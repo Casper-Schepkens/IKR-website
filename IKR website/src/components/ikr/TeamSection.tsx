@@ -46,10 +46,10 @@ export function TeamSection() {
   }, [])
 
   return (
-    <section ref={ref} style={{ backgroundColor: '#F0EBE0' }}>
+    <section ref={ref} style={{ backgroundColor: 'var(--ikr-cream)' }}>
       <div
         style={{
-          backgroundColor: '#0FC1DE',
+          backgroundColor: 'var(--ikr-cyan)',
           clipPath: `polygon(${CLIP})`,
           padding: `${ZIG_H + 32}px clamp(1rem, 5.2vw, 75px) ${ZIG_H + 40}px`,
         }}
@@ -71,7 +71,7 @@ export function TeamSection() {
               fontSize: 'clamp(2.5rem, 6.67vw, 96px)',
               lineHeight: 1,
               letterSpacing: '-0.04em',
-              color: '#201637',
+              color: 'var(--ikr-navy-text)',
               display: 'inline-block',
               transform: 'rotate(-3.71deg)',
             }}
@@ -91,7 +91,7 @@ export function TeamSection() {
               fontSize: 'clamp(2.5rem, 6.67vw, 96px)',
               lineHeight: 1,
               letterSpacing: '-0.04em',
-              color: '#201637',
+              color: 'var(--ikr-navy-text)',
               display: 'inline-block',
               transform: 'rotate(3.71deg)',
             }}

@@ -1,0 +1,57 @@
+@import 'tailwindcss';
+
+@config '../../tailwind.config.mjs';
+
+@theme {
+  --font-display: var(--font-roboto-condensed);
+  --font-sans: var(--font-inter);
+
+  --color-ikr-cream: #F0EBE0;
+  --color-ikr-cream-light: #FFF8F1;
+  --color-ikr-navy: #201737;
+  --color-ikr-navy-text: #211636;
+  --color-ikr-cyan: #0FC1DE;
+}
+
+:root {
+  --ikr-cream: #F0EBE0;
+  --ikr-cream-light: #FFF8F1;
+  --ikr-navy: #201737;
+  --ikr-navy-text: #211636;
+  --ikr-cyan: #0FC1DE;
+}
+
+@keyframes ikr-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes tiktok-song-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.tiktok-song-marquee {
+  display: inline-block;
+  animation: tiktok-song-scroll 8s linear infinite;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html,
+  body {
+    min-height: 100vh;
+    background-color: var(--ikr-cream);
+    color: var(--ikr-navy-text);
+    font-family: var(--font-inter), Inter, sans-serif;
+  }
+
+  .font-display {
+    font-family: var(--font-roboto-condensed), 'Roboto Condensed', sans-serif;
+  }
+}

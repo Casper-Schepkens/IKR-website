@@ -33,7 +33,7 @@ export function HeroSection() {
   }, [])
 
   return (
-    <section ref={ref} style={{ backgroundColor: '#F0EBE0', paddingTop: 190, paddingBottom: 120 }}>
+    <section ref={ref} style={{ backgroundColor: 'var(--ikr-cream)', paddingTop: 190, paddingBottom: 120 }}>
       <div style={{ maxWidth: 1440, margin: '0 auto', paddingLeft: 204, paddingRight: 204, textAlign: 'center' }}>
 
         {/* Regel 1 — 69px, vult 1033px breedte */}
@@ -43,7 +43,7 @@ export function HeroSection() {
             fontSize: 'clamp(1.5rem, 4.79vw, 69px)',
             lineHeight: 0.79,
             letterSpacing: '-0.04em',
-            color: '#211636',
+            color: 'var(--ikr-navy-text)',
           }}
         >
           GEEF JE CONTENT UIT HANDEN WANT
@@ -56,7 +56,7 @@ export function HeroSection() {
             fontSize: 'clamp(3rem, 13vw, 187px)',
             lineHeight: 0.79,
             letterSpacing: '-0.04em',
-            color: '#211636',
+            color: 'var(--ikr-navy-text)',
           }}
         >
           IKNOWRIGHT
@@ -72,7 +72,7 @@ export function HeroSection() {
             fontSize: 'clamp(1rem, 2.78vw, 40px)',
             lineHeight: 1,
             letterSpacing: '-0.04em',
-            color: '#201637',
+            color: 'var(--ikr-navy-text)',
           }}
         >
           Met content waar je klanten honger van krijgen

@@ -3,69 +3,13 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
+import { caseCarouselVideos, heroFeedVideos } from '@/data/videos'
+import { bodyFont, displayFont, ikr } from '@/lib/ikr-styles'
 import { TikTokPhoneFeed, type FeedItem } from './TikTokPhoneFeed'
 
-const DISPLAY: React.CSSProperties = {
-  fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif',
-  fontWeight: 900,
-  letterSpacing: '-0.04em',
-}
+const heroFeed: FeedItem[] = [...heroFeedVideos]
 
-const BODY: React.CSSProperties = {
-  fontFamily: 'var(--font-geist-sans), sans-serif',
-  fontWeight: 400,
-  letterSpacing: '-0.04em',
-  lineHeight: '150%',
-}
-
-const CREAM = '#F0EBE0'
-const NAVY = '#201737'
-const CYAN = '#0FC1DE'
-
-const heroFeed: FeedItem[] = [
-  {
-    src: '/videos/ssstik.io_%40wasbarontiktok_1777728322884.mp4',
-    user: '@wasbar',
-    caption: 'POV: je gaat naar de wasbar 🧺',
-    song: 'Original Sound - Wasbar',
-    likes: '12.4K',
-    comments: '842',
-  },
-  {
-    src: '/videos/pureto%20video%20theelepels.mp4',
-    user: '@pureto',
-    caption: 'Dit is waarom je moet koken met Pureto',
-    song: 'Original Sound - Pureto',
-    likes: '8.2K',
-    comments: '316',
-  },
-  {
-    src: '/videos/Pureto%20video%20brandoefening.mp4',
-    user: '@pureto',
-    caption: 'Brandoefening van de week 🔥',
-    song: 'Trending Audio - FoodTok',
-    likes: '15.1K',
-    comments: '1.2K',
-  },
-  {
-    src: '/videos/AQPqG4SqZV4UXGZ3hWquu3MNeOMQYJWr8n20QBgE7Za9REEzc6rxLdRaDJrDJykthPWf-Lyd8847GvjDATmM0BVp.mp4',
-    user: '@iknowright',
-    caption: 'Content die resultaten oplevert ✨',
-    song: 'Original Sound - IKnowRight',
-    likes: '22K',
-    comments: '2.4K',
-  },
-]
-
-const allCaseVideos = [
-  '/videos/pureto%20video%20theelepels.mp4',
-  '/videos/AQPQweSd1NLfgqKuAh9wpKsJ1pFBE4bPxsZNKbD_bYSvKqmazqpDpv9pLtB9ZSQ4WwPK5gOsEMDnErMeUAeREhCvoBtIq-kAnYZto7A.mp4',
-  '/videos/ssstik.io_%40wasbarontiktok_1777728322884.mp4',
-  '/videos/Pureto%20video%20brandoefening.mp4',
-  '/videos/AQPqG4SqZV4UXGZ3hWquu3MNeOMQYJWr8n20QBgE7Za9REEzc6rxLdRaDJrDJykthPWf-Lyd8847GvjDATmM0BVp.mp4',
-]
-
-const caseCarouselVideos = Array.from({ length: 10 }, (_, i) => allCaseVideos[i % allCaseVideos.length])
+const caseVideos = Array.from({ length: 10 }, (_, i) => caseCarouselVideos[i % caseCarouselVideos.length])
 
 const steps = [
   {
@@ -162,18 +106,18 @@ function HeroPhone() {
 
 function HeroSection() {
   return (
-    <section style={{ backgroundColor: CREAM, paddingTop: 80, overflow: 'hidden' }}>
+    <section style={{ backgroundColor: ikr.cream, paddingTop: 80, overflow: 'hidden' }}>
       <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 clamp(1rem, 6.8vw, 98px)' }}>
         <div style={{ paddingTop: 'clamp(2rem, 10vw, 140px)', textAlign: 'center' }}>
-          <p style={{ ...DISPLAY, fontSize: 'clamp(1rem, 2.22vw, 32px)', color: NAVY, marginBottom: '0.5rem' }}>
+          <p style={{ ...displayFont, fontSize: 'clamp(1rem, 2.22vw, 32px)', color: ikr.navy, marginBottom: '0.5rem' }}>
             MAAR...
           </p>
           <h1
             style={{
-              ...DISPLAY,
+              ...displayFont,
               fontSize: 'clamp(2.5rem, 8.89vw, 128px)',
               lineHeight: '79%',
-              color: NAVY,
+              color: ikr.navy,
               textTransform: 'uppercase',
               marginBottom: 'clamp(2rem, 5vw, 60px)',
             }}
@@ -194,7 +138,7 @@ function HeroSection() {
         <div style={{ paddingTop: 'clamp(2rem, 6vw, 80px)', paddingBottom: 'clamp(2rem, 6vw, 80px)' }}>
           <p
             style={{
-              ...DISPLAY,
+              ...displayFont,
               fontSize: 'clamp(1.5rem, 4.44vw, 64px)',
               lineHeight: '100%',
               textTransform: 'uppercase',
@@ -202,9 +146,9 @@ function HeroSection() {
               marginBottom: 'clamp(1.5rem, 4vw, 60px)',
             }}
           >
-            <span style={{ color: NAVY }}>SIMPEL!</span>
+            <span style={{ color: ikr.navy }}>SIMPEL!</span>
             <br />
-            <span style={{ color: CYAN }}>RESULTATEN BEHALEN</span>
+            <span style={{ color: ikr.cyan }}>RESULTATEN BEHALEN</span>
           </p>
           <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'flex-start', gap: '2rem' }}>
             {[
@@ -215,10 +159,10 @@ function HeroSection() {
               <div key={num} style={{ textAlign: 'center' }}>
                 <span
                   style={{
-                    ...DISPLAY,
+                    ...displayFont,
                     fontSize: 'clamp(3rem, 10.4vw, 150px)',
                     lineHeight: '79%',
-                    color: '#211636',
+                    color: 'var(--ikr-navy-text)',
                     display: 'block',
                   }}
                 >
@@ -226,9 +170,9 @@ function HeroSection() {
                 </span>
                 <span
                   style={{
-                    ...BODY,
+                    ...bodyFont,
                     fontSize: 'clamp(0.875rem, 2.78vw, 40px)',
-                    color: NAVY,
+                    color: ikr.navy,
                     marginTop: '0.5rem',
                     display: 'block',
                   }}
@@ -246,12 +190,12 @@ function HeroSection() {
 
 function ProcessSection() {
   return (
-    <section style={{ backgroundColor: NAVY }}>
+    <section style={{ backgroundColor: ikr.navy }}>
       <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 clamp(1rem, 6.8vw, 98px)' }}>
         <div style={{ paddingTop: 'clamp(2rem, 8.7vw, 125px)', paddingBottom: 'clamp(1rem, 4vw, 60px)' }}>
           <p
             style={{
-              ...DISPLAY,
+              ...displayFont,
               fontSize: 'clamp(1rem, 2.22vw, 32px)',
               color: '#FFF9F1',
               textAlign: 'center',
@@ -262,7 +206,7 @@ function ProcessSection() {
           </p>
           <h2
             style={{
-              ...DISPLAY,
+              ...displayFont,
               fontSize: 'clamp(2.5rem, 8.89vw, 128px)',
               lineHeight: '79%',
               color: '#FFF9F1',
@@ -291,7 +235,7 @@ function ProcessSection() {
               <div style={{ flex: 1, textAlign: step.align === 'right' ? 'right' : 'left' }}>
                 <h3
                   style={{
-                    ...DISPLAY,
+                    ...displayFont,
                     fontSize: 'clamp(1.5rem, 4.44vw, 64px)',
                     lineHeight: '100%',
                     textTransform: 'uppercase',
@@ -301,7 +245,7 @@ function ProcessSection() {
                 >
                   {step.title}
                 </h3>
-                <p style={{ ...BODY, fontSize: 'clamp(1rem, 2.22vw, 32px)', color: '#FFF9F1' }}>{step.body}</p>
+                <p style={{ ...bodyFont, fontSize: 'clamp(1rem, 2.22vw, 32px)', color: '#FFF9F1' }}>{step.body}</p>
               </div>
               {step.iconSrc && <ProcessIcon src={step.iconSrc} />}
             </div>
@@ -333,9 +277,9 @@ function CaseCardButton() {
         bottom: 'clamp(10px, 7%, 18px)',
         left: '50%',
         transform: `translateX(-50%) translateY(${hovered ? -2 : 0}px) scale(${hovered ? 1.08 : 1})`,
-        ...DISPLAY,
+        ...displayFont,
         fontSize: 'clamp(0.6rem, 1.15vw, 15px)',
-        color: NAVY,
+        color: ikr.navy,
         backgroundColor: '#FFF9F1',
         borderRadius: 48,
         padding: '0.45em 1.1em',
@@ -367,7 +311,7 @@ function CaseVideosRow() {
   const [hovered, setHovered] = useState<number | null>(null)
   const [dragging, setDragging] = useState(false)
 
-  const loopVideos = [...caseCarouselVideos, ...caseCarouselVideos]
+  const loopVideos = [...caseVideos, ...caseVideos]
 
   useEffect(() => {
     const el = trackRef.current
@@ -542,11 +486,11 @@ function CTAButton({
     <Link
       href={href}
       style={{
-        ...DISPLAY,
+        ...displayFont,
         display: 'inline-block',
         position: 'relative',
         fontSize: 'clamp(1rem, 2.78vw, 40px)',
-        color: NAVY,
+        color: ikr.navy,
         backgroundColor: '#FFF9F1',
         borderRadius: 48,
         padding: '0.4em 1.2em',
@@ -632,7 +576,7 @@ function CasesAndCTASection() {
   const contactCollapsed = hoveredCta === 'freelancer'
 
   return (
-    <section style={{ backgroundColor: CREAM, padding: 'clamp(3rem, 8vw, 120px) 0' }}>
+    <section style={{ backgroundColor: ikr.cream, padding: 'clamp(3rem, 8vw, 120px) 0' }}>
       <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 clamp(1rem, 6.8vw, 98px)' }}>
         <div
           style={{
@@ -644,16 +588,16 @@ function CasesAndCTASection() {
             gap: 16,
           }}
         >
-          <span style={{ ...DISPLAY, fontSize: 'clamp(1rem, 2.78vw, 40px)', color: NAVY }}>
+          <span style={{ ...displayFont, fontSize: 'clamp(1rem, 2.78vw, 40px)', color: ikr.navy }}>
             BEKIJK HET ZELF...
           </span>
           <Link
             href="/cases"
             style={{
-              ...DISPLAY,
+              ...displayFont,
               fontSize: 'clamp(0.875rem, 2.22vw, 32px)',
               color: '#FFF9F1',
-              backgroundColor: NAVY,
+              backgroundColor: ikr.navy,
               borderRadius: 48,
               padding: '0.45em 1.2em',
               textDecoration: 'none',
@@ -711,7 +655,7 @@ function CasesAndCTASection() {
               >
                 <h3
                   style={{
-                    ...DISPLAY,
+                    ...displayFont,
                     fontSize: 'clamp(1.25rem, 3.33vw, 48px)',
                     lineHeight: 1.15,
                     textTransform: 'uppercase',
@@ -737,7 +681,7 @@ function CasesAndCTASection() {
             style={{
               flex: contactFlex,
               borderRadius: 30,
-              background: 'radial-gradient(170% 170% at 96% -86%, #0FC1DE 0%, #201637 100%)',
+              background: 'radial-gradient(170% 170% at 96% -86%, var(--ikr-cyan) 0%, var(--ikr-navy-text) 100%)',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'flex-end',
@@ -755,7 +699,7 @@ function CasesAndCTASection() {
             <FadeText visible={showContactCopy}>
               <p
                 style={{
-                  ...DISPLAY,
+                  ...displayFont,
                   fontSize: 'clamp(0.875rem, 1.67vw, 24px)',
                   textTransform: 'uppercase',
                   color: '#FFF9F1',
@@ -766,7 +710,7 @@ function CasesAndCTASection() {
               </p>
               <h3
                 style={{
-                  ...DISPLAY,
+                  ...displayFont,
                   fontSize: 'clamp(1.25rem, 3.33vw, 48px)',
                   lineHeight: 1.15,
                   textTransform: 'uppercase',
@@ -803,10 +747,10 @@ function CasesAndCTASection() {
             <Image src="/images/freelancer-cta.jpg" alt="" fill style={{ objectFit: 'cover' }} sizes="100vw" />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(32,22,55,0.15) 0%, rgba(32,22,55,0.85) 100%)' }} />
             <div style={{ position: 'relative', zIndex: 2, padding: 'clamp(2rem, 5vw, 72px) clamp(1.5rem, 4vw, 56px)' }}>
-              <h3 style={{ ...DISPLAY, fontSize: 'clamp(1.25rem, 3.33vw, 48px)', lineHeight: 1.15, textTransform: 'uppercase', color: '#FFF9F1', marginBottom: 'clamp(1.5rem, 3vw, 44px)' }}>
+              <h3 style={{ ...displayFont, fontSize: 'clamp(1.25rem, 3.33vw, 48px)', lineHeight: 1.15, textTransform: 'uppercase', color: '#FFF9F1', marginBottom: 'clamp(1.5rem, 3vw, 44px)' }}>
                 WIL JE BIJ IKNOWRIGHT WERKEN ALS FREELANCER?
               </h3>
-              <Link href="/contact" style={{ ...DISPLAY, display: 'inline-block', fontSize: 'clamp(1rem, 2.78vw, 40px)', color: NAVY, backgroundColor: '#FFF9F1', borderRadius: 48, padding: '0.4em 1.2em', textDecoration: 'none', textTransform: 'uppercase' }}>
+              <Link href="/contact" style={{ ...displayFont, display: 'inline-block', fontSize: 'clamp(1rem, 2.78vw, 40px)', color: ikr.navy, backgroundColor: '#FFF9F1', borderRadius: 48, padding: '0.4em 1.2em', textDecoration: 'none', textTransform: 'uppercase' }}>
                 SOLLICITEER NU
               </Link>
             </div>
@@ -814,7 +758,7 @@ function CasesAndCTASection() {
           <div
             style={{
               borderRadius: 30,
-              background: 'radial-gradient(170% 170% at 96% -86%, #0FC1DE 0%, #201637 100%)',
+              background: 'radial-gradient(170% 170% at 96% -86%, var(--ikr-cyan) 0%, var(--ikr-navy-text) 100%)',
               padding: 'clamp(2rem, 5vw, 72px) clamp(1.5rem, 4vw, 56px)',
               display: 'flex',
               flexDirection: 'column',
@@ -822,11 +766,11 @@ function CasesAndCTASection() {
               minHeight: 320,
             }}
           >
-            <p style={{ ...DISPLAY, fontSize: 'clamp(0.875rem, 1.67vw, 24px)', textTransform: 'uppercase', color: '#FFF9F1', marginBottom: '0.5rem' }}>SAMENWERKEN?</p>
-            <h3 style={{ ...DISPLAY, fontSize: 'clamp(1.25rem, 3.33vw, 48px)', lineHeight: 1.15, textTransform: 'uppercase', color: '#FFF9F1', marginBottom: 'clamp(1.5rem, 3vw, 44px)' }}>
+            <p style={{ ...displayFont, fontSize: 'clamp(0.875rem, 1.67vw, 24px)', textTransform: 'uppercase', color: '#FFF9F1', marginBottom: '0.5rem' }}>SAMENWERKEN?</p>
+            <h3 style={{ ...displayFont, fontSize: 'clamp(1.25rem, 3.33vw, 48px)', lineHeight: 1.15, textTransform: 'uppercase', color: '#FFF9F1', marginBottom: 'clamp(1.5rem, 3vw, 44px)' }}>
               KLAAR OM JE SOCIALE MEDIA WAT EXTRA LIEFDE TE GEVEN?
             </h3>
-            <Link href="/contact" style={{ ...DISPLAY, display: 'inline-block', fontSize: 'clamp(1rem, 2.78vw, 40px)', color: NAVY, backgroundColor: '#FFF9F1', borderRadius: 48, padding: '0.4em 1.2em', textDecoration: 'none', textTransform: 'uppercase' }}>
+            <Link href="/contact" style={{ ...displayFont, display: 'inline-block', fontSize: 'clamp(1rem, 2.78vw, 40px)', color: ikr.navy, backgroundColor: '#FFF9F1', borderRadius: 48, padding: '0.4em 1.2em', textDecoration: 'none', textTransform: 'uppercase' }}>
               CONTACTEER ONS
             </Link>
           </div>

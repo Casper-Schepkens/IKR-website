@@ -1,22 +1,7 @@
-build
-dist / media
 node_modules
-.DS_Store
-.env
 .next
-next-env.d.ts
-.vercel
-
-# Payload default media upload directory
-public/media/
-
-public/robots.txt
-public/sitemap*.xml
-
-
-# Playwright
-node_modules/
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
+.env
+.env.local
+database.db
+tsconfig.tsbuildinfo
+public/media

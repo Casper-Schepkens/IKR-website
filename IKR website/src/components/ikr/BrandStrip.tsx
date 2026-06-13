@@ -18,7 +18,7 @@ export function BrandStrip() {
   }
 
   return (
-    <section style={{ backgroundColor: '#F0EBE0', paddingTop: 60, paddingBottom: 40 }}>
+    <section style={{ backgroundColor: 'var(--ikr-cream)', paddingTop: 60, paddingBottom: 40 }}>
       {/* Title */}
       <div style={{ textAlign: 'center', marginBottom: 40 }}>
         <p
@@ -29,7 +29,7 @@ export function BrandStrip() {
             lineHeight: 1,
             letterSpacing: '-0.04em',
             textTransform: 'uppercase',
-            color: '#201637',
+            color: 'var(--ikr-navy-text)',
           }}
         >
           WIJ FOCUSSEN OP

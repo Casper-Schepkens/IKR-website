@@ -10,7 +10,7 @@ const LINK: React.CSSProperties = {
   fontSize: 'clamp(0.9rem, 1.67vw, 24px)',
   lineHeight: '29px',
   letterSpacing: '-0.04em',
-  color: '#201637',
+  color: 'var(--ikr-navy-text)',
   textDecoration: 'none',
   display: 'block',
 }
@@ -21,7 +21,7 @@ function ColHeader({ children }: { children: React.ReactNode }) {
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        backgroundColor: '#201737',
+        backgroundColor: 'var(--ikr-navy)',
         borderRadius: 48,
         padding: '4px 12px',
         marginBottom: 'clamp(12px, 1.7vw, 24px)',
@@ -80,7 +80,7 @@ function ContactLabel({ children }: { children: React.ReactNode }) {
         fontSize: 'clamp(0.75rem, 1.39vw, 20px)',
         lineHeight: '100%',
         letterSpacing: '-0.04em',
-        color: '#201637',
+        color: 'var(--ikr-navy-text)',
         marginBottom: '0.35em',
       }}
     >
@@ -98,7 +98,7 @@ function ContactValue({ children }: { children: React.ReactNode }) {
         fontSize: 'clamp(0.75rem, 1.39vw, 20px)',
         lineHeight: '100%',
         letterSpacing: '-0.04em',
-        color: '#201637',
+        color: 'var(--ikr-navy-text)',
       }}
     >
       {children}
@@ -110,7 +110,7 @@ function ContactValue({ children }: { children: React.ReactNode }) {
 function IconTikTok() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.02a8.18 8.18 0 004.78 1.52V7.1a4.85 4.85 0 01-1.01-.41z" fill="#201737"/>
+      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V9.02a8.18 8.18 0 004.78 1.52V7.1a4.85 4.85 0 01-1.01-.41z" fill="var(--ikr-navy)"/>
     </svg>
   )
 }
@@ -118,9 +118,9 @@ function IconTikTok() {
 function IconInstagram() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <rect x="2" y="2" width="20" height="20" rx="5" stroke="#201737" strokeWidth="2"/>
-      <circle cx="12" cy="12" r="4" stroke="#201737" strokeWidth="2"/>
-      <circle cx="17.5" cy="6.5" r="1.5" fill="#201737"/>
+      <rect x="2" y="2" width="20" height="20" rx="5" stroke="var(--ikr-navy)" strokeWidth="2"/>
+      <circle cx="12" cy="12" r="4" stroke="var(--ikr-navy)" strokeWidth="2"/>
+      <circle cx="17.5" cy="6.5" r="1.5" fill="var(--ikr-navy)"/>
     </svg>
   )
 }
@@ -128,7 +128,7 @@ function IconInstagram() {
 function IconFacebook() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-      <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" fill="#201737"/>
+      <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" fill="var(--ikr-navy)"/>
     </svg>
   )
 }
@@ -137,13 +137,13 @@ export function SiteFooter() {
   return (
     <footer
       style={{
-        backgroundColor: '#F0EBE0',
+        backgroundColor: 'var(--ikr-cream)',
         padding: 'clamp(16px, 2.8vw, 40px) clamp(1rem, 3.5vw, 51px) clamp(24px, 4vw, 60px)',
       }}
     >
       <div
         style={{
-          backgroundColor: '#0FC1DE',
+          backgroundColor: 'var(--ikr-cyan)',
           borderRadius: 30,
           padding: 'clamp(24px, 2.8vw, 40px) clamp(24px, 3.96vw, 57px)',
           maxWidth: 1319,
@@ -202,7 +202,7 @@ export function SiteFooter() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div style={{
                   width: 48, height: 48, borderRadius: '50%',
-                  backgroundColor: '#201737', flexShrink: 0,
+                  backgroundColor: 'var(--ikr-navy)', flexShrink: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   <svg width="20" height="16" viewBox="0 0 20 16" fill="none">
@@ -226,7 +226,7 @@ export function SiteFooter() {
                 </div>
                 <div style={{
                   width: 48, height: 48, borderRadius: '50%',
-                  backgroundColor: '#201737', flexShrink: 0,
+                  backgroundColor: 'var(--ikr-navy)', flexShrink: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -244,7 +244,7 @@ export function SiteFooter() {
                   fontWeight: 700,
                   fontSize: 'clamp(0.75rem, 1.39vw, 20px)',
                   letterSpacing: '-0.04em',
-                  color: '#201637',
+                  color: 'var(--ikr-navy-text)',
                   marginBottom: 'clamp(8px, 1.1vw, 16px)',
                 }}
               >
@@ -303,7 +303,7 @@ export function SiteFooter() {
               fontSize: 13,
               lineHeight: '16px',
               letterSpacing: '-0.04em',
-              color: '#201737',
+              color: 'var(--ikr-navy)',
             }}
           >
             © Copyright, IKnowRight 2026

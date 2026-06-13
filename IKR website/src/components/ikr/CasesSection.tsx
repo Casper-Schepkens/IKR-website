@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 export function CasesSection() {
   return (
-    <section style={{ backgroundColor: '#fff8f1' }} className="py-16">
+    <section style={{ backgroundColor: 'var(--ikr-cream-light)' }} className="py-16">
       <div className="max-w-[1200px] mx-auto px-6">
         <div className="flex items-center justify-between mb-8">
           <p className="font-display font-black uppercase text-sm tracking-widest"
@@ -12,7 +12,7 @@ export function CasesSection() {
           </p>
           <Link href="/cases"
             className="font-display font-black uppercase text-sm px-5 h-9 rounded-full flex items-center"
-            style={{ backgroundColor: '#201737', color: '#fff' }}>
+            style={{ backgroundColor: 'var(--ikr-navy)', color: '#fff' }}>
             ZIE ALLES →
           </Link>
         </div>

@@ -1,22 +1,20 @@
 # Progress — 13 jun 2026
 
 ## Gedaan deze sessie
-- Design assets gebundeld in `design/figma-pages/` en `design/figma-sections/`
-- Root-duplicaat PNG's + figma token verwijderd
-- Orphan Figma-exports uit `public/images/` naar `design/`
-- `AanpakNavbar.tsx` verwijderd (dode code)
-- Homepage: CasesSection, ReviewsSection, CTASection toegevoegd aan `page.tsx`
-- Debug scripts verplaatst naar `IKR website/scripts/screenshots/`
-- Git repo + GitHub aangemaakt
+- **Payload volledig verwijderd** — puur Next.js, ~200 template-bestanden weg
+- Video's hernoemd + `src/data/videos.ts` als single source of truth
+- Design tokens in `globals.css` (`--ikr-cream`, `--ikr-navy`, `--ikr-cyan`)
+- IKR-componenten gebruiken CSS variables i.p.v. hardcoded hex
+- `src/lib/ikr-styles.ts` voor gedeelde font-styles
 
 ## Huidige stand
-- **Homepage:** volledig wired (9 secties + footer)
-- **Aanpak:** live op `/aanpak`
-- **Nav links naar /pricing, /cases, /contact:** bestaan nog niet (404)
-- **Payload CMS:** geïnstalleerd maar marketingpagina's zijn hardcoded React
+- **Stack:** Next.js 16 + React 19 + Tailwind 4 + GSAP
+- **Pagina's:** `/` (homepage), `/aanpak`
+- **Nog te bouwen:** /pricing, /cases, /contact
+- **Repo:** https://github.com/Tandloosi/IKR-website
 
 ## Volgende stappen
-1. Pricing-, Cases- en Contact-pagina's bouwen
-2. Aanpak gsm-frame placeholders vervangen door echte assets
-3. OG-image vervangen (nu nog Payload template)
-4. Video-bestanden hernoemen + centrale constants
+1. OG-image vervangen (website-template-OG.webp)
+2. Pricing / Cases / Contact pagina's bouwen
+3. Deploy setup (hosting keuze)
+4. Aanpak gsm-frame placeholders vervangen

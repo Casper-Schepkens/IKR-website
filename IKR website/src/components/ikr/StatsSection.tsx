@@ -17,7 +17,7 @@ const NUM: CSSProperties = {
   fontSize: 'clamp(4rem, 17.36vw, 250px)',
   lineHeight: '79%',
   letterSpacing: '-0.04em',
-  color: '#211636',
+  color: 'var(--ikr-navy-text)',
   display: 'block',
 }
 
@@ -27,7 +27,7 @@ const LABEL: CSSProperties = {
   fontSize: 'clamp(1rem, 2.78vw, 40px)',
   lineHeight: '100%',
   letterSpacing: '-0.04em',
-  color: '#201637',
+  color: 'var(--ikr-navy-text)',
   whiteSpace: 'nowrap',
 }
 
@@ -43,7 +43,7 @@ function Badge({ emoji, style }: { emoji: string; style?: CSSProperties }) {
         width: BADGE_SIZE,
         height: BADGE_SIZE,
         borderRadius: '50%',
-        backgroundColor: '#0FC1DE',
+        backgroundColor: 'var(--ikr-cyan)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -76,7 +76,7 @@ export function StatsSection() {
     <section
       ref={ref}
       style={{
-        backgroundColor: '#F0EBE0',
+        backgroundColor: 'var(--ikr-cream)',
         padding: 'clamp(40px, 6vw, 96px) clamp(1rem, 5.76vw, 83px)',
         overflow: 'hidden',
       }}

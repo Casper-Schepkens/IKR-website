@@ -3,16 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { carouselCards } from '@/data/videos'
 
 gsap.registerPlugin(ScrollTrigger)
-
-const cards = [
-  { id: 'far-left',   left: -11.6,  top: 127, rotation: -16, zIndex: 1,  src: '/videos/Pureto%20video%20brandoefening.mp4' },
-  { id: 'near-left',  left:   9.86, top:  48, rotation: -10, zIndex: 2,  src: '/videos/pureto%20video%20theelepels.mp4' },
-  { id: 'center',     left:  36.53, top:   0, rotation:   0, zIndex: 5,  src: '/videos/ssstik.io_%40wasbarontiktok_1777728322884.mp4', shadow: true },
-  { id: 'near-right', left:  56.81, top:  48, rotation:  10, zIndex: 2,  src: '/videos/AQPqG4SqZV4UXGZ3hWquu3MNeOMQYJWr8n20QBgE7Za9REEzc6rxLdRaDJrDJykthPWf-Lyd8847GvjDATmM0BVp.mp4' },
-  { id: 'far-right',  left:  74.1,  top: 127, rotation:  16, zIndex: 1,  src: '/videos/AQPQweSd1NLfgqKuAh9wpKsJ1pFBE4bPxsZNKbD_bYSvKqmazqpDpv9pLtB9ZSQ4WwPK5gOsEMDnErMeUAeREhCvoBtIq-kAnYZto7A.mp4' },
-]
 
 const CARD_W = 26.39
 const CARD_H = 47.08
@@ -57,13 +50,13 @@ export function CarouselSection() {
     <section
       ref={sectionRef}
       style={{
-        backgroundColor: '#F0EBE0',
+        backgroundColor: 'var(--ikr-cream)',
         position: 'relative',
         height: `calc(${127 * (100 / 1440)}vw + ${CARD_H}vw + 6vw)`,
         overflow: 'hidden',
       }}
     >
-      {cards.map((card, i) => (
+      {carouselCards.map((card, i) => (
         <div
           key={card.id}
           className="carousel-card"

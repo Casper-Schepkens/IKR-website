@@ -1,1 +1,1 @@
-Bouw de Contact-pagina op basis van `design/figma-pages/Contact v5.png` (of kies definitieve versie).
+Deploy-setup: Vercel project koppelen aan GitHub repo + DNS van DaddyGo-domein instellen.

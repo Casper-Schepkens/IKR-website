@@ -22,12 +22,12 @@ export function Navbar() {
   return (
     <nav
       className="fixed top-0 left-0 right-0 z-50"
-      style={{ backgroundColor: '#F0EBE0' }}
+      style={{ backgroundColor: 'var(--ikr-cream)' }}
     >
       <div className="max-w-[1440px] mx-auto px-6 h-[80px] flex items-center">
         <div
           className="flex items-center w-full h-[62px] px-5 gap-4"
-          style={{ backgroundColor: '#201737', borderRadius: '100px' }}
+          style={{ backgroundColor: 'var(--ikr-navy)', borderRadius: '100px' }}
         >
           {/* Logo */}
           <Link href="/" className="shrink-0">
@@ -65,12 +65,12 @@ export function Navbar() {
           <Link
             href="/contact"
             className="flex items-center gap-2 pl-5 pr-1 h-[46px] rounded-full font-display font-black hover:opacity-85 transition-opacity shrink-0"
-            style={{ backgroundColor: '#0FC1DE', color: '#fff', letterSpacing: '-0.04em', fontSize: '1rem' }}
+            style={{ backgroundColor: 'var(--ikr-cyan)', color: '#fff', letterSpacing: '-0.04em', fontSize: '1rem' }}
           >
             CONTACT
             <span
               className="w-[34px] h-[34px] rounded-full flex items-center justify-center shrink-0"
-              style={{ backgroundColor: '#201737' }}
+              style={{ backgroundColor: 'var(--ikr-navy)' }}
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M2.5 11.5L11.5 2.5M11.5 2.5H5M11.5 2.5V9" stroke="#FFF9F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

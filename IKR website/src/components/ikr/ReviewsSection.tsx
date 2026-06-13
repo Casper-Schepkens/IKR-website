@@ -7,9 +7,9 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 gsap.registerPlugin(ScrollTrigger)
 
 const reviews = [
-  { quote: 'ONGELOOFLIJK BLIJ MET DE RESULTATEN', name: 'Wout Desmedt', bg: '#0fc1de', color: '#fff' },
-  { quote: 'WAUW! WAT EEN KWALITEIT WERD AFGELEVERD', name: 'Koen Degrote', bg: '#fff', color: '#201737' },
-  { quote: 'NIET NORMAAL HOEVEEL VIEWS WIJ KREGEN', name: 'Bart Delrue', bg: '#c4b098', color: '#201737' },
+  { quote: 'ONGELOOFLIJK BLIJ MET DE RESULTATEN', name: 'Wout Desmedt', bg: 'var(--ikr-cyan)', color: '#fff' },
+  { quote: 'WAUW! WAT EEN KWALITEIT WERD AFGELEVERD', name: 'Koen Degrote', bg: '#fff', color: 'var(--ikr-navy)' },
+  { quote: 'NIET NORMAAL HOEVEEL VIEWS WIJ KREGEN', name: 'Bart Delrue', bg: '#c4b098', color: 'var(--ikr-navy)' },
 ]
 
 export function ReviewsSection() {
@@ -26,7 +26,7 @@ export function ReviewsSection() {
   }, [])
 
   return (
-    <section ref={ref} className="relative py-24 overflow-hidden" style={{ backgroundColor: '#fff8f1' }}>
+    <section ref={ref} className="relative py-24 overflow-hidden" style={{ backgroundColor: 'var(--ikr-cream-light)' }}>
       {/* IKNOWRIGHT watermark */}
       <div className="absolute inset-0 flex flex-col justify-center overflow-hidden select-none pointer-events-none"
         aria-hidden>
@@ -34,7 +34,7 @@ export function ReviewsSection() {
           style={{
             fontSize: 'clamp(8rem, 22vw, 22rem)',
             letterSpacing: '-0.04em',
-            color: '#201737',
+            color: 'var(--ikr-navy)',
             opacity: 0.06,
             whiteSpace: 'nowrap',
           }}>

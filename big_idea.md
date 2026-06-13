@@ -9,6 +9,6 @@ TikTok-bureau website voor IKnowRight: professionele marketing site voor food br
 - Aanpak-pagina
 - Nog te bouwen: Pricing, Cases, Contact
 
-**Tech:** Next.js 16 + Payload CMS 3 (SQLite lokaal, Postgres in productie).
+**Tech:** Next.js 16 + React 19 + Tailwind 4 + GSAP. Geen CMS.
 
 **Design:** Warm crème (#F0EBE0), navy (#201737), cyan accent (#0FC1DE), Roboto Condensed display.

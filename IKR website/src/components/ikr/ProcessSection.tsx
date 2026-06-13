@@ -16,7 +16,7 @@ const TITLE_FONT: React.CSSProperties = {
   lineHeight: '90%',
   letterSpacing: '-0.04em',
   textTransform: 'uppercase',
-  color: '#201637',
+  color: 'var(--ikr-navy-text)',
 }
 
 const BODY_FONT: React.CSSProperties = {
@@ -37,7 +37,7 @@ function NumberBadge({ n }: { n: string }) {
         width: CIRCLE_SIZE,
         height: CIRCLE_SIZE,
         borderRadius: '50%',
-        backgroundColor: '#201737',
+        backgroundColor: 'var(--ikr-navy)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -98,7 +98,7 @@ export function ProcessSection() {
   return (
     <section
       ref={sectionRef}
-      style={{ backgroundColor: '#F0EBE0', padding: 'clamp(40px, 6vw, 80px) clamp(1rem, 2.8vw, 40px) clamp(60px, 8vw, 120px)' }}
+      style={{ backgroundColor: 'var(--ikr-cream)', padding: 'clamp(40px, 6vw, 80px) clamp(1rem, 2.8vw, 40px) clamp(60px, 8vw, 120px)' }}
     >
       {/* Title */}
       <div style={{ textAlign: 'center', marginBottom: 'clamp(40px, 5.6vw, 80px)' }}>
@@ -110,7 +110,7 @@ export function ProcessSection() {
             lineHeight: '79%',
             letterSpacing: '-0.04em',
             textTransform: 'uppercase',
-            color: '#201637',
+            color: 'var(--ikr-navy-text)',
           }}
         >
           HET PROCES
@@ -157,7 +157,7 @@ export function ProcessSection() {
               transform: 'translateX(-50%)',
               width: 'clamp(6px, 0.69vw, 10px)',
               height: '0%',
-              backgroundColor: '#0FC1DE',
+              backgroundColor: 'var(--ikr-cyan)',
               borderRadius: 12,
               transformOrigin: 'top',
             }}
@@ -174,7 +174,7 @@ export function ProcessSection() {
                 width: 'clamp(8px, 1.11vw, 16px)',
                 height: 'clamp(8px, 1.11vw, 16px)',
                 borderRadius: '50%',
-                backgroundColor: '#0FC1DE',
+                backgroundColor: 'var(--ikr-cyan)',
                 zIndex: 2,
               }}
             />

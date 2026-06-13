@@ -1,15 +1,22 @@
 # Decisions
 
-## Architectuur: hybrid (jun 2026)
-**Beslissing:** Marketingpagina's (home, aanpak, pricing, cases, contact) blijven hardcoded React components in `src/components/ikr/`. Payload CMS gebruiken voor blog/posts en optioneel dynamische content later.
+## Payload CMS → verwijderd (jun 2026)
+**Beslissing:** Payload volledig strippen. Puur Next.js voor marketing site.
 
-**Waarom:** IKR-site is design-gedreven met pixel-perfect Figma-layouts. Payload's block-systeem is overkill voor vaste marketingpagina's. Payload blijft nuttig voor `/posts`, media-beheer en admin — zonder de hele site te hoeven migreren.
+**Waarom:** Geen blog/CMS nodig voor v1. Payload voegde admin panel, SQLite DB, blocks-systeem en honderden template-bestanden toe zonder winst.
 
-**Alternatief afgewezen:** Alles via Payload Pages/blocks — te veel template-boilerplate, trager itereren op design.
+**Status:** Uitgevoerd.
+
+## Styling
+**Beslissing:** CSS custom properties in `globals.css` als design tokens. Complexe Figma-layouts (vw positioning, clip-path) blijven inline styles — kleuren via `var(--ikr-*)`.
 
 ## Asset-structuur
-- `IKR website/public/images/` — alleen live assets
+- `IKR website/public/images/` — live assets
 - `design/` — Figma-referenties, nooit deployed
 
 ## Navbar
-Eén component: `Navbar.tsx` (pill-bar). Oude hamburger `AanpakNavbar` verwijderd.
+Eén component: `Navbar.tsx` (pill-bar).
+
+## Hosting (open)
+DaddyGo = traditionele shared hosting, geen Node.js. Next.js vereist Node-runtime.
+**Aanbeveling:** Site hosten op Vercel (gratis tier, perfect voor Next.js), domein van DaddyGo wijzen via DNS (CNAME/A-record). DaddyGo behouden voor e-mail of andere diensten.
