@@ -1,0 +1,12 @@
+﻿import { chromium } from '@playwright/test';
+const browser = await chromium.launch();
+const page = await browser.newPage();
+await page.setViewportSize({ width: 1440, height: 900 });
+await page.goto('http://localhost:3000', { waitUntil: 'networkidle', timeout: 20000 });
+await page.screenshot({ path: 'C:/tmp/ikr-top.png' });
+await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 3));
+await page.screenshot({ path: 'C:/tmp/ikr-mid.png' });
+await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+await page.screenshot({ path: 'C:/tmp/ikr-bottom.png' });
+await browser.close();
+console.log('done');

@@ -1,0 +1,15 @@
+﻿import { chromium } from '@playwright/test';
+const browser = await chromium.launch({ channel: 'msedge', headless: false });
+const page = await browser.newPage();
+const errors = [];
+const logs = [];
+page.on('console', m => logs.push(m.type() + ': ' + m.text().substring(0,100)));
+page.on('pageerror', e => errors.push(e.message.substring(0,200)));
+await page.setViewportSize({ width: 1280, height: 900 });
+await page.goto('http://localhost:3000', { waitUntil: 'load', timeout: 20000 });
+await page.waitForTimeout(4000);
+console.log('ERRORS:', JSON.stringify(errors));
+console.log('LOGS:', JSON.stringify(logs.slice(0,10)));
+const bgColor = await page.evaluate(() => window.getComputedStyle(document.body).backgroundColor);
+console.log('body bg:', bgColor);
+await browser.close();
