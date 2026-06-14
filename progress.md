@@ -11,7 +11,7 @@
 - **Lokaal:** `cd ikr-website && npm run dev`
 - **Deploy:** live op Vercel (Hobby), auto-deploy bij push naar `master`
 - **Root directory:** `ikr-website` (hernoemd van `IKR website` — spaties breken Vercel serverless functions)
-- **Laatste commit:** audit follow-up jun 2026 (na push)
+- **Laatste commit:** `8176c10` — legacy audit follow-up jun 2026
 - Design assets in `design/figma-pages/` + `design/figma-sections/`
 - Payload verwijderd → puur Next.js
 - Design tokens in `globals.css`, video's in `src/data/videos.ts`
