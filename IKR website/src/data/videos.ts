@@ -4,6 +4,9 @@ export const VIDEO_PATHS = {
   puretoBrandoefening: '/videos/pureto-brandoefening.mp4',
   ikrShowcase1: '/videos/ikr-showcase-1.mp4',
   ikrShowcase2: '/videos/ikr-showcase-2.mp4',
+  /** Gehost op huidige site — lokaal kopiëren naar public/videos/tempus-case.mp4 wanneer gewenst */
+  tempusCase:
+    'https://iknowright.be/wp-content/uploads/2025/11/v24044gl0000cvnttofog65op1i44log.mp4',
 } as const
 
 export type CarouselCardConfig = {

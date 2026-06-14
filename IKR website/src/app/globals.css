@@ -21,6 +21,17 @@
   --ikr-cyan: #0FC1DE;
 }
 
+@keyframes contact-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes ikr-marquee {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
