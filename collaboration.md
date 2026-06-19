@@ -8,7 +8,7 @@
 
 | Item | Waarde |
 |------|--------|
-| GitHub | https://github.com/Tandloosi/IKR-website |
+| GitHub | https://github.com/Casper-Schepkens/IKR-website |
 | Hoofdbranch | `master` |
 | App-map | `ikr-website/` |
 | Lokaal starten | `cd ikr-website && npm run dev` |

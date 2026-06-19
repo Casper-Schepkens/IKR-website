@@ -7,7 +7,7 @@
 ## Algemeen
 
 - **Stack:** Next.js 16 + React 19 + Tailwind 4 + GSAP
-- **Repo:** https://github.com/Tandloosi/IKR-website
+- **Repo:** https://github.com/Casper-Schepkens/IKR-website
 - **Lokaal:** `cd ikr-website && npm run dev`
 - **Deploy:** live op Vercel (Hobby), auto-deploy bij push naar `master`
 - **Root directory:** `ikr-website` (hernoemd van `IKR website` — spaties breken Vercel serverless functions)
