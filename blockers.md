@@ -5,12 +5,12 @@
 ---
 
 ## Algemeen
-- **Custom domain:** uitgesteld — DNS DaddyGo → Vercel komt later
+- **Custom domain:** uitgesteld — DNS DaddyGo/GreenGeeks → Vercel komt later. **Bij permanente switch:** Turnstile hostnames op `iknowright.be` (+ www) zetten + Vercel env keys checken; Hobby → Pro.
 - **Vercel plan:** Hobby → Pro ($20/maand) pas bij live op eigen domein
 - **Gsm/mobile:** site is nog niet responsive — volgende grote taak
 
 ## Homepage (`/`)
-_(geen)_
+- **Proces 1-2-3 + Why TikTok:** copy/cijfers nog niet geleverd — niet aanpassen tot Casper content geeft
 
 ## Aanpak (`/aanpak`)
 - **Gsm-schermen:** echte Figma exports nog niet beschikbaar
@@ -23,6 +23,5 @@ _(geen)_
 - **Live test:** creator/solliciteren topics + mail subjects nog verifiëren op Vercel-URL (lokaal ok, build ok)
 
 ## Cases (`/cases`)
-_(geen blockers — v1 klaar)_
-
-Optioneel later: hero/storyfoto's Maison Slash & Anneke; food `.mov` lokaal hosten; echte food retainer-cases.
+- **Content:** foto's + tekst nog niet juist — wacht op juiste assets/copy
+- Optioneel later: hero/storyfoto's Maison Slash & Anneke; food `.mov` lokaal hosten; echte food retainer-cases.

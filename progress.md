@@ -16,8 +16,10 @@
 - Payload verwijderd → puur Next.js
 - Design tokens in `globals.css`, video's in `src/data/videos.ts`
 - OG-image nog vervangen
-- Custom domain `iknowright.be` — bewust uitgesteld (DNS DaddyGo later)
-- Vercel env vars ingesteld (Resend + Turnstile)
+- Custom domain `iknowright.be` — bewust uitgesteld (DNS nog GreenGeeks/WP; DaddyGo later → Vercel)
+- Vercel env vars ingesteld (Resend + Turnstile) — Turnstile hostname-fix **bij permanente domain-switch**
+- Live Next-site: `https://ikr-website.vercel.app` — `iknowright.be` = nog oude WordPress
+- **Cases single-source (jul 2026):** `caseDetails` → `caseGridItems` / `caseCarouselItems`
 - Gsm/mobile versie nog niet gebouwd
 - **Legal:** `/privacy`, `/cookies`, `/algemene-voorwaarden`, `/legal` — footer links + LinkedIn/Instagram socials
 - Telefoon site-wide: `+32 479 40 03 29` (`src/data/site-contact.ts`)
@@ -31,6 +33,8 @@
 
 - Hero, carousel, brand strip, stats, team, proces, **Why TikTok**, cases (3 linkbare cards), reviews (echte quotes), CTA, footer
 - Live op Vercel
+- **jul 2026:** homepage fan-carousel (5) = case-video's + link naar detail (`homepageCarouselCards`)
+- **Gepland (nog niet gebouwd):** proces stap 1-2-3 herschrijven; Why TikTok met echte cijfers + bezwaren ("zit mijn doelpubliek daar?")
 
 ---
 
@@ -40,6 +44,7 @@
 
 - Hero + gsm-feed, **Is dat wel iets voor mij?**, **Zonder/Met IKR**, proces-sectie, case-carousel, freelancer/contact CTA
 - Open: gsm-placeholders (echte Figma exports ontbreken), freelancer CTA asset (`card top.png`)
+- **jul 2026:** case-carousel + gsm-feed pullen uit case-video's (`caseCarouselItems` / `aanpakHeroFeedVideos`)
 
 ---
 
@@ -87,9 +92,13 @@
 **Laag 2 — Food werk:**
 - Aïki, O'Tacos, Panos — influencer-grid, views + highlight, geen detailpagina
 - Video's via WP `.mov`
+- **jul 2026:** blauwe play/pijl-button midden op food-video's verwijderd (niet clickable)
 
-**Open (nice-to-have):**
+**Open:**
+- Foto's + tekst corrigeren (nog niet juist)
 - Hero/storyfoto's + logo's voor Maison Slash & Anneke
 - Food `.mov` lokaal als `.mp4` hosten
 - Panos view-stat invullen
 - Echte food retainer-cases later → laag 1
+
+**jul 2026:** single-source — `caseGridItems`/`caseCarouselItems` afgeleid van `caseDetails`

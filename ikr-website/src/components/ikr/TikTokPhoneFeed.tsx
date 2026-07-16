@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 type FeedItem = {
@@ -9,6 +10,8 @@ type FeedItem = {
   song: string
   likes: string
   comments: string
+  /** Optional: link to case detail (Aanpak phone-feed). */
+  href?: string
 }
 
 export type TikTokVariant = 'classic' | 'ios' | 'modern2026'
@@ -155,11 +158,29 @@ function ActionRail({
 }
 
 function BottomMeta({ item, bottom = 108 }: { item: FeedItem; bottom?: number }) {
+  const userStyle: React.CSSProperties = {
+    margin: 0,
+    fontSize: 16,
+    fontWeight: 700,
+    color: '#fff',
+    lineHeight: 1.2,
+    fontFamily: FONT,
+    textDecoration: 'none',
+  }
+
   return (
     <div style={{ position: 'absolute', left: 12, right: 72, bottom }}>
-      <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#fff', lineHeight: 1.2, fontFamily: FONT }}>
-        {item.user}
-      </p>
+      {item.href ? (
+        <a
+          href={item.href}
+          style={{ ...userStyle, pointerEvents: 'auto' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {item.user}
+        </a>
+      ) : (
+        <p style={userStyle}>{item.user}</p>
+      )}
       <p
         style={{
           margin: '6px 0 0',
@@ -383,6 +404,7 @@ function TikTokOverlay({
 }
 
 export function TikTokPhoneFeed({ items, variant = 'classic' }: { items: FeedItem[]; variant?: TikTokVariant }) {
+  const router = useRouter()
   const outerRef = useRef<HTMLDivElement>(null)
   const feedRef = useRef<HTMLDivElement>(null)
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([])
@@ -393,6 +415,8 @@ export function TikTokPhoneFeed({ items, variant = 'classic' }: { items: FeedIte
   const [isDragging, setIsDragging] = useState(false)
   const wheelLock = useRef(false)
   const touchStartY = useRef(0)
+  const touchMoved = useRef(false)
+  const suppressClick = useRef(false)
 
   useEffect(() => {
     const el = outerRef.current
@@ -405,14 +429,19 @@ export function TikTokPhoneFeed({ items, variant = 'classic' }: { items: FeedIte
   }, [])
 
   const goNext = useCallback(() => {
-    setActiveIndex((prev) => Math.min(items.length - 1, prev + 1))
+    setActiveIndex((prev) => (items.length === 0 ? 0 : (prev + 1) % items.length))
     setDragOffset(0)
   }, [items.length])
 
   const goPrev = useCallback(() => {
-    setActiveIndex((prev) => Math.max(0, prev - 1))
+    setActiveIndex((prev) => (items.length === 0 ? 0 : (prev - 1 + items.length) % items.length))
     setDragOffset(0)
   }, [items.length])
+
+  const openActiveCase = useCallback(() => {
+    const href = items[activeIndex]?.href
+    if (href) router.push(href)
+  }, [items, activeIndex, router])
 
   useEffect(() => {
     videoRefs.current.forEach((video, i) => {
@@ -425,6 +454,14 @@ export function TikTokPhoneFeed({ items, variant = 'classic' }: { items: FeedIte
       }
     })
   }, [activeIndex])
+
+  useEffect(() => {
+    const video = videoRefs.current[activeIndex]
+    if (!video) return
+    const onEnded = () => goNext()
+    video.addEventListener('ended', onEnded)
+    return () => video.removeEventListener('ended', onEnded)
+  }, [activeIndex, goNext])
 
   useEffect(() => {
     const el = feedRef.current
@@ -442,11 +479,13 @@ export function TikTokPhoneFeed({ items, variant = 'classic' }: { items: FeedIte
 
     const onTouchStart = (e: TouchEvent) => {
       touchStartY.current = e.touches[0].clientY
+      touchMoved.current = false
       setIsDragging(true)
     }
 
     const onTouchMove = (e: TouchEvent) => {
       const delta = e.touches[0].clientY - touchStartY.current
+      if (Math.abs(delta) > 10) touchMoved.current = true
       const maxDrag = REF_H * 0.35
       setDragOffset(Math.max(-maxDrag, Math.min(maxDrag, delta)))
     }
@@ -456,21 +495,38 @@ export function TikTokPhoneFeed({ items, variant = 'classic' }: { items: FeedIte
       const delta = e.changedTouches[0].clientY - touchStartY.current
       if (delta < -50) goNext()
       else if (delta > 50) goPrev()
-      else setDragOffset(0)
+      else {
+        setDragOffset(0)
+        if (!touchMoved.current) {
+          suppressClick.current = true
+          openActiveCase()
+        }
+      }
+    }
+
+    const onClick = (e: MouseEvent) => {
+      if (suppressClick.current) {
+        suppressClick.current = false
+        return
+      }
+      if ((e.target as HTMLElement).closest('a, button')) return
+      openActiveCase()
     }
 
     el.addEventListener('wheel', onWheel, { passive: false })
     el.addEventListener('touchstart', onTouchStart, { passive: true })
     el.addEventListener('touchmove', onTouchMove, { passive: true })
     el.addEventListener('touchend', onTouchEnd, { passive: true })
+    el.addEventListener('click', onClick)
 
     return () => {
       el.removeEventListener('wheel', onWheel)
       el.removeEventListener('touchstart', onTouchStart)
       el.removeEventListener('touchmove', onTouchMove)
       el.removeEventListener('touchend', onTouchEnd)
+      el.removeEventListener('click', onClick)
     }
-  }, [goNext, goPrev])
+  }, [goNext, goPrev, openActiveCase])
 
   const slideShare = 100 / items.length
   const translateY = `calc(-${activeIndex * slideShare}% + ${dragOffset / scale}px)`
@@ -505,7 +561,7 @@ export function TikTokPhoneFeed({ items, variant = 'classic' }: { items: FeedIte
             height: REF_H,
             overflow: 'hidden',
             touchAction: 'none',
-            cursor: 'grab',
+            cursor: items[activeIndex]?.href ? 'pointer' : 'grab',
             position: 'relative',
           }}
         >
@@ -522,7 +578,6 @@ export function TikTokPhoneFeed({ items, variant = 'classic' }: { items: FeedIte
                   ref={(el) => { videoRefs.current[i] = el }}
                   src={item.src}
                   muted
-                  loop
                   playsInline
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 />
