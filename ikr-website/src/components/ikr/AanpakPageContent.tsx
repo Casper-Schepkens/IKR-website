@@ -3,13 +3,17 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
-import { caseCarouselVideos, heroFeedVideos } from '@/data/videos'
+import { caseCarouselItems, aanpakHeroFeedVideos } from '@/data/cases'
 import { bodyFont, displayFont, ikr } from '@/lib/ikr-styles'
-import { TikTokPhoneFeed, type FeedItem } from './TikTokPhoneFeed'
+import { TikTokPhoneFeed } from './TikTokPhoneFeed'
 
-const heroFeed: FeedItem[] = [...heroFeedVideos]
+const heroFeed = aanpakHeroFeedVideos
 
-const caseVideos = Array.from({ length: 10 }, (_, i) => caseCarouselVideos[i % caseCarouselVideos.length])
+/** Genoeg kaarten voor een vloeiende infinite scroll, altijd uit caseCarouselItems. */
+const caseVideos = Array.from(
+  { length: Math.max(caseCarouselItems.length * 4, 12) },
+  (_, i) => caseCarouselItems[i % caseCarouselItems.length],
+)
 
 const steps = [
   {
@@ -400,12 +404,13 @@ const CASE_CARD_H = 47.08
 
 const CASE_SCROLL_SPEED = 0.55
 
-function CaseCardButton() {
+function CaseCardButton({ href, label }: { href: string; label: string }) {
   const [hovered, setHovered] = useState(false)
 
   return (
     <Link
-      href="/cases"
+      href={href}
+      aria-label={`Case ${label}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onMouseDown={(e) => e.stopPropagation()}
@@ -432,7 +437,7 @@ function CaseCardButton() {
         transition: 'transform 0.25s ease, box-shadow 0.25s ease',
       }}
     >
-      ZIE CASE
+      {label}
     </Link>
   )
 }
@@ -563,9 +568,9 @@ function CaseVideosRow() {
           willChange: 'transform',
         }}
       >
-        {loopVideos.map((src, i) => (
+        {loopVideos.map((item, i) => (
           <div
-            key={`${src}-${i}`}
+            key={`${item.href}-${i}`}
             onMouseEnter={() => handleCardEnter(i)}
             onMouseLeave={() => handleCardLeave(i)}
             style={{
@@ -586,7 +591,7 @@ function CaseVideosRow() {
           >
             <video
               ref={(el) => { videoRefs.current[i] = el }}
-              src={src}
+              src={item.src}
               muted
               loop
               playsInline
@@ -601,7 +606,7 @@ function CaseVideosRow() {
                 pointerEvents: 'none',
               }}
             />
-            <CaseCardButton />
+            <CaseCardButton href={item.href} label={item.label} />
           </div>
         ))}
       </div>

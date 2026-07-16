@@ -1,6 +1,6 @@
-import { CASE_CHANNEL_VIDEOS, CASE_GRID_PREVIEW, VIDEO_PATHS } from './videos'
+import { CASE_CHANNEL_VIDEOS, VIDEO_PATHS } from './videos'
 
-// ─── Overview grid (cases met detailpagina) ───────────────────────────────────
+// ─── Overview grid types (afgeleid van caseDetails — zie onderaan) ────────────
 
 export type CaseGridItem = {
   id: string
@@ -10,27 +10,11 @@ export type CaseGridItem = {
   logo?: string
 }
 
-export const caseGridItems: CaseGridItem[] = [
-  {
-    id: 'tempus',
-    slug: 'tempus',
-    clientName: 'Tempus',
-    video: CASE_GRID_PREVIEW.tempus,
-    logo: '/images/client_logos/tempus logo.png',
-  },
-  {
-    id: 'maison-slash',
-    slug: 'maison-slash',
-    clientName: 'Maison Slash',
-    video: CASE_GRID_PREVIEW.maisonSlash,
-  },
-  {
-    id: 'anneke-govaerts',
-    slug: 'anneke-govaerts',
-    clientName: 'Anneke Govaerts',
-    video: CASE_GRID_PREVIEW.annekeGovaerts,
-  },
-]
+export type CaseCarouselItem = {
+  src: string
+  href: string
+  label: string
+}
 
 // ─── Food werk (influencer-opdrachten, geen detailpagina) ─────────────────────
 
@@ -268,3 +252,136 @@ export const caseDetails: Record<string, CaseDetail> = {
 }
 
 export const caseDetailSlugs = Object.keys(caseDetails)
+
+// ─── Single source: grid + carousel afgeleid van caseDetails ─────────────────
+
+/** Volgorde homepage /cases overview / Aanpak-carousel. */
+const CASE_GRID_ORDER = ['tempus', 'maison-slash', 'anneke-govaerts'] as const
+
+/**
+ * Welke video uit `caseDetails[slug].videos` als thumbnail (niet altijd #1 views).
+ * Maison Slash: index 2 = 757364… (niet seksenquete-topvideo).
+ */
+const CASE_GRID_PREVIEW_INDEX: Record<string, number> = {
+  tempus: 0,
+  'maison-slash': 2,
+  'anneke-govaerts': 0,
+}
+
+function toGridItem(detail: CaseDetail): CaseGridItem {
+  const idx = CASE_GRID_PREVIEW_INDEX[detail.slug] ?? 0
+  const video = detail.videos[idx]?.src ?? detail.videos[0]?.src ?? ''
+  return {
+    id: detail.slug,
+    slug: detail.slug,
+    clientName: detail.bedrijf,
+    video,
+    logo: detail.logo,
+  }
+}
+
+/** Overview + homepage — zelfde bron als detailpagina's. */
+export const caseGridItems: CaseGridItem[] = CASE_GRID_ORDER.map((slug) => {
+  const detail = caseDetails[slug]
+  if (!detail) throw new Error(`Missing case detail for grid: ${slug}`)
+  return toGridItem(detail)
+})
+
+/** Aanpak-carousel — zelfde cases, link naar detail. */
+export const caseCarouselItems: CaseCarouselItem[] = caseGridItems.map((item) => ({
+  src: item.video,
+  href: `/cases/${item.slug}`,
+  label: item.clientName,
+}))
+
+// ─── Homepage fan-carousel + Aanpak phone-feed (zelfde case-video's) ─────────
+
+const CASE_TIKTOK_HANDLE: Record<string, string> = {
+  tempus: '@tempusverpleging',
+  'maison-slash': '@maisonslashbelgie',
+  'anneke-govaerts': '@anneke_govaerts',
+}
+
+/** Layout slots (Figma) — bron-video's komen uit caseDetails via HOMEPAGE_CAROUSEL_PICKS. */
+const HOMEPAGE_CAROUSEL_LAYOUT = [
+  { id: 'far-left', left: -11.6, top: 127, rotation: -16, zIndex: 1 },
+  { id: 'near-left', left: 9.86, top: 48, rotation: -10, zIndex: 2 },
+  { id: 'center', left: 36.53, top: 0, rotation: 0, zIndex: 5, shadow: true },
+  { id: 'near-right', left: 56.81, top: 48, rotation: 10, zIndex: 2 },
+  { id: 'far-right', left: 74.1, top: 127, rotation: 16, zIndex: 1 },
+] as const
+
+/** Welke case-video per carousel-slot (5 stuks). */
+const HOMEPAGE_CAROUSEL_PICKS: { slug: string; videoIndex: number }[] = [
+  { slug: 'tempus', videoIndex: 1 },
+  { slug: 'maison-slash', videoIndex: 0 },
+  { slug: 'tempus', videoIndex: 0 },
+  { slug: 'anneke-govaerts', videoIndex: 0 },
+  { slug: 'maison-slash', videoIndex: 2 },
+]
+
+export type HomepageCarouselCard = {
+  id: string
+  left: number
+  top: number
+  rotation: number
+  zIndex: number
+  src: string
+  href: string
+  label: string
+  shadow?: boolean
+}
+
+export const homepageCarouselCards: HomepageCarouselCard[] = HOMEPAGE_CAROUSEL_LAYOUT.map((layout, i) => {
+  const pick = HOMEPAGE_CAROUSEL_PICKS[i]
+  const detail = caseDetails[pick.slug]
+  if (!detail) throw new Error(`Missing case for homepage carousel: ${pick.slug}`)
+  const video = detail.videos[pick.videoIndex] ?? detail.videos[0]
+  if (!video) throw new Error(`Missing video for homepage carousel: ${pick.slug}`)
+  return {
+    id: layout.id,
+    left: layout.left,
+    top: layout.top,
+    rotation: layout.rotation,
+    zIndex: layout.zIndex,
+    shadow: 'shadow' in layout ? layout.shadow : undefined,
+    src: video.src,
+    href: `/cases/${detail.slug}`,
+    label: detail.bedrijf,
+  }
+})
+
+export type CaseFeedItem = {
+  src: string
+  user: string
+  caption: string
+  song: string
+  likes: string
+  comments: string
+  href: string
+}
+
+/** Aanpak gsm-feed — echte case-video's i.p.v. showcase placeholders. */
+const AANPAK_FEED_PICKS: { slug: string; videoIndex: number }[] = [
+  { slug: 'tempus', videoIndex: 0 },
+  { slug: 'maison-slash', videoIndex: 0 },
+  { slug: 'anneke-govaerts', videoIndex: 0 },
+  { slug: 'maison-slash', videoIndex: 2 },
+]
+
+export const aanpakHeroFeedVideos: CaseFeedItem[] = AANPAK_FEED_PICKS.map((pick) => {
+  const detail = caseDetails[pick.slug]
+  if (!detail) throw new Error(`Missing case for aanpak feed: ${pick.slug}`)
+  const video = detail.videos[pick.videoIndex] ?? detail.videos[0]
+  if (!video) throw new Error(`Missing video for aanpak feed: ${pick.slug}`)
+  const handle = CASE_TIKTOK_HANDLE[detail.slug] ?? `@${detail.slug}`
+  return {
+    src: video.src,
+    user: handle,
+    caption: detail.outcomeLine ?? detail.summary[0] ?? detail.bedrijf,
+    song: `Original Sound - ${detail.bedrijf}`,
+    likes: video.stat,
+    comments: '—',
+    href: `/cases/${detail.slug}`,
+  }
+})

@@ -52,6 +52,8 @@ DaddyGo = shared hosting, geen Node.js. **Beslissing:** site op Vercel hosten, D
 
 **Beslissing (jun 2026):** "Is dat wel iets voor mij?" + Zonder/Met IKR secties op pagina. Geen aparte `/jobs` — solliciteren via `/contact?type=solliciteren` met type-specifieke topics.
 
+**Beslissing (jul 2026):** Cases single-source. `caseDetails` = bron; `caseGridItems` + `caseCarouselItems` afgeleid. Homepage, `/cases`, Aanpak-carousel delen die bron. Nieuwe case = toevoegen aan `caseDetails` + `CASE_GRID_ORDER` (+ assets). Food werk blijft apart (`foodWorkItems`, geen detail).
+
 ---
 
 ## Pricing (`/pricing`)
@@ -72,7 +74,7 @@ DaddyGo = shared hosting, geen Node.js. **Beslissing:** site op Vercel hosten, D
 
 Portfolio in **twee lagen** — geen fake case-pagina's.
 
-**Laag 1 — Cases (`caseGridItems` + `caseDetails`):** volledige case studies met detailpagina. Nu: Tempus, Maison Slash, Anneke Govaerts. Criteria: doel, aanpak, cijfers, minstens één concreet resultaat. Nieuwe case = kopieer `caseDetailTemplate`, zet in `caseDetails` + `caseGridItems`.
+**Laag 1 — Cases (`caseDetails` → `caseGridItems`):** volledige case studies met detailpagina. Nu: Tempus, Maison Slash, Anneke Govaerts. Criteria: doel, aanpak, cijfers, minstens één concreet resultaat. Nieuwe case = kopieer `caseDetailTemplate`, zet in `caseDetails` + `CASE_GRID_ORDER` (+ optioneel `CASE_GRID_PREVIEW_INDEX`). Grid/carousel volgen automatisch.
 
 **Laag 2 — Food werk (`foodWorkItems`):** influencer-opdrachten binnen food. Grid met video + views + highlight. **Geen detailpagina**, geen verzonnen verhaal. Tonen dat IKR food kent; geen retainer-case pretenderen.
 
@@ -80,4 +82,6 @@ Portfolio in **twee lagen** — geen fake case-pagina's.
 
 **Niet doen:** `/cases/template` publiek linken. Wasbar/Ohma/MS zijn uit het grid.
 
-**Beslissing (jun 2026):** Top TikTok-video's per kanaal lokaal in `public/videos/cases/`. Overview-thumbnail via `CASE_GRID_PREVIEW` — niet altijd hoogste views (Maison Slash: seksenquete uitgesloten). Galerij-klik opent TikTok-post. Views-badge = oog-icoon + "XK views". Testimonial marquee = echte klantquotes (geen fake CEO-namen). Footer anchor `#food` op food-sectie.
+**Beslissing (jun 2026):** Top TikTok-video's per kanaal lokaal in `public/videos/cases/`. Overview-thumbnail via `CASE_GRID_PREVIEW_INDEX` — niet altijd hoogste views (Maison Slash: seksenquete uitgesloten). Galerij-klik opent TikTok-post. Views-badge = oog-icoon + "XK views". Testimonial marquee = echte klantquotes (geen fake CEO-namen). Footer anchor `#food` op food-sectie.
+
+**Beslissing (jul 2026):** Single-source — geen losse `caseCarouselVideos` / handmatige `caseGridItems` meer.

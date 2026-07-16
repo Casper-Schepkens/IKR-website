@@ -369,7 +369,6 @@ function FoodWorkVideoCard({
       >
         <ClientLogo name={clientName} logo={logo} />
       </div>
-      <CasePlayButton />
       <FoodWorkStatBadge views={views} highlight={highlight} />
     </div>
   )

@@ -1,16 +1,21 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { carouselCards } from '@/data/videos'
+import { homepageCarouselCards } from '@/data/cases'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const CARD_W = 26.39
-const CARD_H = 47.08
-const BORDER = 1.18
-const RADIUS = 1.18
+const SCALE = 0.5
+const CARD_W = 26.39 * SCALE
+const CARD_H = 47.08 * SCALE
+const BORDER = 1.18 * SCALE
+const RADIUS = 1.18 * SCALE
+const LAYOUT_CENTER = 36.53
+const ORIG_CARD_W = 26.39
+const ORIG_TOP_SPREAD = 127
 
 export function CarouselSection() {
   const sectionRef = useRef<HTMLElement>(null)
@@ -52,20 +57,22 @@ export function CarouselSection() {
       style={{
         backgroundColor: 'var(--ikr-cream)',
         position: 'relative',
-        height: `calc(${127 * (100 / 1440)}vw + ${CARD_H}vw + 6vw)`,
+        height: `calc(${ORIG_TOP_SPREAD * SCALE * (100 / 1440)}vw + ${CARD_H}vw + 4vw)`,
         overflow: 'hidden',
       }}
     >
-      {carouselCards.map((card, i) => (
-        <div
+      {homepageCarouselCards.map((card, i) => (
+        <Link
           key={card.id}
+          href={card.href}
+          aria-label={`Case ${card.label}`}
           className="carousel-card"
           onMouseEnter={() => handleEnter(i, card.id)}
           onMouseLeave={() => handleLeave(i)}
           style={{
             position: 'absolute',
-            left: `${card.left}vw`,
-            top: `${card.top * (100 / 1440)}vw`,
+            left: `${LAYOUT_CENTER + (ORIG_CARD_W - CARD_W) / 2 + (card.left - LAYOUT_CENTER) * SCALE}vw`,
+            top: `${card.top * SCALE * (100 / 1440)}vw`,
             width: `${CARD_W}vw`,
             height: `${CARD_H}vw`,
             border: `${BORDER}vw solid #FFFFFF`,
@@ -76,6 +83,8 @@ export function CarouselSection() {
             transform: `rotate(${card.rotation}deg) scale(${hovered === card.id ? 1.06 : 1})`,
             transition: 'transform 0.35s ease, box-shadow 0.35s ease',
             cursor: 'pointer',
+            display: 'block',
+            textDecoration: 'none',
           }}
         >
           <video
@@ -92,7 +101,7 @@ export function CarouselSection() {
               backgroundColor: '#D0C8BC',
             }}
           />
-        </div>
+        </Link>
       ))}
     </section>
   )
