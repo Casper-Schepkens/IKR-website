@@ -6,6 +6,7 @@ import { useRef } from 'react'
 import type { CaseDetail } from '@/data/cases'
 import { bodyFont, displayFont, ikr } from '@/lib/ikr-styles'
 import { SpeechBubble } from './SpeechBubble'
+import { claimVideo, InViewVideo } from './InViewVideo'
 
 const PAGE_PAD = 'clamp(1rem, 6.8vw, 98px)'
 
@@ -78,15 +79,7 @@ function HoverVideo({ src, stat, tiktokUrl }: { src: string; stat?: string; tikt
 
   const content = (
     <>
-      <video
-        ref={videoRef}
-        src={src}
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-      />
+      <InViewVideo ref={videoRef} src={src} phoneOnly />
       {stat && (
         <div
           style={{
@@ -150,7 +143,7 @@ function HoverVideo({ src, stat, tiktokUrl }: { src: string; stat?: string; tikt
   }
 
   const hoverHandlers = {
-    onMouseEnter: () => videoRef.current?.play().catch(() => {}),
+    onMouseEnter: () => claimVideo(videoRef.current),
     onMouseLeave: () => {
       const v = videoRef.current
       if (!v) return
@@ -308,9 +301,8 @@ function ResultsRow({ results }: { results: CaseDetail['results'] }) {
       }}
     >
       <div
+        className="grid grid-cols-1 sm:grid-cols-2"
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))',
           gap: 'clamp(12px, 2vw, 20px)',
         }}
       >
@@ -366,18 +358,34 @@ function VideoGallery({ videos }: { videos: CaseDetail['videos'] }) {
       <div style={{ padding: `0 ${PAGE_PAD} clamp(1rem, 2vw, 24px)` }}>
         <SectionHeading>BEKIJK DE CONTENT</SectionHeading>
       </div>
-      <div style={{ overflowX: 'auto' }}>
+      <div
+        style={{
+          overflowX: 'auto',
+          scrollSnapType: 'x mandatory',
+          WebkitOverflowScrolling: 'touch',
+          touchAction: 'pan-x',
+          overscrollBehavior: 'contain',
+          maxWidth: '100%',
+          minWidth: 0,
+        }}
+      >
         <div
           style={{
             display: 'flex',
             gap: 'clamp(12px, 2vw, 24px)',
             padding: `0 ${PAGE_PAD}`,
             width: 'max-content',
-            minWidth: '100%',
           }}
         >
           {videos.map((v, i) => (
-            <div key={i} style={{ width: 'clamp(140px, 18vw, 220px)' }}>
+            <div
+              key={i}
+              style={{
+                width: 'min(72vw, 220px)',
+                scrollSnapAlign: 'start',
+                flexShrink: 0,
+              }}
+            >
               <HoverVideo src={v.src} stat={v.stat} tiktokUrl={v.tiktokUrl} />
             </div>
           ))}
@@ -459,7 +467,7 @@ function ClientQuote({ testimonial }: { testimonial: CaseDetail['testimonial'] }
           KLANT AAN HET WOORD
         </h2>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <SpeechBubble tail="right" maxWidth={560}>
+          <SpeechBubble tail="right" maxWidth="min(100%, 560px)">
             <p
               style={{
                 ...bodyFont,

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRef, type CSSProperties, type ReactNode } from 'react'
 import { caseDetailTempus, caseGridItems } from '@/data/cases'
 import { bodyFont, displayFont, ikr } from '@/lib/ikr-styles'
+import { claimVideo, InViewVideo } from '../InViewVideo'
 
 export const TEMPUS = caseDetailTempus
 
@@ -148,19 +149,11 @@ export function TempusVideoThumb({
 
   const inner = (
     <>
-      <video
+      <InViewVideo
         ref={videoRef}
         src={src}
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        onLoadedMetadata={() => {
-          if (videoRef.current && videoRef.current.currentTime < 0.05) {
-            videoRef.current.currentTime = 0.12
-          }
-        }}
-        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        phoneOnly
+        style={{ backgroundColor: '#D0C8BC' }}
       />
       {stat && (
         <span
@@ -198,7 +191,7 @@ export function TempusVideoThumb({
   }
 
   const hover = {
-    onMouseEnter: () => videoRef.current?.play().catch(() => {}),
+    onMouseEnter: () => claimVideo(videoRef.current),
     onMouseLeave: () => {
       const v = videoRef.current
       if (!v) return

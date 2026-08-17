@@ -18,11 +18,21 @@ export default function HomePage() {
       <HeroSection />
       <CarouselSection />
       <BrandStrip />
-      <StatsSection />
-      <TeamSection />
-      <ProcessSection />
-      <WhyTikTokSection />
-      <CasesSection />
+      <div className="flex flex-col">
+        <StatsSection />
+        <div className="order-1 lg:order-4">
+          <CasesSection />
+        </div>
+        <div className="order-2">
+          <ProcessSection />
+        </div>
+        <div className="order-3">
+          <WhyTikTokSection />
+        </div>
+        <div className="order-4 lg:order-1">
+          <TeamSection />
+        </div>
+      </div>
       <ReviewsSection />
       <CTASection />
       <SiteFooter />

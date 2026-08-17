@@ -32,6 +32,12 @@ const LABEL: CSSProperties = {
   whiteSpace: 'nowrap',
 }
 
+const MOBILE_STATS = [
+  { ...ikrStats[0], emoji: '🔥' },
+  { ...ikrStats[1], emoji: '📹' },
+  { ...ikrStats[2], emoji: '📈' },
+] as const
+
 const BADGE_SIZE = 'clamp(50px, 10.42vw, 150px)'
 const EMOJI_SIZE = 'clamp(1.5rem, 6.67vw, 96px)'
 
@@ -82,7 +88,55 @@ export function StatsSection() {
         overflow: 'hidden',
       }}
     >
+      <div className="flex lg:hidden" style={{ gap: 8 }}>
+        {MOBILE_STATS.map((stat) => (
+          <div
+            key={stat.num}
+            style={{
+              flex: 1,
+              minWidth: 0,
+              backgroundColor: '#FFF9F1',
+              borderRadius: 16,
+              padding: '12px 6px',
+              textAlign: 'center',
+            }}
+          >
+            <span
+              style={{
+                fontSize: 18,
+                lineHeight: 1,
+                display: 'block',
+                marginBottom: 4,
+              }}
+            >
+              {stat.emoji}
+            </span>
+            <span
+              style={{
+                ...NUM,
+                fontSize: 'clamp(1.35rem, 7vw, 28px)',
+                lineHeight: 1,
+              }}
+            >
+              {stat.num}
+            </span>
+            <p
+              style={{
+                ...LABEL,
+                whiteSpace: 'normal',
+                fontSize: 11,
+                lineHeight: 1.2,
+                marginTop: 6,
+              }}
+            >
+              {stat.shortLabel}
+            </p>
+          </div>
+        ))}
+      </div>
+
       <div
+        className="hidden lg:block"
         style={{
           position: 'relative',
           maxWidth: 1305,

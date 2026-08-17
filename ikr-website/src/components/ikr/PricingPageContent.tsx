@@ -127,7 +127,7 @@ function FormField({
             border: `1px solid ${INPUT_BORDER}`,
             backgroundColor: '#FFFFFF',
             padding: withAtIcon ? '0 16px 0 52px' : '0 16px',
-            fontSize: 'clamp(0.875rem, 1.25vw, 18px)',
+            fontSize: 'clamp(16px, 1.25vw, 18px)',
             color: ikr.navyText,
             outline: 'none',
           }}
@@ -484,10 +484,11 @@ function PricingFormSection() {
             </p>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <div className="flex justify-stretch lg:justify-end">
             <button
               type="submit"
               disabled={status === 'loading'}
+              className="w-full lg:w-auto justify-center"
               style={{
                 ...displayFont,
                 display: 'inline-flex',

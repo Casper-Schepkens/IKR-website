@@ -7,6 +7,7 @@ import { caseCarouselItems, aanpakHeroFeedVideos } from '@/data/cases'
 import { ikrStats } from '@/data/ikr-stats'
 import { bodyFont, displayFont, ikr } from '@/lib/ikr-styles'
 import { ClickHint, ClientLogoSticker } from './ClientLogoSticker'
+import { claimVideo, InViewVideo } from './InViewVideo'
 import { TikTokPhoneFeed } from './TikTokPhoneFeed'
 
 const heroFeed = aanpakHeroFeedVideos
@@ -156,13 +157,16 @@ function HeroSection() {
             <br />
             <span style={{ color: ikr.cyan }}>RESULTATEN BEHALEN</span>
           </p>
-          <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'flex-start', gap: '2rem' }}>
+          <div
+            className="flex flex-wrap justify-around items-start"
+            style={{ gap: '1.5rem 2rem' }}
+          >
             {ikrStats.map(({ num, shortLabel }) => (
-              <div key={num} style={{ textAlign: 'center' }}>
+              <div key={num} style={{ textAlign: 'center', flex: '1 1 90px', minWidth: 90 }}>
                 <span
                   style={{
                     ...displayFont,
-                    fontSize: 'clamp(3rem, 10.4vw, 150px)',
+                    fontSize: 'clamp(2.25rem, 10.4vw, 150px)',
                     lineHeight: '79%',
                     color: 'var(--ikr-navy-text)',
                     display: 'block',
@@ -372,7 +376,7 @@ function ProcessSection() {
               key={step.title}
               className={`flex flex-col items-center gap-[clamp(2rem,5vw,80px)] ${step.align === 'right' ? 'md:flex-row-reverse' : 'md:flex-row'}`}
             >
-              <div style={{ flex: 1, textAlign: step.align === 'right' ? 'right' : 'left' }}>
+              <div className={`flex-1 text-center ${step.align === 'right' ? 'md:text-right' : 'md:text-left'}`}>
                 <h3
                   style={{
                     ...displayFont,
@@ -524,16 +528,11 @@ function CaseVideosRow() {
 
   const handleCardEnter = (index: number) => {
     setHovered(index)
-    videoRefs.current[index]?.play()
+    claimVideo(videoRefs.current[index])
   }
 
-  const handleCardLeave = (index: number) => {
+  const handleCardLeave = () => {
     setHovered(null)
-    const video = videoRefs.current[index]
-    if (video) {
-      video.pause()
-      video.currentTime = 0
-    }
   }
 
   return (
@@ -546,7 +545,6 @@ function CaseVideosRow() {
         e.preventDefault()
         startDrag(e.clientX)
       }}
-      onTouchStart={(e) => startDrag(e.touches[0].clientX)}
       style={{
         overflow: 'hidden',
         marginBottom: 'clamp(1.5rem, 3vw, 48px)',
@@ -554,7 +552,8 @@ function CaseVideosRow() {
         minHeight: `clamp(360px, ${CASE_CARD_H * 0.72 + 6}vw, 680px)`,
         cursor: dragging ? 'grabbing' : 'grab',
         userSelect: 'none',
-        touchAction: 'none',
+        touchAction: 'pan-x',
+        overscrollBehavior: 'contain',
       }}
     >
       <div
@@ -571,7 +570,7 @@ function CaseVideosRow() {
           <div
             key={`${item.href}-${i}`}
             onMouseEnter={() => handleCardEnter(i)}
-            onMouseLeave={() => handleCardLeave(i)}
+            onMouseLeave={() => handleCardLeave()}
             style={{
               position: 'relative',
               width: `clamp(140px, ${CASE_CARD_W * 0.72}vw, 300px)`,
@@ -589,14 +588,10 @@ function CaseVideosRow() {
               pointerEvents: dragging ? 'none' : 'auto',
             }}
           >
-            <video
+            <InViewVideo
               ref={(el) => { videoRefs.current[i] = el }}
               src={item.src}
-              muted
-              loop
-              playsInline
-              draggable={false}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }}
+              style={{ pointerEvents: 'none' }}
             />
             <div
               style={{

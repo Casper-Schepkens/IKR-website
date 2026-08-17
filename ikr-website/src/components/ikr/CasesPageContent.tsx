@@ -5,6 +5,7 @@ import { useRef, useState } from 'react'
 import { caseGridItems, foodWorkItems } from '@/data/cases'
 import { bodyFont, displayFont, ikr } from '@/lib/ikr-styles'
 import { SpeechBubble } from './SpeechBubble'
+import { claimVideo, InViewVideo } from './InViewVideo'
 
 const testimonials = [
   {
@@ -188,7 +189,7 @@ function CaseVideoCard({
 
   const handleEnter = () => {
     setHovered(true)
-    videoRef.current?.play().catch(() => {})
+    claimVideo(videoRef.current)
   }
 
   const handleLeave = () => {
@@ -216,15 +217,7 @@ function CaseVideoCard({
         textDecoration: 'none',
       }}
     >
-      <video
-        ref={videoRef}
-        src={src}
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-      />
+      <InViewVideo ref={videoRef} src={src} phoneOnly />
       <div
         style={{
           position: 'absolute',
@@ -318,14 +311,8 @@ function FoodWorkVideoCard({
   const videoRef = useRef<HTMLVideoElement>(null)
   const [failed, setFailed] = useState(false)
 
-  const showFrame = () => {
-    const video = videoRef.current
-    if (!video) return
-    if (video.currentTime < 0.05) video.currentTime = 0.12
-  }
-
   const handleEnter = () => {
-    videoRef.current?.play().catch(() => {})
+    claimVideo(videoRef.current)
   }
 
   const handleLeave = () => {
@@ -349,18 +336,7 @@ function FoodWorkVideoCard({
       }}
     >
       {!failed ? (
-        <video
-          ref={videoRef}
-          src={src}
-          muted
-          loop
-          playsInline
-          preload="auto"
-          onLoadedMetadata={showFrame}
-          onLoadedData={showFrame}
-          onError={() => setFailed(true)}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-        />
+        <InViewVideo ref={videoRef} src={src} phoneOnly onError={() => setFailed(true)} />
       ) : (
         <div
           style={{
@@ -428,7 +404,7 @@ function TestimonialBubble({
   const [liked, setLiked] = useState(false)
 
   return (
-    <SpeechBubble tail={tail} style={{ width: 'clamp(260px, 24vw, 360px)' }}>
+    <SpeechBubble tail={tail} style={{ width: 'min(100%, clamp(260px, 24vw, 360px))' }}>
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         <div
           style={{
@@ -565,7 +541,20 @@ function TestimonialsSection() {
         KIJK WAT ONZE KLANTEN ZEGGEN...
       </h2>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(8px, 1.2vw, 16px)' }}>
+      <div className="flex flex-col gap-4 px-5 lg:hidden">
+        {testimonials.slice(0, 3).map((t, i) => (
+          <TestimonialBubble
+            key={t.name}
+            name={t.name}
+            role={t.role}
+            avatar={t.avatar}
+            quote={t.quote}
+            tail={i % 2 === 0 ? 'left' : 'right'}
+          />
+        ))}
+      </div>
+
+      <div className="hidden lg:flex flex-col" style={{ gap: 'clamp(8px, 1.2vw, 16px)' }}>
         {testimonialRows.map((row, rowIndex) => (
           <TestimonialMarqueeRow
             key={rowIndex}
@@ -608,6 +597,19 @@ export function CasesPageContent() {
               }}
             >
               <h1
+                className="lg:hidden"
+                style={{
+                  ...displayFont,
+                  fontSize: 'clamp(3.5rem, 18vw, 80px)',
+                  lineHeight: 0.82,
+                  color: ikr.navy,
+                  margin: 0,
+                }}
+              >
+                CASES
+              </h1>
+              <h1
+                className="hidden lg:block"
                 style={{
                   ...displayFont,
                   writingMode: 'vertical-rl',
@@ -629,7 +631,7 @@ export function CasesPageContent() {
                   textTransform: 'uppercase',
                   margin: 0,
                   paddingLeft: 'clamp(8px, 1vw, 16px)',
-                  maxWidth: 'clamp(180px, 20vw, 280px)',
+                  maxWidth: 'min(100%, 280px)',
                   lineHeight: 1.1,
                 }}
               >
@@ -638,10 +640,9 @@ export function CasesPageContent() {
             </div>
 
             <div
+              className="grid grid-cols-1 lg:grid-cols-2"
               style={{
                 flex: '1 1 320px',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
                 gap: 'clamp(12px, 1.8vw, 24px)',
                 minWidth: 0,
               }}
@@ -684,11 +685,8 @@ export function CasesPageContent() {
               case study.
             </p>
             <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                gap: 'clamp(12px, 1.8vw, 24px)',
-              }}
+              className="grid grid-cols-1 lg:grid-cols-3"
+              style={{ gap: 'clamp(12px, 1.8vw, 24px)' }}
             >
               {foodWorkItems.map((item) => (
                 <FoodWorkVideoCard

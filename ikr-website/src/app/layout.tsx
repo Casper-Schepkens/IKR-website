@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter, Roboto_Condensed } from 'next/font/google'
 import { cn } from '@/utilities/ui'
 import './globals.css'
@@ -13,6 +13,12 @@ const robotoCondensed = Roboto_Condensed({
 export const metadata: Metadata = {
   title: 'IKnowRight — TikTok bureau voor food brands',
   description: 'Wij maken scroll-stoppende content voor food brands die gezien en onthouden willen worden.',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

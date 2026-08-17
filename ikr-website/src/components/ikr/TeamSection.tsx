@@ -48,18 +48,108 @@ export function TeamSection() {
   return (
     <section ref={ref} style={{ backgroundColor: 'var(--ikr-cream)' }}>
       <div
+        className="flex flex-col lg:hidden"
         style={{
           backgroundColor: 'var(--ikr-cyan)',
-          clipPath: `polygon(${CLIP})`,
-          padding: `${ZIG_H + 32}px clamp(1rem, 5.2vw, 75px) ${ZIG_H + 40}px`,
+          padding: '28px 0 36px',
         }}
       >
-        {/* Title */}
+        <p
+          className="font-display font-black uppercase"
+          style={{
+            textAlign: 'center',
+            fontSize: 28,
+            letterSpacing: '-0.04em',
+            color: 'var(--ikr-navy-text)',
+            marginBottom: 20,
+            padding: '0 20px',
+          }}
+        >
+          The IKR team
+        </p>
         <div
           style={{
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            gap: 12,
+            overflowX: 'auto',
+            scrollSnapType: 'x mandatory',
+            padding: '0 20px',
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-x pan-y',
+            width: '100%',
+            maxWidth: '100%',
+          }}
+        >
+          {MEMBERS.map((m) => (
+            <div
+              key={`m-${m.name}`}
+              className="team-card"
+              style={{
+                flexShrink: 0,
+                width: 'min(72vw, 260px)',
+                scrollSnapAlign: 'center',
+                backgroundColor: '#FFFFFF',
+                borderRadius: 12,
+                padding: '12px 12px 16px',
+              }}
+            >
+              <div
+                style={{
+                  width: '100%',
+                  aspectRatio: '338 / 359',
+                  borderRadius: 8,
+                  overflow: 'hidden',
+                  backgroundColor: '#e0d8cc',
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={m.photo}
+                  alt={m.name}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                />
+              </div>
+              <p
+                style={{
+                  fontFamily: 'var(--font-roboto-condensed)',
+                  fontWeight: 900,
+                  fontSize: 16,
+                  lineHeight: 1.2,
+                  color: '#252525',
+                  marginTop: 12,
+                }}
+              >
+                {m.name}
+              </p>
+              <p
+                style={{
+                  fontFamily: 'var(--font-inter)',
+                  fontSize: 13,
+                  color: '#252525',
+                  marginTop: 4,
+                }}
+              >
+                {m.role}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div
+        className="hidden lg:block pb-[112px]"
+        style={{
+          backgroundColor: 'var(--ikr-cyan)',
+          clipPath: `polygon(${CLIP})`,
+          paddingTop: ZIG_H + 32,
+          paddingLeft: 'clamp(1rem, 5.2vw, 75px)',
+          paddingRight: 'clamp(1rem, 5.2vw, 75px)',
+        }}
+      >
+        <div
+          className="flex flex-wrap items-center justify-center"
+          style={{
             gap: 'clamp(8px, 1.8vw, 26px)',
             marginBottom: 'clamp(32px, 4vw, 56px)',
           }}
@@ -82,7 +172,7 @@ export function TeamSection() {
           <img
             src="/images/logo.png"
             alt="IKR"
-            style={{ height: 'clamp(60px, 10.1vw, 145px)', width: 'auto', objectFit: 'contain' }}
+            style={{ height: 'clamp(40px, 10.1vw, 145px)', width: 'auto', objectFit: 'contain' }}
           />
           <span
             style={{
@@ -100,27 +190,22 @@ export function TeamSection() {
           </span>
         </div>
 
-        {/* Cards */}
         <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: 'clamp(16px, 3.5vw, 50px)',
-            alignItems: 'flex-end',
-          }}
+          className="flex flex-row items-end justify-center"
+          style={{ gap: 'clamp(16px, 3.5vw, 50px)' }}
         >
           {MEMBERS.map((m) => (
             <div
               key={m.name}
-              className="team-card"
-              style={{ transform: `rotate(${m.rotation}deg)`, flexShrink: 0 }}
+              className="team-card shrink-0"
+              style={{ transform: `rotate(${m.rotation}deg)` }}
             >
               <div
                 style={{
+                  width: 'clamp(180px, 26.2vw, 377px)',
                   backgroundColor: '#FFFFFF',
                   borderRadius: 12,
                   padding: 'clamp(12px, 1.7vw, 24px) clamp(12px, 1.7vw, 24px) clamp(16px, 2.2vw, 32px)',
-                  width: 'clamp(180px, 26.2vw, 377px)',
                 }}
               >
                 <div

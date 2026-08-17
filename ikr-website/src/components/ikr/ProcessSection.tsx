@@ -141,7 +141,20 @@ export function ProcessSection() {
         </h2>
       </div>
 
+      <div className="flex flex-col lg:hidden" style={{ gap: 40, maxWidth: 560, margin: '0 auto' }}>
+        {STEPS.map((step) => (
+          <div key={step.n} style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+            <NumberBadge n={step.n} />
+            <div style={{ minWidth: 0, paddingTop: 8 }}>
+              <h3 style={{ ...TITLE_FONT, fontSize: 'clamp(1.75rem, 8vw, 48px)' }}>{step.title}</h3>
+              <p style={{ ...BODY_FONT, marginTop: 12, fontSize: '1rem' }}>{step.body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
       <div
+        className="hidden lg:block"
         style={{
           position: 'relative',
           maxWidth: 1387,
