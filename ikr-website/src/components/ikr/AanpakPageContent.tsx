@@ -4,7 +4,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { caseCarouselItems, aanpakHeroFeedVideos } from '@/data/cases'
+import { ikrStats } from '@/data/ikr-stats'
 import { bodyFont, displayFont, ikr } from '@/lib/ikr-styles'
+import { ClickHint, ClientLogoSticker } from './ClientLogoSticker'
 import { TikTokPhoneFeed } from './TikTokPhoneFeed'
 
 const heroFeed = aanpakHeroFeedVideos
@@ -84,7 +86,7 @@ function HeroPhone() {
             backgroundColor: '#000',
           }}
         >
-          <TikTokPhoneFeed items={heroFeed} variant="classic" />
+          <TikTokPhoneFeed items={heroFeed} variant="classic" scrollHint />
 
           <div
             style={{
@@ -155,11 +157,7 @@ function HeroSection() {
             <span style={{ color: ikr.cyan }}>RESULTATEN BEHALEN</span>
           </p>
           <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'flex-start', gap: '2rem' }}>
-            {[
-              { num: '125M', label: 'Weergaven' },
-              { num: '263', label: "Video's" },
-              { num: '400K', label: 'Nieuwe volgers' },
-            ].map(({ num, label }) => (
+            {ikrStats.map(({ num, shortLabel }) => (
               <div key={num} style={{ textAlign: 'center' }}>
                 <span
                   style={{
@@ -181,7 +179,7 @@ function HeroSection() {
                     display: 'block',
                   }}
                 >
-                  {label}
+                  {shortLabel}
                 </span>
               </div>
             ))}
@@ -552,7 +550,8 @@ function CaseVideosRow() {
       style={{
         overflow: 'hidden',
         marginBottom: 'clamp(1.5rem, 3vw, 48px)',
-        minHeight: `clamp(320px, ${CASE_CARD_H * 0.72}vw, 620px)`,
+        paddingTop: 'clamp(28px, 5vw, 56px)',
+        minHeight: `clamp(360px, ${CASE_CARD_H * 0.72 + 6}vw, 680px)`,
         cursor: dragging ? 'grabbing' : 'grab',
         userSelect: 'none',
         touchAction: 'none',
@@ -562,7 +561,7 @@ function CaseVideosRow() {
         ref={trackRef}
         style={{
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-end',
           gap: 'clamp(1.25rem, 4vw, 48px)',
           width: 'max-content',
           willChange: 'transform',
@@ -583,6 +582,7 @@ function CaseVideosRow() {
               zIndex: hovered === i ? 10 : 1,
               boxShadow: hovered === i ? '0px 4px 24px rgba(0,0,0,0.25)' : 'none',
               transform: `scale(${hovered === i ? 1.06 : 1})`,
+              transformOrigin: 'bottom center',
               transition: 'transform 0.35s ease, box-shadow 0.35s ease',
               flexShrink: 0,
               backgroundColor: '#D0C8BC',
@@ -606,6 +606,28 @@ function CaseVideosRow() {
                 pointerEvents: 'none',
               }}
             />
+            <div
+              style={{
+                position: 'absolute',
+                top: 'clamp(8px, 4%, 14px)',
+                left: 'clamp(8px, 4%, 14px)',
+                zIndex: 3,
+                pointerEvents: 'none',
+              }}
+            >
+              <ClientLogoSticker name={item.label} logo={item.logo} rotate={-7} />
+            </div>
+            <div
+              style={{
+                position: 'absolute',
+                right: 'clamp(8px, 4%, 14px)',
+                bottom: 'clamp(44px, 16%, 64px)',
+                zIndex: 3,
+                pointerEvents: 'none',
+              }}
+            >
+              <ClickHint />
+            </div>
             <CaseCardButton href={item.href} label={item.label} />
           </div>
         ))}
@@ -776,7 +798,7 @@ function CasesAndCTASection() {
           >
             <Image
               src="/images/freelancer-cta.jpg"
-              alt=""
+              alt="Creator aan het werk"
               fill
               style={{ objectFit: 'cover' }}
               sizes="(max-width: 768px) 100vw, 55vw"
@@ -824,20 +846,34 @@ function CasesAndCTASection() {
             style={{
               flex: contactFlex,
               borderRadius: 30,
-              background: 'radial-gradient(170% 170% at 96% -86%, var(--ikr-cyan) 0%, var(--ikr-navy-text) 100%)',
+              minHeight: 'clamp(300px, 58.7vw, 845px)',
+              position: 'relative',
+              overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'flex-end',
-              minHeight: 'clamp(300px, 58.7vw, 845px)',
               transition: 'flex 0.45s cubic-bezier(0.4, 0, 0.2, 1)',
               minWidth: 0,
               cursor: 'pointer',
-              overflow: 'hidden',
             }}
           >
+            <Image
+              src="/images/contact-team.jpg"
+              alt="Het IKR-team"
+              fill
+              style={{ objectFit: 'cover' }}
+              sizes="(max-width: 768px) 100vw, 55vw"
+            />
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: 'linear-gradient(180deg, rgba(15,193,222,0.15) 0%, rgba(32,22,55,0.88) 100%)',
+              }}
+            />
             <CTAContent
               collapsed={contactCollapsed}
-              style={{ padding: 'clamp(2rem, 5vw, 72px) clamp(1.5rem, 4vw, 56px)' }}
+              style={{ position: 'relative', zIndex: 2, padding: 'clamp(2rem, 5vw, 72px) clamp(1.5rem, 4vw, 56px)' }}
             >
             <FadeText visible={showContactCopy}>
               <p
@@ -887,7 +923,7 @@ function CasesAndCTASection() {
               justifyContent: 'flex-end',
             }}
           >
-            <Image src="/images/freelancer-cta.jpg" alt="" fill style={{ objectFit: 'cover' }} sizes="100vw" />
+            <Image src="/images/freelancer-cta.jpg" alt="Creator aan het werk" fill style={{ objectFit: 'cover' }} sizes="100vw" />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(32,22,55,0.15) 0%, rgba(32,22,55,0.85) 100%)' }} />
             <div style={{ position: 'relative', zIndex: 2, padding: 'clamp(2rem, 5vw, 72px) clamp(1.5rem, 4vw, 56px)' }}>
               <h3 style={{ ...displayFont, fontSize: 'clamp(1.25rem, 3.33vw, 48px)', lineHeight: 1.15, textTransform: 'uppercase', color: '#FFF9F1', marginBottom: 'clamp(1.5rem, 3vw, 44px)' }}>
@@ -901,14 +937,17 @@ function CasesAndCTASection() {
           <div
             style={{
               borderRadius: 30,
-              background: 'radial-gradient(170% 170% at 96% -86%, var(--ikr-cyan) 0%, var(--ikr-navy-text) 100%)',
-              padding: 'clamp(2rem, 5vw, 72px) clamp(1.5rem, 4vw, 56px)',
+              minHeight: 320,
+              position: 'relative',
+              overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'flex-end',
-              minHeight: 320,
             }}
           >
+            <Image src="/images/contact-team.jpg" alt="Het IKR-team" fill style={{ objectFit: 'cover' }} sizes="100vw" />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(15,193,222,0.15) 0%, rgba(32,22,55,0.88) 100%)' }} />
+            <div style={{ position: 'relative', zIndex: 2, padding: 'clamp(2rem, 5vw, 72px) clamp(1.5rem, 4vw, 56px)' }}>
             <p style={{ ...displayFont, fontSize: 'clamp(0.875rem, 1.67vw, 24px)', textTransform: 'uppercase', color: '#FFF9F1', marginBottom: '0.5rem' }}>SAMENWERKEN?</p>
             <h3 style={{ ...displayFont, fontSize: 'clamp(1.25rem, 3.33vw, 48px)', lineHeight: 1.15, textTransform: 'uppercase', color: '#FFF9F1', marginBottom: 'clamp(1.5rem, 3vw, 44px)' }}>
               KLAAR OM JE SOCIALE MEDIA WAT EXTRA LIEFDE TE GEVEN?
@@ -916,6 +955,7 @@ function CasesAndCTASection() {
             <Link href="/contact" style={{ ...displayFont, display: 'inline-block', fontSize: 'clamp(1rem, 2.78vw, 40px)', color: ikr.navy, backgroundColor: '#FFF9F1', borderRadius: 48, padding: '0.4em 1.2em', textDecoration: 'none', textTransform: 'uppercase' }}>
               CONTACTEER ONS
             </Link>
+            </div>
           </div>
         </div>
       </div>

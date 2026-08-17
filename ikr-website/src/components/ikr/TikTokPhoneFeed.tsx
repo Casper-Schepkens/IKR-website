@@ -403,7 +403,15 @@ function TikTokOverlay({
   )
 }
 
-export function TikTokPhoneFeed({ items, variant = 'classic' }: { items: FeedItem[]; variant?: TikTokVariant }) {
+export function TikTokPhoneFeed({
+  items,
+  variant = 'classic',
+  scrollHint = false,
+}: {
+  items: FeedItem[]
+  variant?: TikTokVariant
+  scrollHint?: boolean
+}) {
   const router = useRouter()
   const outerRef = useRef<HTMLDivElement>(null)
   const feedRef = useRef<HTMLDivElement>(null)
@@ -413,10 +421,15 @@ export function TikTokPhoneFeed({ items, variant = 'classic' }: { items: FeedIte
   const [likedVideos, setLikedVideos] = useState<Set<number>>(new Set())
   const [dragOffset, setDragOffset] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
+  const [hintVisible, setHintVisible] = useState(scrollHint)
   const wheelLock = useRef(false)
   const touchStartY = useRef(0)
   const touchMoved = useRef(false)
   const suppressClick = useRef(false)
+
+  const dismissHint = useCallback(() => {
+    setHintVisible(false)
+  }, [])
 
   useEffect(() => {
     const el = outerRef.current
@@ -472,6 +485,7 @@ export function TikTokPhoneFeed({ items, variant = 'classic' }: { items: FeedIte
       if (wheelLock.current) return
       if (Math.abs(e.deltaY) < 12) return
       wheelLock.current = true
+      dismissHint()
       if (e.deltaY > 0) goNext()
       else goPrev()
       window.setTimeout(() => { wheelLock.current = false }, 500)
@@ -493,9 +507,13 @@ export function TikTokPhoneFeed({ items, variant = 'classic' }: { items: FeedIte
     const onTouchEnd = (e: TouchEvent) => {
       setIsDragging(false)
       const delta = e.changedTouches[0].clientY - touchStartY.current
-      if (delta < -50) goNext()
-      else if (delta > 50) goPrev()
-      else {
+      if (delta < -50) {
+        dismissHint()
+        goNext()
+      } else if (delta > 50) {
+        dismissHint()
+        goPrev()
+      } else {
         setDragOffset(0)
         if (!touchMoved.current) {
           suppressClick.current = true
@@ -526,7 +544,7 @@ export function TikTokPhoneFeed({ items, variant = 'classic' }: { items: FeedIte
       el.removeEventListener('touchend', onTouchEnd)
       el.removeEventListener('click', onClick)
     }
-  }, [goNext, goPrev, openActiveCase])
+  }, [goNext, goPrev, openActiveCase, dismissHint])
 
   const slideShare = 100 / items.length
   const translateY = `calc(-${activeIndex * slideShare}% + ${dragOffset / scale}px)`
@@ -590,6 +608,41 @@ export function TikTokPhoneFeed({ items, variant = 'classic' }: { items: FeedIte
             liked={isLiked}
             onLike={toggleLike}
           />
+          {hintVisible && (
+            <div
+              aria-hidden
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 8,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 8,
+                pointerEvents: 'none',
+                animation: 'ikr-scroll-nudge 1.6s ease-in-out infinite',
+              }}
+            >
+              <svg width="38" height="62" viewBox="0 0 22 36" fill="none">
+                <rect x="1" y="1" width="20" height="34" rx="10" stroke="rgba(255,255,255,0.92)" strokeWidth="1.6" />
+                <circle cx="11" cy="10" r="3.2" fill="rgba(255,255,255,0.95)" />
+              </svg>
+              <span
+                style={{
+                  fontFamily: 'var(--font-roboto-condensed), "Roboto Condensed", sans-serif',
+                  fontWeight: 900,
+                  fontSize: 14,
+                  letterSpacing: '0.1em',
+                  color: '#fff',
+                  textShadow: '0 1px 6px rgba(0,0,0,0.7)',
+                }}
+              >
+                SCROLL
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>

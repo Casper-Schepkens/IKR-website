@@ -14,6 +14,7 @@ export type CaseCarouselItem = {
   src: string
   href: string
   label: string
+  logo?: string
 }
 
 // ─── Food werk (influencer-opdrachten, geen detailpagina) ─────────────────────
@@ -27,7 +28,8 @@ export type FoodWorkItem = {
   logo?: string
 }
 
-/** Influencer-opdrachten binnen food — tonen als werk, geen volledige case study. */
+/** Influencer-opdrachten binnen food — tonen als werk, geen volledige case study.
+ *  Video's lokaal in public/videos/food/ (geconverteerd van de originele .mov's). */
 export const foodWorkItems: FoodWorkItem[] = [
   {
     id: 'aiki',
@@ -135,29 +137,29 @@ export const caseDetailTempus: CaseDetail = {
   logo: '/images/client_logos/tempus logo.png',
   tags: ['HR Marketing', 'TikTok'],
   heroImage: '/images/cases/tempus/hero.jpg',
-  outcomeLine: '650.000+ unieke kijkers in de eerste vier maanden',
+  outcomeLine: '1 miljoen views — en 1 tot 2 sollicitaties per dag',
   summary: [
     'Tempus Thuisverpleging werkt al bijna een jaar op vaste basis met IKnowRight. Hun grootste uitdaging: zoveel mogelijk jonge verpleegkundigen aantrekken via TikTok — HR-marketing, geen productpromo.',
     'We maakten content die jonge zorgprofessionals aanspreekt: herkenbare situaties, authentieke formats en een consistente aanwezigheid op @tempusverpleging.',
-    'Het resultaat: massaal bereik, gesprekken op jobbeurzen en video\'s die niet alleen views opleveren, maar ook concrete websitebezoeken.',
+    'Het resultaat: 1 miljoen views, 886K bereik en een community die 78% vrouw is — plus 1 tot 2 sollicitaties per dag via TikTok.',
   ],
   results: [
-    { label: 'Unieke kijkers', value: '650K+' },
-    { label: 'Gem. views/video', value: '25K' },
-    { label: 'Topvideo views', value: '142K' },
-    { label: 'Websitebezoeken', value: '90+' },
+    { label: 'Views', value: '1M+' },
+    { label: 'Bereik', value: '886K' },
+    { label: 'Topvideo', value: '142K' },
+    { label: "Video's", value: '71' },
+    { label: 'Likes', value: '25K' },
+    { label: 'Community', value: '78% vrouw' },
   ],
   videos: [...CASE_CHANNEL_VIDEOS.tempus],
   story: [
     {
       title: 'DE UITDAGING',
       body: 'Tempus moest opvallen in een krappe arbeidsmarkt voor verpleegkundigen. Klassieke jobposts bereikten de jonge doelgroep niet — ze zitten op TikTok, niet op vacaturesites.',
-      image: '/images/cases/tempus/story-challenge.jpg',
     },
     {
       title: 'ONZE AANPAK VOOR TEMPUS',
-      body: 'We bouwden een contentlijn rond HR-marketing: video\'s die het werk bij Tempus tonen zoals jonge verpleegkundigen het beleven. Consistente output, formats die delen stimuleren, en metrics die verder gaan dan likes — zoals websitebezoeken en gesprekken op jobbeurzen.',
-      image: '/images/cases/tempus/story-approach.jpg',
+      body: 'We bouwden een contentlijn rond HR-marketing: video\'s die het werk bij Tempus tonen zoals jonge verpleegkundigen het beleven. Consistente output, formats die delen stimuleren, en metrics die verder gaan dan likes — zoals sollicitaties en gesprekken op jobbeurzen.',
     },
   ],
   testimonial: {
@@ -172,20 +174,22 @@ export const caseDetailTempus: CaseDetail = {
 export const caseDetailMaisonSlash: CaseDetail = {
   slug: 'maison-slash',
   bedrijf: 'Maison Slash',
+  logo: '/images/client_logos/MS logo.png',
   tags: ['Media', 'TikTok', 'Ouderschap'],
-  heroImage:
-    'https://iknowright.be/wp-content/uploads/2025/11/8413f8bc-e817-4357-9da3-e9970562e494-1024x427.jpeg',
-  outcomeLine: '170K+ organische views op topvideo — na één maand',
+  heroImage: '/images/cases/maison-slash/hero.jpg',
+  outcomeLine: '1.2 miljoen views — topvideo 170K organisch',
   summary: [
     'Maison Slash België verkoopt magazines voor ouders. Hun doel op TikTok: ouders aanspreken met content die herkenbaar en deelbaar is.',
-    'Het account bestond al, maar de cijfers explodeerden pas toen IKnowRight erbij kwam. Na slechts één maand lieten we een video organisch viraal gaan.',
-    'Het resultaat: een account dat plots relevant werd voor hun doelgroep — met een virale hit die het merk op de kaart zette bij jonge ouders.',
+    'Het account bestond al, maar de cijfers explodeerden pas toen IKnowRight erbij kwam. Honderd video\'s later staat de teller op 1.2 miljoen views.',
+    'Het resultaat: 1.2 miljoen views, 961K bereik en een community die 68% vrouw is — met een organische hit van 170K.',
   ],
   results: [
+    { label: 'Views', value: '1.2M' },
+    { label: 'Bereik', value: '961K' },
     { label: 'Topvideo', value: '170K' },
-    { label: 'Video views', value: '+28.000%' },
-    { label: 'Likes', value: '+96.000%' },
-    { label: 'Shares', value: '+749.000%' },
+    { label: "Video's", value: '100' },
+    { label: 'Likes', value: '30K' },
+    { label: 'Community', value: '68% vrouw' },
   ],
   videos: [...CASE_CHANNEL_VIDEOS.maisonSlash],
   story: [
@@ -196,7 +200,7 @@ export const caseDetailMaisonSlash: CaseDetail = {
     },
     {
       title: 'ONZE AANPAK VOOR MAISON SLASH',
-      body: 'We maakten scroll-stoppende video\'s voor @maisonslashbelgie — formats die ouders herkennen en delen. Binnen een maand ging een video organisch viraal met meer dan 170.000 weergaven. De groei kwam vooral door die hit, maar die video hebben we zelf gemaakt en gelanceerd.',
+      body: 'We maakten scroll-stoppende video\'s voor @maisonslashbelgie — formats die ouders herkennen en delen. De sterkste video haalde 170.000 organische views. In totaal 1.2 miljoen views op 100 video\'s.',
     },
   ],
   testimonial: {
@@ -292,6 +296,7 @@ export const caseCarouselItems: CaseCarouselItem[] = caseGridItems.map((item) =>
   src: item.video,
   href: `/cases/${item.slug}`,
   label: item.clientName,
+  logo: item.logo,
 }))
 
 // ─── Homepage fan-carousel + Aanpak phone-feed (zelfde case-video's) ─────────
@@ -329,6 +334,7 @@ export type HomepageCarouselCard = {
   src: string
   href: string
   label: string
+  logo?: string
   shadow?: boolean
 }
 
@@ -348,6 +354,7 @@ export const homepageCarouselCards: HomepageCarouselCard[] = HOMEPAGE_CAROUSEL_L
     src: video.src,
     href: `/cases/${detail.slug}`,
     label: detail.bedrijf,
+    logo: detail.logo,
   }
 })
 

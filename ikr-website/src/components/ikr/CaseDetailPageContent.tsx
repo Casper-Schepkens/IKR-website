@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRef } from 'react'
 import type { CaseDetail } from '@/data/cases'
 import { bodyFont, displayFont, ikr } from '@/lib/ikr-styles'
+import { SpeechBubble } from './SpeechBubble'
 
 const PAGE_PAD = 'clamp(1rem, 6.8vw, 98px)'
 
@@ -437,36 +438,6 @@ function StorySection({ blocks }: { blocks: CaseDetail['story'] }) {
   )
 }
 
-function SpeechBubble({ tail, children }: { tail: 'left' | 'right'; children: React.ReactNode }) {
-  return (
-    <div style={{ position: 'relative', maxWidth: 560 }}>
-      <div
-        style={{
-          backgroundColor: '#FEFEFE',
-          borderRadius: 20,
-          padding: 'clamp(16px, 2vw, 28px) clamp(20px, 2.5vw, 36px)',
-        }}
-      >
-        {children}
-      </div>
-      <div
-        style={{
-          position: 'absolute',
-          bottom: -22,
-          ...(tail === 'right' ? { right: '12%' } : { left: '12%' }),
-          width: 56,
-          height: 24,
-          backgroundColor: '#FEFEFE',
-          clipPath:
-            tail === 'right'
-              ? 'polygon(0% 0%, 100% 0%, 100% 100%)'
-              : 'polygon(0% 0%, 100% 0%, 0% 100%)',
-        }}
-      />
-    </div>
-  )
-}
-
 function ClientQuote({ testimonial }: { testimonial: CaseDetail['testimonial'] }) {
   return (
     <section
@@ -488,7 +459,7 @@ function ClientQuote({ testimonial }: { testimonial: CaseDetail['testimonial'] }
           KLANT AAN HET WOORD
         </h2>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <SpeechBubble tail="right">
+          <SpeechBubble tail="right" maxWidth={560}>
             <p
               style={{
                 ...bodyFont,

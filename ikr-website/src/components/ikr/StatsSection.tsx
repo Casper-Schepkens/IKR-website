@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { ikrStats } from '@/data/ikr-stats'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -89,28 +90,25 @@ export function StatsSection() {
           height: 'clamp(500px, 48.2vw, 694px)',
         }}
       >
-        {/* 125M */}
         <div className="stat-num" style={{ position: 'absolute', left: x(16), top: y(0) }}>
-          <span style={NUM}>125M</span>
+          <span style={NUM}>{ikrStats[0].num}</span>
         </div>
         <div style={{ position: 'absolute', left: x(0), top: y(216) }}>
-          <p style={LABEL}>Meest bekeken video in 2025</p>
+          <p style={LABEL}>{ikrStats[0].label}</p>
         </div>
 
-        {/* +400K */}
         <div className="stat-num" style={{ position: 'absolute', left: x(620), top: y(216) }}>
-          <span style={NUM}>+400K</span>
+          <span style={NUM}>{ikrStats[2].num}</span>
         </div>
         <div style={{ position: 'absolute', left: x(724), top: y(422) }}>
-          <p style={LABEL}>Nieuwe volgers in 2 jaar</p>
+          <p style={LABEL}>{ikrStats[2].label}</p>
         </div>
 
-        {/* 263 */}
         <div className="stat-num" style={{ position: 'absolute', left: x(197), top: y(438) }}>
-          <span style={NUM}>263</span>
+          <span style={NUM}>{ikrStats[1].num}</span>
         </div>
         <div style={{ position: 'absolute', left: x(91), top: y(654) }}>
-          <p style={LABEL}>Video&#39;s gepost in 2025</p>
+          <p style={LABEL}>{ikrStats[1].label}</p>
         </div>
 
         {/* Badges */}

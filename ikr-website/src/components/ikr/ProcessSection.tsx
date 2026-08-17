@@ -6,7 +6,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 gsap.registerPlugin(ScrollTrigger)
 
-// Figma steps-container reference: 1387 × 1283px
 const px = (v: number, base: number) => `${((v / base) * 100).toFixed(2)}%`
 
 const TITLE_FONT: React.CSSProperties = {
@@ -29,6 +28,30 @@ const BODY_FONT: React.CSSProperties = {
 }
 
 const CIRCLE_SIZE = 'clamp(60px, 9.72vw, 140px)'
+
+const STEPS = [
+  {
+    n: '1',
+    title: <>ANALYSE</>,
+    body: 'We starten bij jouw merk, doelgroep en wat er nu al werkt. Geen content voor we weten waar we naartoe moeten.',
+  },
+  {
+    n: '2',
+    title: (
+      <>
+        CONTENT
+        <br />
+        CREATIE
+      </>
+    ),
+    body: 'Wij bedenken de content, filmen de video’s, monteren alles en publiceren in jouw naam.',
+  },
+  {
+    n: '3',
+    title: <>ITERATIE</>,
+    body: 'Elke maand meten we wat werkt en sturen we bij. Geen one-shot campagne — we blijven verbeteren.',
+  },
+] as const
 
 function NumberBadge({ n }: { n: string }) {
   return (
@@ -62,29 +85,31 @@ function NumberBadge({ n }: { n: string }) {
 
 export function ProcessSection() {
   const sectionRef = useRef<HTMLElement>(null)
-  const fillRef = useRef<HTMLDivElement>(null)
+  const pathRef = useRef<SVGPathElement>(null)
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Scroll-driven line fill
-      gsap.fromTo(
-        fillRef.current,
-        { height: '0%' },
-        {
-          height: '100%',
-          ease: 'none',
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top center',  // start pas als sectie de helft van scherm in is
-            end: '60% top',       // vol als 60% van sectie boven scherm is
-            scrub: true,
-          },
-        }
-      )
+    const path = pathRef.current
+    const section = sectionRef.current
+    if (!path || !section) return
 
-      // Step cards fade in
+    const length = path.getTotalLength()
+    path.style.strokeDasharray = `${length}`
+    path.style.strokeDashoffset = `${length}`
+
+    const ctx = gsap.context(() => {
+      gsap.to(path, {
+        strokeDashoffset: 0,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: section,
+          start: 'top center',
+          end: '70% top',
+          scrub: 1,
+        },
+      })
+
       gsap.from('.process-step', {
-        scrollTrigger: { trigger: sectionRef.current, start: 'top 75%' },
+        scrollTrigger: { trigger: section, start: 'top 75%' },
         y: 50,
         opacity: 0,
         duration: 0.8,
@@ -100,7 +125,6 @@ export function ProcessSection() {
       ref={sectionRef}
       style={{ backgroundColor: 'var(--ikr-cream)', padding: 'clamp(40px, 6vw, 80px) clamp(1rem, 2.8vw, 40px) clamp(60px, 8vw, 120px)' }}
     >
-      {/* Title */}
       <div style={{ textAlign: 'center', marginBottom: 'clamp(40px, 5.6vw, 80px)' }}>
         <h2
           style={{
@@ -117,7 +141,6 @@ export function ProcessSection() {
         </h2>
       </div>
 
-      {/* Steps container — 1387×1283 reference */}
       <div
         style={{
           position: 'relative',
@@ -126,62 +149,40 @@ export function ProcessSection() {
           minHeight: 'clamp(700px, 89.1vw, 1283px)',
         }}
       >
-        {/* ── Center vertical track ── */}
         <div
           style={{
             position: 'absolute',
-            left: px(710, 1387),
-            top: px(85, 1283),
-            width: 'clamp(8px, 0.97vw, 14px)',
-            height: px(799, 1283),
-            display: 'flex',
-            justifyContent: 'center',
+            left: px(640, 1387),
+            top: px(40, 1283),
+            width: px(120, 1387),
+            height: px(900, 1283),
+            pointerEvents: 'none',
+            zIndex: 1,
           }}
         >
-          {/* White background track */}
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              backgroundColor: '#FFFFFF',
-              borderRadius: 12,
-            }}
-          />
-          {/* Cyan fill — animated */}
-          <div
-            ref={fillRef}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: 'clamp(6px, 0.69vw, 10px)',
-              height: '0%',
-              backgroundColor: 'var(--ikr-cyan)',
-              borderRadius: 12,
-              transformOrigin: 'top',
-            }}
-          />
-          {/* Dots */}
-          {[0, px(320, 799), '100%'].map((top, i) => (
-            <div
-              key={i}
-              style={{
-                position: 'absolute',
-                top,
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: 'clamp(8px, 1.11vw, 16px)',
-                height: 'clamp(8px, 1.11vw, 16px)',
-                borderRadius: '50%',
-                backgroundColor: 'var(--ikr-cyan)',
-                zIndex: 2,
-              }}
+          <svg viewBox="0 0 120 900" width="100%" height="100%" preserveAspectRatio="none" aria-hidden>
+            <path
+              d="M60 12 C60 90, 108 170, 60 340 S12 620, 60 888"
+              fill="none"
+              stroke="#FFFFFF"
+              strokeWidth="14"
+              strokeLinecap="round"
             />
-          ))}
+            <path
+              ref={pathRef}
+              d="M60 12 C60 90, 108 170, 60 340 S12 620, 60 888"
+              fill="none"
+              stroke="var(--ikr-cyan)"
+              strokeWidth="10"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {[12, 340, 888].map((cy) => (
+              <circle key={cy} cx="60" cy={cy} r="9" fill="var(--ikr-cyan)" />
+            ))}
+          </svg>
         </div>
 
-        {/* ── Step 1: CONTENT STRATEGIE (left, right-aligned) ── */}
         <div
           className="process-step"
           style={{
@@ -190,32 +191,18 @@ export function ProcessSection() {
             top: px(0, 1283),
             width: px(508, 1387),
             textAlign: 'right',
+            zIndex: 2,
           }}
         >
-          <h3 style={TITLE_FONT}>CONTENT<br />STRATEGIE</h3>
-          <p style={{ ...BODY_FONT, marginTop: 'clamp(12px, 1.7vw, 24px)' }}>
-            Een strategie uitbouwen is het werk van echte professionals, en die zijn vaak duur. Wij gaan aan de slag voor een eerlijke prijs. Win-win!
-          </p>
+          <h3 style={TITLE_FONT}>{STEPS[0].title}</h3>
+          <p style={{ ...BODY_FONT, marginTop: 'clamp(12px, 1.7vw, 24px)' }}>{STEPS[0].body}</p>
         </div>
-        <div
-          style={{
-            position: 'absolute',
-            left: px(530, 1387),
-            top: px(29, 1283),
-          }}
-        >
-          <NumberBadge n="1" />
+        <div style={{ position: 'absolute', left: px(530, 1387), top: px(29, 1283), zIndex: 3 }}>
+          <NumberBadge n={STEPS[0].n} />
         </div>
 
-        {/* ── Step 2: CONTENT CREATIE (right) ── */}
-        <div
-          style={{
-            position: 'absolute',
-            left: px(778, 1387),
-            top: px(343, 1283),
-          }}
-        >
-          <NumberBadge n="2" />
+        <div style={{ position: 'absolute', left: px(778, 1387), top: px(343, 1283), zIndex: 3 }}>
+          <NumberBadge n={STEPS[1].n} />
         </div>
         <div
           className="process-step"
@@ -224,23 +211,15 @@ export function ProcessSection() {
             left: px(930, 1387),
             top: px(354, 1283),
             width: px(417, 1387),
+            zIndex: 2,
           }}
         >
-          <h3 style={TITLE_FONT}>CONTENT<br />CREATIE</h3>
-          <p style={{ ...BODY_FONT, marginTop: 'clamp(12px, 1.7vw, 24px)' }}>
-            Wij bedenken de content, filmen de videos, monteren alles en publiceren ze als laatste in jouw naam!
-          </p>
+          <h3 style={TITLE_FONT}>{STEPS[1].title}</h3>
+          <p style={{ ...BODY_FONT, marginTop: 'clamp(12px, 1.7vw, 24px)' }}>{STEPS[1].body}</p>
         </div>
 
-        {/* ── Step 3: ADVERTENTIES (left, left-aligned) ── */}
-        <div
-          style={{
-            position: 'absolute',
-            left: px(296, 1387),
-            top: px(799, 1283),
-          }}
-        >
-          <NumberBadge n="3" />
+        <div style={{ position: 'absolute', left: px(296, 1387), top: px(799, 1283), zIndex: 3 }}>
+          <NumberBadge n={STEPS[2].n} />
         </div>
         <div
           className="process-step"
@@ -249,12 +228,11 @@ export function ProcessSection() {
             left: px(296, 1387),
             top: px(965, 1283),
             width: px(683, 1387),
+            zIndex: 2,
           }}
         >
-          <h3 style={TITLE_FONT}>ADVERTENTIES</h3>
-          <p style={{ ...BODY_FONT, marginTop: 'clamp(12px, 1.7vw, 24px)' }}>
-            Minder interesse in je merk op te bouwen, maar eerder gefocust op directe leads of website clicks? Dan stellen wij maandelijks advertising campagnes op voor jouw bedrijf.
-          </p>
+          <h3 style={TITLE_FONT}>{STEPS[2].title}</h3>
+          <p style={{ ...BODY_FONT, marginTop: 'clamp(12px, 1.7vw, 24px)' }}>{STEPS[2].body}</p>
         </div>
       </div>
     </section>

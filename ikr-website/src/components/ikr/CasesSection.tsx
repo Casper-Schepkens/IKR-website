@@ -4,15 +4,18 @@ import Link from 'next/link'
 import { useRef, useState } from 'react'
 import { caseGridItems } from '@/data/cases'
 import { displayFont, ikr } from '@/lib/ikr-styles'
+import { ClickHint, ClientLogoSticker } from './ClientLogoSticker'
 
 function CasePreviewCard({
   slug,
   clientName,
   video,
+  logo,
 }: {
   slug: string
   clientName: string
   video: string
+  logo?: string
 }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [hovered, setHovered] = useState(false)
@@ -60,6 +63,28 @@ function CasePreviewCard({
           pointerEvents: 'none',
         }}
       />
+      <div
+        style={{
+          position: 'absolute',
+          top: 'clamp(10px, 4%, 16px)',
+          left: 'clamp(10px, 4%, 16px)',
+          zIndex: 3,
+          pointerEvents: 'none',
+        }}
+      >
+        <ClientLogoSticker name={clientName} logo={logo} />
+      </div>
+      <div
+        style={{
+          position: 'absolute',
+          right: 'clamp(10px, 4%, 16px)',
+          top: 'clamp(10px, 4%, 16px)',
+          zIndex: 3,
+          pointerEvents: 'none',
+        }}
+      >
+        <ClickHint />
+      </div>
       <span
         style={{
           position: 'absolute',
@@ -114,6 +139,7 @@ export function CasesSection() {
               slug={item.slug}
               clientName={item.clientName}
               video={item.video}
+              logo={item.logo}
             />
           ))}
         </div>

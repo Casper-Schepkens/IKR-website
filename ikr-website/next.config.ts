@@ -8,7 +8,6 @@ const dirname = path.dirname(__filename)
 const nextConfig: NextConfig = {
   images: {
     localPatterns: [{ pathname: '/images/**' }],
-    remotePatterns: [{ hostname: 'iknowright.be', pathname: '/wp-content/uploads/**' }],
   },
   reactStrictMode: true,
   turbopack: {

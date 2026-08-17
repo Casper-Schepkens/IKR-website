@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRef, useState } from 'react'
 import { caseGridItems, foodWorkItems } from '@/data/cases'
 import { bodyFont, displayFont, ikr } from '@/lib/ikr-styles'
+import { SpeechBubble } from './SpeechBubble'
 
 const testimonials = [
   {
@@ -45,7 +46,7 @@ const testimonials = [
     name: 'Tempus',
     role: 'HR marketing',
     avatar: '#C0B88B',
-    quote: '650K+ unieke kijkers in vier maanden — via TikTok, niet via vacaturesites.',
+    quote: '1 miljoen views — via TikTok, niet via vacaturesites. En 1 tot 2 sollicitaties per dag.',
   },
 ] as const
 
@@ -315,6 +316,13 @@ function FoodWorkVideoCard({
   highlight: string
 }) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const [failed, setFailed] = useState(false)
+
+  const showFrame = () => {
+    const video = videoRef.current
+    if (!video) return
+    if (video.currentTime < 0.05) video.currentTime = 0.12
+  }
 
   const handleEnter = () => {
     videoRef.current?.play().catch(() => {})
@@ -324,7 +332,7 @@ function FoodWorkVideoCard({
     const video = videoRef.current
     if (!video) return
     video.pause()
-    video.currentTime = 0
+    video.currentTime = 0.12
   }
 
   return (
@@ -336,19 +344,49 @@ function FoodWorkVideoCard({
         aspectRatio: '9 / 16',
         borderRadius: 'clamp(18px, 2vw, 28px)',
         overflow: 'hidden',
-        backgroundColor: '#D0C8BC',
+        backgroundColor: ikr.navy,
         cursor: 'default',
       }}
     >
-      <video
-        ref={videoRef}
-        src={src}
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-      />
+      {!failed ? (
+        <video
+          ref={videoRef}
+          src={src}
+          muted
+          loop
+          playsInline
+          preload="auto"
+          onLoadedMetadata={showFrame}
+          onLoadedData={showFrame}
+          onError={() => setFailed(true)}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+      ) : (
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            background: `linear-gradient(180deg, ${ikr.navy} 0%, #3a2d5c 100%)`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 24,
+          }}
+        >
+          <p
+            style={{
+              ...displayFont,
+              color: ikr.cyan,
+              fontSize: 'clamp(1.1rem, 2vw, 28px)',
+              textTransform: 'uppercase',
+              textAlign: 'center',
+              margin: 0,
+            }}
+          >
+            {clientName}
+          </p>
+        </div>
+      )}
       <div
         style={{
           position: 'absolute',
@@ -374,44 +412,6 @@ function FoodWorkVideoCard({
   )
 }
 
-function SpeechBubble({ tail, children }: { tail: 'left' | 'right'; children: React.ReactNode }) {
-  return (
-    <div
-      style={{
-        position: 'relative',
-        marginBottom: 'clamp(18px, 2.5vw, 36px)',
-        flexShrink: 0,
-        width: 'clamp(260px, 24vw, 360px)',
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: '#FEFEFE',
-          borderRadius: 20,
-          padding: 'clamp(12px, 1.4vw, 20px) clamp(16px, 1.9vw, 28px)',
-          position: 'relative',
-        }}
-      >
-        {children}
-      </div>
-      <div
-        style={{
-          position: 'absolute',
-          bottom: -22,
-          ...(tail === 'right' ? { right: '12%' } : { left: '12%' }),
-          width: 56,
-          height: 24,
-          backgroundColor: '#FEFEFE',
-          clipPath:
-            tail === 'right'
-              ? 'polygon(0% 0%, 100% 0%, 100% 100%)'
-              : 'polygon(0% 0%, 100% 0%, 0% 100%)',
-        }}
-      />
-    </div>
-  )
-}
-
 function TestimonialBubble({
   name,
   role,
@@ -428,7 +428,7 @@ function TestimonialBubble({
   const [liked, setLiked] = useState(false)
 
   return (
-    <SpeechBubble tail={tail}>
+    <SpeechBubble tail={tail} style={{ width: 'clamp(260px, 24vw, 360px)' }}>
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         <div
           style={{
@@ -510,6 +510,7 @@ function TestimonialMarqueeRow({
       <div
         style={{
           display: 'flex',
+          alignItems: 'flex-start',
           gap: 'clamp(16px, 2vw, 28px)',
           width: 'max-content',
           animation: `ikr-marquee ${duration}s linear infinite ${direction === 'right' ? 'reverse' : 'normal'}`,

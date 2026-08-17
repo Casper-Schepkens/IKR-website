@@ -10,7 +10,7 @@ type Props = {
 }
 
 export function generateStaticParams() {
-  return caseDetailSlugs.map((slug) => ({ slug }))
+  return caseDetailSlugs.filter((slug) => slug !== 'tempus').map((slug) => ({ slug }))
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

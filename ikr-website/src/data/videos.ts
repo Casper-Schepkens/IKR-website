@@ -4,12 +4,14 @@ export const VIDEO_PATHS = {
   puretoBrandoefening: '/videos/pureto-brandoefening.mp4',
   ikrShowcase1: '/videos/ikr-showcase-1.mp4',
   ikrShowcase2: '/videos/ikr-showcase-2.mp4',
-  foodWorkAiki: 'https://iknowright.be/wp-content/uploads/2026/03/Aiki.mov',
-  foodWorkOtacos: 'https://iknowright.be/wp-content/uploads/2026/03/Otacos.mov',
-  foodWorkPanos: 'https://iknowright.be/wp-content/uploads/2026/03/panos.mov',
+  foodWorkAiki: '/videos/food/aiki.mp4',
+  foodWorkOtacos: '/videos/food/otacos.mp4',
+  foodWorkPanos: '/videos/food/panos.mp4',
 } as const
 
-/** Top presterende TikTok-video's per case-kanaal (views bij download, jun 2026). */
+/** Top presterende TikTok-video's per case-kanaal.
+ *  Tempus + Maison Slash: Metricool 17 aug 2026.
+ *  Anneke: views bij download (jun 2026) — account niet in Metricool. */
 export type CaseChannelVideo = {
   src: string
   stat: string
