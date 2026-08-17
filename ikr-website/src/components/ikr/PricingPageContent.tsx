@@ -198,14 +198,13 @@ function PricingFormSection() {
       return
     }
 
-    const hasTurnstileKey = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY)
-    const token = hasTurnstileKey ? turnstileToken : 'dev-bypass'
-
-    if (hasTurnstileKey && !turnstileToken) {
+    if (!turnstileToken) {
       setStatus('error')
       setErrorMessage('Bevestig dat je geen robot bent.')
       return
     }
+
+    const token = turnstileToken
 
     setStatus('loading')
 

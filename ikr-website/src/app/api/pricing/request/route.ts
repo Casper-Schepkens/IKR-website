@@ -3,7 +3,7 @@ import path from 'path'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import type { PricingRequestPayload } from '@/lib/pricing-types'
-import { verifyTurnstileToken } from '@/lib/turnstile'
+import { isDevTurnstileBypass, verifyTurnstileToken } from '@/lib/turnstile'
 
 const PDF_FILENAME = 'IKnowRight-tarieven.pdf'
 
@@ -49,11 +49,9 @@ export async function POST(request: Request) {
     }
 
     const remoteIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    const isDevBypass =
-      process.env.NODE_ENV === 'development' &&
-      process.env.SKIP_TURNSTILE === 'true' &&
-      body.turnstileToken === 'dev-bypass'
-    const captchaOk = isDevBypass || (await verifyTurnstileToken(body.turnstileToken, remoteIp))
+    const captchaOk =
+      isDevTurnstileBypass(body.turnstileToken) ||
+      (await verifyTurnstileToken(body.turnstileToken, remoteIp))
     if (!captchaOk) {
       return NextResponse.json({ error: 'Captcha verificatie mislukt. Probeer opnieuw.' }, { status: 400 })
     }

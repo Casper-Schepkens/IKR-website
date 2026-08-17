@@ -14,6 +14,7 @@ export type CaseCarouselItem = {
   src: string
   href: string
   label: string
+  logo?: string
 }
 
 // ─── Food werk (influencer-opdrachten, geen detailpagina) ─────────────────────
@@ -27,7 +28,8 @@ export type FoodWorkItem = {
   logo?: string
 }
 
-/** Influencer-opdrachten binnen food — tonen als werk, geen volledige case study. */
+/** Influencer-opdrachten binnen food — tonen als werk, geen volledige case study.
+ *  Video's lokaal in public/videos/food/ (geconverteerd van de originele .mov's). */
 export const foodWorkItems: FoodWorkItem[] = [
   {
     id: 'aiki',
@@ -172,9 +174,9 @@ export const caseDetailTempus: CaseDetail = {
 export const caseDetailMaisonSlash: CaseDetail = {
   slug: 'maison-slash',
   bedrijf: 'Maison Slash',
+  logo: '/images/client_logos/MS logo.png',
   tags: ['Media', 'TikTok', 'Ouderschap'],
-  heroImage:
-    'https://iknowright.be/wp-content/uploads/2025/11/8413f8bc-e817-4357-9da3-e9970562e494-1024x427.jpeg',
+  heroImage: '/images/cases/maison-slash/hero.jpg',
   outcomeLine: '170K+ organische views op topvideo — na één maand',
   summary: [
     'Maison Slash België verkoopt magazines voor ouders. Hun doel op TikTok: ouders aanspreken met content die herkenbaar en deelbaar is.',
@@ -292,6 +294,7 @@ export const caseCarouselItems: CaseCarouselItem[] = caseGridItems.map((item) =>
   src: item.video,
   href: `/cases/${item.slug}`,
   label: item.clientName,
+  logo: item.logo,
 }))
 
 // ─── Homepage fan-carousel + Aanpak phone-feed (zelfde case-video's) ─────────
@@ -329,6 +332,7 @@ export type HomepageCarouselCard = {
   src: string
   href: string
   label: string
+  logo?: string
   shadow?: boolean
 }
 
@@ -348,6 +352,7 @@ export const homepageCarouselCards: HomepageCarouselCard[] = HOMEPAGE_CAROUSEL_L
     src: video.src,
     href: `/cases/${detail.slug}`,
     label: detail.bedrijf,
+    logo: detail.logo,
   }
 })
 

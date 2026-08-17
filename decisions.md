@@ -40,11 +40,20 @@ DaddyGo = shared hosting, geen Node.js. **Beslissing:** site op Vercel hosten, D
 
 **Status:** Uitgevoerd (legal set, reviews, contact topics, Why TikTok, footer links).
 
+### Resend from/to split (aug 2026, nog niet uitgevoerd)
+**Beslissing:** interne form-notificaties niet meer `From: contact@` → `To: contact@`. Klantmails (tarieven-PDF) blijven `From: contact@`. Notificaties `From: forms@` of `hello@` (geen echte mailbox nodig) → `To: contact@`. Daarna `contact@` van Resend suppression halen.
+
+**Waarom:** self-send via Resend naar Google Workspace bounced; adres staat sindsdien op de suppression-lijst.
+
+**Status:** Uitgesteld tot Casper weer bij de mail kan.
+
 ---
 
 ## Homepage (`/`)
 
 **Beslissing (jun 2026):** Why TikTok-sectie tussen proces en cases. Case preview = 3 linkbare cards i.p.v. static PNG. Echte testimonials (Anne Cornu, Anneke Govaerts, Maison Slash).
+
+**Beslissing (aug 2026):** Proces = Analyse → Creatie → Iteratie (niet strategie/creatie/ads). Why TikTok-cijfers: 42,5% volwassen Belgen (DataReportal 2026), geen 50%. Leeftijd via Ads Manager-split. Geen IKR-eigen 125M in die sectie.
 
 ---
 
@@ -59,6 +68,8 @@ DaddyGo = shared hosting, geen Node.js. **Beslissing:** site op Vercel hosten, D
 ## Pricing (`/pricing`)
 
 **Beslissing (jun 2026):** Resend via `/api/pricing/request`. PDF statisch in `public/documents/`. From + notify = `contact@iknowright.be`. Creator/sollicitant → redirect contact, geen PDF-mail. Nav-label **Prijzen** (route blijft `/pricing`).
+
+**Beslissing (aug 2026):** Turnstile lokaal = Cloudflare dummy-keys (niet de productie-sitekey op localhost). Productie blijft echte keys. Hostname `ikr-website.vercel.app` moet in het Cloudflare-dashboard. SKIP_TURNSTILE blijft als extra lokale bypass.
 
 ---
 
@@ -85,3 +96,5 @@ Portfolio in **twee lagen** — geen fake case-pagina's.
 **Beslissing (jun 2026):** Top TikTok-video's per kanaal lokaal in `public/videos/cases/`. Overview-thumbnail via `CASE_GRID_PREVIEW_INDEX` — niet altijd hoogste views (Maison Slash: seksenquete uitgesloten). Galerij-klik opent TikTok-post. Views-badge = oog-icoon + "XK views". Testimonial marquee = echte klantquotes (geen fake CEO-namen). Footer anchor `#food` op food-sectie.
 
 **Beslissing (jul 2026):** Single-source — geen losse `caseCarouselVideos` / handmatige `caseGridItems` meer.
+
+**Beslissing (aug 2026):** Tempus-detail heeft 3 layout-kandidaten ter review (`/cases/tempus`, `/v2`, `/v3`) met extra CTA's. Food-werk host de originele Aïki/O'Tacos/Panos-video's lokaal als H.264 in `public/videos/food/` — geen WordPress-hotlink. Speech-bubble: staart is sibling van de afgeronde box, volle bovenrand + overlap in de bubble, `paddingBottom` i.p.v. `bottom: -N` zodat marquee-overflow de tail niet afknipt.

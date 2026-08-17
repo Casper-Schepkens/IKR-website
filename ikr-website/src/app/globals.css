@@ -47,6 +47,37 @@
   animation: tiktok-song-scroll 8s linear infinite;
 }
 
+@media (max-width: 900px) {
+  .tempus-step,
+  .tempus-split,
+  .tempus-chapters,
+  .tempus-quote-grid {
+    grid-template-columns: 1fr !important;
+    min-height: auto !important;
+  }
+
+  .tempus-split-panel {
+    position: relative !important;
+    min-height: auto !important;
+  }
+}
+
+@media (max-width: 1100px) {
+  .tempus-video-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@keyframes tiktok-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ikr-scroll-nudge {
+  0%, 100% { transform: translateY(0); opacity: 0.95; }
+  50% { transform: translateY(8px); opacity: 1; }
+}
+
 @layer base {
   * {
     box-sizing: border-box;
