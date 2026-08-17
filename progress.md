@@ -38,6 +38,7 @@
 - **aug 2026:** carousel-logo als sticker + klik-pijl; hover groeit omhoog zonder cutoff
 - **aug 2026:** proces = Analyse → Creatie → Iteratie; smooth S-curve (`scrub: 1`)
 - **aug 2026:** Why TikTok met DataReportal 42,5% + leeftijd-pie (niet 50%, niet 46% 34+)
+- **aug 2026:** homepage-stats uit Metricool (Tempus + Maison Slash): 2.2M views / 171 video's / 170K topvideo — geen Figma-125M
 
 ---
 
@@ -47,7 +48,7 @@
 
 - Hero + gsm-feed, **Is dat wel iets voor mij?**, **Zonder/Met IKR**, proces-sectie, case-carousel, freelancer/contact CTA
 - **jul 2026:** case-carousel + gsm-feed pullen uit case-video's (`caseCarouselItems` / `aanpakHeroFeedVideos`)
-- **aug 2026:** scroll-hint op gsm; cijfers via `ikr-stats.ts`; Bekijk-het-zelf zonder cutoff; CTA-foto’s freelancer + team
+- **aug 2026:** scroll-hint op gsm; cijfers via `ikr-stats.ts` (zelfde Metricool-bron als homepage); Bekijk-het-zelf zonder cutoff; CTA-foto’s freelancer + team
 - Open: dedicated freelancer-asset (`card top.png`) indien betere foto klaar; Anneke-logo ontbreekt nog
 
 ---
@@ -86,14 +87,15 @@
 
 ## Cases (`/cases`)
 
-**Status:** v1 + Tempus layout-preview aug 2026 (3 versies)
+**Status:** v1 + Tempus layout A (cijfers i.p.v. foto's, aug 2026)
 
 **Laag 1 — Cases (detailpagina's):**
 - Tempus, Maison Slash, Anneke Govaerts — elk met top 4 TikTok-video's lokaal (`public/videos/cases/`)
 - Overview: hele kaart klikbaar → detail; galerij: klik → TikTok-post
 - Views-badge met oog-icoon (niet likes)
 - Maison Slash overview-thumbnail = `7573647751959858464.mp4` (niet seksenquete-topvideo)
-- **aug 2026 Tempus layouts (kies er één):** `/cases/tempus` (A tijdlijn), `/cases/tempus/v2` (B split), `/cases/tempus/v3` (C kolommen). Switcher bovenaan. Extra CTA's: contact, prijzen, andere cases.
+- **Tempus (aug 2026):** layout A. Foto's in de 3 stappen vervangen door Metricool-cijfers. v2/v3 weg.
+- **Maison Slash (aug 2026):** Metricool-cijfers i.p.v. groeipercentages (+28.000% etc.). 1.2M views, 170K topvideo, 100 video's. Geen "binnen één maand".
 
 **Laag 2 — Food werk:**
 - Aïki, O'Tacos, Panos — influencer-grid, views + highlight, geen detailpagina

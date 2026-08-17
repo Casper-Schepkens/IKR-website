@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import { bodyFont, displayFont, ikr } from '@/lib/ikr-styles'
 import { SpeechBubble } from '../SpeechBubble'
 import {
@@ -8,49 +7,127 @@ import {
   RelatedCases,
   TEMPUS,
   TempusCtaCluster,
-  TempusVersionSwitcher,
   TempusVideoThumb,
 } from './shared'
 
-const steps = [
+type Metric = { value: string; label: string }
+
+const steps: {
+  n: string
+  kicker: string
+  title: string
+  body: string
+  bg: string
+  color: string
+  kickerColor: string
+  metrics: Metric[]
+}[] = [
   {
     n: '01',
     kicker: 'Het probleem',
     title: TEMPUS.story[0]?.title ?? 'De uitdaging',
     body: TEMPUS.story[0]?.body ?? TEMPUS.summary[0],
-    image: TEMPUS.story[0]?.image,
     bg: ikr.cream,
     color: ikr.navy,
     kickerColor: ikr.cyan,
+    metrics: [
+      { value: 'Sep ’25', label: 'Start TikTok-kanaal' },
+      { value: 'HR', label: 'Geen productpromo — verpleegkundigen aantrekken' },
+      { value: 'Gen Z', label: 'Zit op TikTok, niet op vacaturesites' },
+    ],
   },
   {
     n: '02',
     kicker: 'Zo hebben we het gefixt',
     title: TEMPUS.story[1]?.title ?? 'Onze aanpak',
     body: TEMPUS.story[1]?.body ?? TEMPUS.summary[1],
-    image: TEMPUS.story[1]?.image,
     bg: ikr.navy,
     color: '#FEFEFE',
     kickerColor: ikr.cyan,
+    metrics: [
+      { value: '71', label: "Video's sinds de start" },
+      { value: '6×', label: 'Per maand, consistent' },
+      { value: '25K', label: 'Likes op de content' },
+    ],
   },
   {
     n: '03',
     kicker: 'Zo is het nu',
     title: 'Het resultaat',
     body: TEMPUS.summary[2] ?? TEMPUS.outcomeLine ?? '',
-    image: TEMPUS.heroImage,
     bg: ikr.cream,
     color: ikr.navy,
     kickerColor: ikr.cyan,
+    metrics: [
+      { value: '1M+', label: 'Views' },
+      { value: '886K', label: 'Bereik' },
+      { value: '142K', label: 'Topvideo' },
+      { value: '1–2', label: 'Sollicitaties per dag' },
+    ],
   },
-] as const
+]
+
+function MetricPanel({ items, dark = false }: { items: Metric[]; dark?: boolean }) {
+  const valueColor = dark ? ikr.cyan : ikr.navy
+  const labelColor = dark ? 'rgba(254,254,254,0.78)' : ikr.navyText
+  const border = dark ? '1px solid rgba(15,193,222,0.35)' : '1px solid rgba(32,23,55,0.12)'
+  const bg = dark ? 'rgba(15,193,222,0.06)' : '#FFF9F1'
+
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+        gap: 12,
+      }}
+    >
+      {items.map((item) => (
+        <div
+          key={item.label}
+          style={{
+            backgroundColor: bg,
+            border,
+            borderRadius: 20,
+            padding: 'clamp(16px, 2.2vw, 28px)',
+            minHeight: 120,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}
+        >
+          <p
+            style={{
+              ...displayFont,
+              fontSize: 'clamp(1.6rem, 3.4vw, 44px)',
+              color: valueColor,
+              margin: 0,
+              lineHeight: 0.9,
+              textTransform: 'uppercase',
+            }}
+          >
+            {item.value}
+          </p>
+          <p
+            style={{
+              ...bodyFont,
+              fontSize: 'clamp(0.75rem, 1.05vw, 14px)',
+              color: labelColor,
+              margin: '10px 0 0',
+              lineHeight: 1.35,
+            }}
+          >
+            {item.label}
+          </p>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export function TempusCaseA() {
   return (
     <div style={{ backgroundColor: ikr.cream }}>
-      <TempusVersionSwitcher active="a" />
-
-      <section style={{ padding: `clamp(2rem, 5vw, 64px) ${pad} clamp(1rem, 2vw, 24px)` }}>
+      <section style={{ padding: `clamp(5.5rem, 10vw, 120px) ${pad} clamp(1rem, 2vw, 24px)` }}>
         <div style={{ maxWidth: 1440, margin: '0 auto' }}>
           <p
             style={{
@@ -169,19 +246,9 @@ export function TempusCaseA() {
                 </div>
               )}
             </div>
-            {step.image && (
-              <div
-                style={{
-                  order: i % 2 === 1 ? 1 : 2,
-                  position: 'relative',
-                  aspectRatio: '4 / 3',
-                  borderRadius: 28,
-                  overflow: 'hidden',
-                }}
-              >
-                <Image src={step.image} alt="" fill style={{ objectFit: 'cover' }} sizes="50vw" />
-              </div>
-            )}
+            <div style={{ order: i % 2 === 1 ? 1 : 2 }}>
+              <MetricPanel items={step.metrics} dark={step.bg === ikr.navy} />
+            </div>
           </div>
         </section>
       ))}
@@ -194,11 +261,21 @@ export function TempusCaseA() {
               fontSize: 'clamp(1.25rem, 2.5vw, 36px)',
               color: '#FEFEFE',
               textTransform: 'uppercase',
-              marginBottom: 24,
+              marginBottom: 8,
             }}
           >
-            Cijfers na vier maanden
+            Cijfers @tempusverpleging
           </h2>
+          <p
+            style={{
+              ...bodyFont,
+              fontSize: 14,
+              color: 'rgba(254,254,254,0.55)',
+              margin: '0 0 24px',
+            }}
+          >
+            TikTok · sep 2025 – aug 2026
+          </p>
           <div
             style={{
               display: 'grid',

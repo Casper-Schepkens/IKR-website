@@ -1,15 +1,16 @@
 /**
  * IKR-brede resultaatcijfers — één bron voor homepage + Aanpak.
  *
- * Bron (aug 2026): copy uit Figma / huidige site. Nog niet herberekend.
- * Juiste ophaalmethode: TikTok Business Center (Analytics) van de accounts
- * die IKR beheert → CSV exporteren → views, video's en volgers-groei optellen.
- * Geen scraping. Zonder login kunnen we deze getallen niet live verifiëren.
+ * Bron (aug 2026): Metricool, accounts die IKR beheert op TikTok
+ * (`@tempusverpleging` + `@maisonslashbelgie`), 1 sep 2025 – 17 aug 2026.
+ * Som van views/video's op gepubliceerde content in die periode.
+ * Anneke zit niet in Metricool — niet meegerekend.
+ * Exact: 2.159.042 views, 171 video's, topvideo 169.606 (Maison Slash).
  */
 export const ikrStats = [
-  { num: '125M', label: 'Meest bekeken video in 2025', shortLabel: 'Weergaven' },
-  { num: '263', label: "Video's gepost in 2025", shortLabel: "Video's" },
-  { num: '+400K', label: 'Nieuwe volgers in 2 jaar', shortLabel: 'Nieuwe volgers' },
+  { num: '2.2M', label: 'Views voor klanten', shortLabel: 'Views' },
+  { num: '171', label: "Video's gepost", shortLabel: "Video's" },
+  { num: '170K', label: 'Beste video', shortLabel: 'Topvideo' },
 ] as const
 
 /**

@@ -55,6 +55,8 @@ DaddyGo = shared hosting, geen Node.js. **Beslissing:** site op Vercel hosten, D
 
 **Beslissing (aug 2026):** Proces = Analyse → Creatie → Iteratie (niet strategie/creatie/ads). Why TikTok-cijfers: 42,5% volwassen Belgen (DataReportal 2026), geen 50%. Leeftijd via Ads Manager-split. Geen IKR-eigen 125M in die sectie.
 
+**Beslissing (aug 2026):** Homepage-stats = som Metricool Tempus + Maison Slash (sep 2025–aug 2026): 2.2M views, 171 video's, 170K beste video. Geen Figma-125M / 263 / +400K. Anneke niet in Metricool, dus niet in de som.
+
 ---
 
 ## Aanpak (`/aanpak`)
@@ -97,4 +99,4 @@ Portfolio in **twee lagen** — geen fake case-pagina's.
 
 **Beslissing (jul 2026):** Single-source — geen losse `caseCarouselVideos` / handmatige `caseGridItems` meer.
 
-**Beslissing (aug 2026):** Tempus-detail heeft 3 layout-kandidaten ter review (`/cases/tempus`, `/v2`, `/v3`) met extra CTA's. Food-werk host de originele Aïki/O'Tacos/Panos-video's lokaal als H.264 in `public/videos/food/` — geen WordPress-hotlink. Speech-bubble: staart is sibling van de afgeronde box, volle bovenrand + overlap in de bubble, `paddingBottom` i.p.v. `bottom: -N` zodat marquee-overflow de tail niet afknipt.
+**Beslissing (aug 2026):** Tempus-detail = layout A (tijdlijn). Foto's in de stappen vervangen door cijfers (Metricool `@tempusverpleging` sep 2025–aug 2026; 1–2 sollicitaties/dag uit Drive-calls). v2/v3 weg. Maison Slash: absolute Metricool-cijfers (1.2M views / 170K top), geen groeipercentages vs bijna-leeg vorig jaar, geen "binnen één maand". Food-werk host Aïki/O'Tacos/Panos lokaal als H.264. Speech-bubble: staart sibling van de box, overlap + paddingBottom zodat marquee de tail niet afknipt.

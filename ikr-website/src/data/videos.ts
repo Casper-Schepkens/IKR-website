@@ -9,7 +9,9 @@ export const VIDEO_PATHS = {
   foodWorkPanos: '/videos/food/panos.mp4',
 } as const
 
-/** Top presterende TikTok-video's per case-kanaal (views bij download, jun 2026). */
+/** Top presterende TikTok-video's per case-kanaal.
+ *  Tempus + Maison Slash: Metricool 17 aug 2026.
+ *  Anneke: views bij download (jun 2026) — account niet in Metricool. */
 export type CaseChannelVideo = {
   src: string
   stat: string

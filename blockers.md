@@ -14,7 +14,6 @@
 - Anneke heeft nog geen logo-bestand.
 
 ## Aanpak (`/aanpak`)
-- **IKR-stats:** 125M / 263 / 400K komen uit Figma, niet geverifieerd. Update via TikTok Analytics-export.
 - Dedicated freelancer-asset (`card top.png`) ontbreekt nog — nu `freelancer-cta.jpg`.
 
 ## Pricing (`/pricing`)
@@ -25,6 +24,5 @@
 - **Live test:** creator/solliciteren topics + mail subjects nog verifiëren op Vercel-URL (lokaal ok, build ok)
 
 ## Cases (`/cases`)
-- **Content:** foto's + tekst nog niet juist — wacht op juiste assets/copy
-- **Tempus:** 3 layout-versies live ter review — Casper moet er één kiezen
+- **Content:** foto's + tekst Maison Slash & Anneke nog niet juist — wacht op assets/copy
 - Optioneel later: betere hero/storyfoto's Maison Slash & Anneke; echte food retainer-cases.

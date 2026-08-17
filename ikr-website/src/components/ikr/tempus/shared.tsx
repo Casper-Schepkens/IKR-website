@@ -7,70 +7,7 @@ import { bodyFont, displayFont, ikr } from '@/lib/ikr-styles'
 
 export const TEMPUS = caseDetailTempus
 
-export const TEMPUS_VERSIONS = [
-  { id: 'a', href: '/cases/tempus', label: 'A — Tijdlijn' },
-  { id: 'b', href: '/cases/tempus/v2', label: 'B — Split' },
-  { id: 'c', href: '/cases/tempus/v3', label: 'C — Kolommen' },
-] as const
-
 const PAGE_PAD = 'clamp(1rem, 6.8vw, 98px)'
-
-export function TempusVersionSwitcher({ active }: { active: 'a' | 'b' | 'c' }) {
-  return (
-    <div
-      style={{
-        backgroundColor: ikr.navy,
-        padding: `10px ${PAGE_PAD}`,
-        paddingTop: 90,
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 1440,
-          margin: '0 auto',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          flexWrap: 'wrap',
-        }}
-      >
-        <span
-          style={{
-            ...bodyFont,
-            fontSize: 12,
-            color: 'rgba(254,254,254,0.65)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-          }}
-        >
-          Layout-preview
-        </span>
-        {TEMPUS_VERSIONS.map((v) => {
-          const isActive = v.id === active
-          return (
-            <Link
-              key={v.id}
-              href={v.href}
-              style={{
-                ...displayFont,
-                fontSize: 13,
-                textDecoration: 'none',
-                textTransform: 'uppercase',
-                padding: '0.4em 0.9em',
-                borderRadius: 48,
-                color: isActive ? ikr.navy : '#FEFEFE',
-                backgroundColor: isActive ? ikr.cyan : 'transparent',
-                border: isActive ? 'none' : '1px solid rgba(254,254,254,0.25)',
-              }}
-            >
-              {v.label}
-            </Link>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
 
 export function CyanBtn({ href, children }: { href: string; children: ReactNode }) {
   return (
