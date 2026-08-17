@@ -5,6 +5,7 @@ import { useRef, useState } from 'react'
 import { caseGridItems } from '@/data/cases'
 import { displayFont, ikr } from '@/lib/ikr-styles'
 import { ClickHint, ClientLogoSticker } from './ClientLogoSticker'
+import { claimVideo, InViewVideo } from './InViewVideo'
 
 function CasePreviewCard({
   slug,
@@ -26,7 +27,7 @@ function CasePreviewCard({
       aria-label={`Case ${clientName}`}
       onMouseEnter={() => {
         setHovered(true)
-        videoRef.current?.play().catch(() => {})
+        claimVideo(videoRef.current)
       }}
       onMouseLeave={() => {
         setHovered(false)
@@ -35,25 +36,17 @@ function CasePreviewCard({
         v.pause()
         v.currentTime = 0
       }}
-      style={{
-        display: 'block',
-        position: 'relative',
-        aspectRatio: '9 / 16',
-        borderRadius: 'clamp(18px, 2vw, 28px)',
-        overflow: 'hidden',
-        backgroundColor: '#D0C8BC',
-        textDecoration: 'none',
-      }}
+        style={{
+          display: 'block',
+          position: 'relative',
+          aspectRatio: '9 / 16',
+          borderRadius: 'clamp(10px, 2vw, 28px)',
+          overflow: 'hidden',
+          backgroundColor: '#D0C8BC',
+          textDecoration: 'none',
+        }}
     >
-      <video
-        ref={videoRef}
-        src={video}
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-      />
+      <InViewVideo ref={videoRef} src={video} phoneOnly exclusive={false} threshold={0.25} />
       <div
         style={{
           position: 'absolute',
@@ -64,10 +57,11 @@ function CasePreviewCard({
         }}
       />
       <div
+        className="origin-top-left scale-75 lg:scale-100"
         style={{
           position: 'absolute',
-          top: 'clamp(10px, 4%, 16px)',
-          left: 'clamp(10px, 4%, 16px)',
+          top: 'clamp(6px, 4%, 16px)',
+          left: 'clamp(6px, 4%, 16px)',
           zIndex: 3,
           pointerEvents: 'none',
         }}
@@ -75,6 +69,7 @@ function CasePreviewCard({
         <ClientLogoSticker name={clientName} logo={logo} />
       </div>
       <div
+        className="hidden lg:block"
         style={{
           position: 'absolute',
           right: 'clamp(10px, 4%, 16px)',
@@ -86,6 +81,7 @@ function CasePreviewCard({
         <ClickHint />
       </div>
       <span
+        className="hidden sm:inline"
         style={{
           position: 'absolute',
           bottom: 'clamp(10px, 7%, 18px)',
@@ -111,9 +107,9 @@ function CasePreviewCard({
 
 export function CasesSection() {
   return (
-    <section style={{ backgroundColor: 'var(--ikr-cream-light)' }} className="py-16">
-      <div className="max-w-[1200px] mx-auto px-6">
-        <div className="flex items-center justify-between mb-8">
+    <section style={{ backgroundColor: 'var(--ikr-cream-light)' }} className="py-10 lg:py-16">
+      <div className="max-w-[1200px] mx-auto px-5 lg:px-6">
+        <div className="flex items-center justify-between gap-4 mb-8">
           <p
             className="font-display font-black uppercase text-sm tracking-widest"
             style={{ color: 'rgba(32,23,55,0.4)' }}
@@ -130,7 +126,7 @@ export function CasesSection() {
         </div>
 
         <div
-          className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6"
+          className="grid grid-cols-3 gap-2 md:gap-4 lg:gap-6"
           style={{ maxWidth: 900, margin: '0 auto' }}
         >
           {caseGridItems.map((item) => (

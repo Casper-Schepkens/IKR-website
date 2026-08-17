@@ -70,7 +70,7 @@ export function ReviewsSection() {
       </div>
 
       <div className="relative max-w-[1200px] mx-auto px-6">
-        <div className="grid md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {reviews.map((r, i) => (
             <div
               key={i}

@@ -166,7 +166,7 @@ function FormInput({
   const fieldStyle: React.CSSProperties = {
     ...bodyFont,
     width: '100%',
-    fontSize: 'clamp(0.875rem, 1.39vw, 20px)',
+    fontSize: 'clamp(16px, 1.39vw, 20px)',
     color: ikr.navyText,
     backgroundColor: '#E8E3D9',
     border: 'none',
@@ -727,11 +727,12 @@ export function ContactPageContent() {
                 </p>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <div className="flex justify-stretch lg:justify-end">
                 <button
                   type="button"
                   onClick={handleSubmit}
                   disabled={status === 'loading'}
+                  className="w-full lg:w-auto justify-center"
                   style={{
                     ...displayFont,
                     display: 'inline-flex',

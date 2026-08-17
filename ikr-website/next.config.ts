@@ -6,6 +6,7 @@ const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ['192.168.129.11'],
   images: {
     localPatterns: [{ pathname: '/images/**' }],
   },

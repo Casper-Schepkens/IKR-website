@@ -119,6 +119,7 @@ function ContactValue({ children }: { children: React.ReactNode }) {
         lineHeight: '100%',
         letterSpacing: '-0.04em',
         color: 'var(--ikr-navy-text)',
+        overflowWrap: 'anywhere',
       }}
     >
       {children}
@@ -153,7 +154,7 @@ export function SiteFooter() {
     <footer
       style={{
         backgroundColor: 'var(--ikr-cream)',
-        padding: 'clamp(16px, 2.8vw, 40px) clamp(1rem, 3.5vw, 51px) clamp(24px, 4vw, 60px)',
+        padding: 'clamp(16px, 2.8vw, 40px) clamp(1rem, 3.5vw, 51px) calc(clamp(24px, 4vw, 60px) + env(safe-area-inset-bottom, 0px))',
       }}
     >
       <div
@@ -165,53 +166,47 @@ export function SiteFooter() {
           margin: '0 auto',
         }}
       >
-        {/* Main columns */}
         <div
+          className="flex flex-col lg:flex-row lg:flex-wrap"
           style={{
-            display: 'flex',
             gap: 'clamp(24px, 4.2vw, 60px)',
-            flexWrap: 'wrap',
             alignItems: 'flex-start',
           }}
         >
-          {/* Navigatie */}
-          <div>
+          <div className="order-2 lg:order-none">
             <ColHeader>Navigatie</ColHeader>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 'clamp(8px, 1.1vw, 16px)' }}>
               {NAV.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} style={LINK}>{l.label}</Link>
+                  <Link href={l.href} style={{ ...LINK, minHeight: 44, display: 'flex', alignItems: 'center' }}>{l.label}</Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Cases */}
-          <div>
+          <div className="order-3 lg:order-none">
             <ColHeader>Cases</ColHeader>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 'clamp(8px, 1.1vw, 16px)' }}>
               {CASES.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} style={LINK}>{l.label}</Link>
+                  <Link href={l.href} style={{ ...LINK, minHeight: 44, display: 'flex', alignItems: 'center' }}>{l.label}</Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Legal */}
-          <div>
+          <div className="order-4 lg:order-none">
             <ColHeader>Legal</ColHeader>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 'clamp(8px, 1.1vw, 16px)' }}>
               {LEGAL.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} style={LINK}>{l.label}</Link>
+                  <Link href={l.href} style={{ ...LINK, minHeight: 44, display: 'flex', alignItems: 'center' }}>{l.label}</Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Contact (pushed to right) */}
-          <div style={{ marginLeft: 'auto', minWidth: 'clamp(240px, 27.8vw, 400px)' }}>
+          <div className="order-1 w-full min-w-0 lg:order-none lg:ml-auto lg:min-w-[min(100%,400px)] lg:w-auto">
             {/* Email — speech bubble, tail rechts */}
             <SpeechBubble tail="right">
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>

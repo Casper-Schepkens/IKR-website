@@ -26,7 +26,7 @@ function AgePie() {
   })
 
   return (
-    <svg viewBox="0 0 160 160" width="100%" height="100%" role="img" aria-label="Leeftijd van TikTok-gebruikers in België">
+    <svg viewBox="0 0 160 160" width="100%" role="img" aria-label="Leeftijd van TikTok-gebruikers in België" style={{ display: 'block' }}>
       {slices.map((slice) => (
         <path key={slice.label} d={slice.path} fill={slice.color} />
       ))}
@@ -61,7 +61,7 @@ export function WhyTikTokSection() {
     <section
       style={{
         backgroundColor: ikr.navy,
-        padding: 'clamp(3rem, 8vw, 100px) clamp(1rem, 6.8vw, 98px)',
+        padding: 'clamp(2.25rem, 8vw, 100px) clamp(1rem, 6.8vw, 98px)',
       }}
     >
       <div style={{ maxWidth: 1040, margin: '0 auto' }}>
@@ -96,9 +96,8 @@ export function WhyTikTokSection() {
         </p>
 
         <div
+          className="grid grid-cols-1 lg:grid-cols-2"
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
             gap: 'clamp(1.5rem, 4vw, 40px)',
             alignItems: 'center',
           }}

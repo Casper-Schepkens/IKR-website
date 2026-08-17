@@ -75,11 +75,8 @@ function MetricPanel({ items, dark = false }: { items: Metric[]; dark?: boolean 
 
   return (
     <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-        gap: 12,
-      }}
+      className="grid grid-cols-1 sm:grid-cols-2"
+      style={{ gap: 12 }}
     >
       {items.map((item) => (
         <div
@@ -335,15 +332,21 @@ export function TempusCaseA() {
             De content
           </h2>
           <div
-            className="tempus-video-grid"
+            className="flex overflow-x-auto max-w-full lg:grid lg:grid-cols-4 lg:overflow-visible snap-x snap-mandatory lg:snap-none"
             style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
               gap: 16,
+              WebkitOverflowScrolling: 'touch',
+              touchAction: 'pan-x',
+              overscrollBehavior: 'contain',
             }}
           >
             {TEMPUS.videos.map((v) => (
-              <TempusVideoThumb key={v.src} src={v.src} stat={v.stat} tiktokUrl={v.tiktokUrl} />
+              <div
+                key={v.src}
+                className="shrink-0 w-[min(72vw,220px)] snap-start lg:w-auto lg:min-w-0"
+              >
+                <TempusVideoThumb src={v.src} stat={v.stat} tiktokUrl={v.tiktokUrl} />
+              </div>
             ))}
           </div>
         </div>

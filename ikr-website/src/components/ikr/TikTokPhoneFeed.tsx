@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { claimVideo, releaseVideo } from './InViewVideo'
 
 type FeedItem = {
   src: string
@@ -461,11 +462,30 @@ export function TikTokPhoneFeed({
       if (!video) return
       if (i === activeIndex) {
         video.currentTime = 0
-        video.play().catch(() => {})
+        claimVideo(video)
       } else {
         video.pause()
       }
     })
+  }, [activeIndex])
+
+  useEffect(() => {
+    const root = outerRef.current
+    if (!root) return
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        const video = videoRefs.current[activeIndex]
+        if (!video || !entry) return
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.4) {
+          claimVideo(video)
+        } else if (entry.intersectionRatio < 0.2) {
+          releaseVideo(video)
+        }
+      },
+      { threshold: [0, 0.2, 0.4, 1] },
+    )
+    io.observe(root)
+    return () => io.disconnect()
   }, [activeIndex])
 
   useEffect(() => {
@@ -596,8 +616,10 @@ export function TikTokPhoneFeed({
                   ref={(el) => { videoRefs.current[i] = el }}
                   src={item.src}
                   muted
+                  loop
                   playsInline
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  preload={i === activeIndex ? 'auto' : 'metadata'}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', backgroundColor: '#000' }}
                 />
               </div>
             ))}
