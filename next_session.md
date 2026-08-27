@@ -5,12 +5,10 @@
 ---
 
 ## Algemeen
-1. **Commit + push** SEO/redirects/Resend-split zodat productie op `iknowright.be` die code krijgt (nu nog de vorige Vercel-deploy).
-2. Contact- en pricing-formulier **live testen** op `https://iknowright.be` (Turnstile + `forms@` → `contact@` + PDF-mail).
-3. Google Search Console: property `iknowright.be`, sitemap `https://iknowright.be/sitemap.xml` indienen. Check of Meta/Google ads nog naar `/landing-page*` of `/vsl*` wijzen.
-4. Vercel Hobby → Pro ($20/maand) bevestigen — commercieel gebruik.
-5. **PDF-diensten sync** — zie [`pdf-diensten-sync.md`](pdf-diensten-sync.md)
-6. _(future)_ IKR roadmap/mijlpalen pagina; nieuwe landing page (vervanger WP landings)
+1. Vercel Hobby → Pro ($20/maand) — jij moet de kaart invoeren in Vercel billing; agent kan dat niet.
+2. Search Console sitemap `https://iknowright.be/sitemap.xml` morgen checken of “Kan niet ophalen” → Succesvol is.
+3. **PDF-diensten sync** — zie [`pdf-diensten-sync.md`](pdf-diensten-sync.md)
+4. _(future)_ IKR roadmap/mijlpalen pagina; nieuwe landing page (vervanger WP landings)
 
 ## Homepage (`/`)
 1. Optioneel: OG-image; her-run `npm run audit:legacy` na grote content-wijzigingen.

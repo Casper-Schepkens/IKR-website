@@ -5,8 +5,7 @@
 ---
 
 ## Algemeen
-- **Vercel plan:** Hobby → Pro ($20/maand) nu de site live is op `iknowright.be` (commercieel)
-- **SEO/Resend-code:** lokaal klaar, nog niet op productie tot commit+push
+- **Vercel plan:** Hobby → Pro ($20/maand) nu de site live is op `iknowright.be` (commercieel) — Casper moet kaart invoeren
 
 ## Homepage (`/`)
 - Anneke heeft nog geen logo-bestand.

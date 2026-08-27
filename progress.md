@@ -11,15 +11,16 @@
 - **Lokaal:** `cd ikr-website && npm run dev`
 - **Deploy:** live op Vercel (Hobby), auto-deploy bij push naar `master`
 - **Root directory:** `ikr-website` (hernoemd van `IKR website` — spaties breken Vercel serverless functions)
-- **Laatste commit:** `8176c10` — legacy audit follow-up jun 2026
+- **Laatste commit:** `ac997fc` — SEO metadata, WP redirects, Resend notify-split (live op productie)
 - Design assets in `design/figma-pages/` + `design/figma-sections/`
 - Payload verwijderd → puur Next.js
 - Design tokens in `globals.css`, video's in `src/data/videos.ts`
 - OG-image: dynamisch via `src/app/opengraph-image.tsx` (geen losse template-webp meer)
-- **SEO (aug 2026):** sitemap, robots, metadataBase/canonicals, JSON-LD, 308's oude WP-URL's. Code lokaal klaar; live op `iknowright.be` pas na commit+push.
+- **Favicon (27 aug 2026):** IKR-logo (cyaan vierkant) via `src/app/icon.png` + `apple-icon.png` + `favicon.ico`. Oude `public/favicon.svg` weg.
+- **SEO (27 aug 2026):** sitemap, robots, metadataBase/canonicals, JSON-LD, 308's oude WP-URL's — live. GSC property `iknowright.be` geverifieerd; sitemap `https://iknowright.be/sitemap.xml` ingediend (Google status nog “Kan niet ophalen”, XML zelf 200). Homepage-indexering opnieuw aangevraagd.
 - **Custom domain (27 aug 2026):** `https://iknowright.be` = Vercel (Valid Configuration). Apex A `216.198.79.1`. www CNAME `6d5c470a752ea4e1.vercel-dns-017.com` → 308 naar apex. Nameservers blijven GreenGeeks. MX `smtp.google.com` onaangeroerd. Turnstile hostnames: localhost + vercel.app + apex + www.
-- Vercel env vars ingesteld (Resend + Turnstile). Lokaal: dummy-keys.
-- **Resend (aug 2026):** notify-split in code (`forms@` → `contact@`; klant-PDF blijft `From: contact@`). `contact@` van suppression-lijst gehaald. Live pas na deploy.
+- Vercel env vars ingesteld (Resend + Turnstile). `RESEND_NOTIFY_FROM_EMAIL` niet nodig (code-fallback `forms@`). Lokaal: dummy-keys.
+- **Resend (27 aug 2026):** notify-split live (`forms@` → `contact@`; klant-PDF blijft `From: contact@`). `contact@` van suppression-lijst gehaald. Contactformulier live getest: Turnstile OK, Resend **Delivered** naar `contact@`.
 - Live Next-site: `https://iknowright.be` + `https://ikr-website.vercel.app`. Media lokaal in `ikr-website/public/`.
 - **Cases single-source (jul 2026):** `caseDetails` → `caseGridItems` / `caseCarouselItems`
 - Gsm/mobile versie: Casper (aug 2026)

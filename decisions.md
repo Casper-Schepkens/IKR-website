@@ -28,7 +28,7 @@ DaddyGo = shared hosting, geen Node.js. **Beslissing:** site op Vercel hosten, D
 
 **Domain-switch (27 aug 2026):** apex `iknowright.be` is primair (A `216.198.79.1`). `www` is 308 naar apex (CNAME `6d5c470a752ea4e1.vercel-dns-017.com`). MX/TXT/DKIM/DMARC/`send`/`resend._domainkey` niet aangeraakt.
 
-**Status:** Live op `https://iknowright.be` (Hobby). Pro ($20/maand) nog te bevestigen voor commercieel gebruik.
+**Status:** Live op `https://iknowright.be` (Hobby). Pro ($20/maand) nog te bevestigen voor commercieel gebruik — Casper moet kaart in Vercel billing zetten.
 
 ### Mapnaam `ikr-website` (jun 2026)
 **Beslissing:** Next.js app hernoemd van `IKR website` → `ikr-website`.
@@ -49,7 +49,7 @@ DaddyGo = shared hosting, geen Node.js. **Beslissing:** site op Vercel hosten, D
 
 **Waarom:** self-send via Resend naar Google Workspace bounced; adres staat sindsdien op de suppression-lijst.
 
-**Status:** Code uitgevoerd (`src/lib/resend-mail.ts`). `contact@` van Resend-suppression gehaald (27 aug 2026). Live pas na deploy.
+**Status:** Live na `ac997fc`. `contact@` van Resend-suppression gehaald. Contactformulier 27 aug 2026 live getest: Resend Delivered naar `contact@` (subject go-live test). Google Ads-account bestaat niet op `contact@` — geen ads naar oude WP-landings.
 
 ---
 
