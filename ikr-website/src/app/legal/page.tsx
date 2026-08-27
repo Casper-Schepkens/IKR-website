@@ -1,11 +1,12 @@
-import type { Metadata } from 'next'
 import { LegalPageLayout, LegalParagraph } from '@/components/ikr/LegalPageLayout'
 import { IKR_PHONE } from '@/data/site-contact'
+import { pageMetadata } from '@/lib/site'
 
-export const metadata: Metadata = {
-  title: 'Bedrijfsgegevens — IKnowRight',
-  description: 'Juridische en contactgegevens van IKnowRight.',
-}
+export const metadata = pageMetadata(
+  'Bedrijfsgegevens',
+  'Juridische en contactgegevens van IKnowRight.',
+  '/legal',
+)
 
 export default function LegalPage() {
   return (

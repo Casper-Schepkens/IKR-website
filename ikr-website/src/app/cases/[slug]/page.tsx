@@ -4,6 +4,7 @@ import { CaseDetailPageContent } from '@/components/ikr/CaseDetailPageContent'
 import { Navbar } from '@/components/ikr/Navbar'
 import { SiteFooter } from '@/components/ikr/SiteFooter'
 import { caseDetails, caseDetailSlugs } from '@/data/cases'
+import { pageMetadata } from '@/lib/site'
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -18,10 +19,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const data = caseDetails[slug]
   if (!data) return {}
 
-  return {
-    title: `${data.bedrijf} — Case — IKnowRight`,
-    description: `Case study: hoe IKnowRight ${data.bedrijf} hielp met TikTok-content.`,
-  }
+  return pageMetadata(
+    data.bedrijf,
+    data.outcomeLine ?? `Case study: hoe IKnowRight ${data.bedrijf} hielp met TikTok-content.`,
+    `/cases/${slug}`,
+  )
 }
 
 export default async function CaseDetailPage({ params }: Props) {

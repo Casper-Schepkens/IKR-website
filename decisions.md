@@ -24,7 +24,11 @@
 Eén component: `Navbar.tsx` (pill-bar). Niet per pagina nabouwen.
 
 ### Hosting
-DaddyGo = shared hosting, geen Node.js. **Beslissing:** site op Vercel hosten, DaddyGo-domein via DNS wijzen. DaddyGo behouden voor e-mail. **Status:** Vercel live (Hobby, jun 2026). Custom domain nog niet gekoppeld.
+DaddyGo = shared hosting, geen Node.js. **Beslissing:** site op Vercel hosten, DNS bij GreenGeeks laten (niet nameservers verhuizen). Google Workspace mail blijft MX `smtp.google.com`.
+
+**Domain-switch (27 aug 2026):** apex `iknowright.be` is primair (A `216.198.79.1`). `www` is 308 naar apex (CNAME `6d5c470a752ea4e1.vercel-dns-017.com`). MX/TXT/DKIM/DMARC/`send`/`resend._domainkey` niet aangeraakt.
+
+**Status:** Live op `https://iknowright.be` (Hobby). Pro ($20/maand) nog te bevestigen voor commercieel gebruik.
 
 ### Mapnaam `ikr-website` (jun 2026)
 **Beslissing:** Next.js app hernoemd van `IKR website` → `ikr-website`.
@@ -40,12 +44,12 @@ DaddyGo = shared hosting, geen Node.js. **Beslissing:** site op Vercel hosten, D
 
 **Status:** Uitgevoerd (legal set, reviews, contact topics, Why TikTok, footer links).
 
-### Resend from/to split (aug 2026, nog niet uitgevoerd)
-**Beslissing:** interne form-notificaties niet meer `From: contact@` → `To: contact@`. Klantmails (tarieven-PDF) blijven `From: contact@`. Notificaties `From: forms@` of `hello@` (geen echte mailbox nodig) → `To: contact@`. Daarna `contact@` van Resend suppression halen.
+### Resend from/to split (aug 2026)
+**Beslissing:** interne form-notificaties niet meer `From: contact@` → `To: contact@`. Klantmails (tarieven-PDF) blijven `From: contact@`. Notificaties `From: forms@` (geen mailbox nodig) → `To: contact@`. Daarna `contact@` van Resend suppression halen.
 
 **Waarom:** self-send via Resend naar Google Workspace bounced; adres staat sindsdien op de suppression-lijst.
 
-**Status:** Uitgesteld tot Casper weer bij de mail kan.
+**Status:** Code uitgevoerd (`src/lib/resend-mail.ts`). `contact@` van Resend-suppression gehaald (27 aug 2026). Live pas na deploy.
 
 ---
 

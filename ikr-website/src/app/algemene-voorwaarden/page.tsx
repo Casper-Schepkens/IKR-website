@@ -1,10 +1,11 @@
-import type { Metadata } from 'next'
 import { LegalPageLayout, LegalParagraph } from '@/components/ikr/LegalPageLayout'
+import { pageMetadata } from '@/lib/site'
 
-export const metadata: Metadata = {
-  title: 'Algemene voorwaarden — IKnowRight',
-  description: 'Algemene voorwaarden voor diensten van IKnowRight.',
-}
+export const metadata = pageMetadata(
+  'Algemene voorwaarden',
+  'Algemene voorwaarden voor diensten van IKnowRight.',
+  '/algemene-voorwaarden',
+)
 
 export default function TermsPage() {
   return (

@@ -3,6 +3,7 @@ import path from 'path'
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import type { PricingRequestPayload } from '@/lib/pricing-types'
+import { getNotifyEmail, getResendFrom, getResendNotifyFrom } from '@/lib/resend-mail'
 import { isDevTurnstileBypass, verifyTurnstileToken } from '@/lib/turnstile'
 
 const PDF_FILENAME = 'IKnowRight-tarieven.pdf'
@@ -57,8 +58,9 @@ export async function POST(request: Request) {
     }
 
     const apiKey = process.env.RESEND_API_KEY
-    const fromEmail = process.env.RESEND_FROM_EMAIL
-    const notifyEmail = process.env.IKR_NOTIFY_EMAIL ?? 'contact@iknowright.be'
+    const fromEmail = getResendFrom()
+    const notifyFromEmail = getResendNotifyFrom()
+    const notifyEmail = getNotifyEmail()
 
     if (!apiKey || !fromEmail) {
       console.error('Missing RESEND_API_KEY or RESEND_FROM_EMAIL')
@@ -98,7 +100,7 @@ export async function POST(request: Request) {
         ],
       }),
       resend.emails.send({
-        from: fromEmail,
+        from: notifyFromEmail,
         to: notifyEmail,
         subject: `Nieuwe tarieven-aanvraag — ${fullName}`,
         html: `

@@ -5,10 +5,8 @@
 ---
 
 ## Algemeen
-- **Custom domain:** uitgesteld — DNS DaddyGo/GreenGeeks → Vercel komt later. **Nu:** Turnstile hostname `ikr-website.vercel.app` aanzetten. **Bij permanente switch:** ook `iknowright.be` (+ www) + Vercel env keys; Hobby → Pro.
-- **Vercel plan:** Hobby → Pro ($20/maand) pas bij live op eigen domein
-- **Gsm/mobile:** site is nog niet responsive — volgende grote taak
-- **Resend:** `contact@iknowright.be` staat nog op suppression (bounce 13 jun 2026). Form-notificaties komen niet aan. Fix (from/to splitsen + unsuppress) uitgesteld — Casper heeft nu geen mail-toegang.
+- **Vercel plan:** Hobby → Pro ($20/maand) nu de site live is op `iknowright.be` (commercieel)
+- **SEO/Resend-code:** lokaal klaar, nog niet op productie tot commit+push
 
 ## Homepage (`/`)
 - Anneke heeft nog geen logo-bestand.

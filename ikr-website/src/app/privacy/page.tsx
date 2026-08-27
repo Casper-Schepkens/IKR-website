@@ -1,11 +1,12 @@
-import type { Metadata } from 'next'
 import Link from 'next/link'
 import { LegalPageLayout, LegalParagraph } from '@/components/ikr/LegalPageLayout'
+import { pageMetadata } from '@/lib/site'
 
-export const metadata: Metadata = {
-  title: 'Privacybeleid — IKnowRight',
-  description: 'Hoe IKnowRight omgaat met je persoonsgegevens.',
-}
+export const metadata = pageMetadata(
+  'Privacybeleid',
+  'Hoe IKnowRight omgaat met je persoonsgegevens.',
+  '/privacy',
+)
 
 export default function PrivacyPage() {
   return (

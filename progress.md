@@ -15,13 +15,14 @@
 - Design assets in `design/figma-pages/` + `design/figma-sections/`
 - Payload verwijderd → puur Next.js
 - Design tokens in `globals.css`, video's in `src/data/videos.ts`
-- OG-image nog vervangen
-- Custom domain `iknowright.be` — bewust uitgesteld (DNS nog GreenGeeks/WP; DaddyGo later → Vercel)
-- Vercel env vars ingesteld (Resend + Turnstile) — **aug 2026:** Turnstile Hostname Management moet `ikr-website.vercel.app` bevatten (live nu). `iknowright.be` + www pas bij permanente domain-switch. Lokaal: dummy-keys.
-- **Resend (aug 2026):** `contact@` nog suppressed (bounce 13 jun). Notify-split + unsuppress = later, wacht op mail-toegang. Zie `next_session.md` Algemeen.
-- Live Next-site: `https://ikr-website.vercel.app` — `iknowright.be` = nog oude WordPress (**Account Suspended**, waarschijnlijk tijdelijk). Media niet meer hotlinken; alles lokaal in `ikr-website/public/`.
+- OG-image: dynamisch via `src/app/opengraph-image.tsx` (geen losse template-webp meer)
+- **SEO (aug 2026):** sitemap, robots, metadataBase/canonicals, JSON-LD, 308's oude WP-URL's. Code lokaal klaar; live op `iknowright.be` pas na commit+push.
+- **Custom domain (27 aug 2026):** `https://iknowright.be` = Vercel (Valid Configuration). Apex A `216.198.79.1`. www CNAME `6d5c470a752ea4e1.vercel-dns-017.com` → 308 naar apex. Nameservers blijven GreenGeeks. MX `smtp.google.com` onaangeroerd. Turnstile hostnames: localhost + vercel.app + apex + www.
+- Vercel env vars ingesteld (Resend + Turnstile). Lokaal: dummy-keys.
+- **Resend (aug 2026):** notify-split in code (`forms@` → `contact@`; klant-PDF blijft `From: contact@`). `contact@` van suppression-lijst gehaald. Live pas na deploy.
+- Live Next-site: `https://iknowright.be` + `https://ikr-website.vercel.app`. Media lokaal in `ikr-website/public/`.
 - **Cases single-source (jul 2026):** `caseDetails` → `caseGridItems` / `caseCarouselItems`
-- Gsm/mobile versie nog niet gebouwd
+- Gsm/mobile versie: Casper (aug 2026)
 - **Legal:** `/privacy`, `/cookies`, `/algemene-voorwaarden`, `/legal` — footer links + LinkedIn/Instagram socials
 - Telefoon site-wide: `+32 479 40 03 29` (`src/data/site-contact.ts`)
 - Legacy audit script: `npm run audit:legacy` → `legacy-content-audit.md`

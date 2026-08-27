@@ -1,10 +1,11 @@
-import type { Metadata } from 'next'
 import { LegalPageLayout, LegalParagraph } from '@/components/ikr/LegalPageLayout'
+import { pageMetadata } from '@/lib/site'
 
-export const metadata: Metadata = {
-  title: 'Cookiebeleid — IKnowRight',
-  description: 'Welke cookies IKnowRight gebruikt op iknowright.be.',
-}
+export const metadata = pageMetadata(
+  'Cookiebeleid',
+  'Welke cookies IKnowRight gebruikt op iknowright.be.',
+  '/cookies',
+)
 
 export default function CookiesPage() {
   return (

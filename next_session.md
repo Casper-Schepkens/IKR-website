@@ -5,13 +5,12 @@
 ---
 
 ## Algemeen
-1. **Gsm/mobile versie** — responsive layout voor alle pagina's (nu desktop-first / vw-positioning)
-2. Contact- en pricing-formulier **live testen** op Vercel-URL (creator/solliciteren topics + PDF-mail)
-3. OG-image vervangen (`ikr-website/public/website-template-OG.webp`)
-4. **PDF-diensten sync** — zie [`pdf-diensten-sync.md`](pdf-diensten-sync.md)
-5. _(uitgesteld)_ Custom domain `iknowright.be` via DaddyGo DNS → Vercel — **bij permanente switch:** Turnstile hostnames + Vercel env keys fixen (`iknowright.be` + www); Hobby → Pro ($20/maand)
-6. _(later, wacht op mail-toegang)_ **Resend notify-split** — `contact@` staat nog op suppression (bounce 13 jun). From/to splitsen: klantmails `From: contact@`, interne form-notificaties `From: forms@` of `hello@` → `To: contact@`. Daarna `contact@` unsuppressen in Resend. Geen mailbox nodig voor het from-adres. Niet doen tot Casper weer bij de mail kan.
-7. _(future)_ IKR roadmap/mijlpalen pagina; nieuwe landing page (vervanger WP landings)
+1. **Commit + push** SEO/redirects/Resend-split zodat productie op `iknowright.be` die code krijgt (nu nog de vorige Vercel-deploy).
+2. Contact- en pricing-formulier **live testen** op `https://iknowright.be` (Turnstile + `forms@` → `contact@` + PDF-mail).
+3. Google Search Console: property `iknowright.be`, sitemap `https://iknowright.be/sitemap.xml` indienen. Check of Meta/Google ads nog naar `/landing-page*` of `/vsl*` wijzen.
+4. Vercel Hobby → Pro ($20/maand) bevestigen — commercieel gebruik.
+5. **PDF-diensten sync** — zie [`pdf-diensten-sync.md`](pdf-diensten-sync.md)
+6. _(future)_ IKR roadmap/mijlpalen pagina; nieuwe landing page (vervanger WP landings)
 
 ## Homepage (`/`)
 1. Optioneel: OG-image; her-run `npm run audit:legacy` na grote content-wijzigingen.

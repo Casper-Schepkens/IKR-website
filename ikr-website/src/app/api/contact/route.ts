@@ -8,6 +8,7 @@ import {
   type ContactRequestPayload,
   type ContactType,
 } from '@/lib/contact-types'
+import { getNotifyEmail, getResendNotifyFrom } from '@/lib/resend-mail'
 import { isDevTurnstileBypass, verifyTurnstileToken } from '@/lib/turnstile'
 
 function isValidEmail(email: string): boolean {
@@ -82,11 +83,11 @@ export async function POST(request: Request) {
     }
 
     const apiKey = process.env.RESEND_API_KEY
-    const fromEmail = process.env.RESEND_FROM_EMAIL
-    const notifyEmail = process.env.IKR_NOTIFY_EMAIL ?? 'contact@iknowright.be'
+    const fromEmail = getResendNotifyFrom()
+    const notifyEmail = getNotifyEmail()
 
-    if (!apiKey || !fromEmail) {
-      console.error('Missing RESEND_API_KEY or RESEND_FROM_EMAIL')
+    if (!apiKey) {
+      console.error('Missing RESEND_API_KEY')
       return NextResponse.json({ error: 'E-mail is tijdelijk niet beschikbaar.' }, { status: 503 })
     }
 

@@ -1,6 +1,13 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Roboto_Condensed } from 'next/font/google'
 import { cn } from '@/utilities/ui'
+import {
+  organizationJsonLd,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_URL,
+} from '@/lib/site'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -11,8 +18,32 @@ const robotoCondensed = Roboto_Condensed({
 })
 
 export const metadata: Metadata = {
-  title: 'IKnowRight — TikTok bureau voor food brands',
-  description: 'Wij maken scroll-stoppende content voor food brands die gezien en onthouden willen worden.',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_TITLE,
+    template: `%s — ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    locale: 'nl_BE',
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+  },
+  twitter: {
+    card: 'summary_large_image',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  icons: {
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
+  },
 }
 
 export const viewport: Viewport = {
@@ -23,11 +54,14 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html className={cn(inter.variable, robotoCondensed.variable)} lang="nl">
-      <head>
-        <link href="/favicon.ico" rel="icon" sizes="32x32" />
-      </head>
-      <body>{children}</body>
+    <html className={cn(inter.variable, robotoCondensed.variable)} lang="nl-BE">
+      <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd()) }}
+        />
+        {children}
+      </body>
     </html>
   )
 }
