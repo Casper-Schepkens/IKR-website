@@ -29,7 +29,7 @@ const roleOptions: { id: PricingRole; title: string; subtitle: string }[] = [
   {
     id: 'solliciteren',
     title: 'Ik wil solliciteren.',
-    subtitle: 'Voor als je op zoek bent naar werk als freelancer',
+    subtitle: 'Voor als je op zoek bent naar werk als content creator',
   },
 ]
 

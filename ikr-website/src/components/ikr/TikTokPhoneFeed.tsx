@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { isExternalHref } from '@/data/cases'
 import { claimVideo, releaseVideo } from './InViewVideo'
 
 type FeedItem = {
@@ -174,6 +175,7 @@ function BottomMeta({ item, bottom = 108 }: { item: FeedItem; bottom?: number })
       {item.href ? (
         <a
           href={item.href}
+          {...(isExternalHref(item.href) ? { target: '_blank', rel: 'noreferrer' } : {})}
           style={{ ...userStyle, pointerEvents: 'auto' }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -408,10 +410,12 @@ export function TikTokPhoneFeed({
   items,
   variant = 'classic',
   scrollHint = false,
+  onInteract,
 }: {
   items: FeedItem[]
   variant?: TikTokVariant
   scrollHint?: boolean
+  onInteract?: () => void
 }) {
   const router = useRouter()
   const outerRef = useRef<HTMLDivElement>(null)
@@ -430,7 +434,8 @@ export function TikTokPhoneFeed({
 
   const dismissHint = useCallback(() => {
     setHintVisible(false)
-  }, [])
+    onInteract?.()
+  }, [onInteract])
 
   useEffect(() => {
     const el = outerRef.current
@@ -454,7 +459,12 @@ export function TikTokPhoneFeed({
 
   const openActiveCase = useCallback(() => {
     const href = items[activeIndex]?.href
-    if (href) router.push(href)
+    if (!href) return
+    if (isExternalHref(href)) {
+      window.open(href, '_blank', 'noopener,noreferrer')
+      return
+    }
+    router.push(href)
   }, [items, activeIndex, router])
 
   useEffect(() => {
@@ -566,7 +576,7 @@ export function TikTokPhoneFeed({
     }
   }, [goNext, goPrev, openActiveCase, dismissHint])
 
-  const slideShare = 100 / items.length
+  const slideShare = items.length === 0 ? 100 : 100 / items.length
   const translateY = `calc(-${activeIndex * slideShare}% + ${dragOffset / scale}px)`
   const isLiked = likedVideos.has(activeIndex)
 

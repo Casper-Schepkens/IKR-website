@@ -224,32 +224,38 @@ function CaseDetailHero({ data }: { data: CaseDetail }) {
               fontSize: 'clamp(0.9rem, 1.67vw, 24px)',
               color: ikr.cyan,
               textTransform: 'uppercase',
-              marginBottom: 'clamp(1.5rem, 3vw, 32px)',
+              marginBottom: data.heroImage ? 'clamp(1.5rem, 3vw, 32px)' : 'clamp(2rem, 4vw, 48px)',
             }}
           >
             {data.outcomeLine}
           </p>
         )}
 
-        <div
-          style={{
-            position: 'relative',
-            width: '100%',
-            aspectRatio: '16 / 7',
-            borderRadius: 'clamp(20px, 2.5vw, 32px)',
-            overflow: 'hidden',
-            marginBottom: 'clamp(2rem, 4vw, 48px)',
-          }}
-        >
-          <Image
-            src={data.heroImage}
-            alt=""
-            fill
-            style={{ objectFit: 'cover' }}
-            sizes="(max-width: 1440px) 100vw, 1440px"
-            priority
-          />
-        </div>
+        {data.heroImage && (
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              aspectRatio: data.heroVariant === 'logo' ? '16 / 5' : '16 / 7',
+              borderRadius: 'clamp(20px, 2.5vw, 32px)',
+              overflow: 'hidden',
+              marginBottom: 'clamp(2rem, 4vw, 48px)',
+              backgroundColor: data.heroVariant === 'logo' ? '#0A0A0A' : undefined,
+            }}
+          >
+            <Image
+              src={data.heroImage}
+              alt={data.heroVariant === 'logo' ? `${data.bedrijf} logo` : ''}
+              fill
+              style={{
+                objectFit: data.heroVariant === 'logo' ? 'contain' : 'cover',
+                padding: data.heroVariant === 'logo' ? 'clamp(20px, 4.5vw, 56px)' : 0,
+              }}
+              sizes="(max-width: 1440px) 100vw, 1440px"
+              priority
+            />
+          </div>
+        )}
       </div>
     </section>
   )

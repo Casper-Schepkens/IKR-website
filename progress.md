@@ -27,6 +27,9 @@
 - **Legal:** `/privacy`, `/cookies`, `/algemene-voorwaarden`, `/legal` — footer links + LinkedIn/Instagram socials
 - Telefoon site-wide: `+32 479 40 03 29` (`src/data/site-contact.ts`)
 - Legacy audit script: `npm run audit:legacy` → `legacy-content-audit.md`
+- **Titel (31 aug 2026):** site-title + OG = `IKnowRight: dé TikTok agency voor food brands in Vlaanderen`
+- **Video-showers (31 aug 2026):** 4 plekken delen geen dezelfde video. Per klantmap: shower 0 = 1e/5e/9e (homepage fan), 1 = 2e/6e (homepage cases), 2 = 3e/7e (start aanpak gsm; daarna alle andere clips in de gsm), 3 = 4e/8e (aanpak carousel). Eén video in het mapje → die overal. Maison Slash seksenquete-topvideo (`hideFromShowers`) blijft alleen op de case-detailpagina.
+- **Showers vs grid (31 aug 2026):** `SHOWER_CHANNELS` = Tempus, Maison Slash, Anneke, Oh!ma, Wasbar. `CASE_GRID_ORDER` blijft 3 laag-1 cases. Oh!ma/Wasbar klikken naar de TikTok-post, geen fake detailpagina. Extra mp4's: Wasbar 2, Oh!ma 6, Maison Slash +5, Tempus +3.
 
 ---
 
@@ -41,6 +44,7 @@
 - **aug 2026:** proces = Analyse → Creatie → Iteratie; smooth S-curve (`scrub: 1`)
 - **aug 2026:** Why TikTok met DataReportal 42,5% + leeftijd-pie (niet 50%, niet 46% 34+)
 - **aug 2026:** homepage-stats uit Metricool (Tempus + Maison Slash): 2.2M views / 171 video's / 170K topvideo — geen Figma-125M
+- **31 aug 2026:** hero-titel = IKnowRight + “dé TikTok agency voor food brands in Vlaanderen”. Proces-sectie heeft knop naar `/aanpak`. Fan-carousel = shower 0 (5 merken: Tempus, Maison Slash, Anneke, Oh!ma, Wasbar). Cases-preview = shower 1 (alleen de 3 laag-1 cases).
 
 ---
 
@@ -48,10 +52,11 @@
 
 **Status:** live — interactie-pass aug 2026
 
-- Hero + gsm-feed, **Is dat wel iets voor mij?**, **Zonder/Met IKR**, proces-sectie, case-carousel, freelancer/contact CTA
+- Hero + gsm-feed, **Is dat wel iets voor mij?**, **Zonder/Met IKR**, proces-sectie, case-carousel, content-creator/contact CTA
 - **jul 2026:** case-carousel + gsm-feed pullen uit case-video's (`caseCarouselItems` / `aanpakHeroFeedVideos`)
 - **aug 2026:** scroll-hint op gsm; cijfers via `ikr-stats.ts` (zelfde Metricool-bron als homepage); Bekijk-het-zelf zonder cutoff; CTA-foto’s freelancer + team
-- Open: dedicated freelancer-asset (`card top.png`) indien betere foto klaar; Anneke-logo ontbreekt nog
+- **31 aug 2026:** “freelancer” → “content creator” in CTA. Scroll-hint staat naast de gsm (niet erover). Gsm-feed begint met shower 2, daarna alle andere clips (geschud, niet dezelfde klant na elkaar; seksenquete blijft eruit). Wasbar zit dus wél in de gsm. Onderaan-carousel = shower 3. Klik op Oh!ma/Wasbar opent TikTok.
+- Open: echte creator/shoot-foto i.p.v. supermarkt-aisle (`freelancer-cta.jpg`); Anneke-logo ontbreekt nog
 
 ---
 
@@ -82,7 +87,8 @@
 - Telefoon sidebar: `+32 479 40 03 29`
 - Submit via `/api/contact` → Resend notificatie naar `contact@iknowright.be` (replyTo = invuller)
 - Turnstile + GDPR + honeypot (zelfde patroon als pricing)
-- Teamfoto: `public/images/contact-team.jpg` (geëxtraheerd uit design)
+- Teamfoto: `public/images/contact-team.jpg` (geëxtraheerd uit design) — echte teamfoto, geen filler
+- **31 aug 2026:** e-mail in de cyan kaart is `mailto:`. Copy “freelancer” → “content creator”. Formulier + tel + mail = de CTA’s.
 - Getest lokaal; live test op Vercel nog doen (env vars)
 
 ---
@@ -92,12 +98,13 @@
 **Status:** v1 + Tempus layout A (cijfers i.p.v. foto's, aug 2026)
 
 **Laag 1 — Cases (detailpagina's):**
-- Tempus, Maison Slash, Anneke Govaerts — elk met top 4 TikTok-video's lokaal (`public/videos/cases/`)
+- Tempus, Maison Slash, Anneke Govaerts — elk met lokale TikTok-video's (`public/videos/cases/`). Extra clips op Tempus/Maison voor showers; Wasbar + Oh!ma alleen in showers, geen detailpagina.
 - Overview: hele kaart klikbaar → detail; galerij: klik → TikTok-post
 - Views-badge met oog-icoon (niet likes)
 - Maison Slash overview-thumbnail = `7573647751959858464.mp4` (niet seksenquete-topvideo)
 - **Tempus (aug 2026):** layout A. Foto's in de 3 stappen vervangen door Metricool-cijfers. v2/v3 weg.
 - **Maison Slash (aug 2026):** Metricool-cijfers i.p.v. groeipercentages (+28.000% etc.). 1.2M views, 170K topvideo, 100 video's. Geen "binnen één maand".
+- **31 aug 2026:** Maison Slash cover = logo-banner (geen seksenquete-videoframe). Anneke geen cover (geen teamfoto meer).
 
 **Laag 2 — Food werk:**
 - Aïki, O'Tacos, Panos — influencer-grid, views + highlight, geen detailpagina
@@ -109,7 +116,7 @@
 
 **Open:**
 - Foto's + tekst corrigeren (nog niet juist)
-- Hero/storyfoto's + logo's voor Maison Slash & Anneke (Maison Slash hero is nu een lokaal videoframe, geen WP-jpeg)
+- Hero/storyfoto's Maison Slash & Anneke (cover is gefixt: logo / geen foto; echte shoot-foto's later)
 - Panos view-stat invullen
 - Echte food retainer-cases later → laag 1
 - Tempus: één layout kiezen, v2/v3 daarna weg
