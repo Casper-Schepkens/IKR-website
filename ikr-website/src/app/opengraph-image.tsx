@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og'
 
-export const alt = 'IKnowRight — TikTok bureau voor food brands'
+export const alt = 'IKnowRight: dé TikTok agency voor food brands in Vlaanderen'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -41,14 +41,14 @@ export default function OpenGraphImage() {
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div
             style={{
-              fontSize: 72,
+              fontSize: 52,
               fontWeight: 900,
               color: '#201737',
               lineHeight: 1.05,
               letterSpacing: '-0.04em',
             }}
           >
-            TikTok bureau voor food brands
+            dé TikTok agency voor food brands in Vlaanderen
           </div>
           <div
             style={{

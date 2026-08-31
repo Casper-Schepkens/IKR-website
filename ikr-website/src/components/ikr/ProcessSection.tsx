@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -247,6 +248,24 @@ export function ProcessSection() {
           <h3 style={TITLE_FONT}>{STEPS[2].title}</h3>
           <p style={{ ...BODY_FONT, marginTop: 'clamp(12px, 1.7vw, 24px)' }}>{STEPS[2].body}</p>
         </div>
+      </div>
+
+      <div style={{ textAlign: 'center', marginTop: 'clamp(28px, 4vw, 56px)' }}>
+        <Link
+          href="/aanpak"
+          className="font-display font-black uppercase inline-flex items-center"
+          style={{
+            fontSize: 'clamp(0.9rem, 1.8vw, 22px)',
+            letterSpacing: '-0.04em',
+            backgroundColor: 'var(--ikr-navy)',
+            color: '#fff',
+            borderRadius: 48,
+            padding: '0.55em 1.5em',
+            textDecoration: 'none',
+          }}
+        >
+          Ontdek onze aanpak →
+        </Link>
       </div>
     </section>
   )

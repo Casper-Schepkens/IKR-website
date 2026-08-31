@@ -1,4 +1,4 @@
-import { CASE_CHANNEL_VIDEOS, VIDEO_PATHS } from './videos'
+import { CASE_CHANNEL_VIDEOS, VIDEO_PATHS, type CaseChannelVideo } from './videos'
 
 // ─── Overview grid types (afgeleid van caseDetails — zie onderaan) ────────────
 
@@ -73,7 +73,9 @@ export type CaseDetail = {
   bedrijf: string
   logo?: string
   tags: string[]
-  heroImage: string
+  /** Weglaten = geen cover. `logo` = merkbanner i.p.v. foto. */
+  heroImage?: string
+  heroVariant?: 'photo' | 'logo'
   outcomeLine?: string
   summary: string[]
   results: { label: string; value: string }[]
@@ -176,7 +178,8 @@ export const caseDetailMaisonSlash: CaseDetail = {
   bedrijf: 'Maison Slash',
   logo: '/images/client_logos/MS logo.png',
   tags: ['Media', 'TikTok', 'Ouderschap'],
-  heroImage: '/images/cases/maison-slash/hero.jpg',
+  heroImage: '/images/client_logos/MS logo.png',
+  heroVariant: 'logo',
   outcomeLine: '1.2 miljoen views — topvideo 170K organisch',
   summary: [
     'Maison Slash België verkoopt magazines voor ouders. Hun doel op TikTok: ouders aanspreken met content die herkenbaar en deelbaar is.',
@@ -196,7 +199,6 @@ export const caseDetailMaisonSlash: CaseDetail = {
     {
       title: 'DE UITDAGING',
       body: 'Maison Slash had een TikTok-account, maar het bereikte niet de jonge ouder-doelgroep op schaal. Ze zochten content die past bij een magazine-merk zonder corporate te voelen.',
-      image: '/images/contact-team.jpg',
     },
     {
       title: 'ONZE AANPAK VOOR MAISON SLASH',
@@ -216,7 +218,6 @@ export const caseDetailAnnekeGovaerts: CaseDetail = {
   slug: 'anneke-govaerts',
   bedrijf: 'Anneke Govaerts',
   tags: ['Healthcare', 'TikTok', 'Awareness'],
-  heroImage: '/images/contact-team.jpg',
   outcomeLine: '1.300+ volgers en landelijke PR in anderhalve maand',
   summary: [
     'Dr. Anneke Govaerts is migraine-specialist en auteur. Haar doelen op TikTok: meer awareness rond migraine én meer verkoop van haar boeken.',
@@ -234,7 +235,6 @@ export const caseDetailAnnekeGovaerts: CaseDetail = {
     {
       title: 'DE UITDAGING',
       body: 'Anneke had expertise en een boek, maar miste het bereik om migraine-bewustzijn op te bouwen bij een jong publiek. Klassieke medical marketing voelde te afstandelijk voor TikTok.',
-      image: '/images/contact-team.jpg',
     },
     {
       title: 'ONZE AANPAK VOOR ANNEKE GOVAERTS',
@@ -257,57 +257,142 @@ export const caseDetails: Record<string, CaseDetail> = {
 
 export const caseDetailSlugs = Object.keys(caseDetails)
 
-// ─── Single source: grid + carousel afgeleid van caseDetails ─────────────────
-
-/** Volgorde homepage /cases overview / Aanpak-carousel. */
-const CASE_GRID_ORDER = ['tempus', 'maison-slash', 'anneke-govaerts'] as const
-
-/**
- * Welke video uit `caseDetails[slug].videos` als thumbnail (niet altijd #1 views).
- * Maison Slash: index 2 = 757364… (niet seksenquete-topvideo).
- */
-const CASE_GRID_PREVIEW_INDEX: Record<string, number> = {
-  tempus: 0,
-  'maison-slash': 2,
-  'anneke-govaerts': 0,
+export function isExternalHref(href: string) {
+  return href.startsWith('http://') || href.startsWith('https://')
 }
 
-function toGridItem(detail: CaseDetail): CaseGridItem {
-  const idx = CASE_GRID_PREVIEW_INDEX[detail.slug] ?? 0
-  const video = detail.videos[idx]?.src ?? detail.videos[0]?.src ?? ''
+export function caseLinkProps(href: string) {
+  return isExternalHref(href)
+    ? { href, target: '_blank' as const, rel: 'noreferrer' }
+    : { href }
+}
+
+// ─── Single source: grid van caseDetails; showers mogen extra kanalen ─────────
+
+/** Volgorde homepage-/cases-overview (alleen laag-1 cases met detailpagina). */
+const CASE_GRID_ORDER = ['tempus', 'maison-slash', 'anneke-govaerts'] as const
+
+type ShowerChannel = {
+  channelKey: keyof typeof CASE_CHANNEL_VIDEOS
+  handle: string
+  /** Gezet → klik naar `/cases/{slug}`. Anders naar de TikTok-post. */
+  caseSlug?: string
+  name: string
+  logo?: string
+  caption: string
+}
+
+/** Showers: cases + food-kanalen zonder fake detailpagina. */
+const SHOWER_CHANNELS: readonly ShowerChannel[] = [
+  { channelKey: 'tempus', caseSlug: 'tempus', handle: '@tempusverpleging', name: 'Tempus', caption: '' },
+  { channelKey: 'maisonSlash', caseSlug: 'maison-slash', handle: '@maisonslashbelgie', name: 'Maison Slash', caption: '' },
+  { channelKey: 'annekeGovaerts', caseSlug: 'anneke-govaerts', handle: '@anneke_govaerts', name: 'Anneke Govaerts', caption: '' },
+  {
+    channelKey: 'ohma',
+    handle: '@ohma_gent',
+    name: 'Oh!ma',
+    logo: '/images/client_logos/ohma logo.png',
+    caption: 'Oh!ma Gent',
+  },
+  {
+    channelKey: 'wasbar',
+    handle: '@wasbarontiktok',
+    name: 'Wasbar',
+    logo: '/images/client_logos/wasbar logo2.jpg',
+    caption: 'Wasbar',
+  },
+]
+
+/**
+ * 4 videoshower-plekken. Per klantmap: shower 0 pakt 1e/5e/9e, shower 1 de 2e/6e, enz.
+ * Eén video in het mapje → die video overal. Geen match voor die shower → klant overslaan
+ * (niet terugvallen op video 1 — dat veroorzaakt herhaling).
+ */
+const VIDEO_SHOWER_COUNT = 4
+export type VideoShowerIndex = 0 | 1 | 2 | 3
+
+const CHANNEL_KEY_BY_SLUG: Record<(typeof CASE_GRID_ORDER)[number], keyof typeof CASE_CHANNEL_VIDEOS> = {
+  tempus: 'tempus',
+  'maison-slash': 'maisonSlash',
+  'anneke-govaerts': 'annekeGovaerts',
+}
+
+function videosForShower(channelKey: keyof typeof CASE_CHANNEL_VIDEOS, shower: VideoShowerIndex): CaseChannelVideo[] {
+  const folder = CASE_CHANNEL_VIDEOS[channelKey].filter((v) => !v.hideFromShowers)
+  if (folder.length === 0) return []
+  if (folder.length === 1) return [folder[0]]
+  return folder.filter((_, i) => i % VIDEO_SHOWER_COUNT === shower)
+}
+
+function resolveChannel(channel: ShowerChannel) {
+  if (channel.caseSlug) {
+    const detail = caseDetails[channel.caseSlug]
+    if (!detail) throw new Error(`Missing case detail for shower channel: ${channel.caseSlug}`)
+    return {
+      name: detail.bedrijf,
+      logo: detail.logo,
+      caption: detail.outcomeLine ?? detail.summary[0] ?? detail.bedrijf,
+      hrefFor: (_video: CaseChannelVideo) => `/cases/${detail.slug}`,
+    }
+  }
+  return {
+    name: channel.name,
+    logo: channel.logo,
+    caption: channel.caption,
+    hrefFor: (video: CaseChannelVideo) => video.tiktokUrl,
+  }
+}
+
+function cycleFill<T>(items: T[], count: number): T[] {
+  if (items.length === 0) return []
+  return Array.from({ length: count }, (_, i) => items[i % items.length])
+}
+
+/** Eerste video per kanaal, daarna extra's — zodat 5 fan-slots 5 merken tonen. */
+function showerPicksFirstThenRest(shower: VideoShowerIndex) {
+  const firsts: { channel: ShowerChannel; video: CaseChannelVideo }[] = []
+  const rest: { channel: ShowerChannel; video: CaseChannelVideo }[] = []
+  for (const channel of SHOWER_CHANNELS) {
+    const videos = videosForShower(channel.channelKey, shower)
+    if (videos[0]) firsts.push({ channel, video: videos[0] })
+    for (const video of videos.slice(1)) rest.push({ channel, video })
+  }
+  return [...firsts, ...rest]
+}
+
+function toGridItem(detail: CaseDetail, videoSrc: string): CaseGridItem {
   return {
     id: detail.slug,
     slug: detail.slug,
     clientName: detail.bedrijf,
-    video,
+    video: videoSrc,
     logo: detail.logo,
   }
 }
 
-/** Overview + homepage — zelfde bron als detailpagina's. */
-export const caseGridItems: CaseGridItem[] = CASE_GRID_ORDER.map((slug) => {
+/** Overview + homepage cases — shower 1 (2e, 6e, … per mapje). Alleen laag-1. */
+export const caseGridItems: CaseGridItem[] = CASE_GRID_ORDER.flatMap((slug) => {
   const detail = caseDetails[slug]
   if (!detail) throw new Error(`Missing case detail for grid: ${slug}`)
-  return toGridItem(detail)
+  const video = videosForShower(CHANNEL_KEY_BY_SLUG[slug], 1)[0]
+  if (!video) return []
+  return [toGridItem(detail, video.src)]
 })
 
-/** Aanpak-carousel — zelfde cases, link naar detail. */
-export const caseCarouselItems: CaseCarouselItem[] = caseGridItems.map((item) => ({
-  src: item.video,
-  href: `/cases/${item.slug}`,
-  label: item.clientName,
-  logo: item.logo,
-}))
+/** Aanpak-carousel — shower 3 (4e, 8e, … per mapje). */
+export const caseCarouselItems: CaseCarouselItem[] = SHOWER_CHANNELS.flatMap((channel) => {
+  const meta = resolveChannel(channel)
+  return videosForShower(channel.channelKey, 3).map((video) => ({
+    src: video.src,
+    href: meta.hrefFor(video),
+    label: meta.name,
+    logo: meta.logo,
+  }))
+})
 
-// ─── Homepage fan-carousel + Aanpak phone-feed (zelfde case-video's) ─────────
+// ─── Homepage fan-carousel + Aanpak phone-feed (verschillende showers) ───────
 
-const CASE_TIKTOK_HANDLE: Record<string, string> = {
-  tempus: '@tempusverpleging',
-  'maison-slash': '@maisonslashbelgie',
-  'anneke-govaerts': '@anneke_govaerts',
-}
-
-/** Layout slots (Figma) — bron-video's komen uit caseDetails via HOMEPAGE_CAROUSEL_PICKS. */
+/** Layout slots (Figma) — bron-video's via SHOWER_CHANNELS, shower 0. */
 const HOMEPAGE_CAROUSEL_LAYOUT = [
   { id: 'far-left', left: -11.6, top: 127, rotation: -16, zIndex: 1 },
   { id: 'near-left', left: 9.86, top: 48, rotation: -10, zIndex: 2 },
@@ -316,14 +401,13 @@ const HOMEPAGE_CAROUSEL_LAYOUT = [
   { id: 'far-right', left: 74.1, top: 127, rotation: 16, zIndex: 1 },
 ] as const
 
-/** Welke case-video per carousel-slot (5 stuks). */
-const HOMEPAGE_CAROUSEL_PICKS: { slug: string; videoIndex: number }[] = [
-  { slug: 'tempus', videoIndex: 1 },
-  { slug: 'maison-slash', videoIndex: 0 },
-  { slug: 'tempus', videoIndex: 0 },
-  { slug: 'anneke-govaerts', videoIndex: 0 },
-  { slug: 'maison-slash', videoIndex: 2 },
-]
+type ShowerPick = { channel: ShowerChannel; video: CaseChannelVideo }
+
+/** Shower 0 (1e, 5e, … per mapje) — 5 layout-slots, eerst 1 per merk. */
+const HOMEPAGE_CAROUSEL_PICKS: ShowerPick[] = cycleFill(
+  showerPicksFirstThenRest(0),
+  HOMEPAGE_CAROUSEL_LAYOUT.length,
+)
 
 export type HomepageCarouselCard = {
   id: string
@@ -340,10 +424,8 @@ export type HomepageCarouselCard = {
 
 export const homepageCarouselCards: HomepageCarouselCard[] = HOMEPAGE_CAROUSEL_LAYOUT.map((layout, i) => {
   const pick = HOMEPAGE_CAROUSEL_PICKS[i]
-  const detail = caseDetails[pick.slug]
-  if (!detail) throw new Error(`Missing case for homepage carousel: ${pick.slug}`)
-  const video = detail.videos[pick.videoIndex] ?? detail.videos[0]
-  if (!video) throw new Error(`Missing video for homepage carousel: ${pick.slug}`)
+  if (!pick) throw new Error(`Missing homepage carousel pick for slot ${layout.id}`)
+  const meta = resolveChannel(pick.channel)
   return {
     id: layout.id,
     left: layout.left,
@@ -351,10 +433,10 @@ export const homepageCarouselCards: HomepageCarouselCard[] = HOMEPAGE_CAROUSEL_L
     rotation: layout.rotation,
     zIndex: layout.zIndex,
     shadow: 'shadow' in layout ? layout.shadow : undefined,
-    src: video.src,
-    href: `/cases/${detail.slug}`,
-    label: detail.bedrijf,
-    logo: detail.logo,
+    src: pick.video.src,
+    href: meta.hrefFor(pick.video),
+    label: meta.name,
+    logo: meta.logo,
   }
 })
 
@@ -366,29 +448,75 @@ export type CaseFeedItem = {
   likes: string
   comments: string
   href: string
+  channelId: string
 }
 
-/** Aanpak gsm-feed — echte case-video's i.p.v. showcase placeholders. */
-const AANPAK_FEED_PICKS: { slug: string; videoIndex: number }[] = [
-  { slug: 'tempus', videoIndex: 0 },
-  { slug: 'maison-slash', videoIndex: 0 },
-  { slug: 'anneke-govaerts', videoIndex: 0 },
-  { slug: 'maison-slash', videoIndex: 2 },
-]
-
-export const aanpakHeroFeedVideos: CaseFeedItem[] = AANPAK_FEED_PICKS.map((pick) => {
-  const detail = caseDetails[pick.slug]
-  if (!detail) throw new Error(`Missing case for aanpak feed: ${pick.slug}`)
-  const video = detail.videos[pick.videoIndex] ?? detail.videos[0]
-  if (!video) throw new Error(`Missing video for aanpak feed: ${pick.slug}`)
-  const handle = CASE_TIKTOK_HANDLE[detail.slug] ?? `@${detail.slug}`
+function toFeedItem(channel: ShowerChannel, video: CaseChannelVideo): CaseFeedItem {
+  const meta = resolveChannel(channel)
   return {
     src: video.src,
-    user: handle,
-    caption: detail.outcomeLine ?? detail.summary[0] ?? detail.bedrijf,
-    song: `Original Sound - ${detail.bedrijf}`,
+    user: channel.handle,
+    caption: meta.caption,
+    song: `Original Sound - ${meta.name}`,
     likes: video.stat,
     comments: '—',
-    href: `/cases/${detail.slug}`,
+    href: meta.hrefFor(video),
+    channelId: channel.channelKey,
   }
-})
+}
+
+/** Round-robin over merken zodat starters niet 2× dezelfde klant na elkaar zetten. */
+function roundRobinByChannel(items: CaseFeedItem[]): CaseFeedItem[] {
+  const queues = new Map<string, CaseFeedItem[]>()
+  for (const item of items) {
+    const queue = queues.get(item.channelId) ?? []
+    queue.push(item)
+    queues.set(item.channelId, queue)
+  }
+  const order = [...queues.keys()]
+  const result: CaseFeedItem[] = []
+  while (result.length < items.length) {
+    for (const id of order) {
+      const next = queues.get(id)?.shift()
+      if (next) result.push(next)
+    }
+  }
+  return result
+}
+
+function shuffleNoAdjacentSame(items: CaseFeedItem[], previousChannelId?: string): CaseFeedItem[] {
+  const remaining = [...items]
+  const result: CaseFeedItem[] = []
+  let last = previousChannelId
+  while (remaining.length > 0) {
+    const candidates = remaining.filter((item) => item.channelId !== last)
+    const pool = candidates.length > 0 ? candidates : remaining
+    const pick = pool[Math.floor(Math.random() * pool.length)]
+    remaining.splice(remaining.indexOf(pick), 1)
+    result.push(pick)
+    last = pick.channelId
+  }
+  return result
+}
+
+/** Shower 2 (3e, 7e, …) — vaste start van de gsm-feed, 1 merk per beurt. */
+export const aanpakHeroFeedStarters: CaseFeedItem[] = roundRobinByChannel(
+  SHOWER_CHANNELS.flatMap((channel) =>
+    videosForShower(channel.channelKey, 2).map((video) => toFeedItem(channel, video)),
+  ),
+)
+
+/** Gsm-feed: starters, daarna alle andere clips (geen seksenquete), geschud zonder dezelfde klant na elkaar. */
+export function buildAanpakPhoneFeed(): CaseFeedItem[] {
+  const starterSrc = new Set(aanpakHeroFeedStarters.map((item) => item.src))
+  const rest = SHOWER_CHANNELS.flatMap((channel) =>
+    CASE_CHANNEL_VIDEOS[channel.channelKey]
+      .filter((video) => !video.hideFromShowers && !starterSrc.has(video.src))
+      .map((video) => toFeedItem(channel, video)),
+  )
+  const lastStarter = aanpakHeroFeedStarters.at(-1)?.channelId
+  return [...aanpakHeroFeedStarters, ...shuffleNoAdjacentSame(rest, lastStarter)]
+}
+
+/** SSR-fallback = starters; client vervangt dit door `buildAanpakPhoneFeed()`. */
+export const aanpakHeroFeedVideos = aanpakHeroFeedStarters

@@ -18,7 +18,7 @@ Hero, carousel, stats, team, proces, cases-preview, reviews, CTA. Eerste indruk 
 
 ## Aanpak (`/aanpak`)
 
-Uitleg werkwijze: wat we doen, hoe we werken, cases-carousel, freelancer + contact CTA.
+Uitleg werkwijze: wat we doen, hoe we werken, cases-carousel, content-creator + contact CTA.
 
 ---
 

@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
-import { IKR_PHONE, SOCIAL_LINKS } from '@/data/site-contact'
+import { IKR_EMAIL, IKR_PHONE, SOCIAL_LINKS } from '@/data/site-contact'
 
 export const SITE_URL = 'https://iknowright.be'
 export const SITE_NAME = 'IKnowRight'
-export const SITE_TITLE = 'IKnowRight — TikTok bureau voor food brands'
+export const SITE_TITLE = 'IKnowRight: dé TikTok agency voor food brands in Vlaanderen'
 export const SITE_DESCRIPTION =
   'Wij maken scroll-stoppende content voor food brands die gezien en onthouden willen worden.'
 
@@ -36,7 +36,7 @@ export function organizationJsonLd() {
         name: SITE_NAME,
         legalName: SITE_NAME,
         url: SITE_URL,
-        email: 'contact@iknowright.be',
+        email: IKR_EMAIL,
         telephone: IKR_PHONE,
         description: SITE_DESCRIPTION,
         address: {

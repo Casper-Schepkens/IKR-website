@@ -39,7 +39,7 @@ export const MESSAGE_TOPIC_LABELS: Record<MessageTopic, string> = {
   samenwerking: 'Ik wil samenwerken als creator/influencer.',
   portfolio: 'Ik wil mijn portfolio of voorstel delen.',
   creator_vraag: 'Ik heb een concrete vraag.',
-  freelancer: 'Ik solliciteer als freelancer (videomaker/editor).',
+  freelancer: 'Ik solliciteer als content creator (videomaker/editor).',
   portfolio_sollicitatie: 'Ik stuur mijn portfolio door.',
   spontaan: 'Spontane sollicitatie — ik denk dat ik kan bijdragen.',
   anders: 'Anders',

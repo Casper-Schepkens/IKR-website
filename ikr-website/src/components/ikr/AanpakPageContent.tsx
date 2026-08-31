@@ -3,14 +3,12 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
-import { caseCarouselItems, aanpakHeroFeedVideos } from '@/data/cases'
+import { caseCarouselItems, aanpakHeroFeedStarters, buildAanpakPhoneFeed, caseLinkProps } from '@/data/cases'
 import { ikrStats } from '@/data/ikr-stats'
 import { bodyFont, displayFont, ikr } from '@/lib/ikr-styles'
 import { ClickHint, ClientLogoSticker } from './ClientLogoSticker'
 import { claimVideo, InViewVideo } from './InViewVideo'
 import { TikTokPhoneFeed } from './TikTokPhoneFeed'
-
-const heroFeed = aanpakHeroFeedVideos
 
 /** Genoeg kaarten voor een vloeiende infinite scroll, altijd uit caseCarouselItems. */
 const caseVideos = Array.from(
@@ -54,7 +52,12 @@ function ProcessIcon({ src }: { src: string }) {
   )
 }
 
-function HeroPhone() {
+function HeroPhone({ onInteract }: { onInteract?: () => void }) {
+  const [feed, setFeed] = useState(aanpakHeroFeedStarters)
+  useEffect(() => {
+    setFeed(buildAanpakPhoneFeed())
+  }, [])
+
   return (
     <div
       style={{
@@ -87,7 +90,7 @@ function HeroPhone() {
             backgroundColor: '#000',
           }}
         >
-          <TikTokPhoneFeed items={heroFeed} variant="classic" scrollHint />
+          <TikTokPhoneFeed items={feed} variant="classic" onInteract={onInteract} />
 
           <div
             style={{
@@ -111,7 +114,55 @@ function HeroPhone() {
   )
 }
 
+function PhoneScrollHint() {
+  return (
+    <div
+      aria-hidden
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 8,
+        animation: 'ikr-scroll-nudge 1.6s ease-in-out infinite',
+        pointerEvents: 'none',
+        flexShrink: 0,
+      }}
+    >
+      <span
+        style={{
+          ...displayFont,
+          fontWeight: 900,
+          fontSize: 'clamp(1rem, 2vw, 22px)',
+          letterSpacing: '0.12em',
+          color: ikr.navy,
+        }}
+      >
+        SCROLL
+      </span>
+      <svg width="22" height="36" viewBox="0 0 22 36" fill="none" aria-hidden>
+        <path d="M11 4v24" stroke={ikr.navy} strokeWidth="2.4" strokeLinecap="round" />
+        <path d="M4 20l7 12 7-12" stroke={ikr.navy} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      <span
+        style={{
+          ...bodyFont,
+          fontSize: 'clamp(0.75rem, 1.1vw, 14px)',
+          color: ikr.navy,
+          opacity: 0.7,
+          textAlign: 'center',
+          maxWidth: 90,
+          lineHeight: 1.3,
+        }}
+      >
+        veeg of scroll
+      </span>
+    </div>
+  )
+}
+
 function HeroSection() {
+  const [hintVisible, setHintVisible] = useState(true)
+
   return (
     <section style={{ backgroundColor: ikr.cream, paddingTop: 80, overflow: 'hidden' }}>
       <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 clamp(1rem, 6.8vw, 98px)' }}>
@@ -133,12 +184,17 @@ function HeroSection() {
           </h1>
 
           <div
-            style={{
-              width: 'min(calc(80svh * 9 / 19.5), 100%)',
-              margin: '0 auto',
-            }}
+            className="flex flex-col items-center lg:flex-row lg:justify-center lg:items-center"
+            style={{ gap: 'clamp(16px, 3vw, 40px)' }}
           >
-            <HeroPhone />
+            <div
+              style={{
+                width: 'min(calc(80svh * 9 / 19.5), 100%)',
+              }}
+            >
+              <HeroPhone onInteract={() => setHintVisible(false)} />
+            </div>
+            {hintVisible && <PhoneScrollHint />}
           </div>
         </div>
 
@@ -411,8 +467,8 @@ function CaseCardButton({ href, label }: { href: string; label: string }) {
 
   return (
     <Link
-      href={href}
-      aria-label={`Case ${label}`}
+      {...caseLinkProps(href)}
+      aria-label={`${label} bekijken`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onMouseDown={(e) => e.stopPropagation()}
@@ -726,14 +782,14 @@ function CTAContent({
 }
 
 function CasesAndCTASection() {
-  const [hoveredCta, setHoveredCta] = useState<'freelancer' | 'contact' | null>(null)
+  const [hoveredCta, setHoveredCta] = useState<'creator' | 'contact' | null>(null)
 
-  const freelancerFlex = hoveredCta === 'freelancer' ? '0 0 80%' : hoveredCta === 'contact' ? '0 0 20%' : '1 1 50%'
-  const contactFlex = hoveredCta === 'contact' ? '0 0 80%' : hoveredCta === 'freelancer' ? '0 0 20%' : '1 1 50%'
-  const showFreelancerCopy = hoveredCta !== 'contact'
-  const showContactCopy = hoveredCta !== 'freelancer'
-  const freelancerCollapsed = hoveredCta === 'contact'
-  const contactCollapsed = hoveredCta === 'freelancer'
+  const creatorFlex = hoveredCta === 'creator' ? '0 0 80%' : hoveredCta === 'contact' ? '0 0 20%' : '1 1 50%'
+  const contactFlex = hoveredCta === 'contact' ? '0 0 80%' : hoveredCta === 'creator' ? '0 0 20%' : '1 1 50%'
+  const showCreatorCopy = hoveredCta !== 'contact'
+  const showContactCopy = hoveredCta !== 'creator'
+  const creatorCollapsed = hoveredCta === 'contact'
+  const contactCollapsed = hoveredCta === 'creator'
 
   return (
     <section style={{ backgroundColor: ikr.cream, padding: 'clamp(3rem, 8vw, 120px) 0' }}>
@@ -775,10 +831,10 @@ function CasesAndCTASection() {
           style={{ transition: 'all 0.45s cubic-bezier(0.4, 0, 0.2, 1)' }}
         >
           <div
-            onMouseEnter={() => setHoveredCta('freelancer')}
+            onMouseEnter={() => setHoveredCta('creator')}
             onMouseLeave={() => setHoveredCta(null)}
             style={{
-              flex: freelancerFlex,
+              flex: creatorFlex,
               borderRadius: 30,
               minHeight: 'clamp(300px, 58.7vw, 845px)',
               position: 'relative',
@@ -806,11 +862,11 @@ function CasesAndCTASection() {
               }}
             />
             <CTAContent
-              collapsed={freelancerCollapsed}
+              collapsed={creatorCollapsed}
               style={{ position: 'relative', zIndex: 2, padding: 'clamp(2rem, 5vw, 72px) clamp(1.5rem, 4vw, 56px)' }}
             >
               <FadeText
-                visible={showFreelancerCopy}
+                visible={showCreatorCopy}
                 style={{ marginBottom: 'clamp(1.5rem, 3vw, 44px)' }}
               >
                 <h3
@@ -823,14 +879,14 @@ function CasesAndCTASection() {
                     margin: 0,
                   }}
                 >
-                  WIL JE BIJ IKNOWRIGHT WERKEN ALS FREELANCER?
+                  WIL JE BIJ IKNOWRIGHT WERKEN ALS CONTENT CREATOR?
                 </h3>
               </FadeText>
               <CTAButton
-                href="/contact"
+                href="/contact?type=solliciteren"
                 fullLabel="SOLLICITEER NU"
                 shortLabel="SOLLICITEER"
-                collapsed={freelancerCollapsed}
+                collapsed={creatorCollapsed}
               />
             </CTAContent>
           </div>
@@ -922,7 +978,7 @@ function CasesAndCTASection() {
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(32,22,55,0.15) 0%, rgba(32,22,55,0.85) 100%)' }} />
             <div style={{ position: 'relative', zIndex: 2, padding: 'clamp(2rem, 5vw, 72px) clamp(1.5rem, 4vw, 56px)' }}>
               <h3 style={{ ...displayFont, fontSize: 'clamp(1.25rem, 3.33vw, 48px)', lineHeight: 1.15, textTransform: 'uppercase', color: '#FFF9F1', marginBottom: 'clamp(1.5rem, 3vw, 44px)' }}>
-                WIL JE BIJ IKNOWRIGHT WERKEN ALS FREELANCER?
+                WIL JE BIJ IKNOWRIGHT WERKEN ALS CONTENT CREATOR?
               </h3>
               <Link href="/contact?type=solliciteren" style={{ ...displayFont, display: 'inline-block', fontSize: 'clamp(1rem, 2.78vw, 40px)', color: ikr.navy, backgroundColor: '#FFF9F1', borderRadius: 48, padding: '0.4em 1.2em', textDecoration: 'none', textTransform: 'uppercase' }}>
                 SOLLICITEER NU

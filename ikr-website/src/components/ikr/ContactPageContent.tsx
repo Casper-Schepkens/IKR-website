@@ -10,7 +10,7 @@ import {
   type ContactType,
   type MessageTopic,
 } from '@/lib/contact-types'
-import { IKR_PHONE, IKR_PHONE_HREF } from '@/data/site-contact'
+import { IKR_EMAIL, IKR_EMAIL_HREF, IKR_PHONE, IKR_PHONE_HREF } from '@/data/site-contact'
 import { bodyFont, displayFont, ikr } from '@/lib/ikr-styles'
 import { TurnstileWidget } from './TurnstileWidget'
 
@@ -28,7 +28,7 @@ const contactTypes: { id: ContactType; title: string; subtitle: string }[] = [
   {
     id: 'solliciteren',
     title: 'Ik wil solliciteren.',
-    subtitle: 'voor als je op zoek bent naar werk als freelancer',
+    subtitle: 'voor als je op zoek bent naar werk als content creator',
   },
 ]
 
@@ -321,16 +321,19 @@ function ContactInfoCard() {
               <path d="M1 1l9 8 9-8" stroke="#FFF9F1" strokeWidth="1.5" />
             </svg>
           </div>
-          <span
+          <a
+            className="hover:opacity-80 transition-opacity"
+            href={IKR_EMAIL_HREF}
             style={{
               ...displayFont,
               fontSize: 'clamp(0.75rem, 1.39vw, 20px)',
               color: '#FEFEFE',
               textTransform: 'uppercase',
+              textDecoration: 'none',
             }}
           >
-            CONTACT@IKNOWRIGHT.BE
-          </span>
+            {IKR_EMAIL}
+          </a>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { homepageCarouselCards } from '@/data/cases'
+import { caseLinkProps, homepageCarouselCards } from '@/data/cases'
 import { ClickHint, ClientLogoSticker } from './ClientLogoSticker'
 import { InViewVideo } from './InViewVideo'
 
@@ -105,8 +105,8 @@ function PhoneInfiniteStrip() {
       {loopCards.map(({ card, copy }) => (
         <Link
           key={`m-${copy}-${card.id}`}
-          href={card.href}
-          aria-label={`Case ${card.label} bekijken`}
+          {...caseLinkProps(card.href)}
+          aria-label={`${card.label} bekijken`}
           style={{
             position: 'relative',
             flexShrink: 0,
@@ -186,8 +186,8 @@ export function CarouselSection() {
         {homepageCarouselCards.map((card, i) => (
           <Link
             key={card.id}
-            href={card.href}
-            aria-label={`Case ${card.label} bekijken`}
+            {...caseLinkProps(card.href)}
+            aria-label={`${card.label} bekijken`}
             className="carousel-card"
             onMouseEnter={() => handleEnter(i, card.id)}
             onMouseLeave={() => handleLeave(i)}
