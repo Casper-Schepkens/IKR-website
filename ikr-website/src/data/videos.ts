@@ -21,7 +21,10 @@ export type CaseChannelVideo = {
   hideFromShowers?: boolean
 }
 
-export const CASE_CHANNEL_VIDEOS = {
+export const CASE_CHANNEL_VIDEOS: Record<
+  'tempus' | 'maisonSlash' | 'ohma' | 'wasbar' | 'annekeGovaerts',
+  CaseChannelVideo[]
+> = {
   tempus: [
     {
       src: '/videos/cases/tempus/7598572509436316961.mp4',
@@ -174,4 +177,4 @@ export const CASE_CHANNEL_VIDEOS = {
       tiktokUrl: 'https://www.tiktok.com/@anneke_govaerts/video/7469056290371800342',
     },
   ],
-} satisfies Record<string, CaseChannelVideo[]>
+}
