@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { isExternalHref } from '@/data/cases'
+import { videoPoster } from '@/lib/video-poster'
 import { claimVideo, releaseVideo } from './InViewVideo'
 
 type FeedItem = {
@@ -624,11 +625,12 @@ export function TikTokPhoneFeed({
               <div key={`${item.src}-${i}`} style={{ height: `${slideShare}%`, position: 'relative' }}>
                 <video
                   ref={(el) => { videoRefs.current[i] = el }}
-                  src={item.src}
+                  data-src={item.src}
+                  poster={videoPoster(item.src)}
                   muted
                   loop
                   playsInline
-                  preload={i === activeIndex ? 'auto' : 'metadata'}
+                  preload="none"
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', backgroundColor: '#000' }}
                 />
               </div>

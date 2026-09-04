@@ -50,7 +50,7 @@ const STEPS = [
   {
     n: '3',
     title: <>ITERATIE</>,
-    body: 'Elke maand meten we wat werkt en sturen we bij. Geen one-shot campagne — we blijven verbeteren.',
+    body: 'Elke maand meten we wat werkt en sturen we bij. Geen one-shot campagne: we blijven verbeteren.',
   },
 ] as const
 

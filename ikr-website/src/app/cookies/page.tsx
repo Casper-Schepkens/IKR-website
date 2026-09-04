@@ -19,9 +19,10 @@ export default function CookiesPage() {
         contact- en pricingformulieren te voorkomen. Dit is nodig om het formulier te laten werken.
       </LegalParagraph>
       <LegalParagraph>
-        <strong>Analytisch:</strong> na deploy op Vercel kunnen we anonieme gebruiksstatistieken
-        verzamelen via Vercel Analytics (geen individuele profilering). Als dat actief is, vermelden
-        we het hier.
+        <strong>Analytisch:</strong> we verzamelen anonieme gebruiksstatistieken via Vercel Web
+        Analytics (bezoekers, paginaweergaven, referrers). Geen cookies, geen individuele
+        profilering, geen dataverkoop. Data staat in het Vercel-dashboard, niet op onze eigen
+        servers.
       </LegalParagraph>
       <LegalParagraph>
         Je kan cookies verwijderen via je browserinstellingen. Sommige formulieren werken dan

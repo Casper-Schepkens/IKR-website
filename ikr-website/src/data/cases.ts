@@ -36,21 +36,21 @@ export const foodWorkItems: FoodWorkItem[] = [
     clientName: 'Aïki',
     video: VIDEO_PATHS.foodWorkAiki,
     views: '50K',
-    highlight: 'Grootste noodlemerk van België — 1.500+ likes',
+    highlight: 'Grootste noodlemerk van België, 1.500+ likes',
   },
   {
     id: 'otacos',
     clientName: "O'Tacos",
     video: VIDEO_PATHS.foodWorkOtacos,
     views: '16K',
-    highlight: 'Fastfoodketen — 16K+ organische views',
+    highlight: 'Fastfoodketen, 16K+ organische views',
   },
   {
     id: 'panos',
     clientName: 'Panos',
     video: VIDEO_PATHS.foodWorkPanos,
-    views: '—',
-    highlight: 'Bakkerijketen — influencer-opdracht',
+    views: '',
+    highlight: 'Bakkerijketen, influencer-opdracht',
   },
 ]
 
@@ -121,12 +121,12 @@ export const caseDetailTemplate: CaseDetail = {
     },
     {
       title: 'ONZE AANPAK VOOR {bedrijf}',
-      body: 'We startten met een intake om het merk en de doelen van {bedrijf} te begrijpen. Daarna ontwikkelden we een contentkalender met formats die bewezen werken — en gingen op locatie filmen met een creator die het merk begrijpt.',
+      body: 'We startten met een intake om het merk en de doelen van {bedrijf} te begrijpen. Daarna ontwikkelden we een contentkalender met formats die bewezen werken, en gingen op locatie filmen met een creator die het merk begrijpt.',
     },
   ],
   testimonial: {
     name: '{naam}',
-    role: '{functie} — {bedrijf}',
+    role: '{functie}, {bedrijf}',
     quote:
       'Ik ben super tevreden over de groei van mijn sociale media dankzij IKnowRight! {bedrijf} ziet eindelijk resultaat op TikTok.',
   },
@@ -139,11 +139,11 @@ export const caseDetailTempus: CaseDetail = {
   logo: '/images/client_logos/tempus logo.png',
   tags: ['HR Marketing', 'TikTok'],
   heroImage: '/images/cases/tempus/hero.jpg',
-  outcomeLine: '1 miljoen views — en 1 tot 2 sollicitaties per dag',
+  outcomeLine: '1 miljoen views, en 1 tot 2 sollicitaties per dag',
   summary: [
-    'Tempus Thuisverpleging werkt al bijna een jaar op vaste basis met IKnowRight. Hun grootste uitdaging: zoveel mogelijk jonge verpleegkundigen aantrekken via TikTok — HR-marketing, geen productpromo.',
+    'Tempus Thuisverpleging werkt al bijna een jaar op vaste basis met IKnowRight. Hun grootste uitdaging: zoveel mogelijk jonge verpleegkundigen aantrekken via TikTok. HR-marketing, geen productpromo.',
     'We maakten content die jonge zorgprofessionals aanspreekt: herkenbare situaties, authentieke formats en een consistente aanwezigheid op @tempusverpleging.',
-    'Het resultaat: 1 miljoen views, 886K bereik en een community die 78% vrouw is — plus 1 tot 2 sollicitaties per dag via TikTok.',
+    'Het resultaat: 1 miljoen views, 886K bereik en een community die 78% vrouw is, plus 1 tot 2 sollicitaties per dag via TikTok.',
   ],
   results: [
     { label: 'Views', value: '1M+' },
@@ -157,11 +157,11 @@ export const caseDetailTempus: CaseDetail = {
   story: [
     {
       title: 'DE UITDAGING',
-      body: 'Tempus moest opvallen in een krappe arbeidsmarkt voor verpleegkundigen. Klassieke jobposts bereikten de jonge doelgroep niet — ze zitten op TikTok, niet op vacaturesites.',
+      body: 'Tempus moest opvallen in een krappe arbeidsmarkt voor verpleegkundigen. Klassieke jobposts bereikten de jonge doelgroep niet: ze zitten op TikTok, niet op vacaturesites.',
     },
     {
       title: 'ONZE AANPAK VOOR TEMPUS',
-      body: 'We bouwden een contentlijn rond HR-marketing: video\'s die het werk bij Tempus tonen zoals jonge verpleegkundigen het beleven. Consistente output, formats die delen stimuleren, en metrics die verder gaan dan likes — zoals sollicitaties en gesprekken op jobbeurzen.',
+      body: 'We bouwden een contentlijn rond HR-marketing: video\'s die het werk bij Tempus tonen zoals jonge verpleegkundigen het beleven. Consistente output, formats die delen stimuleren, en metrics die verder gaan dan likes, zoals sollicitaties en gesprekken op jobbeurzen.',
     },
   ],
   testimonial: {
@@ -180,11 +180,11 @@ export const caseDetailMaisonSlash: CaseDetail = {
   tags: ['Media', 'TikTok', 'Ouderschap'],
   heroImage: '/images/client_logos/MS logo.png',
   heroVariant: 'logo',
-  outcomeLine: '1.2 miljoen views — topvideo 170K organisch',
+  outcomeLine: '1.2 miljoen views, topvideo 170K organisch',
   summary: [
     'Maison Slash België verkoopt magazines voor ouders. Hun doel op TikTok: ouders aanspreken met content die herkenbaar en deelbaar is.',
     'Het account bestond al, maar de cijfers explodeerden pas toen IKnowRight erbij kwam. Honderd video\'s later staat de teller op 1.2 miljoen views.',
-    'Het resultaat: 1.2 miljoen views, 961K bereik en een community die 68% vrouw is — met een organische hit van 170K.',
+    'Het resultaat: 1.2 miljoen views, 961K bereik en een community die 68% vrouw is, met een organische hit van 170K.',
   ],
   results: [
     { label: 'Views', value: '1.2M' },
@@ -202,14 +202,14 @@ export const caseDetailMaisonSlash: CaseDetail = {
     },
     {
       title: 'ONZE AANPAK VOOR MAISON SLASH',
-      body: 'We maakten scroll-stoppende video\'s voor @maisonslashbelgie — formats die ouders herkennen en delen. De sterkste video haalde 170.000 organische views. In totaal 1.2 miljoen views op 100 video\'s.',
+      body: 'We maakten scroll-stoppende video\'s voor @maisonslashbelgie: formats die ouders herkennen en delen. De sterkste video haalde 170.000 organische views. In totaal 1.2 miljoen views op 100 video\'s.',
     },
   ],
   testimonial: {
     name: 'Maison Slash',
     role: 'Magazines voor ouders',
     quote:
-      'Ons TikTok-account bestond al — maar onze cijfers explodeerden pas met IKnowRight. Eén video ging viraal en zette alles in beweging.',
+      'Ons TikTok-account bestond al, maar onze cijfers explodeerden pas met IKnowRight. Eén video ging viraal en zette alles in beweging.',
   },
 }
 
@@ -221,7 +221,7 @@ export const caseDetailAnnekeGovaerts: CaseDetail = {
   outcomeLine: '1.300+ volgers en landelijke PR in anderhalve maand',
   summary: [
     'Dr. Anneke Govaerts is migraine-specialist en auteur. Haar doelen op TikTok: meer awareness rond migraine én meer verkoop van haar boeken.',
-    'We bouwden een contentlijn die medische expertise toegankelijk maakt — video\'s die educeren, herkenning geven en vertrouwen opbouwen bij @anneke_govaerts.',
+    'We bouwden een contentlijn die medische expertise toegankelijk maakt: video\'s die educeren, herkenning geven en vertrouwen opbouwen bij @anneke_govaerts.',
     'Het resultaat: snelle audience-groei, consistent bereik per video én PR buiten TikTok: VRT, Radio 1 en een repost door uitgeverij Pelckmans.',
   ],
   results: [
@@ -238,14 +238,14 @@ export const caseDetailAnnekeGovaerts: CaseDetail = {
     },
     {
       title: 'ONZE AANPAK VOOR ANNEKE GOVAERTS',
-      body: 'We vertaalden complexe migraine-kennis naar herkenbare, deelbare video\'s. Consistente output leverde gemiddeld 26.000 organische views per video — en trok aandacht van VRT, Radio 1 en uitgeverij Pelckmans.',
+      body: 'We vertaalden complexe migraine-kennis naar herkenbare, deelbare video\'s. Consistente output leverde gemiddeld 26.000 organische views per video, en trok aandacht van VRT, Radio 1 en uitgeverij Pelckmans.',
     },
   ],
   testimonial: {
     name: 'Dr. Anneke Govaerts',
     role: 'Migraine-specialist & auteur',
     quote:
-      'In anderhalve maand meer dan 1.300 volgers, gemiddeld 26.000 views per video — en media-aandacht van VRT en Radio 1. TikTok werkt voor awareness.',
+      'In anderhalve maand meer dan 1.300 volgers, gemiddeld 26.000 views per video, en media-aandacht van VRT en Radio 1. TikTok werkt voor awareness.',
   },
 }
 
@@ -459,7 +459,7 @@ function toFeedItem(channel: ShowerChannel, video: CaseChannelVideo): CaseFeedIt
     caption: meta.caption,
     song: `Original Sound - ${meta.name}`,
     likes: video.stat,
-    comments: '—',
+    comments: '0',
     href: meta.hrefFor(video),
     channelId: channel.channelKey,
   }

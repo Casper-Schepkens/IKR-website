@@ -36,7 +36,7 @@ export function TurnstileWidget({ onToken, onExpire }: Props) {
     if (process.env.NODE_ENV === 'development') {
       return (
         <p style={{ fontSize: 14, color: '#8B849E' }}>
-          Captcha uitgeschakeld — stel NEXT_PUBLIC_TURNSTILE_SITE_KEY in voor productie.
+          Captcha uitgeschakeld. Stel NEXT_PUBLIC_TURNSTILE_SITE_KEY in voor productie.
         </p>
       )
     }

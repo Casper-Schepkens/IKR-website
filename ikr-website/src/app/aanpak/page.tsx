@@ -5,7 +5,7 @@ import { pageMetadata } from '@/lib/site'
 
 export const metadata = pageMetadata(
   'Aanpak',
-  'Van analyse tot content op TikTok: zo werkt IKnowRight met food brands — strategie, creatie en iteratie.',
+  'Van analyse tot content op TikTok: zo werkt IKnowRight met food brands. Strategie, creatie en iteratie.',
   '/aanpak',
 )
 

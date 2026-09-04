@@ -41,7 +41,7 @@ export const MESSAGE_TOPIC_LABELS: Record<MessageTopic, string> = {
   creator_vraag: 'Ik heb een concrete vraag.',
   freelancer: 'Ik solliciteer als content creator (videomaker/editor).',
   portfolio_sollicitatie: 'Ik stuur mijn portfolio door.',
-  spontaan: 'Spontane sollicitatie — ik denk dat ik kan bijdragen.',
+  spontaan: 'Spontane sollicitatie: ik denk dat ik kan bijdragen.',
   anders: 'Anders',
 }
 
@@ -105,5 +105,5 @@ export function getContactEmailSubject(
       : contactType === 'creator'
         ? 'Creator'
         : 'Sollicitatie'
-  return `[${typeShort}] ${MESSAGE_TOPIC_LABELS[messageTopic]} — ${fullName}`
+  return `[${typeShort}] ${MESSAGE_TOPIC_LABELS[messageTopic]} | ${fullName}`
 }

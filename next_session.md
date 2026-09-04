@@ -5,10 +5,11 @@
 ---
 
 ## Algemeen
-1. Vercel Hobby → Pro ($20/maand) — jij moet de kaart invoeren in Vercel billing; agent kan dat niet.
-2. Search Console sitemap `https://iknowright.be/sitemap.xml` morgen checken of “Kan niet ophalen” → Succesvol is.
-3. **PDF-diensten sync** — zie [`pdf-diensten-sync.md`](pdf-diensten-sync.md)
-4. _(future)_ IKR roadmap/mijlpalen pagina; nieuwe landing page (vervanger WP landings)
+1. **Web Analytics:** Vercel-dashboard → project IKR-website → Analytics → Enable. Daarna deze commit pushen. Cijfers staan daarna onder Analytics (bezoekers, pagina's, referrers). Geen historische data van vóór enable.
+2. **Search Console:** sitemap is live (`https://iknowright.be/sitemap.xml`, HTTP 200). Opnieuw indienen: Search Console → Sitemaps → `https://iknowright.be/sitemap.xml` → Verzenden.
+3. Vercel Hobby → Pro ($20/maand) — jij moet de kaart invoeren in Vercel billing; agent kan dat niet.
+4. **PDF-diensten sync** — zie [`pdf-diensten-sync.md`](pdf-diensten-sync.md)
+5. _(future)_ IKR roadmap/mijlpalen pagina; nieuwe landing page (vervanger WP landings)
 
 ## Homepage (`/`)
 1. Anneke-logo ontbreekt → nu tekst-sticker. Aanleveren als je het bestand hebt.

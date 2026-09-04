@@ -15,12 +15,12 @@ export function pageMetadata(title: string, description: string, path: string): 
     description,
     alternates: { canonical: path },
     openGraph: {
-      title: `${title} — ${SITE_NAME}`,
+      title: `${title} | ${SITE_NAME}`,
       description,
       url,
     },
     twitter: {
-      title: `${title} — ${SITE_NAME}`,
+      title: `${title} | ${SITE_NAME}`,
       description,
     },
   }

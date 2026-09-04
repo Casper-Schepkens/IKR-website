@@ -91,7 +91,7 @@ export function WhyTikTokSection() {
           }}
         >
           Je klanten zitten op TikTok. {tiktokBelgium.adultReachLabel} volwassen Belgen ook. Maar ze zien je
-          alleen als de content klopt. Wij doen TikTok omdat we daar het best in zijn — en omdat het de
+          alleen als de content klopt. Wij doen TikTok omdat we daar het best in zijn, en omdat het de
           kortste weg is naar jouw doelgroep.
         </p>
 
@@ -156,7 +156,7 @@ export function WhyTikTokSection() {
             {[
               {
                 num: tiktokBelgium.adultReachLabel,
-                label: 'volwassen Belgen zit op TikTok — bijna de helft, geen tiener-app',
+                label: 'volwassen Belgen zit op TikTok: bijna de helft, geen tiener-app',
               },
               {
                 num: `${tiktokBelgium.over35Pct}%`,

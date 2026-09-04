@@ -47,7 +47,7 @@ const testimonials = [
     name: 'Tempus',
     role: 'HR marketing',
     avatar: '#C0B88B',
-    quote: '1 miljoen views — via TikTok, niet via vacaturesites. En 1 tot 2 sollicitaties per dag.',
+    quote: '1 miljoen views via TikTok, niet via vacaturesites. En 1 tot 2 sollicitaties per dag.',
   },
 ] as const
 
@@ -259,7 +259,7 @@ function FoodWorkStatBadge({ views, highlight }: { views: string; highlight: str
         width: 'calc(100% - 24px)',
       }}
     >
-      {views !== '—' && (
+      {views && (
         <span
           style={{
             ...displayFont,
@@ -681,7 +681,7 @@ export function CasesPageContent() {
                 lineHeight: 1.5,
               }}
             >
-              Influencer-opdrachten binnen food — bewijs dat we de sector kennen, zonder volledige
+              Influencer-opdrachten binnen food: bewijs dat we de sector kennen, zonder volledige
               case study.
             </p>
             <div
