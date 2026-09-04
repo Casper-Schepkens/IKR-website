@@ -1,14 +1,26 @@
 'use client'
 
 import { forwardRef, useEffect, useRef, type CSSProperties } from 'react'
+import { videoPoster } from '@/lib/video-poster'
 
 let active: HTMLVideoElement | null = null
+
+function armSource(el: HTMLVideoElement) {
+  const next = el.dataset.src
+  if (!next) return
+  if (el.getAttribute('src') !== next) {
+    el.src = next
+    el.preload = 'auto'
+    el.load()
+  }
+}
 
 export function claimVideo(el: HTMLVideoElement | null) {
   if (!el) return
   if (active && active !== el) active.pause()
   active = el
   el.muted = true
+  armSource(el)
   el.preload = 'auto'
   void el.play().catch(() => {})
 }
@@ -24,7 +36,7 @@ type InViewVideoProps = {
   className?: string
   style?: CSSProperties
   threshold?: number
-  /** Observer alleen onder 1024px — desktop blijft hover. */
+  /** Observer alleen onder 1024px. Desktop blijft hover. */
   phoneOnly?: boolean
   /** false = mag samen met andere video's spelen (homepage thumbs). */
   exclusive?: boolean
@@ -37,6 +49,7 @@ export const InViewVideo = forwardRef<HTMLVideoElement, InViewVideoProps>(
     forwardedRef,
   ) {
     const innerRef = useRef<HTMLVideoElement>(null)
+    const poster = videoPoster(src)
 
     const setRefs = (node: HTMLVideoElement | null) => {
       innerRef.current = node
@@ -64,19 +77,25 @@ export const InViewVideo = forwardRef<HTMLVideoElement, InViewVideoProps>(
         io = new IntersectionObserver(
           ([entry]) => {
             if (!entry) return
-            if (entry.isIntersecting && entry.intersectionRatio >= threshold) {
-              if (exclusive) claimVideo(el)
-              else {
-                el.muted = true
-                el.preload = 'auto'
-                void el.play().catch(() => {})
+            if (entry.isIntersecting) {
+              armSource(el)
+              if (entry.intersectionRatio >= threshold) {
+                if (exclusive) claimVideo(el)
+                else {
+                  el.muted = true
+                  el.preload = 'auto'
+                  void el.play().catch(() => {})
+                }
+              } else {
+                el.pause()
+                if (active === el) active = null
               }
             } else {
               el.pause()
               if (active === el) active = null
             }
           },
-          { threshold: [0, threshold, 1] },
+          { rootMargin: '280px 0px', threshold: [0, threshold, 1] },
         )
         io.observe(el)
       }
@@ -97,12 +116,12 @@ export const InViewVideo = forwardRef<HTMLVideoElement, InViewVideoProps>(
     return (
       <video
         ref={setRefs}
-        src={src}
+        data-src={src}
+        poster={poster}
         muted
         loop
         playsInline
-        autoPlay
-        preload="metadata"
+        preload="none"
         className={className}
         onError={onError}
         style={{

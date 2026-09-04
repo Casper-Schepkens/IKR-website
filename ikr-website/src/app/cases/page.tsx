@@ -5,7 +5,7 @@ import { pageMetadata } from '@/lib/site'
 
 export const metadata = pageMetadata(
   'Cases',
-  'Bekijk onze cases — TikTok-content voor food brands waar we trots op zijn.',
+  'Bekijk onze cases: TikTok-content voor food brands waar we trots op zijn.',
   '/cases',
 )
 

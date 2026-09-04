@@ -496,7 +496,7 @@ function ClientQuote({ testimonial }: { testimonial: CaseDetail['testimonial'] }
                 margin: 0,
               }}
             >
-              {testimonial.name} — {testimonial.role}
+              {testimonial.name}, {testimonial.role}
             </p>
           </SpeechBubble>
         </div>

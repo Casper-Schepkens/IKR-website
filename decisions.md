@@ -65,6 +65,13 @@ DaddyGo = shared hosting, geen Node.js. **Beslissing:** site op Vercel hosten, D
 
 **Status:** Uitgevoerd.
 
+### Vercel Web Analytics (4 sep 2026)
+**Beslissing:** Vercel Web Analytics voor bezoekers/pagina's/referrers. Geen Google Analytics.
+
+**Waarom:** site staat al op Vercel, cookieless (geen banner), cookies-pagina beloofde dit al. GA4 is overkill + GDPR-rommel voor een marketing site van deze schaal.
+
+**Status:** `@vercel/analytics` in root layout, legal-tekst bijgewerkt. Casper moet Enable klikken in het Vercel-dashboard. Hobby: 50k events/maand, 1 maand retentie. Custom events (form-submits) alleen op Pro.
+
 ---
 
 ## Homepage (`/`)

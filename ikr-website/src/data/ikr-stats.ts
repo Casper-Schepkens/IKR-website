@@ -22,7 +22,7 @@ export const ikrStats = [
 export const tiktokBelgium = {
   adultReachPct: 42.5,
   adultReachLabel: '4 op 10',
-  sourceReach: 'DataReportal Digital 2026 — TikTok ads, eind 2025',
+  sourceReach: 'DataReportal Digital 2026, TikTok ads, eind 2025',
   ageSlices: [
     { label: '18–24', pct: 25, color: '#0FC1DE' },
     { label: '25–34', pct: 33, color: '#5EE1F5' },

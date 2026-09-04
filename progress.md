@@ -30,6 +30,8 @@
 - **Titel (31 aug 2026):** site-title + OG = `IKnowRight: dé TikTok agency voor food brands in Vlaanderen`
 - **Video-showers (31 aug 2026):** 4 plekken delen geen dezelfde video. Per klantmap: shower 0 = 1e/5e/9e (homepage fan), 1 = 2e/6e (homepage cases), 2 = 3e/7e (start aanpak gsm; daarna alle andere clips in de gsm), 3 = 4e/8e (aanpak carousel). Eén video in het mapje → die overal. Maison Slash seksenquete-topvideo (`hideFromShowers`) blijft alleen op de case-detailpagina.
 - **Showers vs grid (31 aug 2026):** `SHOWER_CHANNELS` = Tempus, Maison Slash, Anneke, Oh!ma, Wasbar. `CASE_GRID_ORDER` blijft 3 laag-1 cases. Oh!ma/Wasbar klikken naar de TikTok-post, geen fake detailpagina. Extra mp4's: Wasbar 2, Oh!ma 6, Maison Slash +5, Tempus +3.
+- **Analytics (4 sep 2026):** `@vercel/analytics` in root layout. Cookie- + privacytekst bijgewerkt. Nog te doen: Enable in Vercel-dashboard + commit/push. Data start vanaf dan (geen geschiedenis).
+- **Video posters + lazy load (4 sep 2026):** eerste frame als JPEG in `public/images/posters/`. `InViewVideo` zet `src` pas in-view/hover (`preload=none`). Food-mp4's ~14MB → ~2MB. Sitemap `https://iknowright.be/sitemap.xml` is 200; GSC opnieuw indienen.
 
 ---
 

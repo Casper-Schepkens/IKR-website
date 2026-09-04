@@ -25,7 +25,7 @@ const steps = [
   },
   {
     title: 'PLANNING EN STRATEGIE',
-    body: 'We presenteren onze creatieve strategie: welke soort content, welke formats, welke stijl. Je krijgt een helder overzicht van hoe we te werk gaan voor jouw brand — van ideeën tot publicatie.',
+    body: 'We presenteren onze creatieve strategie: welke soort content, welke formats, welke stijl. Je krijgt een helder overzicht van hoe we te werk gaan voor jouw brand, van ideeën tot publicatie.',
     align: 'right' as const,
     iconSrc: '/images/aanpak/checlist_img.png',
   },
@@ -647,6 +647,7 @@ function CaseVideosRow() {
             <InViewVideo
               ref={(el) => { videoRefs.current[i] = el }}
               src={item.src}
+              phoneOnly
               style={{ pointerEvents: 'none' }}
             />
             <div

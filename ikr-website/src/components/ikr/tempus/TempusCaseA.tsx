@@ -32,7 +32,7 @@ const steps: {
     kickerColor: ikr.cyan,
     metrics: [
       { value: 'Sep ’25', label: 'Start TikTok-kanaal' },
-      { value: 'HR', label: 'Geen productpromo — verpleegkundigen aantrekken' },
+      { value: 'HR', label: 'Geen productpromo, wel verpleegkundigen aantrekken' },
       { value: 'Gen Z', label: 'Zit op TikTok, niet op vacaturesites' },
     ],
   },
@@ -359,7 +359,7 @@ export function TempusCaseA() {
               &ldquo;{TEMPUS.testimonial.quote}&rdquo;
             </p>
             <p style={{ ...bodyFont, fontWeight: 700, fontSize: 15, color: ikr.navyText, margin: 0 }}>
-              {TEMPUS.testimonial.name} — {TEMPUS.testimonial.role}
+              {TEMPUS.testimonial.name}, {TEMPUS.testimonial.role}
             </p>
           </SpeechBubble>
         </div>

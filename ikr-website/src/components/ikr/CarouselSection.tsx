@@ -6,7 +6,7 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { caseLinkProps, homepageCarouselCards } from '@/data/cases'
 import { ClickHint, ClientLogoSticker } from './ClientLogoSticker'
-import { InViewVideo } from './InViewVideo'
+import { claimVideo, InViewVideo } from './InViewVideo'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -155,8 +155,7 @@ export function CarouselSection() {
 
   const handleEnter = (index: number, id: string) => {
     setHovered(id)
-    const video = videoRefs.current[index]
-    if (video) video.play()
+    claimVideo(videoRefs.current[index])
   }
 
   const handleLeave = (index: number) => {
@@ -210,19 +209,10 @@ export function CarouselSection() {
               textDecoration: 'none',
             }}
           >
-            <video
+            <InViewVideo
               ref={(el) => { videoRefs.current[i] = el }}
               src={card.src}
-              muted
-              loop
-              playsInline
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                display: 'block',
-                backgroundColor: '#D0C8BC',
-              }}
+              phoneOnly
             />
             <div
               style={{

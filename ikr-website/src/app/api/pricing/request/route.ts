@@ -102,7 +102,7 @@ export async function POST(request: Request) {
       resend.emails.send({
         from: notifyFromEmail,
         to: notifyEmail,
-        subject: `Nieuwe tarieven-aanvraag — ${fullName}`,
+        subject: `Nieuwe tarieven-aanvraag | ${fullName}`,
         html: `
           <p><strong>Nieuwe tarieven-aanvraag via /pricing</strong></p>
           <ul>

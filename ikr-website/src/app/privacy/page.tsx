@@ -25,7 +25,8 @@ export default function PrivacyPage() {
       </LegalParagraph>
       <LegalParagraph>
         <strong>Verwerkers:</strong> e-mailverzending via Resend. Captcha via Cloudflare Turnstile
-        (spampreventie). Zie ook ons{' '}
+        (spampreventie). Anonieme gebruiksstatistieken via Vercel Web Analytics (geen cookies, geen
+        persoonsgegevens). Zie ook ons{' '}
         <Link href="/cookies" style={{ color: 'var(--ikr-navy)', fontWeight: 700 }}>
           cookiebeleid
         </Link>
@@ -36,7 +37,7 @@ export default function PrivacyPage() {
         contact, tenzij wettelijk anders vereist.
       </LegalParagraph>
       <LegalParagraph>
-        <strong>Jouw rechten:</strong> inzage, correctie of verwijdering — mail naar{' '}
+        <strong>Jouw rechten:</strong> inzage, correctie of verwijdering: mail naar{' '}
         <a href="mailto:contact@iknowright.be">contact@iknowright.be</a>. Bedrijfsgegevens:{' '}
         <Link href="/legal" style={{ color: 'var(--ikr-navy)', fontWeight: 700 }}>
           /legal
