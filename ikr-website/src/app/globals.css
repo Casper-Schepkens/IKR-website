@@ -83,6 +83,11 @@
   line-height: 0;
 }
 
+/* Caption-only: nudge mark slightly lower so white glyph does not optically cover @handle. */
+.ikr-tt-mark--caption {
+  transform: translateY(0.18em);
+}
+
 .ikr-tt-mark svg {
   display: block;
 }
