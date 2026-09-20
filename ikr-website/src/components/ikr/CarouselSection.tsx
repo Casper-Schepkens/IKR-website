@@ -20,6 +20,47 @@ const ORIG_CARD_W = 26.39
 const ORIG_TOP_SPREAD = 127
 const TOP_PAD = 3.2
 
+function MobileCarouselCard({
+  card,
+}: {
+  card: (typeof homepageCarouselCards)[number]
+}) {
+  const [playing, setPlaying] = useState(false)
+
+  return (
+    <Link
+      {...caseLinkProps(card.href)}
+      aria-label={card.handle ? `${card.label} ${card.handle} bekijken` : `${card.label} bekijken`}
+      style={{
+        position: 'relative',
+        flexShrink: 0,
+        width: 'min(82vw, 340px)',
+        aspectRatio: '9 / 16',
+        border: '4px solid #FFFFFF',
+        borderRadius: 22,
+        overflow: 'hidden',
+        scrollSnapAlign: 'center',
+        display: 'block',
+        textDecoration: 'none',
+        backgroundColor: '#D0C8BC',
+      }}
+    >
+      <InViewVideo src={card.src} threshold={0.6} phoneOnly onPlayingChange={setPlaying} />
+      <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 2, pointerEvents: 'none' }}>
+        <ClientLogoSticker name={card.label} logo={card.logo} rotate={-7} />
+      </div>
+      {card.handle ? (
+        <div style={{ position: 'absolute', left: 12, bottom: 14, zIndex: 2, pointerEvents: 'none' }}>
+          <TikTokHandleCaption handle={card.handle} playing={playing} />
+        </div>
+      ) : null}
+      <div style={{ position: 'absolute', right: 12, bottom: 12, zIndex: 2, pointerEvents: 'none' }}>
+        <ClickHint />
+      </div>
+    </Link>
+  )
+}
+
 function PhoneInfiniteStrip() {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const jumpingRef = useRef(false)
@@ -103,37 +144,7 @@ function PhoneInfiniteStrip() {
       }}
     >
       {loopCards.map(({ card, copy }) => (
-        <Link
-          key={`m-${copy}-${card.id}`}
-          {...caseLinkProps(card.href)}
-          aria-label={card.handle ? `${card.label} ${card.handle} bekijken` : `${card.label} bekijken`}
-          style={{
-            position: 'relative',
-            flexShrink: 0,
-            width: 'min(82vw, 340px)',
-            aspectRatio: '9 / 16',
-            border: '4px solid #FFFFFF',
-            borderRadius: 22,
-            overflow: 'hidden',
-            scrollSnapAlign: 'center',
-            display: 'block',
-            textDecoration: 'none',
-            backgroundColor: '#D0C8BC',
-          }}
-        >
-          <InViewVideo src={card.src} threshold={0.6} phoneOnly />
-          <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 2, pointerEvents: 'none' }}>
-            <ClientLogoSticker name={card.label} logo={card.logo} rotate={-7} />
-          </div>
-          {card.handle ? (
-            <div style={{ position: 'absolute', left: 12, bottom: 14, zIndex: 2, pointerEvents: 'none' }}>
-              <TikTokHandleCaption handle={card.handle} />
-            </div>
-          ) : null}
-          <div style={{ position: 'absolute', right: 12, bottom: 12, zIndex: 2, pointerEvents: 'none' }}>
-            <ClickHint />
-          </div>
-        </Link>
+        <MobileCarouselCard key={`m-${copy}-${card.id}`} card={card} />
       ))}
     </div>
   )
@@ -143,6 +154,7 @@ export function CarouselSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([])
   const [hovered, setHovered] = useState<string | null>(null)
+  const [playingIds, setPlayingIds] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -218,6 +230,12 @@ export function CarouselSection() {
               ref={(el) => { videoRefs.current[i] = el }}
               src={card.src}
               phoneOnly
+              onPlayingChange={(playing) => {
+                setPlayingIds((prev) => {
+                  if (prev[card.id] === playing) return prev
+                  return { ...prev, [card.id]: playing }
+                })
+              }}
             />
             <div
               style={{
@@ -240,7 +258,10 @@ export function CarouselSection() {
                   pointerEvents: 'none',
                 }}
               >
-                <TikTokHandleCaption handle={card.handle} />
+                <TikTokHandleCaption
+                  handle={card.handle}
+                  playing={Boolean(playingIds[card.id]) || hovered === card.id}
+                />
               </div>
             ) : null}
             <div

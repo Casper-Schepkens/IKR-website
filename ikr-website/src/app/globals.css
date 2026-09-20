@@ -74,6 +74,64 @@
   to { transform: rotate(360deg); }
 }
 
+/* Homepage carousel: musical-note mark (legal-safe stand-in, not official TikTok asset).
+   Animates only while the card video is playing. */
+.ikr-tt-mark {
+  flex-shrink: 0;
+  display: block;
+  overflow: visible;
+}
+
+.ikr-tt-mark-cyan,
+.ikr-tt-mark-magenta {
+  opacity: 0.75;
+}
+
+.ikr-tt-mark--playing {
+  animation: ikr-tt-mark-bounce 0.65s ease-in-out infinite;
+}
+
+.ikr-tt-mark--playing .ikr-tt-mark-cyan {
+  animation: ikr-tt-chroma-cyan 0.5s ease-in-out infinite;
+}
+
+.ikr-tt-mark--playing .ikr-tt-mark-magenta {
+  animation: ikr-tt-chroma-magenta 0.5s ease-in-out infinite;
+}
+
+.ikr-tt-mark--playing .ikr-tt-mark-core {
+  animation: ikr-tt-core-pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes ikr-tt-mark-bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-1.5px) scale(1.1); }
+}
+
+@keyframes ikr-tt-chroma-cyan {
+  0%, 100% { transform: translate(0, 0); opacity: 0.55; }
+  50% { transform: translate(-1.4px, 0.5px); opacity: 1; }
+}
+
+@keyframes ikr-tt-chroma-magenta {
+  0%, 100% { transform: translate(0, 0); opacity: 0.55; }
+  50% { transform: translate(1.4px, -0.5px); opacity: 1; }
+}
+
+@keyframes ikr-tt-core-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.9; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ikr-tt-mark--playing,
+  .ikr-tt-mark--playing .ikr-tt-mark-cyan,
+  .ikr-tt-mark--playing .ikr-tt-mark-magenta,
+  .ikr-tt-mark--playing .ikr-tt-mark-core {
+    animation: none;
+  }
+}
+
 @keyframes ikr-scroll-nudge {
   0%, 100% { transform: translateY(0); opacity: 0.95; }
   50% { transform: translateY(8px); opacity: 1; }

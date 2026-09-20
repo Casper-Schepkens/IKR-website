@@ -84,48 +84,61 @@ export function ClickHint() {
 }
 
 /**
- * Minimal musical-note mark — legal-safe stand-in, not an official TikTok brand asset.
- * Paired with @handle on carousel cards (bottom-left).
+ * Musical-note stand-in (not an official TikTok brand asset).
+ * CSS animates when the card video is playing: bounce + cyan/magenta chroma flicker.
  */
-function MiniTikTokMark({ size = 12 }: { size?: number }) {
+function MiniTikTokMark({ playing = false }: { playing?: boolean }) {
+  const note =
+    'M14 3v9.2a3.6 3.6 0 1 1-2.4-3.4V3h2.4zM16.2 3c.55 1.85 1.9 3.35 3.8 4.05V9.3c-1.55-.35-2.9-1.1-3.8-2.15V3z'
+
   return (
     <svg
-      width={size}
-      height={size}
+      className={playing ? 'ikr-tt-mark ikr-tt-mark--playing' : 'ikr-tt-mark'}
+      width="1.2em"
+      height="1.2em"
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden="true"
-      style={{ flexShrink: 0, display: 'block' }}
     >
-      <path d="M14 3v9.2a3.6 3.6 0 1 1-2.4-3.4V3h2.4z" fill="#25F4EE" />
-      <path
-        d="M16.2 3c.55 1.85 1.9 3.35 3.8 4.05V9.3c-1.55-.35-2.9-1.1-3.8-2.15V3z"
-        fill="#FE2C55"
-      />
-      <path d="M14 3v9.2a3.6 3.6 0 1 1-2.4-3.4V3h2.4z" fill="#FFFFFF" fillOpacity="0.92" />
+      <g className="ikr-tt-mark-cyan">
+        <path d={note} fill="#25F4EE" />
+      </g>
+      <g className="ikr-tt-mark-magenta">
+        <path d={note} fill="#FE2C55" />
+      </g>
+      <g className="ikr-tt-mark-core">
+        <path d={note} fill="#FFF9F1" />
+      </g>
     </svg>
   )
 }
 
-/** TikTok-style mini mark + @handle on proof cards — only render when a real handle exists. */
-export function TikTokHandleCaption({ handle }: { handle: string }) {
+/** Mini mark + @handle on proof cards (bottom-left). Only render when a real handle exists. */
+export function TikTokHandleCaption({
+  handle,
+  playing = false,
+}: {
+  handle: string
+  /** True while the card video is playing: starts the mark animation. */
+  playing?: boolean
+}) {
   return (
     <span
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: 5,
+        gap: '0.35em',
         fontFamily: 'var(--font-inter), Inter, sans-serif',
         fontWeight: 700,
-        fontSize: 'clamp(0.65rem, 1.05vw, 13px)',
-        lineHeight: 1.2,
+        fontSize: 'clamp(0.7rem, 1.15vw, 14px)',
+        lineHeight: 1.15,
         letterSpacing: '-0.02em',
         color: '#FFFFFF',
         textShadow: '0 1px 3px rgba(0,0,0,0.65), 0 0 12px rgba(0,0,0,0.35)',
         whiteSpace: 'nowrap',
       }}
     >
-      <MiniTikTokMark size={12} />
+      <MiniTikTokMark playing={playing} />
       {handle}
     </span>
   )
