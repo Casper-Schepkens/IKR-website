@@ -74,18 +74,13 @@
   to { transform: rotate(360deg); }
 }
 
-/* Homepage carousel: static TikTok icon beside @handle (no play animation). */
+/* Homepage carousel: static TikTok icon above @handle on phone cards (no play animation). */
 .ikr-tt-mark {
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
   line-height: 0;
-}
-
-/* Caption-only: nudge mark slightly lower so white glyph clears @handle optically. */
-.ikr-tt-mark--caption {
-  transform: translateY(0.22em);
 }
 
 .ikr-tt-mark svg {
