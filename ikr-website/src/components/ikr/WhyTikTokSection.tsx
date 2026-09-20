@@ -90,7 +90,7 @@ export function WhyTikTokSection() {
             margin: '0 auto clamp(2rem, 5vw, 48px)',
           }}
         >
-          Je klanten zitten op TikTok. {tiktokBelgium.adultReachLabel} volwassen Belgen ook. Maar ze zien je
+          Je klanten zitten op TikTok. {tiktokBelgium.adultReachLabel} volwassen Belgen ook. Ze zien je
           alleen als de content klopt. Wij doen TikTok omdat we daar het best in zijn, en omdat het de
           kortste weg is naar jouw doelgroep.
         </p>
@@ -156,15 +156,15 @@ export function WhyTikTokSection() {
             {[
               {
                 num: tiktokBelgium.adultReachLabel,
-                label: 'volwassen Belgen zit op TikTok: bijna de helft, geen tiener-app',
+                label: 'volwassen Belgen zit op TikTok. Bijna de helft van 18+.',
               },
               {
                 num: `${tiktokBelgium.over35Pct}%`,
-                label: 'van de gebruikers is 35 of ouder. Meer 40-plussers dan de meeste merken denken.',
+                label: 'van de gebruikers is 35 of ouder.',
               },
               {
                 num: 'Content',
-                label: 'is de filter. Zonder scroll-stoppende video’s zie je die mensen niet.',
+                label: 'is de filter. Zonder video’s die opvallen in de feed zie je die mensen niet.',
               },
             ].map(({ num, label }) => (
               <div key={num} style={{ marginBottom: 'clamp(1.25rem, 3vw, 28px)' }}>

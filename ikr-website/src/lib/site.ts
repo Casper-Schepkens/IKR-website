@@ -5,7 +5,7 @@ export const SITE_URL = 'https://iknowright.be'
 export const SITE_NAME = 'IKnowRight'
 export const SITE_TITLE = 'IKnowRight: dé TikTok agency voor food brands in Vlaanderen'
 export const SITE_DESCRIPTION =
-  'Wij maken scroll-stoppende content voor food brands die gezien en onthouden willen worden.'
+  'Wij maken TikTok-content voor food brands in Vlaanderen: strategie, film en publicatie.'
 
 export function pageMetadata(title: string, description: string, path: string): Metadata {
   const url = path === '/' ? SITE_URL : `${SITE_URL}${path}`

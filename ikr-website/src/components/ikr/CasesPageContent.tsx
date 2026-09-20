@@ -833,8 +833,8 @@ export function CasesPageContent() {
                   lineHeight: 1.5,
                 }}
               >
-                Verse food brands waarmee de samenwerking is gestart. Cases in opbouw, zonder
-                opgeblazen organische cijfers.
+                Verse food brands waarmee de samenwerking is gestart. Cases in opbouw; resultaatcijfers
+                volgen wanneer er organisch bewijs is.
               </p>
               <ul
                 style={{

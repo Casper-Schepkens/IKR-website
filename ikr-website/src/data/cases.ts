@@ -102,8 +102,8 @@ export const caseDetailTemplate: CaseDetail = {
   outcomeLine: '{bedrijf} groeide naar {views} views in {periode}',
   summary: [
     '{bedrijf} wilde meer zichtbaarheid op TikTok bij een jongere doelgroep, maar miste de tijd en expertise om consistente content te maken.',
-    'IKnowRight ontwikkelde een contentstrategie op maat, kwam op locatie filmen en leverde scroll-stoppende video\'s die pasten bij het merk van {bedrijf}.',
-    'Het resultaat: meetbaar meer bereik, hogere engagement en een social feed waar {bedrijf} trots op is.',
+    'IKnowRight werkte een contentstrategie uit, kwam op locatie filmen en leverde TikTok-video\'s die pasten bij het merk van {bedrijf}.',
+    'Meer bereik, hogere engagement en een feed waar {bedrijf} achter staat.',
   ],
   results: [
     { label: 'Views', value: '{views}' },
@@ -125,7 +125,7 @@ export const caseDetailTemplate: CaseDetail = {
     },
     {
       title: 'ONZE AANPAK VOOR {bedrijf}',
-      body: 'We startten met een intake om het merk en de doelen van {bedrijf} te begrijpen. Daarna ontwikkelden we een contentkalender met formats die bewezen werken, en gingen op locatie filmen met een creator die het merk begrijpt.',
+      body: 'We startten met een intake over het merk en de doelen van {bedrijf}. Daarna volgde een contentkalender met formats die op TikTok werken, en filmden we op locatie met een creator die het merk snapt.',
     },
   ],
   testimonial: {
@@ -147,8 +147,8 @@ export const caseDetailTempus: CaseDetail = {
   outcomeLine: '1.7 miljoen views, en 1 tot 2 sollicitaties per dag',
   summary: [
     'Tempus Thuisverpleging werkt al bijna een jaar op vaste basis met IKnowRight. Hun grootste uitdaging: zoveel mogelijk jonge verpleegkundigen aantrekken via TikTok. HR-marketing, geen productpromo.',
-    'We maakten content die jonge zorgprofessionals aanspreekt: herkenbare situaties, authentieke formats en een consistente aanwezigheid op @tempusverpleging.',
-    'Het resultaat: 1.7 miljoen views over 107 video\'s, 886K bereik en een community die 78% vrouw is, plus 1 tot 2 sollicitaties per dag via TikTok.',
+    'We maakten content voor @tempusverpleging die jonge zorgprofessionals herkennen: situaties uit het werk, vaste formats en een regelmatige feed.',
+    '1.7 miljoen views over 107 video\'s, 886K bereik, een community die 78% vrouw is, en 1 tot 2 sollicitaties per dag via TikTok.',
   ],
   results: [
     { label: 'Views', value: '1.7M' },
@@ -162,11 +162,11 @@ export const caseDetailTempus: CaseDetail = {
   story: [
     {
       title: 'DE UITDAGING',
-      body: 'Tempus moest opvallen in een krappe arbeidsmarkt voor verpleegkundigen. Klassieke jobposts bereikten de jonge doelgroep niet: ze zitten op TikTok, niet op vacaturesites.',
+      body: 'Tempus moest opvallen in een krappe arbeidsmarkt voor verpleegkundigen. Klassieke jobposts bereikten de jonge doelgroep niet. Die doelgroep zit op TikTok.',
     },
     {
       title: 'ONZE AANPAK VOOR TEMPUS',
-      body: 'We bouwden een contentlijn rond HR-marketing: video\'s die het werk bij Tempus tonen zoals jonge verpleegkundigen het beleven. Consistente output, formats die delen stimuleren, en metrics die verder gaan dan likes, zoals sollicitaties en gesprekken op jobbeurzen.',
+      body: 'We bouwden een contentlijn rond HR-marketing: video\'s die het werk bij Tempus tonen zoals jonge verpleegkundigen het beleven. Vaste output, formats die delen stimuleren, en tracking van sollicitaties en gesprekken op jobbeurzen naast likes.',
     },
   ],
   testimonial: {
@@ -193,7 +193,7 @@ export const caseDetailMaisonSlash: CaseDetail = {
   summary: [
     'Maison Slash België verkoopt magazines voor ouders. Hun doel op TikTok: ouders aanspreken met content die herkenbaar en deelbaar is.',
     'Het account bestond al (~20K views, ~300 volgers). Sinds de eerste IKR-video (24 sep 2025) groeide @maisonslashbelgie naar ~1.2 miljoen views en ~1.4K volgers.',
-    'Het resultaat: 1.2 miljoen views, topvideo 170K, ~41K likes en een community die 68% vrouw is.',
+    '1.2 miljoen views, topvideo 170K, ~41K likes en een community die 68% vrouw is.',
   ],
   results: [
     { label: 'Views', value: '1.2M' },
@@ -207,11 +207,11 @@ export const caseDetailMaisonSlash: CaseDetail = {
   story: [
     {
       title: 'DE UITDAGING',
-      body: 'Maison Slash had een TikTok-account, maar het bereikte niet de jonge ouder-doelgroep op schaal. Ze zochten content die past bij een magazine-merk zonder corporate te voelen.',
+      body: 'Maison Slash had een TikTok-account, maar bereikte jonge ouders nog niet op schaal. Ze zochten content die bij een magazine-merk past zonder stijf of corporate te voelen.',
     },
     {
       title: 'ONZE AANPAK VOOR MAISON SLASH',
-      body: 'We maakten scroll-stoppende video\'s voor @maisonslashbelgie: formats die ouders herkennen en delen. De sterkste video haalde 170.000 organische views. In totaal ~1.2 miljoen views op ~100 video\'s sinds de start van IKR.',
+      body: 'Voor @maisonslashbelgie maakten we formats die ouders herkennen en delen. De sterkste video haalde 170.000 organische views. In totaal ~1.2 miljoen views op ~100 video\'s sinds de start van IKR.',
     },
   ],
   testimonial: {
@@ -232,7 +232,7 @@ export const caseDetailChezAlbert: CaseDetail = {
   heroVariant: 'logo',
   outcomeLine: 'Samenwerking gestart. TikTok i.s.m. IKR',
   summary: [
-    'Chez Albert is een food brand waarmee IKnowRight recent de samenwerking is gestart via @chezalbert. Focus: TikTok-content die het merk laat proeven en scroll-stoppend aanvoelt.',
+    'Chez Albert is een food brand waarmee IKnowRight recent de samenwerking is gestart via @chezalbert. Focus: TikTok-content die het merk laat proeven en in de feed blijft hangen.',
     'We bouwen samen de contentlijn op: formats, tone of voice en een vaste aanwezigheid op TikTok. Resultaten en video\'s volgen hier zodra er sterke organische hits zijn.',
   ],
   results: [],
@@ -240,11 +240,11 @@ export const caseDetailChezAlbert: CaseDetail = {
   story: [
     {
       title: 'DE UITDAGING',
-      body: 'Chez Albert wil zichtbaar worden bij een jongere food-doelgroep op TikTok. Klassieke promo voelt te glad; ze zoeken content die authentiek smaakt en past bij het merk.',
+      body: 'Chez Albert wil zichtbaar worden bij een jongere food-doelgroep op TikTok. Klassieke promo voelt te glad; ze zoeken content die naar het merk smaakt.',
     },
     {
       title: 'ONZE AANPAK VOOR CHEZ ALBERT',
-      body: 'Samen met @chezalbert starten we met intake, merkfit en een contentkalender op maat. Daarna filmen en editen we scroll-stoppende video\'s i.s.m. IKR: consistent, food-first, zonder gehaaste vanity metrics.',
+      body: 'Samen met @chezalbert starten we met intake, merkfit en een contentkalender. Daarna filmen en editen we TikTok-video\'s: vast ritme, food in beeld, zonder te jagen op snelle like-cijfers.',
     },
   ],
   // Testimonial volgt later.
@@ -273,7 +273,7 @@ export const caseDetailLilalou: CaseDetail = {
     },
     {
       title: 'ONZE AANPAK VOOR LILALOU',
-      body: 'Samen met @lilaloubiscuits zetten we een food-first contentlijn op: product in beeld, snappy edits en formats die werken op TikTok. IKR begeleidt strategie, creatie en publicatie terwijl de organische lijn groeit.',
+      body: 'Samen met @lilaloubiscuits zetten we een contentlijn op rond het product: biscuits in beeld, korte edits en formats die op TikTok werken. IKR begeleidt strategie, creatie en publicatie terwijl de organische lijn groeit.',
     },
   ],
 }
@@ -288,7 +288,7 @@ export const caseDetailWasbar: CaseDetail = {
   heroVariant: 'logo',
   outcomeLine: '200K views op 3 IKR-video\'s',
   summary: [
-    'Wasbar is een food-first plek met wascafé-vibe: wassen, koffie, hapjes en hangout. Via @wasbarontiktok werkt Wasbar i.s.m. IKnowRight aan TikTok-content die die sfeer laat zien.',
+    'Wasbar is een plek met wascafé-vibe: wassen, koffie, hapjes en hangout. Via @wasbarontiktok werkt Wasbar i.s.m. IKnowRight aan TikTok-content die die sfeer laat zien.',
     'Drie IKR-video\'s staan live. Samen goed voor zo\'n 200K views.',
     'Hieronder de gallery. We blijven formats bijsturen terwijl de feed groeit.',
   ],
@@ -301,11 +301,11 @@ export const caseDetailWasbar: CaseDetail = {
   story: [
     {
       title: 'DE UITDAGING',
-      body: 'Wasbar wil op TikTok voelen als de plek zelf: warm, food-first en herkenbaar. Geen gladde promo, wel content die de wascafé-vibe en het eten in beeld brengt bij een jongere doelgroep.',
+      body: 'Wasbar wil op TikTok voelen als de plek zelf: warm en herkenbaar. Content die de wascafé-vibe en het eten in beeld brengt bij een jongere doelgroep, geen gladde promo.',
     },
     {
       title: 'ONZE AANPAK VOOR WASBAR',
-      body: 'Samen met @wasbarontiktok zetten we een contentlijn op i.s.m. IKR: sfeer, food en snappy edits die passen bij het merk. Drie video\'s staan online; we blijven bijsturen terwijl de feed groeit.',
+      body: 'Samen met @wasbarontiktok zetten we een contentlijn op: sfeer, eten en korte edits die bij het merk passen. Drie video\'s staan online; we blijven bijsturen terwijl de feed groeit.',
     },
   ],
 }
@@ -318,8 +318,8 @@ export const caseDetailAnnekeGovaerts: CaseDetail = {
   outcomeLine: '1.300+ volgers en landelijke PR in anderhalve maand',
   summary: [
     'Dr. Anneke Govaerts is migraine-specialist en auteur. Haar doelen op TikTok: meer awareness rond migraine én meer verkoop van haar boeken.',
-    'We bouwden een contentlijn die medische expertise toegankelijk maakt: video\'s die educeren, herkenning geven en vertrouwen opbouwen bij @anneke_govaerts.',
-    'Het resultaat: snelle audience-groei, consistent bereik per video én PR buiten TikTok: VRT, Radio 1 en een repost door uitgeverij Pelckmans.',
+    'We bouwden een contentlijn bij @anneke_govaerts die medische expertise toegankelijk maakt. De video\'s leggen migraine uit en bouwen herkenning op.',
+    'Meer dan 1.300 volgers in anderhalve maand, gemiddeld 26K views per video, en PR buiten TikTok: VRT, Radio 1 en een repost door uitgeverij Pelckmans.',
   ],
   results: [
     { label: 'Volgers', value: '1.300+' },

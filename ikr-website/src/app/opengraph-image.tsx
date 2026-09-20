@@ -58,7 +58,7 @@ export default function OpenGraphImage() {
               opacity: 0.72,
             }}
           >
-            Scroll-stoppende content die gezien en onthouden wordt.
+            TikTok-content voor food brands in Vlaanderen.
           </div>
         </div>
         <div

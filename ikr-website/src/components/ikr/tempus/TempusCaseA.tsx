@@ -32,8 +32,8 @@ const steps: {
     kickerColor: ikr.cyan,
     metrics: [
       { value: 'Sep ’25', label: 'Start TikTok-kanaal' },
-      { value: 'HR', label: 'Geen productpromo, wel verpleegkundigen aantrekken' },
-      { value: 'Gen Z', label: 'Zit op TikTok, niet op vacaturesites' },
+      { value: 'HR', label: 'Doel: verpleegkundigen aantrekken' },
+      { value: 'Gen Z', label: 'Doelgroep zit op TikTok' },
     ],
   },
   {
@@ -62,7 +62,7 @@ const steps: {
       { value: '1.7M', label: 'Views' },
       { value: '886K', label: 'Bereik' },
       { value: '142K', label: 'Topvideo' },
-      { value: '1–2', label: 'Sollicitaties per dag' },
+      { value: '1-2', label: 'Sollicitaties per dag' },
     ],
   },
 ]
@@ -271,7 +271,7 @@ export function TempusCaseA() {
               margin: '0 0 24px',
             }}
           >
-            TikTok · sep 2025 – aug 2026
+            TikTok · sep 2025 tot aug 2026
           </p>
           <div
             style={{
