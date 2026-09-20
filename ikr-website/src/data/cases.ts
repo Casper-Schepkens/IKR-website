@@ -418,6 +418,8 @@ export type HomepageCarouselCard = {
   src: string
   href: string
   label: string
+  /** Real TikTok @handle from SHOWER_CHANNELS — omit when unknown. */
+  handle?: string
   logo?: string
   shadow?: boolean
 }
@@ -436,6 +438,7 @@ export const homepageCarouselCards: HomepageCarouselCard[] = HOMEPAGE_CAROUSEL_L
     src: pick.video.src,
     href: meta.hrefFor(pick.video),
     label: meta.name,
+    handle: pick.channel.handle || undefined,
     logo: meta.logo,
   }
 })

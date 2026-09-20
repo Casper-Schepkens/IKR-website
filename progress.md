@@ -47,6 +47,7 @@
 - **aug 2026:** Why TikTok met DataReportal 42,5% + leeftijd-pie (niet 50%, niet 46% 34+)
 - **aug 2026:** homepage-stats uit Metricool (Tempus + Maison Slash): 2.2M views / 171 video's / 170K topvideo — geen Figma-125M
 - **31 aug 2026:** hero-titel = IKnowRight + “dé TikTok agency voor food brands in Vlaanderen”. Proces-sectie heeft knop naar `/aanpak`. Fan-carousel = shower 0 (5 merken: Tempus, Maison Slash, Anneke, Oh!ma, Wasbar). Cases-preview = shower 1 (alleen de 3 laag-1 cases).
+- **TikTok-clarity quick win (sep 2026):** fan-carousel cards tonen echte `@handle`s uit `SHOWER_CHANNELS` (geen fake handles), bottom-left met mini musical-note mark + handle. Navbar ongewijzigd (geen TikTok-mark naast logo). Bestaande cards blijven; `TikTokPhoneFeed` niet op homepage.
 
 ---
 

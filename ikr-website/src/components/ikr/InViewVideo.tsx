@@ -41,14 +41,27 @@ type InViewVideoProps = {
   /** false = mag samen met andere video's spelen (homepage thumbs). */
   exclusive?: boolean
   onError?: () => void
+  /** Fires when the underlying video starts or stops playing. */
+  onPlayingChange?: (playing: boolean) => void
 }
 
 export const InViewVideo = forwardRef<HTMLVideoElement, InViewVideoProps>(
   function InViewVideo(
-    { src, className, style, threshold = 0.55, phoneOnly = false, exclusive = true, onError },
+    {
+      src,
+      className,
+      style,
+      threshold = 0.55,
+      phoneOnly = false,
+      exclusive = true,
+      onError,
+      onPlayingChange,
+    },
     forwardedRef,
   ) {
     const innerRef = useRef<HTMLVideoElement>(null)
+    const onPlayingChangeRef = useRef(onPlayingChange)
+    onPlayingChangeRef.current = onPlayingChange
     const poster = videoPoster(src)
 
     const setRefs = (node: HTMLVideoElement | null) => {
@@ -56,6 +69,28 @@ export const InViewVideo = forwardRef<HTMLVideoElement, InViewVideoProps>(
       if (typeof forwardedRef === 'function') forwardedRef(node)
       else if (forwardedRef) forwardedRef.current = node
     }
+
+    useEffect(() => {
+      const el = innerRef.current
+      if (!el) return
+
+      const emit = () => {
+        onPlayingChangeRef.current?.(!el.paused && !el.ended)
+      }
+      el.addEventListener('play', emit)
+      el.addEventListener('playing', emit)
+      el.addEventListener('pause', emit)
+      el.addEventListener('ended', emit)
+      emit()
+
+      return () => {
+        el.removeEventListener('play', emit)
+        el.removeEventListener('playing', emit)
+        el.removeEventListener('pause', emit)
+        el.removeEventListener('ended', emit)
+        onPlayingChangeRef.current?.(false)
+      }
+    }, [src])
 
     useEffect(() => {
       const el = innerRef.current

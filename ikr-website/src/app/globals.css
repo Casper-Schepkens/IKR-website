@@ -74,6 +74,19 @@
   to { transform: rotate(360deg); }
 }
 
+/* Homepage carousel: static TikTok icon beside @handle (no play animation). */
+.ikr-tt-mark {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.ikr-tt-mark svg {
+  display: block;
+}
+
 @keyframes ikr-scroll-nudge {
   0%, 100% { transform: translateY(0); opacity: 0.95; }
   50% { transform: translateY(8px); opacity: 1; }

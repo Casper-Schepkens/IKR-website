@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { caseLinkProps, homepageCarouselCards } from '@/data/cases'
-import { ClickHint, ClientLogoSticker } from './ClientLogoSticker'
+import { ClickHint, ClientLogoSticker, TikTokHandleCaption } from './ClientLogoSticker'
 import { claimVideo, InViewVideo } from './InViewVideo'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -19,6 +19,45 @@ const LAYOUT_CENTER = 36.53
 const ORIG_CARD_W = 26.39
 const ORIG_TOP_SPREAD = 127
 const TOP_PAD = 3.2
+
+function MobileCarouselCard({
+  card,
+}: {
+  card: (typeof homepageCarouselCards)[number]
+}) {
+  return (
+    <Link
+      {...caseLinkProps(card.href)}
+      aria-label={card.handle ? `${card.label} ${card.handle} bekijken` : `${card.label} bekijken`}
+      style={{
+        position: 'relative',
+        flexShrink: 0,
+        width: 'min(82vw, 340px)',
+        aspectRatio: '9 / 16',
+        border: '4px solid #FFFFFF',
+        borderRadius: 22,
+        overflow: 'hidden',
+        scrollSnapAlign: 'center',
+        display: 'block',
+        textDecoration: 'none',
+        backgroundColor: '#D0C8BC',
+      }}
+    >
+      <InViewVideo src={card.src} threshold={0.6} phoneOnly />
+      <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 2, pointerEvents: 'none' }}>
+        <ClientLogoSticker name={card.label} logo={card.logo} rotate={-7} />
+      </div>
+      {card.handle ? (
+        <div style={{ position: 'absolute', left: 12, bottom: 14, zIndex: 2, pointerEvents: 'none' }}>
+          <TikTokHandleCaption handle={card.handle} />
+        </div>
+      ) : null}
+      <div style={{ position: 'absolute', right: 12, bottom: 12, zIndex: 2, pointerEvents: 'none' }}>
+        <ClickHint />
+      </div>
+    </Link>
+  )
+}
 
 function PhoneInfiniteStrip() {
   const scrollerRef = useRef<HTMLDivElement>(null)
@@ -103,32 +142,7 @@ function PhoneInfiniteStrip() {
       }}
     >
       {loopCards.map(({ card, copy }) => (
-        <Link
-          key={`m-${copy}-${card.id}`}
-          {...caseLinkProps(card.href)}
-          aria-label={`${card.label} bekijken`}
-          style={{
-            position: 'relative',
-            flexShrink: 0,
-            width: 'min(82vw, 340px)',
-            aspectRatio: '9 / 16',
-            border: '4px solid #FFFFFF',
-            borderRadius: 22,
-            overflow: 'hidden',
-            scrollSnapAlign: 'center',
-            display: 'block',
-            textDecoration: 'none',
-            backgroundColor: '#D0C8BC',
-          }}
-        >
-          <InViewVideo src={card.src} threshold={0.6} phoneOnly />
-          <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 2, pointerEvents: 'none' }}>
-            <ClientLogoSticker name={card.label} logo={card.logo} rotate={-7} />
-          </div>
-          <div style={{ position: 'absolute', right: 12, bottom: 12, zIndex: 2, pointerEvents: 'none' }}>
-            <ClickHint />
-          </div>
-        </Link>
+        <MobileCarouselCard key={`m-${copy}-${card.id}`} card={card} />
       ))}
     </div>
   )
@@ -186,7 +200,7 @@ export function CarouselSection() {
           <Link
             key={card.id}
             {...caseLinkProps(card.href)}
-            aria-label={`${card.label} bekijken`}
+            aria-label={card.handle ? `${card.label} ${card.handle} bekijken` : `${card.label} bekijken`}
             className="carousel-card"
             onMouseEnter={() => handleEnter(i, card.id)}
             onMouseLeave={() => handleLeave(i)}
@@ -225,6 +239,19 @@ export function CarouselSection() {
             >
               <ClientLogoSticker name={card.label} logo={card.logo} rotate={-7} />
             </div>
+            {card.handle ? (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 'clamp(8px, 4%, 14px)',
+                  bottom: 'clamp(10px, 5%, 16px)',
+                  zIndex: 2,
+                  pointerEvents: 'none',
+                }}
+              >
+                <TikTokHandleCaption handle={card.handle} />
+              </div>
+            ) : null}
             <div
               style={{
                 position: 'absolute',
