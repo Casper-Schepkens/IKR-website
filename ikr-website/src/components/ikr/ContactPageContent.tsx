@@ -12,6 +12,7 @@ import {
 } from '@/lib/contact-types'
 import { IKR_EMAIL, IKR_EMAIL_HREF, IKR_PHONE, IKR_PHONE_HREF } from '@/data/site-contact'
 import { bodyFont, displayFont, ikr } from '@/lib/ikr-styles'
+import { trackOpenAIAdsRegistrationCompleted } from './OpenAIAdsPixel'
 import { TurnstileWidget } from './TurnstileWidget'
 
 const contactTypes: { id: ContactType; title: string; subtitle: string }[] = [
@@ -481,6 +482,7 @@ export function ContactPageContent() {
       }
 
       setStatus('success')
+      trackOpenAIAdsRegistrationCompleted()
     } catch {
       setStatus('error')
       setErrorMessage('Verzenden mislukt. Controleer je verbinding en probeer opnieuw.')
