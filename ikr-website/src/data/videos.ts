@@ -12,7 +12,8 @@ export const VIDEO_PATHS = {
 /** Top presterende TikTok-video's per kanaal.
  *  Tempus + Maison Slash: Metricool 17/31 aug 2026.
  *  Anneke: views bij download (jun 2026) — account niet in Metricool.
- *  Oh!ma / Wasbar: views bij download (31 aug 2026) — in showers, geen case-pagina. */
+ *  Oh!ma: views bij download (31 aug 2026), showers zonder case-pagina.
+ *  Wasbar: views bij download (31 aug 2026); case /cases/wasbar + showers. */
 export type CaseChannelVideo = {
   src: string
   stat: string

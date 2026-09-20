@@ -273,6 +273,34 @@ export const caseDetailLilalou: CaseDetail = {
   ],
 }
 
+/** Food case: @wasbarontiktok; early but live, few videos in gallery, no fake result-row metrics. */
+export const caseDetailWasbar: CaseDetail = {
+  slug: 'wasbar',
+  bedrijf: 'Wasbar',
+  logo: '/images/client_logos/wasbar.png',
+  tags: ['Food', 'TikTok', 'Gestart'],
+  heroImage: '/images/client_logos/wasbar.png',
+  heroVariant: 'logo',
+  outcomeLine: 'Food vibe op TikTok. Eerste video\'s live',
+  summary: [
+    'Wasbar is een food-first plek met wascafé-vibe: wassen, koffie, hapjes en hangout. Via @wasbarontiktok werkt Wasbar i.s.m. IKnowRight aan TikTok-content die die sfeer laat zien.',
+    'De samenwerking is gestart. Er staan al een paar video\'s live. We bouwen verder aan formats die scroll-stoppen zonder te forceren op grote cijfers.',
+    'Hieronder de beschikbare clips. Resultaten-rijen volgen zodra er genoeg organisch bewijs is om eerlijk te claimen.',
+  ],
+  results: [],
+  videos: [...CASE_CHANNEL_VIDEOS.wasbar],
+  story: [
+    {
+      title: 'DE UITDAGING',
+      body: 'Wasbar wil op TikTok voelen als de plek zelf: warm, food-first en herkenbaar. Geen gladde promo, wel content die de wascafé-vibe en het eten in beeld brengt bij een jongere doelgroep.',
+    },
+    {
+      title: 'ONZE AANPAK VOOR WASBAR',
+      body: 'Samen met @wasbarontiktok zetten we een contentlijn op i.s.m. IKR: sfeer, food en snappy edits die passen bij het merk. De eerste video\'s staan online; we blijven bijsturen terwijl de feed groeit.',
+    },
+  ],
+}
+
 /** Bron: https://iknowright.be/cases/anneke-govaerts */
 export const caseDetailAnnekeGovaerts: CaseDetail = {
   slug: 'anneke-govaerts',
@@ -315,6 +343,7 @@ export const caseDetails: Record<string, CaseDetail> = {
   [caseDetailAnnekeGovaerts.slug]: caseDetailAnnekeGovaerts,
   [caseDetailChezAlbert.slug]: caseDetailChezAlbert,
   [caseDetailLilalou.slug]: caseDetailLilalou,
+  [caseDetailWasbar.slug]: caseDetailWasbar,
 }
 
 export const caseDetailSlugs = Object.keys(caseDetails)
@@ -338,6 +367,7 @@ export function caseLinkProps(href: string) {
 const CASE_GRID_ORDER = [
   'tempus',
   'maison-slash',
+  'wasbar',
   'chez-albert',
   'lilalou',
   'anneke-govaerts',
@@ -367,6 +397,7 @@ const SHOWER_CHANNELS: readonly ShowerChannel[] = [
   },
   {
     channelKey: 'wasbar',
+    caseSlug: 'wasbar',
     handle: '@wasbarontiktok',
     name: 'Wasbar',
     logo: '/images/client_logos/wasbar.png',
@@ -388,6 +419,7 @@ const CHANNEL_KEY_BY_SLUG: Partial<
 > = {
   tempus: 'tempus',
   'maison-slash': 'maisonSlash',
+  wasbar: 'wasbar',
   'anneke-govaerts': 'annekeGovaerts',
 }
 
