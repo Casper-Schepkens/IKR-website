@@ -105,9 +105,9 @@
 
 .hero-tiktok-mark--mobile {
   display: flex;
-  width: clamp(52px, 14vw, 72px);
-  height: clamp(52px, 14vw, 72px);
-  margin: clamp(28px, 7vw, 40px) auto 0;
+  width: clamp(64px, 18vw, 88px);
+  height: clamp(64px, 18vw, 88px);
+  margin: clamp(24px, 6vw, 36px) auto 0;
   opacity: 0.92;
 }
 
