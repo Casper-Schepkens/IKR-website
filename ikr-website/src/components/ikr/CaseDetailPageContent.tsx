@@ -452,7 +452,11 @@ function StorySection({ blocks }: { blocks: CaseDetail['story'] }) {
   )
 }
 
-function ClientQuote({ testimonial }: { testimonial: CaseDetail['testimonial'] }) {
+function ClientQuote({
+  testimonial,
+}: {
+  testimonial: NonNullable<CaseDetail['testimonial']>
+}) {
   return (
     <section
       style={{
@@ -580,10 +584,10 @@ export function CaseDetailPageContent({ data }: { data: CaseDetail }) {
     <div style={{ backgroundColor: ikr.cream }}>
       <CaseDetailHero data={data} />
       <SummaryBlock paragraphs={data.summary} />
-      <ResultsRow results={data.results} />
-      <VideoGallery videos={data.videos} />
+      {data.results.length > 0 && <ResultsRow results={data.results} />}
+      {data.videos.length > 0 && <VideoGallery videos={data.videos} />}
       <StorySection blocks={data.story} />
-      <ClientQuote testimonial={data.testimonial} />
+      {data.testimonial && <ClientQuote testimonial={data.testimonial} />}
       <CaseDetailCTA />
     </div>
   )

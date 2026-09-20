@@ -81,7 +81,8 @@ export type CaseDetail = {
   results: { label: string; value: string }[]
   videos: CaseDetailVideo[]
   story: CaseDetailStoryBlock[]
-  testimonial: {
+  /** Weglaten bij early cases zonder quote. */
+  testimonial?: {
     name: string
     role: string
     quote: string
@@ -92,7 +93,7 @@ export type CaseDetail = {
 export const caseDetailTemplate: CaseDetail = {
   slug: 'template',
   bedrijf: '{bedrijf}',
-  logo: '/images/client_logos/wasbar logo2.jpg',
+  logo: '/images/client_logos/wasbar.png',
   tags: ['Social Media', '{jaar}'],
   heroImage: '/images/freelancer-cta.jpg',
   outcomeLine: '{bedrijf} groeide naar {views} views in {periode}',
@@ -213,6 +214,62 @@ export const caseDetailMaisonSlash: CaseDetail = {
   },
 }
 
+/** Early food case — samenwerking gestart; geen resultaten/video's tot er organisch bewijs is. */
+export const caseDetailChezAlbert: CaseDetail = {
+  slug: 'chez-albert',
+  bedrijf: 'Chez Albert',
+  logo: '/images/client_logos/chez-albert.png',
+  tags: ['Food', 'TikTok', 'Gestart'],
+  heroImage: '/images/client_logos/chez-albert.png',
+  heroVariant: 'logo',
+  outcomeLine: 'Samenwerking gestart — TikTok i.s.m. IKR',
+  summary: [
+    'Chez Albert is een food brand waarmee IKnowRight recent de samenwerking is gestart. Focus: TikTok-content die het merk laat proeven en scroll-stoppend aanvoelt.',
+    'We bouwen samen de contentlijn op: formats, tone of voice en een vaste aanwezigheid op TikTok. Resultaten en video\'s volgen hier zodra er sterke organische hits zijn.',
+  ],
+  results: [],
+  videos: [],
+  story: [
+    {
+      title: 'DE UITDAGING',
+      body: 'Chez Albert wil zichtbaar worden bij een jongere food-doelgroep op TikTok. Klassieke promo voelt te glad; ze zoeken content die authentiek smaakt en past bij het merk.',
+    },
+    {
+      title: 'ONZE AANPAK VOOR CHEZ ALBERT',
+      body: 'We starten met intake, merkfit en een contentkalender op maat. Daarna filmen en editen we scroll-stoppende video\'s i.s.m. IKR — consistent, food-first, zonder gehaaste vanity metrics.',
+    },
+  ],
+  // TikTok handle TBD — do not invent. Testimonial volgt later.
+}
+
+/** Early food case — @lilaloubiscuits; boosted bereik ≠ organisch case-resultaat. */
+export const caseDetailLilalou: CaseDetail = {
+  slug: 'lilalou',
+  bedrijf: 'Lilalou',
+  logo: '/images/client_logos/lilalou.jpg',
+  tags: ['Food', 'TikTok', 'Gestart'],
+  heroImage: '/images/client_logos/lilalou.jpg',
+  heroVariant: 'logo',
+  outcomeLine: 'Food brand op TikTok — samenwerking gestart',
+  summary: [
+    'Lilalou (biscuits) werkt met IKnowRight aan TikTok-content via @lilaloubiscuits. De samenwerking is gestart: we bouwen aan formats die het merk laten zien én smaken.',
+    'Alles tot nu toe is vooral boosted bereik — er is nog geen sterke organische hero-video. Daarom tonen we hier geen view- of topvideo-cijfers als organisch resultaat.',
+    'Deze case groeit mee: zodra er organische hits en lokale clips zijn, vullen we gallery en resultaten aan.',
+  ],
+  results: [],
+  videos: [],
+  story: [
+    {
+      title: 'DE UITDAGING',
+      body: 'Lilalou wil als food brand opvallen op TikTok zonder alleen op paid boost te leunen. Het doel: herkenbare, deelbare content die organisch blijft hangen bij biscuit-liefhebbers.',
+    },
+    {
+      title: 'ONZE AANPAK VOOR LILALOU',
+      body: 'Samen met @lilaloubiscuits zetten we een food-first contentlijn op: product in beeld, snappy edits en formats die werken op TikTok. IKR begeleidt strategie, creatie en publicatie terwijl de organische lijn groeit.',
+    },
+  ],
+}
+
 /** Bron: https://iknowright.be/cases/anneke-govaerts */
 export const caseDetailAnnekeGovaerts: CaseDetail = {
   slug: 'anneke-govaerts',
@@ -253,6 +310,8 @@ export const caseDetails: Record<string, CaseDetail> = {
   [caseDetailTempus.slug]: caseDetailTempus,
   [caseDetailMaisonSlash.slug]: caseDetailMaisonSlash,
   [caseDetailAnnekeGovaerts.slug]: caseDetailAnnekeGovaerts,
+  [caseDetailChezAlbert.slug]: caseDetailChezAlbert,
+  [caseDetailLilalou.slug]: caseDetailLilalou,
 }
 
 export const caseDetailSlugs = Object.keys(caseDetails)
@@ -298,7 +357,7 @@ const SHOWER_CHANNELS: readonly ShowerChannel[] = [
     channelKey: 'wasbar',
     handle: '@wasbarontiktok',
     name: 'Wasbar',
-    logo: '/images/client_logos/wasbar logo2.jpg',
+    logo: '/images/client_logos/wasbar.png',
     caption: 'Wasbar',
   },
 ]

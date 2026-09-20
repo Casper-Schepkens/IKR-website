@@ -9,6 +9,12 @@ export type BrandStripItem = {
   name: string
   /** Optional logo under /images/client_logos/. Omit → text chip in the marquee. */
   logo?: string
+  /**
+   * How to crop the logo in the brand strip.
+   * - `rounded` (default): soft corner radius
+   * - `circle`: full circle mask (round marks sitting on a square canvas, e.g. Wasbar)
+   */
+  logoShape?: 'rounded' | 'circle'
 }
 
 /**
@@ -19,52 +25,43 @@ export const brandStripItems: BrandStripItem[] = [
   { name: 'Tempus', logo: '/images/client_logos/tempus logo.png' },
   { name: 'Maison Slash', logo: '/images/client_logos/MS logo.png' },
   { name: 'Oh!ma', logo: '/images/client_logos/ohma logo.png' },
-  { name: 'Wasbar', logo: '/images/client_logos/wasbar logo2.jpg' },
-  // Soft presence — logos TBD
-  { name: 'Chez Albert' },
-  { name: 'Lilalou' },
+  { name: 'Wasbar', logo: '/images/client_logos/wasbar.png', logoShape: 'circle' },
+  { name: 'Chez Albert', logo: '/images/client_logos/chez-albert.png' },
+  { name: 'Lilalou', logo: '/images/client_logos/lilalou.jpg' },
 ]
 
-/** Soft stats only when confirmed (e.g. Metricool). Omit entirely if unknown. */
-export type EarlyClientStats = {
-  views?: string
-  topVideo?: string
-  /** Short date label, e.g. "20 aug" — shown as “sinds …”. */
-  since?: string
-}
-
-/** Early / new clients — name presence; optional handle + soft Metricool stats. */
+/** Soft early-case presence on /cases#nieuw — collaboration started, no fake results. */
 export type EarlyClient = {
   id: string
   clientName: string
   /** Honest status copy — no fake views/results. */
   note: string
   logo?: string
+  /** Detail page when a real case entry exists. */
+  caseSlug?: string
   /** Confirmed TikTok handle including @. Omit if unknown (do not invent). */
   handle?: string
   /** Profile URL only when handle is confirmed. */
   tiktokUrl?: string
-  stats?: EarlyClientStats
 }
 
 export const earlyClients: EarlyClient[] = [
   {
     id: 'chez-albert',
     clientName: 'Chez Albert',
-    note: 'Nieuwe food brand — samenwerking start binnenkort',
-    // No Metricool brand yet; collaboration not started — no handle, no results.
+    note: 'Food brand — samenwerking gestart. TikTok i.s.m. IKR; case in opbouw.',
+    logo: '/images/client_logos/chez-albert.png',
+    caseSlug: 'chez-albert',
+    // TikTok handle TBD — do not invent.
   },
   {
     id: 'lilalou',
     clientName: 'Lilalou',
-    note: 'Early food brand op TikTok',
+    note: 'Food brand (biscuits) — samenwerking gestart. TikTok i.s.m. IKR; organische hero-content volgt.',
+    logo: '/images/client_logos/lilalou.jpg',
+    caseSlug: 'lilalou',
     handle: '@lilaloubiscuits',
     tiktokUrl: 'https://www.tiktok.com/@lilaloubiscuits',
-    // Soft Metricool line (brand since 2026-08-20) — not a full case results grid.
-    stats: {
-      views: '~387K',
-      topVideo: '~198K',
-      since: '20 aug',
-    },
+    // No Metricool view/top-video flex — current reach is boosted, not organic proof.
   },
 ]

@@ -713,7 +713,7 @@ export function CasesPageContent() {
                   marginBottom: 'clamp(8px, 1vw, 12px)',
                 }}
               >
-                Nieuw / coming soon
+                Nieuw gestart
               </p>
               <p
                 style={{
@@ -725,8 +725,8 @@ export function CasesPageContent() {
                   lineHeight: 1.5,
                 }}
               >
-                Verse food brands: early resultaten waar we ze hebben, of puur naam tot de
-                samenwerking start — geen volledige case study.
+                Verse food brands waarmee de samenwerking is gestart — cases in opbouw, zonder
+                opgeblazen organische cijfers.
               </p>
               <ul
                 style={{
@@ -738,89 +738,119 @@ export function CasesPageContent() {
                   gap: 'clamp(16px, 2.4vw, 32px)',
                 }}
               >
-                {earlyClients.map((client) => (
-                  <li key={client.id}>
-                    {client.logo ? (
-                      <ClientLogo name={client.clientName} logo={client.logo} />
-                    ) : (
-                      <p
-                        style={{
-                          ...displayFont,
-                          fontSize: 'clamp(1.1rem, 2vw, 26px)',
-                          color: ikr.navy,
-                          textTransform: 'uppercase',
-                          letterSpacing: '-0.03em',
-                          margin: 0,
-                        }}
-                      >
-                        {client.clientName}
-                      </p>
-                    )}
-                    {client.handle && (
-                      <p style={{ marginTop: 6, marginBottom: 0 }}>
-                        {client.tiktokUrl ? (
-                          <a
-                            href={client.tiktokUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{
-                              ...bodyFont,
-                              fontSize: 'clamp(0.8rem, 1.05vw, 14px)',
-                              color: ikr.cyan,
-                              textDecoration: 'none',
-                              fontWeight: 600,
-                            }}
-                          >
-                            {client.handle}
-                          </a>
-                        ) : (
-                          <span
-                            style={{
-                              ...bodyFont,
-                              fontSize: 'clamp(0.8rem, 1.05vw, 14px)',
-                              color: ikr.navyText,
-                              fontWeight: 600,
-                            }}
-                          >
-                            {client.handle}
-                          </span>
-                        )}
-                      </p>
-                    )}
+                {earlyClients.map((client) => {
+                  const title = (
                     <p
                       style={{
-                        ...bodyFont,
-                        fontSize: 'clamp(0.8rem, 1.05vw, 14px)',
-                        color: ikr.navyText,
-                        marginTop: 8,
-                        lineHeight: 1.45,
-                        maxWidth: 280,
+                        ...displayFont,
+                        fontSize: 'clamp(1.1rem, 2vw, 26px)',
+                        color: ikr.navy,
+                        textTransform: 'uppercase',
+                        letterSpacing: '-0.03em',
+                        margin: 0,
                       }}
                     >
-                      {client.note}
+                      {client.clientName}
                     </p>
-                    {client.stats && (
+                  )
+
+                  return (
+                    <li key={client.id}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {client.logo ? (
+                          client.caseSlug ? (
+                            <Link
+                              href={`/cases/${client.caseSlug}`}
+                              aria-label={`Case ${client.clientName}`}
+                              style={{ textDecoration: 'none', display: 'inline-block' }}
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={client.logo}
+                                alt={`${client.clientName} logo`}
+                                style={{
+                                  display: 'block',
+                                  height: 'clamp(48px, 8vw, 72px)',
+                                  width: 'auto',
+                                  maxWidth: 160,
+                                  objectFit: 'contain',
+                                  borderRadius: 12,
+                                }}
+                              />
+                            </Link>
+                          ) : (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img
+                              src={client.logo}
+                              alt={`${client.clientName} logo`}
+                              style={{
+                                display: 'block',
+                                height: 'clamp(48px, 8vw, 72px)',
+                                width: 'auto',
+                                maxWidth: 160,
+                                objectFit: 'contain',
+                                borderRadius: 12,
+                              }}
+                            />
+                          )
+                        ) : null}
+                        {client.caseSlug ? (
+                          <Link
+                            href={`/cases/${client.caseSlug}`}
+                            style={{ textDecoration: 'none' }}
+                          >
+                            {title}
+                          </Link>
+                        ) : (
+                          title
+                        )}
+                      </div>
+                      {client.handle && (
+                        <p style={{ marginTop: 6, marginBottom: 0 }}>
+                          {client.tiktokUrl ? (
+                            <a
+                              href={client.tiktokUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                ...bodyFont,
+                                fontSize: 'clamp(0.8rem, 1.05vw, 14px)',
+                                color: ikr.cyan,
+                                textDecoration: 'none',
+                                fontWeight: 600,
+                              }}
+                            >
+                              {client.handle}
+                            </a>
+                          ) : (
+                            <span
+                              style={{
+                                ...bodyFont,
+                                fontSize: 'clamp(0.8rem, 1.05vw, 14px)',
+                                color: ikr.navyText,
+                                fontWeight: 600,
+                              }}
+                            >
+                              {client.handle}
+                            </span>
+                          )}
+                        </p>
+                      )}
                       <p
                         style={{
                           ...bodyFont,
-                          fontSize: 'clamp(0.75rem, 0.95vw, 13px)',
-                          color: ikr.navy,
-                          marginTop: 10,
-                          lineHeight: 1.4,
+                          fontSize: 'clamp(0.8rem, 1.05vw, 14px)',
+                          color: ikr.navyText,
+                          marginTop: 8,
+                          lineHeight: 1.45,
                           maxWidth: 280,
                         }}
                       >
-                        {[
-                          client.stats.views && `${client.stats.views} views`,
-                          client.stats.topVideo && `top ${client.stats.topVideo}`,
-                          client.stats.since && `sinds ${client.stats.since}`,
-                        ]
-                          .filter(Boolean)
-                          .join(' · ')}
+                        {client.note}
                       </p>
-                    )}
-                  </li>
-                ))}
+                    </li>
+                  )
+                })}
               </ul>
             </div>
           )}

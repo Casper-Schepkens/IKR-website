@@ -9,6 +9,30 @@ function buildTrack(items: BrandStripItem[]) {
   return [...half, ...half]
 }
 
+function logoFrameStyle(shape: BrandStripItem['logoShape']) {
+  if (shape === 'circle') {
+    return {
+      height: 80,
+      width: 80,
+      borderRadius: '50%',
+      overflow: 'hidden' as const,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'transparent',
+    }
+  }
+
+  return {
+    height: 80,
+    borderRadius: 16,
+    overflow: 'hidden' as const,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }
+}
+
 export function BrandStripMarquee({ items }: { items: BrandStripItem[] }) {
   const track = buildTrack(items)
 
@@ -34,12 +58,21 @@ export function BrandStripMarquee({ items }: { items: BrandStripItem[] }) {
             }}
           >
             {item.logo ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={item.logo}
-                alt={item.name}
-                style={{ height: '100%', width: 'auto', objectFit: 'contain', mixBlendMode: 'multiply' }}
-              />
+              <div style={logoFrameStyle(item.logoShape)}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={item.logo}
+                  alt={item.name}
+                  style={{
+                    height: '100%',
+                    width: item.logoShape === 'circle' ? '100%' : 'auto',
+                    objectFit: item.logoShape === 'circle' ? 'cover' : 'contain',
+                    display: 'block',
+                    borderRadius: item.logoShape === 'circle' ? 0 : 16,
+                    mixBlendMode: item.logoShape === 'circle' ? 'normal' : 'multiply',
+                  }}
+                />
+              </div>
             ) : (
               <span
                 style={{

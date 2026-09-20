@@ -356,10 +356,10 @@ export function TempusCaseA() {
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
           <SpeechBubble tail="left" maxWidth="100%">
             <p style={{ ...bodyFont, fontSize: 'clamp(0.95rem, 1.3vw, 18px)', color: ikr.navyText, margin: '0 0 10px' }}>
-              &ldquo;{TEMPUS.testimonial.quote}&rdquo;
+              &ldquo;{TEMPUS.testimonial!.quote}&rdquo;
             </p>
             <p style={{ ...bodyFont, fontWeight: 700, fontSize: 15, color: ikr.navyText, margin: 0 }}>
-              {TEMPUS.testimonial.name}, {TEMPUS.testimonial.role}
+              {TEMPUS.testimonial!.name}, {TEMPUS.testimonial!.role}
             </p>
           </SpeechBubble>
         </div>
