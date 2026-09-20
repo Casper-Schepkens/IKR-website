@@ -25,8 +25,6 @@ function MobileCarouselCard({
 }: {
   card: (typeof homepageCarouselCards)[number]
 }) {
-  const [playing, setPlaying] = useState(false)
-
   return (
     <Link
       {...caseLinkProps(card.href)}
@@ -45,13 +43,13 @@ function MobileCarouselCard({
         backgroundColor: '#D0C8BC',
       }}
     >
-      <InViewVideo src={card.src} threshold={0.6} phoneOnly onPlayingChange={setPlaying} />
+      <InViewVideo src={card.src} threshold={0.6} phoneOnly />
       <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 2, pointerEvents: 'none' }}>
         <ClientLogoSticker name={card.label} logo={card.logo} rotate={-7} />
       </div>
       {card.handle ? (
         <div style={{ position: 'absolute', left: 12, bottom: 14, zIndex: 2, pointerEvents: 'none' }}>
-          <TikTokHandleCaption handle={card.handle} playing={playing} />
+          <TikTokHandleCaption handle={card.handle} />
         </div>
       ) : null}
       <div style={{ position: 'absolute', right: 12, bottom: 12, zIndex: 2, pointerEvents: 'none' }}>
@@ -154,7 +152,6 @@ export function CarouselSection() {
   const sectionRef = useRef<HTMLElement>(null)
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([])
   const [hovered, setHovered] = useState<string | null>(null)
-  const [playingIds, setPlayingIds] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -230,12 +227,6 @@ export function CarouselSection() {
               ref={(el) => { videoRefs.current[i] = el }}
               src={card.src}
               phoneOnly
-              onPlayingChange={(playing) => {
-                setPlayingIds((prev) => {
-                  if (prev[card.id] === playing) return prev
-                  return { ...prev, [card.id]: playing }
-                })
-              }}
             />
             <div
               style={{
@@ -258,10 +249,7 @@ export function CarouselSection() {
                   pointerEvents: 'none',
                 }}
               >
-                <TikTokHandleCaption
-                  handle={card.handle}
-                  playing={Boolean(playingIds[card.id]) || hovered === card.id}
-                />
+                <TikTokHandleCaption handle={card.handle} />
               </div>
             ) : null}
             <div
