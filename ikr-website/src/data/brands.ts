@@ -1,7 +1,7 @@
 /**
  * Brand strip + soft presence for food brands.
  * Logos live in public/images/client_logos/. Text-only entries are OK until a logo lands.
- * Do not invent TikTok handles, URLs, or metrics — only Metricool / user-confirmed facts.
+ * Do not invent TikTok handles, URLs, or metrics: only Metricool / user-confirmed facts.
  */
 
 export type BrandStripItem = {
@@ -30,11 +30,11 @@ export const brandStripItems: BrandStripItem[] = [
   { name: 'Lilalou', logo: '/images/client_logos/lilalou.jpg' },
 ]
 
-/** Soft early-case presence on /cases#nieuw — collaboration started, no fake results. */
+/** Soft early-case presence on /cases#nieuw: collaboration started, no fake results. */
 export type EarlyClient = {
   id: string
   clientName: string
-  /** Honest status copy — no fake views/results. */
+  /** Honest status copy: no fake views/results. */
   note: string
   logo?: string
   /** Detail page when a real case entry exists. */
@@ -49,19 +49,19 @@ export const earlyClients: EarlyClient[] = [
   {
     id: 'chez-albert',
     clientName: 'Chez Albert',
-    note: 'Food brand — samenwerking gestart. TikTok i.s.m. IKR; case in opbouw.',
+    note: 'Food brand. Samenwerking gestart. TikTok i.s.m. IKR; case in opbouw.',
     logo: '/images/client_logos/chez-albert.png',
     caseSlug: 'chez-albert',
-    // TikTok handle TBD — do not invent.
+    // TikTok handle TBD; do not invent.
   },
   {
     id: 'lilalou',
     clientName: 'Lilalou',
-    note: 'Food brand (biscuits) — samenwerking gestart. TikTok i.s.m. IKR; organische hero-content volgt.',
+    note: 'Food brand (biscuits). Samenwerking gestart. TikTok i.s.m. IKR; organische hero-content volgt.',
     logo: '/images/client_logos/lilalou.jpg',
     caseSlug: 'lilalou',
     handle: '@lilaloubiscuits',
     tiktokUrl: 'https://www.tiktok.com/@lilaloubiscuits',
-    // No Metricool view/top-video flex — current reach is boosted, not organic proof.
+    // No Metricool view/top-video flex: current reach is boosted, not organic proof.
   },
 ]

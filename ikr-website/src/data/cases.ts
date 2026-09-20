@@ -6,8 +6,11 @@ export type CaseGridItem = {
   id: string
   slug: string
   clientName: string
-  video: string
+  /** Present for video cases; omit for early logo-only grid cards. */
+  video?: string
   logo?: string
+  /** Soft status chip on early /cases grid cards (e.g. Gestart). */
+  statusLabel?: string
 }
 
 export type CaseCarouselItem = {
@@ -214,7 +217,7 @@ export const caseDetailMaisonSlash: CaseDetail = {
   },
 }
 
-/** Early food case — samenwerking gestart; geen resultaten/video's tot er organisch bewijs is. */
+/** Early food case: samenwerking gestart; geen resultaten/video's tot er organisch bewijs is. */
 export const caseDetailChezAlbert: CaseDetail = {
   slug: 'chez-albert',
   bedrijf: 'Chez Albert',
@@ -222,7 +225,7 @@ export const caseDetailChezAlbert: CaseDetail = {
   tags: ['Food', 'TikTok', 'Gestart'],
   heroImage: '/images/client_logos/chez-albert.png',
   heroVariant: 'logo',
-  outcomeLine: 'Samenwerking gestart — TikTok i.s.m. IKR',
+  outcomeLine: 'Samenwerking gestart. TikTok i.s.m. IKR',
   summary: [
     'Chez Albert is een food brand waarmee IKnowRight recent de samenwerking is gestart. Focus: TikTok-content die het merk laat proeven en scroll-stoppend aanvoelt.',
     'We bouwen samen de contentlijn op: formats, tone of voice en een vaste aanwezigheid op TikTok. Resultaten en video\'s volgen hier zodra er sterke organische hits zijn.',
@@ -236,13 +239,13 @@ export const caseDetailChezAlbert: CaseDetail = {
     },
     {
       title: 'ONZE AANPAK VOOR CHEZ ALBERT',
-      body: 'We starten met intake, merkfit en een contentkalender op maat. Daarna filmen en editen we scroll-stoppende video\'s i.s.m. IKR — consistent, food-first, zonder gehaaste vanity metrics.',
+      body: 'We starten met intake, merkfit en een contentkalender op maat. Daarna filmen en editen we scroll-stoppende video\'s i.s.m. IKR: consistent, food-first, zonder gehaaste vanity metrics.',
     },
   ],
-  // TikTok handle TBD — do not invent. Testimonial volgt later.
+  // TikTok handle TBD; do not invent. Testimonial volgt later.
 }
 
-/** Early food case — @lilaloubiscuits; boosted bereik ≠ organisch case-resultaat. */
+/** Early food case: @lilaloubiscuits; boosted bereik is geen organisch case-resultaat. */
 export const caseDetailLilalou: CaseDetail = {
   slug: 'lilalou',
   bedrijf: 'Lilalou',
@@ -250,10 +253,10 @@ export const caseDetailLilalou: CaseDetail = {
   tags: ['Food', 'TikTok', 'Gestart'],
   heroImage: '/images/client_logos/lilalou.jpg',
   heroVariant: 'logo',
-  outcomeLine: 'Food brand op TikTok — samenwerking gestart',
+  outcomeLine: 'Food brand op TikTok. Samenwerking gestart',
   summary: [
     'Lilalou (biscuits) werkt met IKnowRight aan TikTok-content via @lilaloubiscuits. De samenwerking is gestart: we bouwen aan formats die het merk laten zien én smaken.',
-    'Alles tot nu toe is vooral boosted bereik — er is nog geen sterke organische hero-video. Daarom tonen we hier geen view- of topvideo-cijfers als organisch resultaat.',
+    'Alles tot nu toe is vooral boosted bereik. Er is nog geen sterke organische hero-video. Daarom tonen we hier geen view- of topvideo-cijfers als organisch resultaat.',
     'Deze case groeit mee: zodra er organische hits en lokale clips zijn, vullen we gallery en resultaten aan.',
   ],
   results: [],
@@ -328,8 +331,17 @@ export function caseLinkProps(href: string) {
 
 // ─── Single source: grid van caseDetails; showers mogen extra kanalen ─────────
 
-/** Volgorde homepage-/cases-overview (alleen laag-1 cases met detailpagina). */
-const CASE_GRID_ORDER = ['tempus', 'maison-slash', 'anneke-govaerts'] as const
+/**
+ * Volgorde /cases overview (+ homepage video cards, gefilterd op video).
+ * Early food cases (geen video) staan zichtbaar in de hoofdgid.
+ */
+const CASE_GRID_ORDER = [
+  'tempus',
+  'maison-slash',
+  'chez-albert',
+  'lilalou',
+  'anneke-govaerts',
+] as const
 
 type ShowerChannel = {
   channelKey: keyof typeof CASE_CHANNEL_VIDEOS
@@ -365,12 +377,15 @@ const SHOWER_CHANNELS: readonly ShowerChannel[] = [
 /**
  * 4 videoshower-plekken. Per klantmap: shower 0 pakt 1e/5e/9e, shower 1 de 2e/6e, enz.
  * Eén video in het mapje → die video overal. Geen match voor die shower → klant overslaan
- * (niet terugvallen op video 1 — dat veroorzaakt herhaling).
+ * (niet terugvallen op video 1, dat veroorzaakt herhaling).
  */
 const VIDEO_SHOWER_COUNT = 4
 export type VideoShowerIndex = 0 | 1 | 2 | 3
 
-const CHANNEL_KEY_BY_SLUG: Record<(typeof CASE_GRID_ORDER)[number], keyof typeof CASE_CHANNEL_VIDEOS> = {
+/** Only cases with a Metricool/local video folder participate in showers. */
+const CHANNEL_KEY_BY_SLUG: Partial<
+  Record<(typeof CASE_GRID_ORDER)[number], keyof typeof CASE_CHANNEL_VIDEOS>
+> = {
   tempus: 'tempus',
   'maison-slash': 'maisonSlash',
   'anneke-govaerts': 'annekeGovaerts',
@@ -419,21 +434,29 @@ function showerPicksFirstThenRest(shower: VideoShowerIndex) {
   return [...firsts, ...rest]
 }
 
-function toGridItem(detail: CaseDetail, videoSrc: string): CaseGridItem {
+function toGridItem(detail: CaseDetail, videoSrc?: string, statusLabel?: string): CaseGridItem {
   return {
     id: detail.slug,
     slug: detail.slug,
     clientName: detail.bedrijf,
     video: videoSrc,
     logo: detail.logo,
+    statusLabel,
   }
 }
 
-/** Overview + homepage cases — shower 1 (2e, 6e, … per mapje). Alleen laag-1. */
+/**
+ * /cases main grid: video cases (shower 1) + early logo cards without fake metrics.
+ * Homepage preview filters to items with `video`.
+ */
 export const caseGridItems: CaseGridItem[] = CASE_GRID_ORDER.flatMap((slug) => {
   const detail = caseDetails[slug]
   if (!detail) throw new Error(`Missing case detail for grid: ${slug}`)
-  const video = videosForShower(CHANNEL_KEY_BY_SLUG[slug], 1)[0]
+  const channelKey = CHANNEL_KEY_BY_SLUG[slug]
+  if (!channelKey) {
+    return [toGridItem(detail, undefined, 'Gestart')]
+  }
+  const video = videosForShower(channelKey, 1)[0]
   if (!video) return []
   return [toGridItem(detail, video.src)]
 })
