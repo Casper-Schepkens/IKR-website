@@ -52,7 +52,8 @@ export const earlyClients: EarlyClient[] = [
     note: 'Food brand. Samenwerking gestart. TikTok i.s.m. IKR; case in opbouw.',
     logo: '/images/client_logos/chez-albert.png',
     caseSlug: 'chez-albert',
-    // TikTok handle TBD; do not invent.
+    handle: '@chezalbert',
+    tiktokUrl: 'https://www.tiktok.com/@chezalbert',
   },
   {
     id: 'lilalou',

@@ -227,7 +227,7 @@ export const caseDetailChezAlbert: CaseDetail = {
   heroVariant: 'logo',
   outcomeLine: 'Samenwerking gestart. TikTok i.s.m. IKR',
   summary: [
-    'Chez Albert is een food brand waarmee IKnowRight recent de samenwerking is gestart. Focus: TikTok-content die het merk laat proeven en scroll-stoppend aanvoelt.',
+    'Chez Albert is een food brand waarmee IKnowRight recent de samenwerking is gestart via @chezalbert. Focus: TikTok-content die het merk laat proeven en scroll-stoppend aanvoelt.',
     'We bouwen samen de contentlijn op: formats, tone of voice en een vaste aanwezigheid op TikTok. Resultaten en video\'s volgen hier zodra er sterke organische hits zijn.',
   ],
   results: [],
@@ -239,10 +239,10 @@ export const caseDetailChezAlbert: CaseDetail = {
     },
     {
       title: 'ONZE AANPAK VOOR CHEZ ALBERT',
-      body: 'We starten met intake, merkfit en een contentkalender op maat. Daarna filmen en editen we scroll-stoppende video\'s i.s.m. IKR: consistent, food-first, zonder gehaaste vanity metrics.',
+      body: 'Samen met @chezalbert starten we met intake, merkfit en een contentkalender op maat. Daarna filmen en editen we scroll-stoppende video\'s i.s.m. IKR: consistent, food-first, zonder gehaaste vanity metrics.',
     },
   ],
-  // TikTok handle TBD; do not invent. Testimonial volgt later.
+  // Testimonial volgt later.
 }
 
 /** Early food case: @lilaloubiscuits; boosted bereik is geen organisch case-resultaat. */
@@ -556,6 +556,25 @@ export const homepageCarouselCards: HomepageCarouselCard[] = HOMEPAGE_CAROUSEL_L
     logo: meta.logo,
   }
 })
+
+/**
+ * Mobile strip order: food brands first (Oh!ma → Wasbar), then the rest as today.
+ * Desktop fan keeps `homepageCarouselCards` layout slots unchanged.
+ * Later: replace non-food cards with Chez Albert + Lilalou once those have shower videos.
+ */
+const MOBILE_FOOD_FIRST_LABELS = ['Oh!ma', 'Wasbar'] as const
+
+export const homepageCarouselCardsMobile: HomepageCarouselCard[] = (() => {
+  const food: HomepageCarouselCard[] = []
+  for (const label of MOBILE_FOOD_FIRST_LABELS) {
+    const card = homepageCarouselCards.find((c) => c.label === label)
+    if (card) food.push(card)
+  }
+  const rest = homepageCarouselCards.filter(
+    (c) => !(MOBILE_FOOD_FIRST_LABELS as readonly string[]).includes(c.label),
+  )
+  return [...food, ...rest]
+})()
 
 export type CaseFeedItem = {
   src: string
