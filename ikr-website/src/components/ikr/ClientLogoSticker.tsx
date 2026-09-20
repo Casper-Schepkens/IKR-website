@@ -85,32 +85,24 @@ export function ClickHint() {
 
 /**
  * Musical-note stand-in (not an official TikTok brand asset).
- * CSS animates when the card video is playing: bounce + cyan/magenta chroma flicker.
- * ViewBox is cropped tight so the glyph fills ~handle-text height (1.25em box).
+ * When the card video plays: bounce + cyan/magenta chroma flicker via CSS.
+ * ViewBox is cropped tight so the glyph fills ~handle-text height.
  */
 function MiniTikTokMark({ playing = false }: { playing?: boolean }) {
   const note =
     'M14 3v9.2a3.6 3.6 0 1 1-2.4-3.4V3h2.4zM16.2 3c.55 1.85 1.9 3.35 3.8 4.05V9.3c-1.55-.35-2.9-1.1-3.8-2.15V3z'
 
   return (
-    <svg
+    <span
       className={playing ? 'ikr-tt-mark ikr-tt-mark--playing' : 'ikr-tt-mark'}
-      width="1.35em"
-      height="1.35em"
-      viewBox="7.2 2 13.6 15.2"
-      fill="none"
       aria-hidden="true"
     >
-      <g className="ikr-tt-mark-cyan">
-        <path d={note} fill="#25F4EE" />
-      </g>
-      <g className="ikr-tt-mark-magenta">
-        <path d={note} fill="#FE2C55" />
-      </g>
-      <g className="ikr-tt-mark-core">
-        <path d={note} fill="#FFF9F1" />
-      </g>
-    </svg>
+      <svg width="1.35em" height="1.35em" viewBox="7.2 2 13.6 15.2" fill="none">
+        <path className="ikr-tt-mark-cyan" d={note} fill="#25F4EE" />
+        <path className="ikr-tt-mark-magenta" d={note} fill="#FE2C55" />
+        <path className="ikr-tt-mark-core" d={note} fill="#FFF9F1" />
+      </svg>
+    </span>
   )
 }
 
