@@ -10,9 +10,14 @@ declare global {
   }
 }
 
+function callOaiq(...args: unknown[]) {
+  if (typeof window === 'undefined' || typeof window.oaiq !== 'function') return
+  window.oaiq(...args)
+}
+
 /**
  * ChatGPT / OpenAI Ads Measurement Pixel.
- * Site-wide init; conversion events via {@link trackOpenAIAdsRegistrationCompleted}.
+ * Site-wide init; conversion helpers below for contact + pricing forms.
  * @see https://developers.openai.com/ads/measurement-pixel
  */
 export function OpenAIAdsPixel() {
@@ -31,6 +36,10 @@ export function OpenAIAdsPixel() {
 
 /** Fires after a successful contact form submit. No-ops if the pixel SDK is unavailable. */
 export function trackOpenAIAdsRegistrationCompleted() {
-  if (typeof window === 'undefined' || typeof window.oaiq !== 'function') return
-  window.oaiq('measure', 'registration_completed', { type: 'customer_action' })
+  callOaiq('measure', 'registration_completed', { type: 'customer_action' })
+}
+
+/** Fires after a successful prijs-aanvraag on /pricing. No-ops if the pixel SDK is unavailable. */
+export function trackOpenAIAdsPrijsAangevraagd() {
+  callOaiq('measure', 'custom', { type: 'custom' }, { custom_event_name: 'prijs_aangevraagd' })
 }
