@@ -10,10 +10,12 @@ export const VIDEO_PATHS = {
 } as const
 
 /** Top presterende TikTok-video's per kanaal.
- *  Tempus + Maison Slash: Metricool 17/31 aug 2026.
- *  Anneke: views bij download (jun 2026) — account niet in Metricool.
+ *  Tempus: Metricool full history (20 sep 2026), alle clips IKR.
+ *  Maison Slash: alleen IKR-window clips die lokaal staan + Metricool stats (20 sep 2026).
+ *    Pre-IKR virals (170K/148K/…) uit gallery gehaald om oneerlijke claims te vermijden.
+ *  Anneke: views bij download (jun 2026); account niet in Metricool.
  *  Oh!ma: views bij download (31 aug 2026), showers zonder case-pagina.
- *  Wasbar: views bij download (31 aug 2026); case /cases/wasbar + showers. */
+ *  Wasbar: views bij download (31 aug 2026); case /cases/wasbar + showers; niet in Metricool. */
 export type CaseChannelVideo = {
   src: string
   stat: string
@@ -34,7 +36,7 @@ export const CASE_CHANNEL_VIDEOS: Record<
     },
     {
       src: '/videos/cases/tempus/7531711349668318496.mp4',
-      stat: '135K',
+      stat: '134K',
       tiktokUrl: 'https://www.tiktok.com/@tempusverpleging/video/7531711349668318496',
     },
     {
@@ -65,35 +67,13 @@ export const CASE_CHANNEL_VIDEOS: Record<
   ],
   maisonSlash: [
     {
-      src: '/videos/cases/maison-slash/7598150186996682017.mp4',
-      stat: '170K',
-      tiktokUrl: 'https://www.tiktok.com/@maisonslashbelgie/video/7598150186996682017',
-      // Seksenquete-topvideo: wel op de case-pagina, niet in de 4 marketing-showers.
-      hideFromShowers: true,
-    },
-    {
-      src: '/videos/cases/maison-slash/7562140206158073120.mp4',
-      stat: '148K',
-      tiktokUrl: 'https://www.tiktok.com/@maisonslashbelgie/video/7562140206158073120',
-    },
-    {
-      src: '/videos/cases/maison-slash/7573647751959858464.mp4',
-      stat: '71K',
-      tiktokUrl: 'https://www.tiktok.com/@maisonslashbelgie/video/7573647751959858464',
-    },
-    {
-      src: '/videos/cases/maison-slash/7611955630290537760.mp4',
-      stat: '64K',
-      tiktokUrl: 'https://www.tiktok.com/@maisonslashbelgie/video/7611955630290537760',
-    },
-    {
       src: '/videos/cases/maison-slash/7661565150620568864.mp4',
-      stat: '7.1K',
+      stat: '7.8K',
       tiktokUrl: 'https://www.tiktok.com/@maisonslashbelgie/video/7661565150620568864',
     },
     {
       src: '/videos/cases/maison-slash/7675310208951864608.mp4',
-      stat: '3.3K',
+      stat: '4.5K',
       tiktokUrl: 'https://www.tiktok.com/@maisonslashbelgie/video/7675310208951864608',
     },
     {
@@ -108,7 +88,7 @@ export const CASE_CHANNEL_VIDEOS: Record<
     },
     {
       src: '/videos/cases/maison-slash/7663514981513710880.mp4',
-      stat: '1K',
+      stat: '1.1K',
       tiktokUrl: 'https://www.tiktok.com/@maisonslashbelgie/video/7663514981513710880',
     },
   ],

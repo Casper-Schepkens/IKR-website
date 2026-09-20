@@ -52,8 +52,8 @@ export const foodWorkItems: FoodWorkItem[] = [
     id: 'panos',
     clientName: 'Panos',
     video: VIDEO_PATHS.foodWorkPanos,
-    views: '',
-    highlight: 'Bakkerijketen, influencer-opdracht',
+    views: '1.2M',
+    highlight: 'Bakkerijketen, influencer-opdracht (~11K likes)',
   },
 ]
 
@@ -136,24 +136,25 @@ export const caseDetailTemplate: CaseDetail = {
   },
 }
 
-/** Bron: https://iknowright.be/cases/tempus */
+/** Bron: https://iknowright.be/cases/tempus
+ *  Views/video's: Metricool full history @tempusverpleging (~2025-04-04 → 2026-09-20). */
 export const caseDetailTempus: CaseDetail = {
   slug: 'tempus',
   bedrijf: 'Tempus',
   logo: '/images/client_logos/tempus logo.png',
   tags: ['HR Marketing', 'TikTok'],
   heroImage: '/images/cases/tempus/hero.jpg',
-  outcomeLine: '1 miljoen views, en 1 tot 2 sollicitaties per dag',
+  outcomeLine: '1.7 miljoen views, en 1 tot 2 sollicitaties per dag',
   summary: [
     'Tempus Thuisverpleging werkt al bijna een jaar op vaste basis met IKnowRight. Hun grootste uitdaging: zoveel mogelijk jonge verpleegkundigen aantrekken via TikTok. HR-marketing, geen productpromo.',
     'We maakten content die jonge zorgprofessionals aanspreekt: herkenbare situaties, authentieke formats en een consistente aanwezigheid op @tempusverpleging.',
-    'Het resultaat: 1 miljoen views, 886K bereik en een community die 78% vrouw is, plus 1 tot 2 sollicitaties per dag via TikTok.',
+    'Het resultaat: 1.7 miljoen views over 107 video\'s, 886K bereik en een community die 78% vrouw is, plus 1 tot 2 sollicitaties per dag via TikTok.',
   ],
   results: [
-    { label: 'Views', value: '1M+' },
+    { label: 'Views', value: '1.7M' },
     { label: 'Bereik', value: '886K' },
     { label: 'Topvideo', value: '142K' },
-    { label: "Video's", value: '71' },
+    { label: "Video's", value: '107' },
     { label: 'Likes', value: '25K' },
     { label: 'Community', value: '78% vrouw' },
   ],
@@ -176,7 +177,9 @@ export const caseDetailTempus: CaseDetail = {
   },
 }
 
-/** Bron: https://iknowright.be/cases/maison-slash */
+/** Bron: https://iknowright.be/cases/maison-slash
+ *  Views/video's/topvideo: Metricool IKR-window @maisonslashbelgie (~2026-04-06 → 2026-09-20).
+ *  Pre-IKR virals (170K e.d.) niet meegerekend. */
 export const caseDetailMaisonSlash: CaseDetail = {
   slug: 'maison-slash',
   bedrijf: 'Maison Slash',
@@ -184,18 +187,16 @@ export const caseDetailMaisonSlash: CaseDetail = {
   tags: ['Media', 'TikTok', 'Ouderschap'],
   heroImage: '/images/client_logos/MS logo.png',
   heroVariant: 'logo',
-  outcomeLine: '1.2 miljoen views, topvideo 170K organisch',
+  outcomeLine: '367K views in de IKR-periode, topvideo 42K',
   summary: [
     'Maison Slash België verkoopt magazines voor ouders. Hun doel op TikTok: ouders aanspreken met content die herkenbaar en deelbaar is.',
-    'Het account bestond al, maar de cijfers explodeerden pas toen IKnowRight erbij kwam. Honderd video\'s later staat de teller op 1.2 miljoen views.',
-    'Het resultaat: 1.2 miljoen views, 961K bereik en een community die 68% vrouw is, met een organische hit van 170K.',
+    'Het account bestond al. Sinds de samenwerking met IKnowRight bouwen we verder aan consistente, scroll-stoppende content voor @maisonslashbelgie.',
+    'In de IKR-periode die Metricool dekt: 367K views over 40 video\'s, met een topvideo van 42K. Community: 68% vrouw.',
   ],
   results: [
-    { label: 'Views', value: '1.2M' },
-    { label: 'Bereik', value: '961K' },
-    { label: 'Topvideo', value: '170K' },
-    { label: "Video's", value: '100' },
-    { label: 'Likes', value: '30K' },
+    { label: 'Views', value: '367K' },
+    { label: 'Topvideo', value: '42K' },
+    { label: "Video's", value: '40' },
     { label: 'Community', value: '68% vrouw' },
   ],
   videos: [...CASE_CHANNEL_VIDEOS.maisonSlash],
@@ -206,14 +207,14 @@ export const caseDetailMaisonSlash: CaseDetail = {
     },
     {
       title: 'ONZE AANPAK VOOR MAISON SLASH',
-      body: 'We maakten scroll-stoppende video\'s voor @maisonslashbelgie: formats die ouders herkennen en delen. De sterkste video haalde 170.000 organische views. In totaal 1.2 miljoen views op 100 video\'s.',
+      body: 'We maakten scroll-stoppende video\'s voor @maisonslashbelgie: formats die ouders herkennen en delen. In de IKR-window die we via Metricool volgen staan 40 video\'s goed voor 367K views, met een topvideo van 42K.',
     },
   ],
   testimonial: {
     name: 'Maison Slash',
     role: 'Magazines voor ouders',
     quote:
-      'Ons TikTok-account bestond al, maar onze cijfers explodeerden pas met IKnowRight. Eén video ging viraal en zette alles in beweging.',
+      'Ons TikTok-account bestond al, maar met IKnowRight kregen we eindelijk een vaste contentlijn die ouders echt bereikt.',
   },
 }
 
@@ -273,7 +274,8 @@ export const caseDetailLilalou: CaseDetail = {
   ],
 }
 
-/** Food case: @wasbarontiktok; early but live, few videos in gallery, no fake result-row metrics. */
+/** Food case: @wasbarontiktok; early but live, few videos in gallery.
+ *  Niet in Metricool. Clip-stats = download-time in videos.ts (69K / 1.1K). Geen agency-aggregate. */
 export const caseDetailWasbar: CaseDetail = {
   slug: 'wasbar',
   bedrijf: 'Wasbar',
@@ -284,8 +286,8 @@ export const caseDetailWasbar: CaseDetail = {
   outcomeLine: 'Food vibe op TikTok. Eerste video\'s live',
   summary: [
     'Wasbar is een food-first plek met wascafé-vibe: wassen, koffie, hapjes en hangout. Via @wasbarontiktok werkt Wasbar i.s.m. IKnowRight aan TikTok-content die die sfeer laat zien.',
-    'De samenwerking is gestart. Er staan al een paar video\'s live. We bouwen verder aan formats die scroll-stoppen zonder te forceren op grote cijfers.',
-    'Hieronder de beschikbare clips. Resultaten-rijen volgen zodra er genoeg organisch bewijs is om eerlijk te claimen.',
+    'De samenwerking is gestart. De eerste video\'s staan live (gallery hieronder, o.a. clips met 69K en 1.1K views bij download). We forceren geen totale agency-cijfers zolang Wasbar niet in Metricool zit.',
+    'Resultaten-rijen volgen zodra er genoeg organisch bewijs is om eerlijk te claimen.',
   ],
   results: [],
   videos: [...CASE_CHANNEL_VIDEOS.wasbar],
