@@ -15,6 +15,7 @@ const CASES: { label: string; href: string }[] = [
   { label: 'Anneke Govaerts', href: '/cases/anneke-govaerts' },
   { label: 'Alle cases', href: '/cases' },
   { label: 'Food werk', href: '/cases#food' },
+  { label: 'Nieuw', href: '/cases#nieuw' },
 ]
 
 const LEGAL: { label: string; href: string }[] = [

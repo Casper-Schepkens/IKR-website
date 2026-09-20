@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useRef, useState } from 'react'
+import { earlyClients } from '@/data/brands'
 import { caseGridItems, foodWorkItems } from '@/data/cases'
 import { bodyFont, displayFont, ikr } from '@/lib/ikr-styles'
 import { SpeechBubble } from './SpeechBubble'
@@ -700,6 +701,78 @@ export function CasesPageContent() {
               ))}
             </div>
           </div>
+
+          {earlyClients.length > 0 && (
+            <div id="nieuw" style={{ marginTop: 'clamp(3rem, 8vw, 100px)' }}>
+              <p
+                style={{
+                  ...displayFont,
+                  fontSize: 'clamp(1rem, 2.2vw, 32px)',
+                  color: ikr.navy,
+                  textTransform: 'uppercase',
+                  marginBottom: 'clamp(8px, 1vw, 12px)',
+                }}
+              >
+                Nieuw / coming soon
+              </p>
+              <p
+                style={{
+                  ...bodyFont,
+                  fontSize: 'clamp(0.85rem, 1.2vw, 16px)',
+                  color: ikr.navyText,
+                  marginBottom: 'clamp(1.5rem, 3vw, 32px)',
+                  maxWidth: 560,
+                  lineHeight: 1.5,
+                }}
+              >
+                Verse food brands in de pipeline. Nog geen case-video of cijfers — wel al onderdeel van
+                IKnowRight.
+              </p>
+              <ul
+                style={{
+                  listStyle: 'none',
+                  margin: 0,
+                  padding: 0,
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 240px), 1fr))',
+                  gap: 'clamp(16px, 2.4vw, 32px)',
+                }}
+              >
+                {earlyClients.map((client) => (
+                  <li key={client.id}>
+                    {client.logo ? (
+                      <ClientLogo name={client.clientName} logo={client.logo} />
+                    ) : (
+                      <p
+                        style={{
+                          ...displayFont,
+                          fontSize: 'clamp(1.1rem, 2vw, 26px)',
+                          color: ikr.navy,
+                          textTransform: 'uppercase',
+                          letterSpacing: '-0.03em',
+                          margin: 0,
+                        }}
+                      >
+                        {client.clientName}
+                      </p>
+                    )}
+                    <p
+                      style={{
+                        ...bodyFont,
+                        fontSize: 'clamp(0.8rem, 1.05vw, 14px)',
+                        color: ikr.navyText,
+                        marginTop: 8,
+                        lineHeight: 1.45,
+                        maxWidth: 280,
+                      }}
+                    >
+                      {client.note}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </section>
 
