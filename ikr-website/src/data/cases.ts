@@ -279,7 +279,7 @@ export const caseDetailLilalou: CaseDetail = {
 }
 
 /** Food case: @wasbarontiktok; early but live, few videos in gallery.
- *  Niet in Metricool. Clip-stats = download-time in videos.ts (69K / 1.1K). Geen agency-aggregate. */
+ *  Clip-stats in videos.ts (69K / 1.1K). Soft case: no forced total. */
 export const caseDetailWasbar: CaseDetail = {
   slug: 'wasbar',
   bedrijf: 'Wasbar',
@@ -290,7 +290,7 @@ export const caseDetailWasbar: CaseDetail = {
   outcomeLine: 'Food vibe op TikTok. Eerste video\'s live',
   summary: [
     'Wasbar is een food-first plek met wascafé-vibe: wassen, koffie, hapjes en hangout. Via @wasbarontiktok werkt Wasbar i.s.m. IKnowRight aan TikTok-content die die sfeer laat zien.',
-    'De samenwerking is gestart. De eerste video\'s staan live (gallery hieronder, o.a. clips met 69K en 1.1K views bij download). We forceren geen totale agency-cijfers zolang Wasbar niet in Metricool zit.',
+    'De samenwerking is gestart. De eerste video\'s staan live in de gallery hieronder, met clips tot zo\'n 69K views. We claimen nog geen totaalcijfers zolang de feed verder groeit.',
     'Resultaten-rijen volgen zodra er genoeg organisch bewijs is om eerlijk te claimen.',
   ],
   results: [],
