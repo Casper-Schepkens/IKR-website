@@ -97,7 +97,7 @@ function MiniTikTokMark({ playing = false }: { playing?: boolean }) {
       className={playing ? 'ikr-tt-mark ikr-tt-mark--playing' : 'ikr-tt-mark'}
       aria-hidden="true"
     >
-      <svg width="1.35em" height="1.35em" viewBox="7.2 2 13.6 15.2" fill="none">
+      <svg width="1.5em" height="1.5em" viewBox="7.2 2 13.6 15.2" fill="none">
         <path className="ikr-tt-mark-cyan" d={note} fill="#25F4EE" />
         <path className="ikr-tt-mark-magenta" d={note} fill="#FE2C55" />
         <path className="ikr-tt-mark-core" d={note} fill="#FFF9F1" />
