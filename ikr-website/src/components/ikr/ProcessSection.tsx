@@ -34,7 +34,7 @@ const STEPS = [
   {
     n: '1',
     title: <>ANALYSE</>,
-    body: 'We starten bij jouw merk, doelgroep en wat er nu al werkt. Geen content voor we weten waar we naartoe moeten.',
+    body: 'We starten bij jouw merk, doelgroep en wat er nu al werkt. Eerst richting, dan content.',
   },
   {
     n: '2',
@@ -50,7 +50,7 @@ const STEPS = [
   {
     n: '3',
     title: <>ITERATIE</>,
-    body: 'Elke maand meten we wat werkt en sturen we bij. Geen one-shot campagne: we blijven verbeteren.',
+    body: 'Elke maand meten we wat werkt en sturen we bij. De contentlijn groeit mee met de resultaten.',
   },
 ] as const
 

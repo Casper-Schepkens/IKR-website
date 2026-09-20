@@ -49,7 +49,7 @@ export const earlyClients: EarlyClient[] = [
   {
     id: 'chez-albert',
     clientName: 'Chez Albert',
-    note: 'Food brand. Samenwerking gestart. TikTok i.s.m. IKR; case in opbouw.',
+    note: 'Food brand. Samenwerking gestart via TikTok met IKR; case in opbouw.',
     logo: '/images/client_logos/chez-albert.png',
     caseSlug: 'chez-albert',
     handle: '@chezalbert',
@@ -58,7 +58,7 @@ export const earlyClients: EarlyClient[] = [
   {
     id: 'lilalou',
     clientName: 'Lilalou',
-    note: 'Food brand (biscuits). Samenwerking gestart. TikTok i.s.m. IKR; organische hero-content volgt.',
+    note: 'Food brand (biscuits). Samenwerking gestart via TikTok met IKR; organische hero-content volgt.',
     logo: '/images/client_logos/lilalou.jpg',
     caseSlug: 'lilalou',
     handle: '@lilaloubiscuits',

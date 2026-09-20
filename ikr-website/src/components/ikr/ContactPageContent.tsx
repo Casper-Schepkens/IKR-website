@@ -525,7 +525,7 @@ export function ContactPageContent() {
                   margin: 0,
                 }}
               >
-                LATEN WE CONNECTEN!
+                LATEN WE PRATEN!
               </p>
             </div>
 
@@ -561,7 +561,7 @@ export function ContactPageContent() {
           >
             {status === 'success' ? (
               <>
-                <QuestionBubble>Got it! We hebben je bericht ontvangen.</QuestionBubble>
+                <QuestionBubble>We hebben je bericht ontvangen.</QuestionBubble>
                 <AnswerCard>
                   <p
                     style={{

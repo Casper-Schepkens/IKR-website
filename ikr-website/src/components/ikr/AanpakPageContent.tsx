@@ -25,13 +25,13 @@ const steps = [
   },
   {
     title: 'PLANNING EN STRATEGIE',
-    body: 'We presenteren onze creatieve strategie: welke soort content, welke formats, welke stijl. Je krijgt een helder overzicht van hoe we te werk gaan voor jouw brand, van ideeën tot publicatie.',
+    body: 'We presenteren onze creatieve strategie: welke content, welke formats, welke stijl. Je krijgt een overzicht van idee tot publicatie voor jouw merk.',
     align: 'right' as const,
     iconSrc: '/images/aanpak/checlist_img.png',
   },
   {
     title: 'JOUW MERK IN BEELD',
-    body: "Onze creator komt langs op locatie en legt alles vast. Efficiënt, relaxed en met oog voor jouw merkidentiteit. Daarna editen wij alles tot scroll-stoppende video's die resultaten opleveren.",
+    body: 'Onze creator komt langs op locatie en legt alles vast. Daarna editen wij de beelden tot TikTok-video’s die bij jouw merk passen en online gaan.',
     align: 'left' as const,
     iconSrc: '/images/aanpak/film_ding_img.png',
   },
@@ -251,10 +251,10 @@ function HeroSection() {
 }
 
 const FIT_FOR_YOU = [
-  'Zichtbaarder willen worden, maar geen idee wat te posten',
-  'Tijd of inspiratie missen om actief te zijn op socials',
-  'Niet willen dansen op TikTok, maar wél willen opvallen',
-  'Meer klanten, personeel of merkherkenning willen',
+  'Je wilt zichtbaarder worden, maar weet niet wat je moet posten',
+  'Je mist tijd of inspiratie om actief te blijven op socials',
+  'Je wilt opvallen op TikTok zonder zelf te dansen',
+  'Je zoekt meer klanten, personeel of merkherkenning',
 ]
 
 const WITHOUT_IKR = [
@@ -266,9 +266,9 @@ const WITHOUT_IKR = [
 ]
 
 const WITH_IKR = [
-  'Strategisch geplande posts die wél impact maken',
-  'Creatieve formats die je merk uniek maken',
-  'Advertenties die wél leads en website clicks opleveren',
+  'Posts met een plan die bereik opleveren',
+  'Formats die bij jouw merk passen',
+  'Advertenties die leads en website clicks opleveren',
   'Wij filmen, monteren en posten voor jou',
   'Wij zijn je externe contentteam',
 ]
@@ -290,7 +290,7 @@ function FitForYouSection() {
         </h2>
         <p style={{ ...bodyFont, fontSize: 'clamp(1rem, 1.8vw, 20px)', color: ikr.navyText, marginBottom: '2rem' }}>
           Twijfel je of TikTok iets voor jouw zaak is? Veel klanten dachten eerst: &quot;TikTok, da&apos;s toch
-          voor tieners?&quot; Tot ze zagen wat er mogelijk was.
+          voor tieners?&quot; Tot ze de cijfers zagen.
         </p>
         <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem', textAlign: 'left' }}>
           {FIT_FOR_YOU.map((item) => (
