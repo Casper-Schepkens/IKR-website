@@ -10,6 +10,7 @@ import {
   SUBMIT_LABELS,
   type PricingRole,
 } from '@/lib/pricing-types'
+import { trackOpenAIAdsPrijsAangevraagd } from './OpenAIAdsPixel'
 import { TurnstileWidget } from './TurnstileWidget'
 
 const TAN = '#C5B094'
@@ -232,6 +233,7 @@ function PricingFormSection() {
       }
 
       setStatus('success')
+      trackOpenAIAdsPrijsAangevraagd()
     } catch {
       setStatus('error')
       setErrorMessage('Verzenden mislukt. Controleer je verbinding en probeer opnieuw.')

@@ -9,6 +9,7 @@ import {
   SITE_URL,
 } from '@/lib/site'
 import { Analytics } from '@vercel/analytics/next'
+import { OpenAIAdsPixel } from '@/components/ikr/OpenAIAdsPixel'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -60,6 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         {children}
         <Analytics />
+        <OpenAIAdsPixel />
       </body>
     </html>
   )
