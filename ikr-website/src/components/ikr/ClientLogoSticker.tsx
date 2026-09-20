@@ -120,7 +120,8 @@ export function TikTokHandleCaption({ handle }: { handle: string }) {
         display: 'inline-flex',
         flexDirection: 'column',
         alignItems: 'flex-start',
-        gap: '0.55em',
+        justifyContent: 'flex-start',
+        gap: '0.85em',
         fontFamily: 'var(--font-inter), Inter, sans-serif',
         fontWeight: 700,
         fontSize: 'clamp(0.7rem, 1.15vw, 14px)',
@@ -132,7 +133,7 @@ export function TikTokHandleCaption({ handle }: { handle: string }) {
       }}
     >
       <MiniTikTokMark />
-      {handle}
+      <span style={{ display: 'block', lineHeight: 1.15 }}>{handle}</span>
     </span>
   )
 }
