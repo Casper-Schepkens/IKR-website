@@ -27,9 +27,10 @@ export const brandStripItems: BrandStripItem[] = [
 
 /** Soft stats only when confirmed (e.g. Metricool). Omit entirely if unknown. */
 export type EarlyClientStats = {
-  videos?: string
   views?: string
   topVideo?: string
+  /** Short date label, e.g. "20 aug" — shown as “sinds …”. */
+  since?: string
 }
 
 /** Early / new clients — name presence; optional handle + soft Metricool stats. */
@@ -56,14 +57,14 @@ export const earlyClients: EarlyClient[] = [
   {
     id: 'lilalou',
     clientName: 'Lilalou',
-    note: 'Early food brand op TikTok (Metricool sinds aug 2026)',
+    note: 'Early food brand op TikTok',
     handle: '@lilaloubiscuits',
     tiktokUrl: 'https://www.tiktok.com/@lilaloubiscuits',
-    // Soft early totals from Metricool — not a full case study.
+    // Soft Metricool line (brand since 2026-08-20) — not a full case results grid.
     stats: {
-      videos: '~10',
       views: '~387K',
       topVideo: '~198K',
+      since: '20 aug',
     },
   },
 ]

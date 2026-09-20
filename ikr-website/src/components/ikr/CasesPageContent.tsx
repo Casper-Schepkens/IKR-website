@@ -811,9 +811,9 @@ export function CasesPageContent() {
                         }}
                       >
                         {[
-                          client.stats.videos && `${client.stats.videos} video’s`,
                           client.stats.views && `${client.stats.views} views`,
                           client.stats.topVideo && `top ${client.stats.topVideo}`,
+                          client.stats.since && `sinds ${client.stats.since}`,
                         ]
                           .filter(Boolean)
                           .join(' · ')}
