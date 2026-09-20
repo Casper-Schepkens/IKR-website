@@ -278,22 +278,25 @@ export const caseDetailLilalou: CaseDetail = {
   ],
 }
 
-/** Food case: @wasbarontiktok; early but live, few videos in gallery.
- *  Clip-stats in videos.ts (69K / 1.1K). Soft case: no forced total. */
+/** Food case: @wasbarontiktok; 3 IKR-clips; views = TikTok public playCount (niet Metricool). */
 export const caseDetailWasbar: CaseDetail = {
   slug: 'wasbar',
   bedrijf: 'Wasbar',
   logo: '/images/client_logos/wasbar.png',
-  tags: ['Food', 'TikTok', 'Gestart'],
+  tags: ['Food', 'TikTok'],
   heroImage: '/images/client_logos/wasbar.png',
   heroVariant: 'logo',
-  outcomeLine: 'Food vibe op TikTok. Eerste video\'s live',
+  outcomeLine: '200K views op 3 IKR-video\'s',
   summary: [
     'Wasbar is een food-first plek met wascafé-vibe: wassen, koffie, hapjes en hangout. Via @wasbarontiktok werkt Wasbar i.s.m. IKnowRight aan TikTok-content die die sfeer laat zien.',
-    'De samenwerking is gestart. De eerste video\'s staan live in de gallery hieronder, met clips tot zo\'n 69K views. We claimen nog geen totaalcijfers zolang de feed verder groeit.',
-    'Resultaten-rijen volgen zodra er genoeg organisch bewijs is om eerlijk te claimen.',
+    'Drie IKR-video\'s staan live. Samen goed voor zo\'n 200K views.',
+    'Hieronder de gallery. We blijven formats bijsturen terwijl de feed groeit.',
   ],
-  results: [],
+  results: [
+    { label: 'Views', value: '200K' },
+    { label: "Video's", value: '3' },
+    { label: 'Topvideo', value: '107K' },
+  ],
   videos: [...CASE_CHANNEL_VIDEOS.wasbar],
   story: [
     {
@@ -302,7 +305,7 @@ export const caseDetailWasbar: CaseDetail = {
     },
     {
       title: 'ONZE AANPAK VOOR WASBAR',
-      body: 'Samen met @wasbarontiktok zetten we een contentlijn op i.s.m. IKR: sfeer, food en snappy edits die passen bij het merk. De eerste video\'s staan online; we blijven bijsturen terwijl de feed groeit.',
+      body: 'Samen met @wasbarontiktok zetten we een contentlijn op i.s.m. IKR: sfeer, food en snappy edits die passen bij het merk. Drie video\'s staan online; we blijven bijsturen terwijl de feed groeit.',
     },
   ],
 }
