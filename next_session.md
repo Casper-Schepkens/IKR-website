@@ -13,7 +13,10 @@
 
 ## Homepage (`/`)
 1. Anneke-logo ontbreekt → nu tekst-sticker. Aanleveren als je het bestand hebt.
+2. Optioneel: officiële TikTok brand asset i.p.v. minimal note + typographic “TikTok” in navbar (nu bewust geen trademark-file).
+3. Optioneel later: stats/BrandStrip labels TikTok-specifieker; hero CTA; footer TikTok-profiel wanneer URL bestaat.
 _(Done 31 aug 2026: fan = 5 merken incl. Oh!ma + Wasbar; cases-preview blijft 3 laag-1)_
+_(Done sep 2026: @handles op carousel + TikTok-mark in navbar — cards gehouden, geen phone-feed op home)_
 
 ## Aanpak (`/aanpak`)
 1. Creator/shoot-foto voor de sollicitatie-CTA (niet de supermarkt-aisle).

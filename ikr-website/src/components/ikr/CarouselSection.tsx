@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { caseLinkProps, homepageCarouselCards } from '@/data/cases'
-import { ClickHint, ClientLogoSticker } from './ClientLogoSticker'
+import { ClickHint, ClientLogoSticker, TikTokHandleCaption } from './ClientLogoSticker'
 import { claimVideo, InViewVideo } from './InViewVideo'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -106,7 +106,7 @@ function PhoneInfiniteStrip() {
         <Link
           key={`m-${copy}-${card.id}`}
           {...caseLinkProps(card.href)}
-          aria-label={`${card.label} bekijken`}
+          aria-label={card.handle ? `${card.label} ${card.handle} bekijken` : `${card.label} bekijken`}
           style={{
             position: 'relative',
             flexShrink: 0,
@@ -125,6 +125,11 @@ function PhoneInfiniteStrip() {
           <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 2, pointerEvents: 'none' }}>
             <ClientLogoSticker name={card.label} logo={card.logo} rotate={-7} />
           </div>
+          {card.handle ? (
+            <div style={{ position: 'absolute', left: 12, bottom: 14, zIndex: 2, pointerEvents: 'none' }}>
+              <TikTokHandleCaption handle={card.handle} />
+            </div>
+          ) : null}
           <div style={{ position: 'absolute', right: 12, bottom: 12, zIndex: 2, pointerEvents: 'none' }}>
             <ClickHint />
           </div>
@@ -186,7 +191,7 @@ export function CarouselSection() {
           <Link
             key={card.id}
             {...caseLinkProps(card.href)}
-            aria-label={`${card.label} bekijken`}
+            aria-label={card.handle ? `${card.label} ${card.handle} bekijken` : `${card.label} bekijken`}
             className="carousel-card"
             onMouseEnter={() => handleEnter(i, card.id)}
             onMouseLeave={() => handleLeave(i)}
@@ -225,6 +230,19 @@ export function CarouselSection() {
             >
               <ClientLogoSticker name={card.label} logo={card.logo} rotate={-7} />
             </div>
+            {card.handle ? (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 'clamp(8px, 4%, 14px)',
+                  bottom: 'clamp(10px, 5%, 16px)',
+                  zIndex: 2,
+                  pointerEvents: 'none',
+                }}
+              >
+                <TikTokHandleCaption handle={card.handle} />
+              </div>
+            ) : null}
             <div
               style={{
                 position: 'absolute',

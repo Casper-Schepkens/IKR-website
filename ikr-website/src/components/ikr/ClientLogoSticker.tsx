@@ -82,3 +82,24 @@ export function ClickHint() {
     </div>
   )
 }
+
+/** TikTok-style @handle caption on proof cards — only render when a real handle exists. */
+export function TikTokHandleCaption({ handle }: { handle: string }) {
+  return (
+    <span
+      style={{
+        display: 'inline-block',
+        fontFamily: 'var(--font-inter), Inter, sans-serif',
+        fontWeight: 700,
+        fontSize: 'clamp(0.65rem, 1.05vw, 13px)',
+        lineHeight: 1.2,
+        letterSpacing: '-0.02em',
+        color: '#FFFFFF',
+        textShadow: '0 1px 3px rgba(0,0,0,0.65), 0 0 12px rgba(0,0,0,0.35)',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {handle}
+    </span>
+  )
+}

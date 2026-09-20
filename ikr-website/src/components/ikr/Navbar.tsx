@@ -19,6 +19,51 @@ function LightningIcon() {
   )
 }
 
+/**
+ * Minimal musical-note mark + typographic “TikTok” — not an official brand asset.
+ * Cream/cyan on navy so it reads “TikTok agency” without competing with the hero wordmark.
+ */
+function TikTokAgencyMark() {
+  return (
+    <span
+      aria-label="TikTok agency"
+      title="TikTok agency"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        flexShrink: 0,
+        paddingLeft: 2,
+        opacity: 0.92,
+      }}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+        <path
+          d="M14 3v9.2a3.6 3.6 0 1 1-2.4-3.4V3h2.4z"
+          fill="var(--ikr-cyan)"
+        />
+        <path
+          d="M16.2 3c.55 1.85 1.9 3.35 3.8 4.05V9.3c-1.55-.35-2.9-1.1-3.8-2.15V3z"
+          fill="#FFF9F1"
+          fillOpacity="0.85"
+        />
+      </svg>
+      <span
+        className="font-display font-black uppercase"
+        style={{
+          color: '#FFF9F1',
+          fontSize: 'clamp(0.7rem, 1.1vw, 0.85rem)',
+          letterSpacing: '-0.03em',
+          lineHeight: 1,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        TikTok
+      </span>
+    </span>
+  )
+}
+
 function ContactArrow() {
   return (
     <span
@@ -72,6 +117,17 @@ export function Navbar() {
               style={{ height: '34px', width: 'auto', filter: 'brightness(0) invert(1)' }}
             />
           </Link>
+
+          <div
+            aria-hidden
+            style={{
+              width: 1,
+              height: 22,
+              backgroundColor: 'rgba(255,255,255,0.22)',
+              flexShrink: 0,
+            }}
+          />
+          <TikTokAgencyMark />
 
           <div className="hidden lg:flex items-center flex-1 gap-0">
             {navLinks.map((link, i) => (
