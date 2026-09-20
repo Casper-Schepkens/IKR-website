@@ -83,21 +83,32 @@ export function ClickHint() {
   )
 }
 
-/**
- * Clean white TikTok icon glyph (Simple Icons path, CC0) — static, no play animation.
- * Sized at 1.5em to sit at handle-text scale.
- */
-function MiniTikTokMark() {
+/** Simple Icons TikTok path (CC0). Same glyph as carousel captions. */
+export const TIKTOK_GLYPH_PATH =
+  'M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z'
+
+/** Reusable TikTok mark — fill defaults to white for video captions. */
+export function TikTokGlyph({
+  size = '1.5em',
+  fill = '#FFFFFF',
+  className,
+}: {
+  size?: number | string
+  fill?: string
+  className?: string
+}) {
   return (
-    <span className="ikr-tt-mark" aria-hidden="true">
-      <svg width="1.5em" height="1.5em" viewBox="0 0 24 24" fill="none">
-        <path
-          fill="#FFFFFF"
-          d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"
-        />
+    <span className={className ?? 'ikr-tt-mark'} aria-hidden="true">
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+        <path fill={fill} d={TIKTOK_GLYPH_PATH} />
       </svg>
     </span>
   )
+}
+
+/** Clean white TikTok icon at handle-text scale (no play animation). */
+function MiniTikTokMark() {
+  return <TikTokGlyph size="1.5em" fill="#FFFFFF" />
 }
 
 /** Mini TikTok logo + @handle on proof cards (bottom-left). Only render when a real handle exists. */
