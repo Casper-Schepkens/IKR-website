@@ -83,12 +83,38 @@ export function ClickHint() {
   )
 }
 
-/** TikTok-style @handle caption on proof cards — only render when a real handle exists. */
+/**
+ * Minimal musical-note mark — legal-safe stand-in, not an official TikTok brand asset.
+ * Paired with @handle on carousel cards (bottom-left).
+ */
+function MiniTikTokMark({ size = 12 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      style={{ flexShrink: 0, display: 'block' }}
+    >
+      <path d="M14 3v9.2a3.6 3.6 0 1 1-2.4-3.4V3h2.4z" fill="#25F4EE" />
+      <path
+        d="M16.2 3c.55 1.85 1.9 3.35 3.8 4.05V9.3c-1.55-.35-2.9-1.1-3.8-2.15V3z"
+        fill="#FE2C55"
+      />
+      <path d="M14 3v9.2a3.6 3.6 0 1 1-2.4-3.4V3h2.4z" fill="#FFFFFF" fillOpacity="0.92" />
+    </svg>
+  )
+}
+
+/** TikTok-style mini mark + @handle on proof cards — only render when a real handle exists. */
 export function TikTokHandleCaption({ handle }: { handle: string }) {
   return (
     <span
       style={{
-        display: 'inline-block',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
         fontFamily: 'var(--font-inter), Inter, sans-serif',
         fontWeight: 700,
         fontSize: 'clamp(0.65rem, 1.05vw, 13px)',
@@ -99,6 +125,7 @@ export function TikTokHandleCaption({ handle }: { handle: string }) {
         whiteSpace: 'nowrap',
       }}
     >
+      <MiniTikTokMark size={12} />
       {handle}
     </span>
   )
