@@ -1,15 +1,19 @@
 /**
  * IKR-brede resultaatcijfers — één bron voor homepage + Aanpak.
  *
- * Bron (aug 2026): Metricool, accounts die IKR beheert op TikTok
- * (`@tempusverpleging` + `@maisonslashbelgie`), 1 sep 2025 – 17 aug 2026.
- * Som van views/video's op gepubliceerde content in die periode.
- * Anneke zit niet in Metricool — niet meegerekend.
- * Exact: 2.159.042 views, 171 video's, topvideo 169.606 (Maison Slash).
+ * Bron (20 sep 2026):
+ * - Tempus `@tempusverpleging`: Metricool full history ~2025-04-04 → 2026-09-20
+ *   (alle video's zijn IKR) → 107 video's, 1.745.189 views, topvideo 142.371
+ * - Maison Slash `@maisonslashbelgie`: TikTok live + Casper pre-IKR baseline
+ *   (Metricool posts incomplete before ~2026-04; first IKR video 2025-09-24)
+ *   → ~100 video's, ~1.2M IKR views, topvideo 169.600 → 170K
+ * Combined display: ~2.9M views (1.745.189 + ~1.18M net IKR), ~200 video's,
+ * topvideo Maison 170K.
+ * Wasbar / Anneke / Lilalou / food werk: niet in dit aggregate.
  */
 export const ikrStats = [
-  { num: '2.2M', label: 'Views voor klanten', shortLabel: 'Views' },
-  { num: '171', label: "Video's gepost", shortLabel: "Video's" },
+  { num: '2.9M', label: 'Views voor klanten', shortLabel: 'Views' },
+  { num: '200', label: "Video's gepost", shortLabel: "Video's" },
   { num: '170K', label: 'Beste video', shortLabel: 'Topvideo' },
 ] as const
 

@@ -10,10 +10,13 @@ export const VIDEO_PATHS = {
 } as const
 
 /** Top presterende TikTok-video's per kanaal.
- *  Tempus + Maison Slash: Metricool 17/31 aug 2026.
- *  Anneke: views bij download (jun 2026) — account niet in Metricool.
+ *  Tempus: Metricool full history (20 sep 2026), alle clips IKR.
+ *  Maison Slash: IKR-period gallery (sinds eerste IKR-video 2025-09-24).
+ *    Metricool posts incomplete before ~2026-04; stats = TikTok live / download-time.
+ *    Top hit 759815… = 169.600 → 170K (Casper / scrape 20 sep 2026).
+ *  Anneke: views bij download (jun 2026); account niet in Metricool.
  *  Oh!ma: views bij download (31 aug 2026), showers zonder case-pagina.
- *  Wasbar: views bij download (31 aug 2026); case /cases/wasbar + showers. */
+ *  Wasbar: views bij download (31 aug 2026); case /cases/wasbar + showers; niet in Metricool. */
 export type CaseChannelVideo = {
   src: string
   stat: string
@@ -34,7 +37,7 @@ export const CASE_CHANNEL_VIDEOS: Record<
     },
     {
       src: '/videos/cases/tempus/7531711349668318496.mp4',
-      stat: '135K',
+      stat: '134K',
       tiktokUrl: 'https://www.tiktok.com/@tempusverpleging/video/7531711349668318496',
     },
     {
@@ -88,12 +91,12 @@ export const CASE_CHANNEL_VIDEOS: Record<
     },
     {
       src: '/videos/cases/maison-slash/7661565150620568864.mp4',
-      stat: '7.1K',
+      stat: '7.8K',
       tiktokUrl: 'https://www.tiktok.com/@maisonslashbelgie/video/7661565150620568864',
     },
     {
       src: '/videos/cases/maison-slash/7675310208951864608.mp4',
-      stat: '3.3K',
+      stat: '4.5K',
       tiktokUrl: 'https://www.tiktok.com/@maisonslashbelgie/video/7675310208951864608',
     },
     {
@@ -108,7 +111,7 @@ export const CASE_CHANNEL_VIDEOS: Record<
     },
     {
       src: '/videos/cases/maison-slash/7663514981513710880.mp4',
-      stat: '1K',
+      stat: '1.1K',
       tiktokUrl: 'https://www.tiktok.com/@maisonslashbelgie/video/7663514981513710880',
     },
   ],
