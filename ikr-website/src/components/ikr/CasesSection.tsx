@@ -129,7 +129,9 @@ export function CasesSection() {
           className="grid grid-cols-3 gap-2 md:gap-4 lg:gap-6"
           style={{ maxWidth: 900, margin: '0 auto' }}
         >
-          {caseGridItems.map((item) => (
+          {caseGridItems
+            .filter((item): item is typeof item & { video: string } => Boolean(item.video))
+            .map((item) => (
             <CasePreviewCard
               key={item.id}
               slug={item.slug}

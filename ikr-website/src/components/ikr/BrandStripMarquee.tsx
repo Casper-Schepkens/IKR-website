@@ -1,16 +1,40 @@
 'use client'
 
-type Logo = { src: string; alt: string }
+import type { BrandStripItem } from '@/data/brands'
 
-function buildTrack(logos: Logo[]) {
-  if (logos.length === 0) return []
-  const reps = Math.ceil(24 / logos.length)
-  const half = Array.from({ length: reps }, () => logos).flat()
+function buildTrack(items: BrandStripItem[]) {
+  if (items.length === 0) return []
+  const reps = Math.ceil(24 / items.length)
+  const half = Array.from({ length: reps }, () => items).flat()
   return [...half, ...half]
 }
 
-export function BrandStripMarquee({ logos }: { logos: Logo[] }) {
-  const track = buildTrack(logos)
+function logoFrameStyle(shape: BrandStripItem['logoShape']) {
+  if (shape === 'circle') {
+    return {
+      height: 80,
+      width: 80,
+      borderRadius: '50%',
+      overflow: 'hidden' as const,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'transparent',
+    }
+  }
+
+  return {
+    height: 80,
+    borderRadius: 16,
+    overflow: 'hidden' as const,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }
+}
+
+export function BrandStripMarquee({ items }: { items: BrandStripItem[] }) {
+  const track = buildTrack(items)
 
   return (
     <div style={{ overflow: 'hidden' }}>
@@ -22,9 +46,9 @@ export function BrandStripMarquee({ logos }: { logos: Logo[] }) {
           willChange: 'transform',
         }}
       >
-        {track.map((logo, i) => (
+        {track.map((item, i) => (
           <div
-            key={i}
+            key={`${item.name}-${i}`}
             style={{
               flexShrink: 0,
               height: 80,
@@ -33,12 +57,38 @@ export function BrandStripMarquee({ logos }: { logos: Logo[] }) {
               alignItems: 'center',
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={logo.src}
-              alt={logo.alt}
-              style={{ height: '100%', width: 'auto', objectFit: 'contain', mixBlendMode: 'multiply' }}
-            />
+            {item.logo ? (
+              <div style={logoFrameStyle(item.logoShape)}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={item.logo}
+                  alt={item.name}
+                  style={{
+                    height: '100%',
+                    width: item.logoShape === 'circle' ? '100%' : 'auto',
+                    objectFit: item.logoShape === 'circle' ? 'cover' : 'contain',
+                    display: 'block',
+                    borderRadius: item.logoShape === 'circle' ? 0 : 16,
+                    mixBlendMode: item.logoShape === 'circle' ? 'normal' : 'multiply',
+                  }}
+                />
+              </div>
+            ) : (
+              <span
+                style={{
+                  fontFamily: 'var(--font-roboto-condensed)',
+                  fontWeight: 900,
+                  fontSize: 'clamp(1.25rem, 2.2vw, 28px)',
+                  letterSpacing: '-0.04em',
+                  textTransform: 'uppercase',
+                  color: 'var(--ikr-navy-text)',
+                  whiteSpace: 'nowrap',
+                  opacity: 0.72,
+                }}
+              >
+                {item.name}
+              </span>
+            )}
           </div>
         ))}
       </div>

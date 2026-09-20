@@ -240,7 +240,15 @@ function CaseDetailHero({ data }: { data: CaseDetail }) {
               borderRadius: 'clamp(20px, 2.5vw, 32px)',
               overflow: 'hidden',
               marginBottom: 'clamp(2rem, 4vw, 48px)',
-              backgroundColor: data.heroVariant === 'logo' ? '#0A0A0A' : undefined,
+              ...(data.heroVariant === 'logo'
+                ? {
+                    backgroundColor: ikr.creamLight,
+                    backgroundImage:
+                      'radial-gradient(ellipse 70% 90% at 50% 45%, rgba(15,193,222,0.14) 0%, transparent 62%), linear-gradient(155deg, #FFF8F1 0%, #F0EBE0 52%, rgba(32,23,55,0.06) 100%)',
+                    boxShadow:
+                      'inset 0 0 0 1.5px rgba(32,23,55,0.12), 0 18px 48px rgba(32,23,55,0.07)',
+                  }
+                : {}),
             }}
           >
             <Image
@@ -452,7 +460,11 @@ function StorySection({ blocks }: { blocks: CaseDetail['story'] }) {
   )
 }
 
-function ClientQuote({ testimonial }: { testimonial: CaseDetail['testimonial'] }) {
+function ClientQuote({
+  testimonial,
+}: {
+  testimonial: NonNullable<CaseDetail['testimonial']>
+}) {
   return (
     <section
       style={{
@@ -580,10 +592,10 @@ export function CaseDetailPageContent({ data }: { data: CaseDetail }) {
     <div style={{ backgroundColor: ikr.cream }}>
       <CaseDetailHero data={data} />
       <SummaryBlock paragraphs={data.summary} />
-      <ResultsRow results={data.results} />
-      <VideoGallery videos={data.videos} />
+      {data.results.length > 0 && <ResultsRow results={data.results} />}
+      {data.videos.length > 0 && <VideoGallery videos={data.videos} />}
       <StorySection blocks={data.story} />
-      <ClientQuote testimonial={data.testimonial} />
+      {data.testimonial && <ClientQuote testimonial={data.testimonial} />}
       <CaseDetailCTA />
     </div>
   )

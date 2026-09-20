@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useRef, useState } from 'react'
+import { earlyClients } from '@/data/brands'
 import { caseGridItems, foodWorkItems } from '@/data/cases'
 import { bodyFont, displayFont, ikr } from '@/lib/ikr-styles'
 import { SpeechBubble } from './SpeechBubble'
@@ -238,6 +239,104 @@ function CaseVideoCard({
         <ClientLogo name={clientName} logo={logo} />
       </div>
       <CasePlayButton />
+      <CaseClientLabel name={clientName} hovered={hovered} />
+    </Link>
+  )
+}
+
+/** Early case without video: cream logo card in the same 9:16 grid slot. */
+function CaseLogoCard({
+  clientName,
+  logo,
+  slug,
+  statusLabel = 'Gestart',
+}: {
+  clientName: string
+  logo?: string
+  slug: string
+  statusLabel?: string
+}) {
+  const [hovered, setHovered] = useState(false)
+
+  return (
+    <Link
+      href={`/cases/${slug}`}
+      aria-label={`Case ${clientName}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'block',
+        position: 'relative',
+        aspectRatio: '9 / 16',
+        borderRadius: 'clamp(18px, 2vw, 28px)',
+        overflow: 'hidden',
+        textDecoration: 'none',
+        backgroundColor: ikr.creamLight,
+        backgroundImage:
+          'radial-gradient(ellipse 80% 55% at 50% 38%, rgba(15,193,222,0.16) 0%, transparent 70%), linear-gradient(165deg, #FFF8F1 0%, #F0EBE0 58%, rgba(32,23,55,0.05) 100%)',
+        boxShadow: hovered
+          ? 'inset 0 0 0 1.5px rgba(32,23,55,0.18), 0 16px 36px rgba(32,23,55,0.14)'
+          : 'inset 0 0 0 1.5px rgba(32,23,55,0.12), 0 8px 24px rgba(32,23,55,0.06)',
+        transition: 'box-shadow 0.25s ease, transform 0.25s ease',
+        transform: hovered ? 'translateY(-2px)' : 'none',
+      }}
+    >
+      <span
+        style={{
+          position: 'absolute',
+          top: 'clamp(10px, 4%, 16px)',
+          left: 'clamp(10px, 4%, 16px)',
+          zIndex: 3,
+          ...displayFont,
+          fontSize: 'clamp(0.55rem, 1vw, 12px)',
+          color: ikr.navy,
+          backgroundColor: ikr.cyan,
+          borderRadius: 48,
+          padding: '0.35em 0.85em',
+          textTransform: 'uppercase',
+        }}
+      >
+        {statusLabel}
+      </span>
+      <div
+        style={{
+          position: 'absolute',
+          inset: '18% 12% 22%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {logo ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={logo}
+            alt={`${clientName} logo`}
+            style={{
+              display: 'block',
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              borderRadius: 12,
+              transform: hovered ? 'scale(1.04)' : 'scale(1)',
+              transition: 'transform 0.25s ease',
+            }}
+          />
+        ) : (
+          <p
+            style={{
+              ...displayFont,
+              fontSize: 'clamp(1.25rem, 3vw, 32px)',
+              color: ikr.navy,
+              textTransform: 'uppercase',
+              textAlign: 'center',
+              margin: 0,
+            }}
+          >
+            {clientName}
+          </p>
+        )}
+      </div>
       <CaseClientLabel name={clientName} hovered={hovered} />
     </Link>
   )
@@ -647,15 +746,25 @@ export function CasesPageContent() {
                 minWidth: 0,
               }}
             >
-              {caseGridItems.map((item) => (
-                <CaseVideoCard
-                  key={item.id}
-                  src={item.video}
-                  clientName={item.clientName}
-                  logo={item.logo}
-                  slug={item.slug}
-                />
-              ))}
+              {caseGridItems.map((item) =>
+                item.video ? (
+                  <CaseVideoCard
+                    key={item.id}
+                    src={item.video}
+                    clientName={item.clientName}
+                    logo={item.logo}
+                    slug={item.slug}
+                  />
+                ) : (
+                  <CaseLogoCard
+                    key={item.id}
+                    clientName={item.clientName}
+                    logo={item.logo}
+                    slug={item.slug}
+                    statusLabel={item.statusLabel}
+                  />
+                ),
+              )}
             </div>
           </div>
 
@@ -700,6 +809,159 @@ export function CasesPageContent() {
               ))}
             </div>
           </div>
+
+          {earlyClients.length > 0 && (
+            <div id="nieuw" style={{ marginTop: 'clamp(3rem, 8vw, 100px)' }}>
+              <p
+                style={{
+                  ...displayFont,
+                  fontSize: 'clamp(1rem, 2.2vw, 32px)',
+                  color: ikr.navy,
+                  textTransform: 'uppercase',
+                  marginBottom: 'clamp(8px, 1vw, 12px)',
+                }}
+              >
+                Nieuw gestart
+              </p>
+              <p
+                style={{
+                  ...bodyFont,
+                  fontSize: 'clamp(0.85rem, 1.2vw, 16px)',
+                  color: ikr.navyText,
+                  marginBottom: 'clamp(1.5rem, 3vw, 32px)',
+                  maxWidth: 560,
+                  lineHeight: 1.5,
+                }}
+              >
+                Verse food brands waarmee de samenwerking is gestart. Cases in opbouw, zonder
+                opgeblazen organische cijfers.
+              </p>
+              <ul
+                style={{
+                  listStyle: 'none',
+                  margin: 0,
+                  padding: 0,
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 240px), 1fr))',
+                  gap: 'clamp(16px, 2.4vw, 32px)',
+                }}
+              >
+                {earlyClients.map((client) => {
+                  const title = (
+                    <p
+                      style={{
+                        ...displayFont,
+                        fontSize: 'clamp(1.1rem, 2vw, 26px)',
+                        color: ikr.navy,
+                        textTransform: 'uppercase',
+                        letterSpacing: '-0.03em',
+                        margin: 0,
+                      }}
+                    >
+                      {client.clientName}
+                    </p>
+                  )
+
+                  return (
+                    <li key={client.id}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {client.logo ? (
+                          client.caseSlug ? (
+                            <Link
+                              href={`/cases/${client.caseSlug}`}
+                              aria-label={`Case ${client.clientName}`}
+                              style={{ textDecoration: 'none', display: 'inline-block' }}
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={client.logo}
+                                alt={`${client.clientName} logo`}
+                                style={{
+                                  display: 'block',
+                                  height: 'clamp(48px, 8vw, 72px)',
+                                  width: 'auto',
+                                  maxWidth: 160,
+                                  objectFit: 'contain',
+                                  borderRadius: 12,
+                                }}
+                              />
+                            </Link>
+                          ) : (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img
+                              src={client.logo}
+                              alt={`${client.clientName} logo`}
+                              style={{
+                                display: 'block',
+                                height: 'clamp(48px, 8vw, 72px)',
+                                width: 'auto',
+                                maxWidth: 160,
+                                objectFit: 'contain',
+                                borderRadius: 12,
+                              }}
+                            />
+                          )
+                        ) : null}
+                        {client.caseSlug ? (
+                          <Link
+                            href={`/cases/${client.caseSlug}`}
+                            style={{ textDecoration: 'none' }}
+                          >
+                            {title}
+                          </Link>
+                        ) : (
+                          title
+                        )}
+                      </div>
+                      {client.handle && (
+                        <p style={{ marginTop: 6, marginBottom: 0 }}>
+                          {client.tiktokUrl ? (
+                            <a
+                              href={client.tiktokUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                ...bodyFont,
+                                fontSize: 'clamp(0.8rem, 1.05vw, 14px)',
+                                color: ikr.cyan,
+                                textDecoration: 'none',
+                                fontWeight: 600,
+                              }}
+                            >
+                              {client.handle}
+                            </a>
+                          ) : (
+                            <span
+                              style={{
+                                ...bodyFont,
+                                fontSize: 'clamp(0.8rem, 1.05vw, 14px)',
+                                color: ikr.navyText,
+                                fontWeight: 600,
+                              }}
+                            >
+                              {client.handle}
+                            </span>
+                          )}
+                        </p>
+                      )}
+                      <p
+                        style={{
+                          ...bodyFont,
+                          fontSize: 'clamp(0.8rem, 1.05vw, 14px)',
+                          color: ikr.navyText,
+                          marginTop: 8,
+                          lineHeight: 1.45,
+                          maxWidth: 280,
+                        }}
+                      >
+                        {client.note}
+                      </p>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
         </div>
       </section>
 
