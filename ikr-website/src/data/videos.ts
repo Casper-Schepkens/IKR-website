@@ -16,7 +16,7 @@ export const VIDEO_PATHS = {
  *    Top hit 759815… = 169.600 → 170K (Casper / scrape 20 sep 2026).
  *  Anneke: views bij download (jun 2026); account niet in Metricool.
  *  Oh!ma: views bij download (31 aug 2026), showers zonder case-pagina.
- *  Wasbar: views bij download (31 aug 2026); case /cases/wasbar + showers; niet in Metricool. */
+ *  Wasbar: TikTok public playCount 20 sep 2026 (niet in Metricool); case /cases/wasbar + showers. */
 export type CaseChannelVideo = {
   src: string
   stat: string
@@ -149,14 +149,19 @@ export const CASE_CHANNEL_VIDEOS: Record<
   ],
   wasbar: [
     {
-      src: '/videos/cases/wasbar/7673163275403676960.mp4',
-      stat: '69K',
-      tiktokUrl: 'https://www.tiktok.com/@wasbarontiktok/video/7673163275403676960',
+      src: '/videos/cases/wasbar/7676094290140908832.mp4',
+      stat: '107K',
+      tiktokUrl: 'https://www.tiktok.com/@wasbarontiktok/video/7676094290140908832',
     },
     {
-      src: '/videos/cases/wasbar/7676094290140908832.mp4',
-      stat: '1.1K',
-      tiktokUrl: 'https://www.tiktok.com/@wasbarontiktok/video/7676094290140908832',
+      src: '/videos/cases/wasbar/7681313103157529888.mp4',
+      stat: '91K',
+      tiktokUrl: 'https://www.tiktok.com/@wasbarontiktok/video/7681313103157529888',
+    },
+    {
+      src: '/videos/cases/wasbar/7680215677067660576.mp4',
+      stat: '1.5K',
+      tiktokUrl: 'https://www.tiktok.com/@wasbarontiktok/video/7680215677067660576',
     },
   ],
   annekeGovaerts: [
