@@ -52,8 +52,8 @@ export const foodWorkItems: FoodWorkItem[] = [
     id: 'panos',
     clientName: 'Panos',
     video: VIDEO_PATHS.foodWorkPanos,
-    views: '',
-    highlight: 'Bakkerijketen, influencer-opdracht',
+    views: '1.2M',
+    highlight: 'Bakkerijketen, influencer-opdracht (~11K likes)',
   },
 ]
 
@@ -136,24 +136,25 @@ export const caseDetailTemplate: CaseDetail = {
   },
 }
 
-/** Bron: https://iknowright.be/cases/tempus */
+/** Bron: https://iknowright.be/cases/tempus
+ *  Views/video's: Metricool full history @tempusverpleging (~2025-04-04 → 2026-09-20). */
 export const caseDetailTempus: CaseDetail = {
   slug: 'tempus',
   bedrijf: 'Tempus',
   logo: '/images/client_logos/tempus logo.png',
   tags: ['HR Marketing', 'TikTok'],
   heroImage: '/images/cases/tempus/hero.jpg',
-  outcomeLine: '1 miljoen views, en 1 tot 2 sollicitaties per dag',
+  outcomeLine: '1.7 miljoen views, en 1 tot 2 sollicitaties per dag',
   summary: [
     'Tempus Thuisverpleging werkt al bijna een jaar op vaste basis met IKnowRight. Hun grootste uitdaging: zoveel mogelijk jonge verpleegkundigen aantrekken via TikTok. HR-marketing, geen productpromo.',
     'We maakten content die jonge zorgprofessionals aanspreekt: herkenbare situaties, authentieke formats en een consistente aanwezigheid op @tempusverpleging.',
-    'Het resultaat: 1 miljoen views, 886K bereik en een community die 78% vrouw is, plus 1 tot 2 sollicitaties per dag via TikTok.',
+    'Het resultaat: 1.7 miljoen views over 107 video\'s, 886K bereik en een community die 78% vrouw is, plus 1 tot 2 sollicitaties per dag via TikTok.',
   ],
   results: [
-    { label: 'Views', value: '1M+' },
+    { label: 'Views', value: '1.7M' },
     { label: 'Bereik', value: '886K' },
     { label: 'Topvideo', value: '142K' },
-    { label: "Video's", value: '71' },
+    { label: "Video's", value: '107' },
     { label: 'Likes', value: '25K' },
     { label: 'Community', value: '78% vrouw' },
   ],
@@ -176,7 +177,11 @@ export const caseDetailTempus: CaseDetail = {
   },
 }
 
-/** Bron: https://iknowright.be/cases/maison-slash */
+/** Bron: https://iknowright.be/cases/maison-slash
+ *  IKR sinds eerste video 2025-09-24 (`7553687254649015585`).
+ *  Metricool posts incomplete before ~2026-04 (returns empty).
+ *  Cijfers: TikTok live 20 sep 2026 + Casper pre-IKR baseline (~20K views, ~300 followers, ~2K likes).
+ *  Nearly all current views/followers/likes = IKR. */
 export const caseDetailMaisonSlash: CaseDetail = {
   slug: 'maison-slash',
   bedrijf: 'Maison Slash',
@@ -187,15 +192,15 @@ export const caseDetailMaisonSlash: CaseDetail = {
   outcomeLine: '1.2 miljoen views, topvideo 170K organisch',
   summary: [
     'Maison Slash België verkoopt magazines voor ouders. Hun doel op TikTok: ouders aanspreken met content die herkenbaar en deelbaar is.',
-    'Het account bestond al, maar de cijfers explodeerden pas toen IKnowRight erbij kwam. Honderd video\'s later staat de teller op 1.2 miljoen views.',
-    'Het resultaat: 1.2 miljoen views, 961K bereik en een community die 68% vrouw is, met een organische hit van 170K.',
+    'Het account bestond al (~20K views, ~300 volgers). Sinds de eerste IKR-video (24 sep 2025) groeide @maisonslashbelgie naar ~1.2 miljoen views en ~1.4K volgers.',
+    'Het resultaat: 1.2 miljoen views, topvideo 170K, ~41K likes en een community die 68% vrouw is.',
   ],
   results: [
     { label: 'Views', value: '1.2M' },
-    { label: 'Bereik', value: '961K' },
+    { label: 'Volgers', value: '1.4K' },
     { label: 'Topvideo', value: '170K' },
     { label: "Video's", value: '100' },
-    { label: 'Likes', value: '30K' },
+    { label: 'Likes', value: '41K' },
     { label: 'Community', value: '68% vrouw' },
   ],
   videos: [...CASE_CHANNEL_VIDEOS.maisonSlash],
@@ -206,7 +211,7 @@ export const caseDetailMaisonSlash: CaseDetail = {
     },
     {
       title: 'ONZE AANPAK VOOR MAISON SLASH',
-      body: 'We maakten scroll-stoppende video\'s voor @maisonslashbelgie: formats die ouders herkennen en delen. De sterkste video haalde 170.000 organische views. In totaal 1.2 miljoen views op 100 video\'s.',
+      body: 'We maakten scroll-stoppende video\'s voor @maisonslashbelgie: formats die ouders herkennen en delen. De sterkste video haalde 170.000 organische views. In totaal ~1.2 miljoen views op ~100 video\'s sinds de start van IKR.',
     },
   ],
   testimonial: {
@@ -227,7 +232,7 @@ export const caseDetailChezAlbert: CaseDetail = {
   heroVariant: 'logo',
   outcomeLine: 'Samenwerking gestart. TikTok i.s.m. IKR',
   summary: [
-    'Chez Albert is een food brand waarmee IKnowRight recent de samenwerking is gestart. Focus: TikTok-content die het merk laat proeven en scroll-stoppend aanvoelt.',
+    'Chez Albert is een food brand waarmee IKnowRight recent de samenwerking is gestart via @chezalbert. Focus: TikTok-content die het merk laat proeven en scroll-stoppend aanvoelt.',
     'We bouwen samen de contentlijn op: formats, tone of voice en een vaste aanwezigheid op TikTok. Resultaten en video\'s volgen hier zodra er sterke organische hits zijn.',
   ],
   results: [],
@@ -239,10 +244,10 @@ export const caseDetailChezAlbert: CaseDetail = {
     },
     {
       title: 'ONZE AANPAK VOOR CHEZ ALBERT',
-      body: 'We starten met intake, merkfit en een contentkalender op maat. Daarna filmen en editen we scroll-stoppende video\'s i.s.m. IKR: consistent, food-first, zonder gehaaste vanity metrics.',
+      body: 'Samen met @chezalbert starten we met intake, merkfit en een contentkalender op maat. Daarna filmen en editen we scroll-stoppende video\'s i.s.m. IKR: consistent, food-first, zonder gehaaste vanity metrics.',
     },
   ],
-  // TikTok handle TBD; do not invent. Testimonial volgt later.
+  // Testimonial volgt later.
 }
 
 /** Early food case: @lilaloubiscuits; boosted bereik is geen organisch case-resultaat. */
@@ -284,7 +289,7 @@ export const caseDetailWasbar: CaseDetail = {
   outcomeLine: '200K views op 3 IKR-video\'s',
   summary: [
     'Wasbar is een food-first plek met wascafé-vibe: wassen, koffie, hapjes en hangout. Via @wasbarontiktok werkt Wasbar i.s.m. IKnowRight aan TikTok-content die die sfeer laat zien.',
-    'Drie IKR-video\'s staan live. Samen goed voor zo\'n 200K views (TikTok playCount, september 2026) — geen Metricool-aggregaat, wel de som van deze drie clips.',
+    'Drie IKR-video\'s staan live. Samen goed voor zo\'n 200K views.',
     'Hieronder de gallery. We blijven formats bijsturen terwijl de feed groeit.',
   ],
   results: [
@@ -560,6 +565,25 @@ export const homepageCarouselCards: HomepageCarouselCard[] = HOMEPAGE_CAROUSEL_L
     logo: meta.logo,
   }
 })
+
+/**
+ * Mobile strip order: food brands first (Oh!ma → Wasbar), then the rest as today.
+ * Desktop fan keeps `homepageCarouselCards` layout slots unchanged.
+ * Later: replace non-food cards with Chez Albert + Lilalou once those have shower videos.
+ */
+const MOBILE_FOOD_FIRST_LABELS = ['Oh!ma', 'Wasbar'] as const
+
+export const homepageCarouselCardsMobile: HomepageCarouselCard[] = (() => {
+  const food: HomepageCarouselCard[] = []
+  for (const label of MOBILE_FOOD_FIRST_LABELS) {
+    const card = homepageCarouselCards.find((c) => c.label === label)
+    if (card) food.push(card)
+  }
+  const rest = homepageCarouselCards.filter(
+    (c) => !(MOBILE_FOOD_FIRST_LABELS as readonly string[]).includes(c.label),
+  )
+  return [...food, ...rest]
+})()
 
 export type CaseFeedItem = {
   src: string

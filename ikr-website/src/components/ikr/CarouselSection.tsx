@@ -4,7 +4,11 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { caseLinkProps, homepageCarouselCards } from '@/data/cases'
+import {
+  caseLinkProps,
+  homepageCarouselCards,
+  homepageCarouselCardsMobile,
+} from '@/data/cases'
 import { ClickHint, ClientLogoSticker, TikTokHandleCaption } from './ClientLogoSticker'
 import { claimVideo, InViewVideo } from './InViewVideo'
 
@@ -63,8 +67,10 @@ function PhoneInfiniteStrip() {
   const scrollerRef = useRef<HTMLDivElement>(null)
   const jumpingRef = useRef(false)
   const copies = 3
+  // Food-first mobile order (Oh!ma, Wasbar, …). Later: swap non-food for Chez Albert + Lilalou.
+  const mobileCards = homepageCarouselCardsMobile
   const loopCards = Array.from({ length: copies }, (_, copy) =>
-    homepageCarouselCards.map((card) => ({ card, copy })),
+    mobileCards.map((card) => ({ card, copy })),
   ).flat()
 
   useEffect(() => {
@@ -73,7 +79,7 @@ function PhoneInfiniteStrip() {
 
     const setWidth = () => {
       const first = el.children[0] as HTMLElement | undefined
-      const next = el.children[homepageCarouselCards.length] as HTMLElement | undefined
+      const next = el.children[mobileCards.length] as HTMLElement | undefined
       if (!first || !next) return 0
       return next.offsetLeft - first.offsetLeft
     }

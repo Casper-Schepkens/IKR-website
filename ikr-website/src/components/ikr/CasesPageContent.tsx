@@ -48,7 +48,7 @@ const testimonials = [
     name: 'Tempus',
     role: 'HR marketing',
     avatar: '#C0B88B',
-    quote: '1 miljoen views via TikTok, niet via vacaturesites. En 1 tot 2 sollicitaties per dag.',
+    quote: '1.7 miljoen views via TikTok, niet via vacaturesites. En 1 tot 2 sollicitaties per dag.',
   },
 ] as const
 

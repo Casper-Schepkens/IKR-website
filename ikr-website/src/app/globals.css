@@ -87,6 +87,52 @@
   display: block;
 }
 
+/* Hero large TikTok mark — desktop right (annotation), mobile under subtitle. */
+.hero-tiktok-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  line-height: 0;
+  transform-origin: center center;
+}
+
+.hero-tiktok-mark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-tiktok-mark--mobile {
+  display: flex;
+  width: clamp(64px, 18vw, 88px);
+  height: clamp(64px, 18vw, 88px);
+  margin: clamp(24px, 6vw, 36px) auto 0;
+  opacity: 0.92;
+}
+
+.hero-tiktok-mark--desktop {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .hero-tiktok-mark--mobile {
+    display: none;
+  }
+
+  .hero-tiktok-mark--desktop {
+    display: flex;
+    position: absolute;
+    /* Right of cream hero, between subtitle and carousel top. */
+    right: clamp(32px, 6.5vw, 110px);
+    top: 52%;
+    width: clamp(110px, 12.5vw, 200px);
+    height: clamp(110px, 12.5vw, 200px);
+    z-index: 0;
+    opacity: 0.88;
+  }
+}
+
 @keyframes ikr-scroll-nudge {
   0%, 100% { transform: translateY(0); opacity: 0.95; }
   50% { transform: translateY(8px); opacity: 1; }

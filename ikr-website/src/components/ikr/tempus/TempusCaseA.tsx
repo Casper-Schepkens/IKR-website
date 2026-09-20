@@ -45,7 +45,7 @@ const steps: {
     color: '#FEFEFE',
     kickerColor: ikr.cyan,
     metrics: [
-      { value: '71', label: "Video's sinds de start" },
+      { value: '107', label: "Video's sinds de start" },
       { value: '6×', label: 'Per maand, consistent' },
       { value: '25K', label: 'Likes op de content' },
     ],
@@ -59,7 +59,7 @@ const steps: {
     color: ikr.navy,
     kickerColor: ikr.cyan,
     metrics: [
-      { value: '1M+', label: 'Views' },
+      { value: '1.7M', label: 'Views' },
       { value: '886K', label: 'Bereik' },
       { value: '142K', label: 'Topvideo' },
       { value: '1–2', label: 'Sollicitaties per dag' },
