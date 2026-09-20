@@ -725,8 +725,8 @@ export function CasesPageContent() {
                   lineHeight: 1.5,
                 }}
               >
-                Verse food brands in de pipeline. Nog geen case-video of cijfers — wel al onderdeel van
-                IKnowRight.
+                Verse food brands: early resultaten waar we ze hebben, of puur naam tot de
+                samenwerking start — geen volledige case study.
               </p>
               <ul
                 style={{
@@ -756,6 +756,37 @@ export function CasesPageContent() {
                         {client.clientName}
                       </p>
                     )}
+                    {client.handle && (
+                      <p style={{ marginTop: 6, marginBottom: 0 }}>
+                        {client.tiktokUrl ? (
+                          <a
+                            href={client.tiktokUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              ...bodyFont,
+                              fontSize: 'clamp(0.8rem, 1.05vw, 14px)',
+                              color: ikr.cyan,
+                              textDecoration: 'none',
+                              fontWeight: 600,
+                            }}
+                          >
+                            {client.handle}
+                          </a>
+                        ) : (
+                          <span
+                            style={{
+                              ...bodyFont,
+                              fontSize: 'clamp(0.8rem, 1.05vw, 14px)',
+                              color: ikr.navyText,
+                              fontWeight: 600,
+                            }}
+                          >
+                            {client.handle}
+                          </span>
+                        )}
+                      </p>
+                    )}
                     <p
                       style={{
                         ...bodyFont,
@@ -768,6 +799,26 @@ export function CasesPageContent() {
                     >
                       {client.note}
                     </p>
+                    {client.stats && (
+                      <p
+                        style={{
+                          ...bodyFont,
+                          fontSize: 'clamp(0.75rem, 0.95vw, 13px)',
+                          color: ikr.navy,
+                          marginTop: 10,
+                          lineHeight: 1.4,
+                          maxWidth: 280,
+                        }}
+                      >
+                        {[
+                          client.stats.videos && `${client.stats.videos} video’s`,
+                          client.stats.views && `${client.stats.views} views`,
+                          client.stats.topVideo && `top ${client.stats.topVideo}`,
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </p>
+                    )}
                   </li>
                 ))}
               </ul>
