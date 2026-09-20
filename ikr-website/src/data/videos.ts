@@ -11,8 +11,9 @@ export const VIDEO_PATHS = {
 
 /** Top presterende TikTok-video's per kanaal.
  *  Tempus: Metricool full history (20 sep 2026), alle clips IKR.
- *  Maison Slash: alleen IKR-window clips die lokaal staan + Metricool stats (20 sep 2026).
- *    Pre-IKR virals (170K/148K/…) uit gallery gehaald om oneerlijke claims te vermijden.
+ *  Maison Slash: IKR-period gallery (sinds eerste IKR-video 2025-09-24).
+ *    Metricool posts incomplete before ~2026-04; stats = TikTok live / download-time.
+ *    Top hit 759815… = 169.600 → 170K (Casper / scrape 20 sep 2026).
  *  Anneke: views bij download (jun 2026); account niet in Metricool.
  *  Oh!ma: views bij download (31 aug 2026), showers zonder case-pagina.
  *  Wasbar: views bij download (31 aug 2026); case /cases/wasbar + showers; niet in Metricool. */
@@ -66,6 +67,28 @@ export const CASE_CHANNEL_VIDEOS: Record<
     },
   ],
   maisonSlash: [
+    {
+      src: '/videos/cases/maison-slash/7598150186996682017.mp4',
+      stat: '170K',
+      tiktokUrl: 'https://www.tiktok.com/@maisonslashbelgie/video/7598150186996682017',
+      // Seksenquete-topvideo: wel op de case-pagina, niet in de 4 marketing-showers.
+      hideFromShowers: true,
+    },
+    {
+      src: '/videos/cases/maison-slash/7562140206158073120.mp4',
+      stat: '148K',
+      tiktokUrl: 'https://www.tiktok.com/@maisonslashbelgie/video/7562140206158073120',
+    },
+    {
+      src: '/videos/cases/maison-slash/7573647751959858464.mp4',
+      stat: '71K',
+      tiktokUrl: 'https://www.tiktok.com/@maisonslashbelgie/video/7573647751959858464',
+    },
+    {
+      src: '/videos/cases/maison-slash/7611955630290537760.mp4',
+      stat: '64K',
+      tiktokUrl: 'https://www.tiktok.com/@maisonslashbelgie/video/7611955630290537760',
+    },
     {
       src: '/videos/cases/maison-slash/7661565150620568864.mp4',
       stat: '7.8K',

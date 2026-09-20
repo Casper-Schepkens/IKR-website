@@ -178,8 +178,10 @@ export const caseDetailTempus: CaseDetail = {
 }
 
 /** Bron: https://iknowright.be/cases/maison-slash
- *  Views/video's/topvideo: Metricool IKR-window @maisonslashbelgie (~2026-04-06 → 2026-09-20).
- *  Pre-IKR virals (170K e.d.) niet meegerekend. */
+ *  IKR sinds eerste video 2025-09-24 (`7553687254649015585`).
+ *  Metricool posts incomplete before ~2026-04 (returns empty).
+ *  Cijfers: TikTok live 20 sep 2026 + Casper pre-IKR baseline (~20K views, ~300 followers, ~2K likes).
+ *  Nearly all current views/followers/likes = IKR. */
 export const caseDetailMaisonSlash: CaseDetail = {
   slug: 'maison-slash',
   bedrijf: 'Maison Slash',
@@ -187,16 +189,18 @@ export const caseDetailMaisonSlash: CaseDetail = {
   tags: ['Media', 'TikTok', 'Ouderschap'],
   heroImage: '/images/client_logos/MS logo.png',
   heroVariant: 'logo',
-  outcomeLine: '367K views in de IKR-periode, topvideo 42K',
+  outcomeLine: '1.2 miljoen views, topvideo 170K organisch',
   summary: [
     'Maison Slash België verkoopt magazines voor ouders. Hun doel op TikTok: ouders aanspreken met content die herkenbaar en deelbaar is.',
-    'Het account bestond al. Sinds de samenwerking met IKnowRight bouwen we verder aan consistente, scroll-stoppende content voor @maisonslashbelgie.',
-    'In de IKR-periode die Metricool dekt: 367K views over 40 video\'s, met een topvideo van 42K. Community: 68% vrouw.',
+    'Het account bestond al (~20K views, ~300 volgers). Sinds de eerste IKR-video (24 sep 2025) groeide @maisonslashbelgie naar ~1.2 miljoen views en ~1.4K volgers.',
+    'Het resultaat: 1.2 miljoen views, topvideo 170K, ~41K likes en een community die 68% vrouw is.',
   ],
   results: [
-    { label: 'Views', value: '367K' },
-    { label: 'Topvideo', value: '42K' },
-    { label: "Video's", value: '40' },
+    { label: 'Views', value: '1.2M' },
+    { label: 'Volgers', value: '1.4K' },
+    { label: 'Topvideo', value: '170K' },
+    { label: "Video's", value: '100' },
+    { label: 'Likes', value: '41K' },
     { label: 'Community', value: '68% vrouw' },
   ],
   videos: [...CASE_CHANNEL_VIDEOS.maisonSlash],
@@ -207,14 +211,14 @@ export const caseDetailMaisonSlash: CaseDetail = {
     },
     {
       title: 'ONZE AANPAK VOOR MAISON SLASH',
-      body: 'We maakten scroll-stoppende video\'s voor @maisonslashbelgie: formats die ouders herkennen en delen. In de IKR-window die we via Metricool volgen staan 40 video\'s goed voor 367K views, met een topvideo van 42K.',
+      body: 'We maakten scroll-stoppende video\'s voor @maisonslashbelgie: formats die ouders herkennen en delen. De sterkste video haalde 170.000 organische views. In totaal ~1.2 miljoen views op ~100 video\'s sinds de start van IKR.',
     },
   ],
   testimonial: {
     name: 'Maison Slash',
     role: 'Magazines voor ouders',
     quote:
-      'Ons TikTok-account bestond al, maar met IKnowRight kregen we eindelijk een vaste contentlijn die ouders echt bereikt.',
+      'Ons TikTok-account bestond al, maar onze cijfers explodeerden pas met IKnowRight. Eén video ging viraal en zette alles in beweging.',
   },
 }
 
