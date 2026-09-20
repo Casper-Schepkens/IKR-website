@@ -86,6 +86,7 @@ export function ClickHint() {
 /**
  * Musical-note stand-in (not an official TikTok brand asset).
  * CSS animates when the card video is playing: bounce + cyan/magenta chroma flicker.
+ * ViewBox is cropped tight so the glyph fills ~handle-text height (1.25em box).
  */
 function MiniTikTokMark({ playing = false }: { playing?: boolean }) {
   const note =
@@ -94,9 +95,9 @@ function MiniTikTokMark({ playing = false }: { playing?: boolean }) {
   return (
     <svg
       className={playing ? 'ikr-tt-mark ikr-tt-mark--playing' : 'ikr-tt-mark'}
-      width="1.2em"
-      height="1.2em"
-      viewBox="0 0 24 24"
+      width="1.35em"
+      height="1.35em"
+      viewBox="7.2 2 13.6 15.2"
       fill="none"
       aria-hidden="true"
     >
