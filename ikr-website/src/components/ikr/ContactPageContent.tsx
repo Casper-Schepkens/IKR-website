@@ -498,13 +498,16 @@ export function ContactPageContent() {
           padding: 'clamp(2rem, 6.8vw, 98px) clamp(1rem, 6.8vw, 98px) clamp(3rem, 8vw, 120px)',
         }}
       >
-        <div
-          className="flex flex-col md:flex-row items-start"
-          style={{ gap: 'clamp(3rem, 8vw, 120px)' }}
-        >
-          {/* Left column — titel + contactkaart + foto */}
-          <div style={{ width: '100%', maxWidth: 380, flexShrink: 0 }}>
-            <div style={{ marginBottom: 'clamp(2rem, 4vw, 56px)' }}>
+        <div className="flex flex-col md:flex-row md:items-start md:gap-[clamp(3rem,8vw,120px)]">
+          {/* Left column on desktop; on mobile children join parent flex for reorder */}
+          <div
+            className="contents md:block"
+            style={{ width: '100%', maxWidth: 380, flexShrink: 0 }}
+          >
+            <div
+              className="order-1 md:order-none"
+              style={{ marginBottom: 'clamp(2rem, 4vw, 56px)' }}
+            >
               <h1
                 style={{
                   ...displayFont,
@@ -531,8 +534,11 @@ export function ContactPageContent() {
               </p>
             </div>
 
-            <ContactInfoCard />
+            <div className="order-3 md:order-none mt-8 md:mt-0">
+              <ContactInfoCard />
+            </div>
             <div
+              className="hidden md:block"
               style={{
                 position: 'relative',
                 width: '100%',
@@ -552,9 +558,9 @@ export function ContactPageContent() {
             </div>
           </div>
 
-          {/* Right column — form, start naast titel */}
+          {/* Form: second on mobile, right column on desktop */}
           <div
-            className="md:pt-20"
+            className="order-2 md:order-none md:pt-20"
             style={{
               flex: 1,
               minWidth: 0,
