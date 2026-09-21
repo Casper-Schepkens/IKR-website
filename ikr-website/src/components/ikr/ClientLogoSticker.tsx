@@ -108,8 +108,8 @@ export function TikTokGlyph({
 
 /** Clean white TikTok icon at handle-text scale (no play animation). */
 function MiniTikTokMark() {
-  /* Slightly above 1em text height. */
-  return <TikTokGlyph size="1.2em" fill="#FFFFFF" className="ikr-tt-mark" />
+  /* Slightly larger than handle text; horizontal gap handles white-on-white clearance. */
+  return <TikTokGlyph size="1.25em" fill="#FFFFFF" className="ikr-tt-mark" />
 }
 
 /** Mini TikTok logo + @handle on proof cards (bottom-left). Only render when a real handle exists. */
@@ -118,10 +118,9 @@ export function TikTokHandleCaption({ handle }: { handle: string }) {
     <span
       style={{
         display: 'inline-flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        justifyContent: 'flex-start',
-        gap: '0.85em',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: '0.7em',
         fontFamily: 'var(--font-inter), Inter, sans-serif',
         fontWeight: 700,
         fontSize: 'clamp(0.7rem, 1.15vw, 14px)',
@@ -133,7 +132,7 @@ export function TikTokHandleCaption({ handle }: { handle: string }) {
       }}
     >
       <MiniTikTokMark />
-      <span style={{ display: 'block', lineHeight: 1.15 }}>{handle}</span>
+      {handle}
     </span>
   )
 }

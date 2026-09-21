@@ -52,7 +52,7 @@ function MobileCarouselCard({
         <ClientLogoSticker name={card.label} logo={card.logo} rotate={-7} />
       </div>
       {card.handle ? (
-        <div style={{ position: 'absolute', left: 12, bottom: 10, zIndex: 2, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', left: 12, bottom: 12, zIndex: 2, pointerEvents: 'none' }}>
           <TikTokHandleCaption handle={card.handle} />
         </div>
       ) : null}
@@ -250,7 +250,7 @@ export function CarouselSection() {
                 style={{
                   position: 'absolute',
                   left: 'clamp(8px, 4%, 14px)',
-                  bottom: 'clamp(8px, 3.5%, 12px)',
+                  bottom: 'clamp(8px, 4%, 14px)',
                   zIndex: 2,
                   pointerEvents: 'none',
                 }}
