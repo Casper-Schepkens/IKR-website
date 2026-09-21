@@ -20,9 +20,9 @@ export default function CookiesPage() {
       </LegalParagraph>
       <LegalParagraph>
         <strong>Analytisch:</strong> we verzamelen anonieme gebruiksstatistieken via Vercel Web
-        Analytics (bezoekers, paginaweergaven, referrers). Geen cookies, geen individuele
-        profilering, geen dataverkoop. Data staat in het Vercel-dashboard, niet op onze eigen
-        servers.
+        Analytics (bezoekers, paginaweergaven, referrers). We meten ook knop- en formulierinteracties
+        anoniem via Vercel (geen cookies, geen individuele profilering, geen dataverkoop). Data staat
+        in het Vercel-dashboard, niet op onze eigen servers.
       </LegalParagraph>
       <LegalParagraph>
         Je kan cookies verwijderen via je browserinstellingen. Sommige formulieren werken dan

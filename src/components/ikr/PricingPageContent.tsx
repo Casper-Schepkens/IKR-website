@@ -3,13 +3,14 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { bodyFont, displayFont, ikr } from '@/lib/ikr-styles'
 import {
   CONTACT_REDIRECT,
   SUBMIT_LABELS,
   type PricingRole,
 } from '@/lib/pricing-types'
+import { trackCtaClick, trackFormStart, trackFormSubmitSuccess } from '@/lib/analytics'
 import { trackOpenAIAdsPrijsAangevraagd } from './OpenAIAdsPixel'
 import { TurnstileWidget } from './TurnstileWidget'
 
@@ -178,9 +179,16 @@ function PricingFormSection() {
   const [turnstileToken, setTurnstileToken] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
+  const formStartedRef = useRef(false)
 
   const isRedirectRole = role === 'creator' || role === 'solliciteren'
   const submitLabel = SUBMIT_LABELS[role]
+
+  const markFormStarted = () => {
+    if (formStartedRef.current) return
+    formStartedRef.current = true
+    trackFormStart('pricing')
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -233,6 +241,7 @@ function PricingFormSection() {
       }
 
       setStatus('success')
+      trackFormSubmitSuccess('pricing', role)
       trackOpenAIAdsPrijsAangevraagd()
     } catch {
       setStatus('error')
@@ -347,14 +356,20 @@ function PricingFormSection() {
               label="Voornaam"
               name="firstName"
               value={firstName}
-              onChange={setFirstName}
+              onChange={(v) => {
+                markFormStarted()
+                setFirstName(v)
+              }}
               required={!isRedirectRole}
             />
             <FormField
               label="Achternaam"
               name="lastName"
               value={lastName}
-              onChange={setLastName}
+              onChange={(v) => {
+                markFormStarted()
+                setLastName(v)
+              }}
               required={!isRedirectRole}
             />
             <FormField
@@ -363,7 +378,10 @@ function PricingFormSection() {
               type="email"
               withAtIcon
               value={email}
-              onChange={setEmail}
+              onChange={(v) => {
+                markFormStarted()
+                setEmail(v)
+              }}
               required={!isRedirectRole}
             />
             <FormField
@@ -371,7 +389,10 @@ function PricingFormSection() {
               name="phone"
               type="tel"
               value={phone}
-              onChange={setPhone}
+              onChange={(v) => {
+                markFormStarted()
+                setPhone(v)
+              }}
               required={!isRedirectRole}
             />
           </div>
@@ -387,6 +408,7 @@ function PricingFormSection() {
                   key={option.id}
                   type="button"
                   onClick={() => {
+                    markFormStarted()
                     setRole(option.id)
                     setErrorMessage('')
                     setStatus('idle')
@@ -573,6 +595,7 @@ function PricingCTASection() {
             </h2>
             <Link
               href="/contact"
+              onClick={() => trackCtaClick('plan_call', 'pricing_page')}
               style={{
                 ...displayFont,
                 display: 'inline-flex',

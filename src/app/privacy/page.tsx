@@ -26,7 +26,7 @@ export default function PrivacyPage() {
       <LegalParagraph>
         <strong>Verwerkers:</strong> e-mailverzending via Resend. Captcha via Cloudflare Turnstile
         (spampreventie). Anonieme gebruiksstatistieken via Vercel Web Analytics (geen cookies, geen
-        persoonsgegevens). Zie ook ons{' '}
+        persoonsgegevens). We meten knop- en formulierinteracties anoniem via Vercel. Zie ook ons{' '}
         <Link href="/cookies" style={{ color: 'var(--ikr-navy)', fontWeight: 700 }}>
           cookiebeleid
         </Link>

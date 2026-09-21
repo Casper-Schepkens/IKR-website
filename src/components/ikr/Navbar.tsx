@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { trackNavClick } from '@/lib/analytics'
 
 const navLinks = [
   { label: 'Home', href: '/' },
@@ -79,6 +80,10 @@ export function Navbar() {
                 {i > 0 && <span className="mx-3"><LightningIcon /></span>}
                 <Link
                   href={link.href}
+                  onClick={() => {
+                    if (link.href === '/pricing') trackNavClick('pricing')
+                    if (link.href === '/contact') trackNavClick('contact')
+                  }}
                   className="font-display font-black uppercase hover:opacity-60 transition-opacity whitespace-nowrap"
                   style={{
                     color: '#FFFFFF',
@@ -95,6 +100,7 @@ export function Navbar() {
 
           <Link
             href="/contact"
+            onClick={() => trackNavClick('contact')}
             className="hidden lg:flex items-center gap-2 pl-5 pr-1 h-[46px] rounded-full font-display font-black hover:opacity-85 transition-opacity shrink-0"
             style={{ backgroundColor: 'var(--ikr-cyan)', color: '#fff', letterSpacing: '-0.04em', fontSize: '1rem' }}
           >
@@ -149,7 +155,11 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  if (link.href === '/pricing') trackNavClick('pricing')
+                  if (link.href === '/contact') trackNavClick('contact')
+                  setOpen(false)
+                }}
                 className="font-display font-black uppercase py-3"
                 style={{
                   color: 'var(--ikr-navy-text)',
@@ -163,7 +173,10 @@ export function Navbar() {
             ))}
             <Link
               href="/contact"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                trackNavClick('contact')
+                setOpen(false)
+              }}
               className="mt-6 inline-flex items-center self-start gap-2 pl-5 pr-1 h-[52px] rounded-full font-display font-black"
               style={{ backgroundColor: 'var(--ikr-cyan)', color: '#fff', letterSpacing: '-0.04em', fontSize: '1.1rem' }}
             >
