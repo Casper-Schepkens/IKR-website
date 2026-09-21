@@ -1,6 +1,6 @@
 # PDF-diensten sync (volgende sessie)
 
-De tarieven-PDF (`ikr-website/public/documents/ikr-tarieven.pdf`) beschrijft uitgebreid wat IKR aanbiedt. De website moet dezelfde diensten/pakketten noemen — vooral op `/aanpak`, homepage process-sectie en `/pricing` teaser.
+De tarieven-PDF (`public/documents/ikr-tarieven.pdf`) beschrijft uitgebreid wat IKR aanbiedt. De website moet dezelfde diensten/pakketten noemen — vooral op `/aanpak`, homepage process-sectie en `/pricing` teaser.
 
 ## Te doen
 

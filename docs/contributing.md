@@ -1,6 +1,6 @@
 # Samenwerking & Git — richtlijnen voor mensen en AI-agents
 
-> **Voor AI-agents:** Lees dit bestand aan het begin van elke sessie, samen met `progress.md`, `next_session.md`, `decisions.md` en `blockers.md`. Volg deze regels strikt — overschrijf geen secties van andere pagina's of andere developers.
+> **Voor AI-agents:** Lees dit bestand aan het begin van elke sessie, samen met `docs/sessions/progress.md`, `docs/sessions/next-session.md`, `docs/sessions/decisions.md` en `docs/sessions/blockers.md`. Volg deze regels strikt — overschrijf geen secties van andere pagina's of andere developers. Zie ook [`ai-rules.md`](ai-rules.md).
 
 ---
 
@@ -10,9 +10,9 @@
 |------|--------|
 | GitHub | https://github.com/Casper-Schepkens/IKR-website |
 | Hoofdbranch | `master` |
-| App-map | `ikr-website/` |
-| Lokaal starten | `cd ikr-website && npm run dev` |
-| Deploy | Vercel — auto-deploy bij push naar `master` |
+| App-root | repo-root (Next.js `package.json` staat hier) |
+| Lokaal starten | `npm run dev` |
+| Deploy | Vercel — auto-deploy bij push naar `master`; Root Directory = `.` |
 
 ---
 
@@ -47,7 +47,7 @@ lokaal werken  →  commit  →  push  →  (optioneel) PR  →  merge in master
 
 ## Standaard workflow (samenwerken)
 
-Voer dit uit vanuit de **repo-root** (`IKR/`, niet alleen `ikr-website/`):
+Voer dit uit vanuit de **repo-root** (waar `package.json` staat):
 
 ```bash
 # 1. Altijd eerst de nieuwste master binnenhalen
@@ -57,7 +57,7 @@ git pull origin master
 git checkout -b feature/korte-naam
 
 # 3. Werk, test lokaal
-cd ikr-website && npm run dev
+npm run dev
 
 # 4. Alleen relevante bestanden stagen
 git add pad/naar/bestanden
@@ -148,7 +148,7 @@ Casper werkt vaak per pagina met meerdere AI-agents tegelijk. Verdeel werk expli
 **Regels voor agents:**
 
 1. Werk **alleen aan de pagina/sectie** die in de opdracht staat.
-2. Update **alleen jouw sectie** in `progress.md`, `next_session.md`, `blockers.md` en `decisions.md` — overschrijf andere secties nooit.
+2. Update **alleen jouw sectie** in `docs/sessions/progress.md`, `docs/sessions/next-session.md`, `docs/sessions/blockers.md` en `docs/sessions/decisions.md` — overschrijf andere secties nooit.
 3. Raak gedeelde bestanden (`layout.tsx`, `globals.css`, navigatie) alleen aan als de taak dat expliciet vraagt — anders eerst afstemmen.
 4. Weet je niet welke pagina? **Vraag** — niet gokken en het hele bestand overschrijven.
 
@@ -156,20 +156,21 @@ Casper werkt vaak per pagina met meerdere AI-agents tegelijk. Verdeel werk expli
 
 ## Contextbestanden — altijd lezen en bijwerken
 
-Deze bestanden staan in de repo-root en zijn de bron van waarheid tussen sessies en tussen developers:
+Deze bestanden staan onder `docs/` en zijn de bron van waarheid tussen sessies en tussen developers:
 
 | Bestand | Doel |
 |---------|------|
-| `big_idea.md` | Visie en scope per pagina |
-| `progress.md` | Huidige stand per pagina |
-| `next_session.md` | Volgende concrete stap per pagina |
-| `decisions.md` | Gemaakte keuzes (stack, copy, design) |
-| `blockers.md` | Openstaande blokkades per pagina |
-| `collaboration.md` | Dit bestand — git & samenwerk-regels |
+| `docs/product/big-idea.md` | Visie en scope per pagina |
+| `docs/sessions/progress.md` | Huidige stand per pagina |
+| `docs/sessions/next-session.md` | Volgende concrete stap per pagina |
+| `docs/sessions/decisions.md` | Gemaakte keuzes (stack, copy, design) |
+| `docs/sessions/blockers.md` | Openstaande blokkades per pagina |
+| `docs/contributing.md` | Dit bestand — git & samenwerk-regels |
+| `docs/ai-rules.md` | Korte agent-gitregels |
 
-**Start van sessie:** lees `progress.md` + `next_session.md` voor jouw pagina.
+**Start van sessie:** lees `docs/sessions/progress.md` + `docs/sessions/next-session.md` voor jouw pagina.
 
-**Einde van sessie (close procedure):** werk alleen jouw pagina-sectie bij in `progress.md`, `next_session.md`, `blockers.md` en eventueel `decisions.md`.
+**Einde van sessie (close procedure):** werk alleen jouw pagina-sectie bij in de sessiebestanden hierboven.
 
 ---
 
@@ -179,7 +180,7 @@ Deze bestanden staan in de repo-root en zijn de bron van waarheid tussen sessies
 2. **Kleine, frequente PR's** — niet dagen wachten met pushen
 3. **Eén pagina per branch** waar mogelijk
 4. **Geen direct pushen op `master`** als er een tweede developer actief is
-5. **Communiceer** wie aan welke pagina werkt (Notion, Discord, of een regel in `next_session.md`)
+5. **Communiceer** wie aan welke pagina werkt (Notion, Discord, of een regel in `docs/sessions/next-session.md`)
 
 Optioneel op GitHub: **branch protection** op `master` — merge alleen via PR, geen direct push.
 
@@ -232,8 +233,8 @@ Environment variables horen in Vercel (of lokaal in `.env.local` die in `.gitign
 
 **Start:**
 - [ ] `git pull origin master`
-- [ ] `progress.md` + `next_session.md` gelezen voor jouw pagina
-- [ ] `decisions.md` gecheckt als je twijfelt over eerdere keuzes
+- [ ] `docs/sessions/progress.md` + `docs/sessions/next-session.md` gelezen voor jouw pagina
+- [ ] `docs/sessions/decisions.md` gecheckt als je twijfelt over eerdere keuzes
 - [ ] Duidelijk welke pagina/branch van jou is
 
 **Tijdens:**
@@ -243,5 +244,5 @@ Environment variables horen in Vercel (of lokaal in `.env.local` die in `.gitign
 **Einde:**
 - [ ] Commit met duidelijke message
 - [ ] Push naar branch (of PR aangemaakt)
-- [ ] Jouw secties bijgewerkt in `progress.md` en `next_session.md`
-- [ ] Blockers toegevoegd/verwijderd in `blockers.md` indien nodig
+- [ ] Jouw secties bijgewerkt in `docs/sessions/progress.md` en `docs/sessions/next-session.md`
+- [ ] Blockers toegevoegd/verwijderd in `docs/sessions/blockers.md` indien nodig
