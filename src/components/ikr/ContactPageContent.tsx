@@ -3,7 +3,7 @@
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   getMessageTopicsForType,
   isValidMessageTopicForType,
@@ -12,6 +12,7 @@ import {
 } from '@/lib/contact-types'
 import { IKR_EMAIL, IKR_EMAIL_HREF, IKR_PHONE, IKR_PHONE_HREF } from '@/data/site-contact'
 import { bodyFont, displayFont, ikr } from '@/lib/ikr-styles'
+import { trackFormStart, trackFormSubmitSuccess } from '@/lib/analytics'
 import { trackOpenAIAdsRegistrationCompleted } from './OpenAIAdsPixel'
 import { TurnstileWidget } from './TurnstileWidget'
 
@@ -382,6 +383,7 @@ export function ContactPageContent() {
   const [turnstileToken, setTurnstileToken] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
+  const formStartedRef = useRef(false)
 
   useEffect(() => {
     const type = searchParams.get('type')
@@ -390,7 +392,14 @@ export function ContactPageContent() {
     }
   }, [searchParams])
 
+  const markFormStarted = () => {
+    if (formStartedRef.current) return
+    formStartedRef.current = true
+    trackFormStart('contact')
+  }
+
   const setField = <K extends keyof FormData>(key: K, value: FormData[K]) => {
+    markFormStarted()
     setForm((prev) => {
       const next = { ...prev, [key]: value }
       if (key === 'contactType' && value && typeof value === 'string') {
@@ -482,6 +491,7 @@ export function ContactPageContent() {
       }
 
       setStatus('success')
+      trackFormSubmitSuccess('contact', form.contactType)
       trackOpenAIAdsRegistrationCompleted()
     } catch {
       setStatus('error')
@@ -672,6 +682,7 @@ export function ContactPageContent() {
                       subtitle={topic.subtitle}
                       selected={form.messageTopic === topic.id}
                       onSelect={() => {
+                        markFormStarted()
                         setForm((prev) => ({
                           ...prev,
                           messageTopic: topic.id,
