@@ -87,7 +87,13 @@
   display: block;
 }
 
-/* Hero large TikTok mark — desktop right (annotation), mobile under subtitle. */
+/* Hero large TikTok mark — desktop right (annotation), mobile under subtitle.
+   Inner .ikr-tt-mark must fill this box: bare SVG width/height 100% otherwise
+   falls back to the ~300px replaced-element default and overflows into the copy. */
+.hero-section {
+  padding-bottom: clamp(20px, 8.3vw, 120px);
+}
+
 .hero-tiktok-mark {
   display: flex;
   align-items: center;
@@ -95,19 +101,34 @@
   pointer-events: none;
   line-height: 0;
   transform-origin: center center;
+  overflow: hidden;
+}
+
+.hero-tiktok-mark .ikr-tt-mark {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  flex-shrink: 1;
+  align-items: center;
+  justify-content: center;
 }
 
 .hero-tiktok-mark svg {
   display: block;
   width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 .hero-tiktok-mark--mobile {
   display: flex;
-  width: clamp(64px, 18vw, 88px);
-  height: clamp(64px, 18vw, 88px);
-  margin: clamp(24px, 6vw, 36px) auto 0;
+  /* Large presence below the subtitle, with clear vertical gap (no bleed into copy). */
+  width: clamp(120px, 42vw, 200px);
+  height: clamp(120px, 42vw, 200px);
+  margin: clamp(32px, 8vw, 48px) auto 0;
   opacity: 0.92;
 }
 
@@ -116,6 +137,11 @@
 }
 
 @media (min-width: 1024px) {
+  /* Extra cream below the subtitle so the large mark sits fully under the copy. */
+  .hero-section {
+    padding-bottom: clamp(210px, 18vw, 290px);
+  }
+
   .hero-tiktok-mark--mobile {
     display: none;
   }
@@ -123,11 +149,12 @@
   .hero-tiktok-mark--desktop {
     display: flex;
     position: absolute;
-    /* Right of cream hero, between subtitle and carousel top. */
-    right: clamp(32px, 6.5vw, 110px);
-    top: 52%;
-    width: clamp(110px, 12.5vw, 200px);
-    height: clamp(110px, 12.5vw, 200px);
+    /* Right of cream hero, below subtitle with clear gap from letterforms. */
+    right: clamp(28px, 5.5vw, 96px);
+    top: auto;
+    bottom: clamp(28px, 4vw, 64px);
+    width: clamp(130px, 12vw, 200px);
+    height: clamp(130px, 12vw, 200px);
     z-index: 0;
     opacity: 0.88;
   }

@@ -41,7 +41,6 @@ export function HeroSection() {
         position: 'relative',
         backgroundColor: 'var(--ikr-cream)',
         paddingTop: 'calc(88px + env(safe-area-inset-top, 0px))',
-        paddingBottom: 'clamp(20px, 8.3vw, 120px)',
         overflow: 'hidden',
       }}
     >
@@ -51,7 +50,8 @@ export function HeroSection() {
           margin: '0 auto',
           paddingLeft: 'clamp(1.25rem, 14.17vw, 204px)',
           paddingRight: 'clamp(1.25rem, 14.17vw, 204px)',
-          paddingTop: 'clamp(0px, 4vw, 70px)',
+          /* Slightly tighter top padding so copy sits higher above the large mark. */
+          paddingTop: 'clamp(0px, 2.8vw, 52px)',
           textAlign: 'center',
           position: 'relative',
           zIndex: 1,
@@ -74,7 +74,7 @@ export function HeroSection() {
             className="hero-sub"
             style={{
               display: 'block',
-              marginTop: 'clamp(12px, 3.3vw, 48px)',
+              marginTop: 'clamp(10px, 2.6vw, 40px)',
               fontFamily: 'var(--font-inter), sans-serif',
               fontWeight: 400,
               fontSize: 'clamp(1rem, 2.5vw, 40px)',
@@ -88,15 +88,15 @@ export function HeroSection() {
           </span>
         </h1>
 
-        {/* Mobile: breathable mark under the subtitle, not cramped beside the title. */}
+        {/* Mobile: large mark under the subtitle — sized box, glyph fills it (no 300px bleed into copy). */}
         <div className="hero-tiktok-mark hero-tiktok-mark--mobile" aria-hidden="true">
-          <TikTokGlyph size="100%" fill="var(--ikr-navy)" />
+          <TikTokGlyph fillContainer fill="var(--ikr-navy)" />
         </div>
       </div>
 
-      {/* Desktop: right of cream hero, between subtitle and carousel (annotation circle). */}
+      {/* Desktop: right of cream hero, below subtitle toward carousel. */}
       <div className="hero-tiktok-mark hero-tiktok-mark--desktop" aria-hidden="true">
-        <TikTokGlyph size="100%" fill="var(--ikr-navy)" />
+        <TikTokGlyph fillContainer fill="var(--ikr-navy)" />
       </div>
     </section>
   )

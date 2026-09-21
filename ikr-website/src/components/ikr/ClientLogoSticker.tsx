@@ -92,14 +92,22 @@ export function TikTokGlyph({
   size = '1.5em',
   fill = '#FFFFFF',
   className,
+  /** When true, omit SVG width/height attrs so a sized parent (e.g. hero mark) can CSS-size the glyph. Avoids the ~300px SVG percentage fallback. */
+  fillContainer = false,
 }: {
   size?: number | string
   fill?: string
   className?: string
+  fillContainer?: boolean
 }) {
   return (
     <span className={className ?? 'ikr-tt-mark'} aria-hidden="true">
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <svg
+        {...(fillContainer ? {} : { width: size, height: size })}
+        viewBox="0 0 24 24"
+        fill="none"
+        style={fillContainer ? { width: '100%', height: '100%', display: 'block' } : undefined}
+      >
         <path fill={fill} d={TIKTOK_GLYPH_PATH} />
       </svg>
     </span>
