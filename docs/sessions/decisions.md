@@ -17,8 +17,8 @@
 **Beslissing:** CSS custom properties in `globals.css` als design tokens. Complexe Figma-layouts (vw positioning, clip-path) blijven inline styles — kleuren via `var(--ikr-*)`.
 
 ### Asset-structuur
-- `ikr-website/public/images/` — live assets
-- `design/` — Figma-referenties, nooit deployed
+- `public/images/` — live assets
+- `design/` — Figma-referenties (~47 MB), nooit deployed; behouden als referentie (niet blind verwijderen)
 
 ### Navbar
 Eén component: `Navbar.tsx` (pill-bar). Niet per pagina nabouwen.
@@ -35,7 +35,16 @@ DaddyGo = shared hosting, geen Node.js. **Beslissing:** site op Vercel hosten, D
 
 **Waarom:** Vercel weigert serverless function-paden met spaties.
 
-**Status:** Uitgevoerd. Vercel Root Directory = `ikr-website`.
+**Status:** Uitgevoerd destijds. **Opgevolgd (sep 2026):** app gepromoveerd naar repo-root (zie hieronder).
+
+### Next.js naar repo-root — Optie A (sep 2026)
+**Beslissing:** Inhoud van `ikr-website/` naar de git-root tillen. Proces-markdown → `docs/`. `design/` blijft op root.
+
+**Waarom:** Eén marketing site, geen monorepo-reden; standaard Next/Vercel DX (`npm run dev` in root).
+
+**Vercel:** Root Directory wijzigen van `ikr-website` → `.` (project root) bij merge.
+
+**Status:** In PR / migratie.
 
 ### Legacy audit follow-up (jun 2026)
 **Beslissing:** Telefoon overal `+32 479 40 03 29`. Geen migratie oude landing/VSL (geen actieve ads). Over ons blijft op homepage — geen aparte `/over-ons`. Socials footer: LinkedIn + Instagram.

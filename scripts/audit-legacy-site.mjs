@@ -10,10 +10,12 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+/** App root = git repo root (Next.js lives at repository root). */
 const ROOT = path.resolve(__dirname, '..')
-const REPO_ROOT = path.resolve(ROOT, '..')
+const REPO_ROOT = ROOT
 const OUT_DIR = path.join(REPO_ROOT, 'legacy-content')
 const PAGES_DIR = path.join(OUT_DIR, 'pages')
+const AUDIT_MD = path.join(REPO_ROOT, 'docs', 'product', 'legacy-content-audit.md')
 
 const WP_API = 'https://iknowright.be/wp-json/wp/v2/pages?per_page=100'
 
@@ -611,10 +613,12 @@ async function main() {
 
   console.log('Writing audit report…')
   const auditMd = buildAuditMarkdown(pages, newIndex, gapMatrix)
-  fs.writeFileSync(path.join(REPO_ROOT, 'legacy-content-audit.md'), auditMd, 'utf8')
+  fs.mkdirSync(path.dirname(AUDIT_MD), { recursive: true })
+  fs.writeFileSync(AUDIT_MD, auditMd, 'utf8')
 
   console.log('\nDone.')
-  console.log(`  ${path.join(REPO_ROOT, 'legacy-content-audit.md')}`)
+  console.log(`  ${OUT_DIR}/`)
+  console.log(`  ${AUDIT_MD}`)
   const counts = {}
   for (const r of gapMatrix) counts[r.status] = (counts[r.status] || 0) + 1
   console.log('  Status:', counts)

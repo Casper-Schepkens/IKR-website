@@ -8,9 +8,9 @@
 
 - **Stack:** Next.js 16 + React 19 + Tailwind 4 + GSAP
 - **Repo:** https://github.com/Casper-Schepkens/IKR-website
-- **Lokaal:** `cd ikr-website && npm run dev`
+- **Lokaal:** `npm run dev` (vanuit repo-root)
 - **Deploy:** live op Vercel (Hobby), auto-deploy bij push naar `master`
-- **Root directory:** `ikr-website` (hernoemd van `IKR website` — spaties breken Vercel serverless functions)
+- **Root directory:** `.` (project root; app gepromoveerd uit `ikr-website/` — spaties in mapnamen breken Vercel serverless functions)
 - **Laatste commit:** `ac997fc` — SEO metadata, WP redirects, Resend notify-split (live op productie)
 - Design assets in `design/figma-pages/` + `design/figma-sections/`
 - Payload verwijderd → puur Next.js
@@ -21,12 +21,12 @@
 - **Custom domain (27 aug 2026):** `https://iknowright.be` = Vercel (Valid Configuration). Apex A `216.198.79.1`. www CNAME `6d5c470a752ea4e1.vercel-dns-017.com` → 308 naar apex. Nameservers blijven GreenGeeks. MX `smtp.google.com` onaangeroerd. Turnstile hostnames: localhost + vercel.app + apex + www.
 - Vercel env vars ingesteld (Resend + Turnstile). `RESEND_NOTIFY_FROM_EMAIL` niet nodig (code-fallback `forms@`). Lokaal: dummy-keys.
 - **Resend (27 aug 2026):** notify-split live (`forms@` → `contact@`; klant-PDF blijft `From: contact@`). `contact@` van suppression-lijst gehaald. Contactformulier live getest: Turnstile OK, Resend **Delivered** naar `contact@`.
-- Live Next-site: `https://iknowright.be` + `https://ikr-website.vercel.app`. Media lokaal in `ikr-website/public/`.
+- Live Next-site: `https://iknowright.be` + `https://ikr-website.vercel.app`. Media lokaal in `public/`.
 - **Cases single-source (jul 2026):** `caseDetails` → `caseGridItems` / `caseCarouselItems`
 - Gsm/mobile versie: Casper (aug 2026)
 - **Legal:** `/privacy`, `/cookies`, `/algemene-voorwaarden`, `/legal` — footer links + LinkedIn/Instagram socials
 - Telefoon site-wide: `+32 479 40 03 29` (`src/data/site-contact.ts`)
-- Legacy audit script: `npm run audit:legacy` → `legacy-content-audit.md`
+- Legacy audit script: `npm run audit:legacy` → `docs/product/legacy-content-audit.md` (+ `legacy-content/` dump, gitignored)
 - **Titel (31 aug 2026):** site-title + OG = `IKnowRight: dé TikTok agency voor food brands in Vlaanderen`
 - **Video-showers (31 aug 2026):** 4 plekken delen geen dezelfde video. Per klantmap: shower 0 = 1e/5e/9e (homepage fan), 1 = 2e/6e (homepage cases), 2 = 3e/7e (start aanpak gsm; daarna alle andere clips in de gsm), 3 = 4e/8e (aanpak carousel). Eén video in het mapje → die overal. Maison Slash seksenquete-topvideo (`hideFromShowers`) blijft alleen op de case-detailpagina.
 - **Showers vs grid (31 aug 2026):** `SHOWER_CHANNELS` = Tempus, Maison Slash, Anneke, Oh!ma, Wasbar. `CASE_GRID_ORDER` blijft 3 laag-1 cases. Oh!ma/Wasbar klikken naar de TikTok-post, geen fake detailpagina. Extra mp4's: Wasbar 2, Oh!ma 6, Maison Slash +5, Tempus +3.

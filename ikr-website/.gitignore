@@ -1,7 +1,0 @@
-node_modules
-.next
-.env
-.env.local
-database.db
-tsconfig.tsbuildinfo
-public/media

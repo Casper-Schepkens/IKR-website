@@ -12,12 +12,15 @@
 # Database
 **/database.db
 
-# Payload uploads
+# Payload uploads (legacy ignore; not used by current site)
 **/public/media/
 
-# Generated
+# Generated sitemap/robots (if ever produced)
 **/public/robots.txt
 **/public/sitemap*.xml
+
+# Generated legacy audit dumps (regenerate via npm run audit:legacy)
+/legacy-content/
 
 # OS & IDE
 .DS_Store
