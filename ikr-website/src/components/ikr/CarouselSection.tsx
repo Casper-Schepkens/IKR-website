@@ -250,7 +250,7 @@ export function CarouselSection() {
                 style={{
                   position: 'absolute',
                   left: 'clamp(8px, 4%, 14px)',
-                  bottom: 'clamp(8px, 3.5%, 12px)',
+                  bottom: 'clamp(8px, 4%, 14px)',
                   zIndex: 2,
                   pointerEvents: 'none',
                 }}
