@@ -87,10 +87,17 @@
   display: block;
 }
 
-/* Hero large TikTok mark — desktop right (annotation), mobile under subtitle.
+/* Hero + carousel share one positioning context so the large TikTok mark can
+   sit beside the phones without padding the hero taller (which shoved videos down).
    Inner .ikr-tt-mark must fill this box: bare SVG width/height 100% otherwise
    falls back to the ~300px replaced-element default and overflows into the copy. */
+.hero-carousel-band {
+  position: relative;
+  background-color: var(--ikr-cream);
+}
+
 .hero-section {
+  /* Restore pre-logo-stack spacing so the carousel sits close under the subtitle. */
   padding-bottom: clamp(20px, 8.3vw, 120px);
 }
 
@@ -124,12 +131,19 @@
 }
 
 .hero-tiktok-mark--mobile {
+  /* Out of flow on the shared band: large mark beside the strip, clears title/subtitle. */
   display: flex;
-  /* Large presence below the subtitle, with clear vertical gap (no bleed into copy). */
-  width: clamp(120px, 42vw, 200px);
-  height: clamp(120px, 42vw, 200px);
-  margin: clamp(32px, 8vw, 48px) auto 0;
-  opacity: 0.92;
+  position: absolute;
+  /* Hang past the right edge so it reads beside the strip, not on the center card. */
+  right: clamp(-28px, -6vw, -8px);
+  /* Align with upper mobile phone strip; top stays below subtitle (~190px on 390px). */
+  top: clamp(210px, 55vw, 268px);
+  bottom: auto;
+  width: clamp(110px, 36vw, 168px);
+  height: clamp(110px, 36vw, 168px);
+  margin: 0;
+  z-index: 0;
+  opacity: 0.88;
 }
 
 .hero-tiktok-mark--desktop {
@@ -137,9 +151,8 @@
 }
 
 @media (min-width: 1024px) {
-  /* Extra cream below the subtitle so the large mark sits fully under the copy. */
   .hero-section {
-    padding-bottom: clamp(210px, 18vw, 290px);
+    padding-bottom: clamp(20px, 8.3vw, 120px);
   }
 
   .hero-tiktok-mark--mobile {
@@ -149,10 +162,11 @@
   .hero-tiktok-mark--desktop {
     display: flex;
     position: absolute;
-    /* Right of cream hero, below subtitle with clear gap from letterforms. */
-    right: clamp(28px, 5.5vw, 96px);
+    /* Right of the fan — beside the phones, not stacked above them. */
+    right: clamp(16px, 2.8vw, 56px);
     top: auto;
-    bottom: clamp(28px, 4vw, 64px);
+    /* Mid fan band (below subtitle). Phone cards keep z-index 1–10 above this. */
+    bottom: clamp(100px, 14vw, 200px);
     width: clamp(130px, 12vw, 200px);
     height: clamp(130px, 12vw, 200px);
     z-index: 0;
@@ -190,3 +204,4 @@
     font-family: var(--font-roboto-condensed), 'Roboto Condensed', sans-serif;
   }
 }
+

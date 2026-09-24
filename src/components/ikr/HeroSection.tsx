@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
-import { TikTokGlyph } from './ClientLogoSticker'
 
 export function HeroSection() {
   const ref = useRef<HTMLElement>(null)
@@ -22,13 +21,6 @@ export function HeroSection() {
         ease: 'power2.out',
         delay: 0.2,
       })
-      gsap.from('.hero-tiktok-mark', {
-        scale: 0.72,
-        opacity: 0,
-        duration: 0.85,
-        ease: 'power3.out',
-        delay: 0.35,
-      })
     }, ref)
     return () => ctx.revert()
   }, [])
@@ -41,7 +33,7 @@ export function HeroSection() {
         position: 'relative',
         backgroundColor: 'var(--ikr-cream)',
         paddingTop: 'calc(88px + env(safe-area-inset-top, 0px))',
-        overflow: 'hidden',
+        overflow: 'visible',
       }}
     >
       <div
@@ -50,11 +42,10 @@ export function HeroSection() {
           margin: '0 auto',
           paddingLeft: 'clamp(1.25rem, 14.17vw, 204px)',
           paddingRight: 'clamp(1.25rem, 14.17vw, 204px)',
-          /* Slightly tighter top padding so copy sits higher above the large mark. */
           paddingTop: 'clamp(0px, 2.8vw, 52px)',
           textAlign: 'center',
           position: 'relative',
-          zIndex: 1,
+          zIndex: 2,
         }}
       >
         <h1>
@@ -87,16 +78,6 @@ export function HeroSection() {
             dé TikTok agency voor food brands in Vlaanderen
           </span>
         </h1>
-
-        {/* Mobile: large mark under the subtitle — sized box, glyph fills it (no 300px bleed into copy). */}
-        <div className="hero-tiktok-mark hero-tiktok-mark--mobile" aria-hidden="true">
-          <TikTokGlyph fillContainer fill="var(--ikr-navy)" />
-        </div>
-      </div>
-
-      {/* Desktop: right of cream hero, below subtitle toward carousel. */}
-      <div className="hero-tiktok-mark hero-tiktok-mark--desktop" aria-hidden="true">
-        <TikTokGlyph fillContainer fill="var(--ikr-navy)" />
       </div>
     </section>
   )
