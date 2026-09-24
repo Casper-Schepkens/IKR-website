@@ -8,15 +8,15 @@ import { TikTokGlyph } from './ClientLogoSticker'
 
 /**
  * Shared positioning context for the cream hero + fan carousel.
- * TikTok marks are siblings after the carousel so they sit beside the phones
- * (not under a full-width stacking context) without padding the hero taller.
+ * Desktop TikTok mark sits beside the phones without padding the hero taller.
+ * Mobile mark lives in HeroSection (beside the title).
  */
 export function HomeHeroBand() {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.from('.hero-tiktok-mark', {
+      gsap.from('.hero-tiktok-mark--desktop', {
         scale: 0.72,
         opacity: 0,
         duration: 0.85,
@@ -31,11 +31,8 @@ export function HomeHeroBand() {
     <div ref={ref} className="hero-carousel-band">
       <HeroSection />
       <CarouselSection />
-      {/* After carousel in DOM so marks are not covered by the section box.
+      {/* After carousel in DOM so the mark is not covered by the section box.
           z-index stays below phone cards (1–10) so cards win on overlap. */}
-      <div className="hero-tiktok-mark hero-tiktok-mark--mobile" aria-hidden="true">
-        <TikTokGlyph fillContainer fill="var(--ikr-navy)" />
-      </div>
       <div className="hero-tiktok-mark hero-tiktok-mark--desktop" aria-hidden="true">
         <TikTokGlyph fillContainer fill="var(--ikr-navy)" />
       </div>

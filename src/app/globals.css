@@ -97,8 +97,16 @@
 }
 
 .hero-section {
-  /* Restore pre-logo-stack spacing so the carousel sits close under the subtitle. */
-  padding-bottom: clamp(20px, 8.3vw, 120px);
+  /* Match the title→subtitle gap so the carousel sits tight under the copy. */
+  padding-bottom: clamp(8px, 2vw, 28px);
+}
+
+.hero-title-row {
+  /* Shrink-wrap the word so the mark can sit at left:100% (beside IKNOWRIGHT). */
+  display: inline-block;
+  position: relative;
+  max-width: 100%;
+  vertical-align: top;
 }
 
 .hero-tiktok-mark {
@@ -131,19 +139,29 @@
 }
 
 .hero-tiktok-mark--mobile {
-  /* Out of flow on the shared band: large mark beside the strip, clears title/subtitle. */
+  /* Absolute beside the title word (user ref: yellow circle). Out of flow so
+     it does not inflate the title→subtitle gap or get covered by the carousel. */
   display: flex;
   position: absolute;
-  /* Hang past the right edge so it reads beside the strip, not on the center card. */
-  right: clamp(-28px, -6vw, -8px);
-  /* Align with upper mobile phone strip; top stays below subtitle (~190px on 390px). */
-  top: clamp(210px, 55vw, 268px);
-  bottom: auto;
-  width: clamp(110px, 36vw, 168px);
-  height: clamp(110px, 36vw, 168px);
-  margin: 0;
-  z-index: 0;
-  opacity: 0.88;
+  left: calc(100% + clamp(6px, 1.5vw, 12px));
+  top: 50%;
+  /* Center on the title without CSS transform (GSAP owns transform). */
+  margin-top: calc(clamp(72px, 22vw, 120px) / -2);
+  width: clamp(72px, 22vw, 120px);
+  height: clamp(72px, 22vw, 120px);
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 0;
+  z-index: 3;
+  opacity: 0.92;
+}
+
+/* Keep subtitle glyphs clear of the mobile mark hanging beside the title. */
+@media (max-width: 1023px) {
+  .hero-sub {
+    padding-right: clamp(72px, 24vw, 120px);
+    box-sizing: border-box;
+  }
 }
 
 .hero-tiktok-mark--desktop {
@@ -152,7 +170,7 @@
 
 @media (min-width: 1024px) {
   .hero-section {
-    padding-bottom: clamp(20px, 8.3vw, 120px);
+    padding-bottom: clamp(8px, 2vw, 28px);
   }
 
   .hero-tiktok-mark--mobile {
