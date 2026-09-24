@@ -87,11 +87,26 @@
   display: block;
 }
 
-/* Hero large TikTok mark — desktop right (annotation), mobile under subtitle.
+/* Hero + carousel share one positioning context so the large TikTok mark can
+   sit beside the phones without padding the hero taller (which shoved videos down).
    Inner .ikr-tt-mark must fill this box: bare SVG width/height 100% otherwise
    falls back to the ~300px replaced-element default and overflows into the copy. */
+.hero-carousel-band {
+  position: relative;
+  background-color: var(--ikr-cream);
+}
+
 .hero-section {
-  padding-bottom: clamp(20px, 8.3vw, 120px);
+  /* Match the title→subtitle gap so the carousel sits tight under the copy. */
+  padding-bottom: clamp(8px, 2vw, 28px);
+}
+
+.hero-title-row {
+  /* Shrink-wrap the word so the mark can sit at left:100% (beside IKNOWRIGHT). */
+  display: inline-block;
+  position: relative;
+  max-width: 100%;
+  vertical-align: top;
 }
 
 .hero-tiktok-mark {
@@ -124,12 +139,29 @@
 }
 
 .hero-tiktok-mark--mobile {
+  /* Absolute beside the title word (user ref: yellow circle). Out of flow so
+     it does not inflate the title→subtitle gap or get covered by the carousel. */
   display: flex;
-  /* Large presence below the subtitle, with clear vertical gap (no bleed into copy). */
-  width: clamp(120px, 42vw, 200px);
-  height: clamp(120px, 42vw, 200px);
-  margin: clamp(32px, 8vw, 48px) auto 0;
+  position: absolute;
+  left: calc(100% + clamp(6px, 1.5vw, 12px));
+  top: 50%;
+  /* Center on the title without CSS transform (GSAP owns transform). */
+  margin-top: calc(clamp(72px, 22vw, 120px) / -2);
+  width: clamp(72px, 22vw, 120px);
+  height: clamp(72px, 22vw, 120px);
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 0;
+  z-index: 3;
   opacity: 0.92;
+}
+
+/* Keep subtitle glyphs clear of the mobile mark hanging beside the title. */
+@media (max-width: 1023px) {
+  .hero-sub {
+    padding-right: clamp(72px, 24vw, 120px);
+    box-sizing: border-box;
+  }
 }
 
 .hero-tiktok-mark--desktop {
@@ -137,9 +169,8 @@
 }
 
 @media (min-width: 1024px) {
-  /* Extra cream below the subtitle so the large mark sits fully under the copy. */
   .hero-section {
-    padding-bottom: clamp(210px, 18vw, 290px);
+    padding-bottom: clamp(8px, 2vw, 28px);
   }
 
   .hero-tiktok-mark--mobile {
@@ -149,10 +180,11 @@
   .hero-tiktok-mark--desktop {
     display: flex;
     position: absolute;
-    /* Right of cream hero, below subtitle with clear gap from letterforms. */
-    right: clamp(28px, 5.5vw, 96px);
+    /* Right of the fan — beside the phones, not stacked above them. */
+    right: clamp(16px, 2.8vw, 56px);
     top: auto;
-    bottom: clamp(28px, 4vw, 64px);
+    /* Mid fan band (below subtitle). Phone cards keep z-index 1–10 above this. */
+    bottom: clamp(100px, 14vw, 200px);
     width: clamp(130px, 12vw, 200px);
     height: clamp(130px, 12vw, 200px);
     z-index: 0;
@@ -190,3 +222,4 @@
     font-family: var(--font-roboto-condensed), 'Roboto Condensed', sans-serif;
   }
 }
+

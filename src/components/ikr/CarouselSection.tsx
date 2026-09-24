@@ -22,7 +22,7 @@ const RADIUS = 1.18 * SCALE
 const LAYOUT_CENTER = 36.53
 const ORIG_CARD_W = 26.39
 const ORIG_TOP_SPREAD = 127
-const TOP_PAD = 3.2
+const TOP_PAD = 0.6
 
 function MobileCarouselCard({
   card,
@@ -135,7 +135,7 @@ function PhoneInfiniteStrip() {
   return (
     <div
       ref={scrollerRef}
-      className="flex lg:hidden"
+      className="flex lg:hidden hero-mobile-strip"
       style={{
         gap: 12,
         overflowX: 'auto',
@@ -145,6 +145,8 @@ function PhoneInfiniteStrip() {
         touchAction: 'pan-x pan-y',
         width: '100%',
         maxWidth: '100%',
+        position: 'relative',
+        zIndex: 1,
       }}
     >
       {loopCards.map(({ card, copy }) => (
@@ -190,6 +192,7 @@ export function CarouselSection() {
   return (
     <section
       ref={sectionRef}
+      className="hero-carousel-section"
       style={{ backgroundColor: 'var(--ikr-cream)', position: 'relative' }}
     >
       <PhoneInfiniteStrip />

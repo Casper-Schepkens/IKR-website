@@ -1,6 +1,5 @@
 import { Navbar } from '@/components/ikr/Navbar'
-import { HeroSection } from '@/components/ikr/HeroSection'
-import { CarouselSection } from '@/components/ikr/CarouselSection'
+import { HomeHeroBand } from '@/components/ikr/HomeHeroBand'
 import { BrandStrip } from '@/components/ikr/BrandStrip'
 import { StatsSection } from '@/components/ikr/StatsSection'
 import { TeamSection } from '@/components/ikr/TeamSection'
@@ -15,8 +14,7 @@ export default function HomePage() {
   return (
     <main style={{ backgroundColor: 'var(--ikr-cream)' }}>
       <Navbar />
-      <HeroSection />
-      <CarouselSection />
+      <HomeHeroBand />
       <BrandStrip />
       <div className="flex flex-col">
         <StatsSection />
