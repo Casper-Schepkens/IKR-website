@@ -14,7 +14,7 @@ export default function OpenGraphImage() {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          backgroundColor: '#F0EBE0',
+          backgroundColor: '#F0ECCD',
           padding: '72px 80px',
         }}
       >
@@ -23,7 +23,7 @@ export default function OpenGraphImage() {
             style={{
               width: 16,
               height: 16,
-              backgroundColor: '#0FC1DE',
+              backgroundColor: '#B192EC',
               marginRight: 16,
             }}
           />
@@ -66,7 +66,7 @@ export default function OpenGraphImage() {
             display: 'flex',
             fontSize: 24,
             fontWeight: 700,
-            color: '#0FC1DE',
+            color: '#B192EC',
           }}
         >
           iknowright.be

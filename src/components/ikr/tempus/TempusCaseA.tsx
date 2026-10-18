@@ -70,8 +70,8 @@ const steps: {
 function MetricPanel({ items, dark = false }: { items: Metric[]; dark?: boolean }) {
   const valueColor = dark ? ikr.cyan : ikr.navy
   const labelColor = dark ? 'rgba(254,254,254,0.78)' : ikr.navyText
-  const border = dark ? '1px solid rgba(15,193,222,0.35)' : '1px solid rgba(32,23,55,0.12)'
-  const bg = dark ? 'rgba(15,193,222,0.06)' : '#FFF9F1'
+  const border = dark ? '1px solid rgba(177,146,236,0.35)' : '1px solid rgba(32,23,55,0.12)'
+  const bg = dark ? 'rgba(177,146,236,0.06)' : '#FFF9F1'
 
   return (
     <div
@@ -284,7 +284,7 @@ export function TempusCaseA() {
               <div
                 key={r.label}
                 style={{
-                  border: '1px solid rgba(15,193,222,0.35)',
+                  border: '1px solid rgba(177,146,236,0.35)',
                   borderRadius: 20,
                   padding: 'clamp(16px, 2vw, 28px)',
                 }}

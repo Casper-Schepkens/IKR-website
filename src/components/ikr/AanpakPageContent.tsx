@@ -490,7 +490,7 @@ function CaseCardButton({ href, label }: { href: string; label: string }) {
         zIndex: 2,
         cursor: 'pointer',
         boxShadow: hovered
-          ? '0 10px 24px rgba(32,23,55,0.32), 0 3px 8px rgba(15,193,222,0.2), inset 0 1px 0 rgba(255,255,255,0.9)'
+          ? '0 10px 24px rgba(32,23,55,0.32), 0 3px 8px rgba(177,146,236,0.2), inset 0 1px 0 rgba(255,255,255,0.9)'
           : '0 4px 14px rgba(32,23,55,0.2), 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.85)',
         transition: 'transform 0.25s ease, box-shadow 0.25s ease',
       }}
@@ -920,7 +920,7 @@ function CasesAndCTASection() {
               style={{
                 position: 'absolute',
                 inset: 0,
-                background: 'linear-gradient(180deg, rgba(15,193,222,0.15) 0%, rgba(32,22,55,0.88) 100%)',
+                background: 'linear-gradient(180deg, rgba(177,146,236,0.15) 0%, rgba(32,22,55,0.88) 100%)',
               }}
             />
             <CTAContent
@@ -998,7 +998,7 @@ function CasesAndCTASection() {
             }}
           >
             <Image src="/images/contact-team.jpg" alt="Het IKR-team" fill style={{ objectFit: 'cover' }} sizes="100vw" />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(15,193,222,0.15) 0%, rgba(32,22,55,0.88) 100%)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(177,146,236,0.15) 0%, rgba(32,22,55,0.88) 100%)' }} />
             <div style={{ position: 'relative', zIndex: 2, padding: 'clamp(2rem, 5vw, 72px) clamp(1.5rem, 4vw, 56px)' }}>
             <p style={{ ...displayFont, fontSize: 'clamp(0.875rem, 1.67vw, 24px)', textTransform: 'uppercase', color: '#FFF9F1', marginBottom: '0.5rem' }}>SAMENWERKEN?</p>
             <h3 style={{ ...displayFont, fontSize: 'clamp(1.25rem, 3.33vw, 48px)', lineHeight: 1.15, textTransform: 'uppercase', color: '#FFF9F1', marginBottom: 'clamp(1.5rem, 3vw, 44px)' }}>

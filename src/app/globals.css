@@ -6,19 +6,19 @@
   --font-display: var(--font-roboto-condensed);
   --font-sans: var(--font-inter);
 
-  --color-ikr-cream: #F0EBE0;
+  --color-ikr-cream: #F0ECCD;
   --color-ikr-cream-light: #FFF8F1;
   --color-ikr-navy: #201737;
   --color-ikr-navy-text: #211636;
-  --color-ikr-cyan: #0FC1DE;
+  --color-ikr-cyan: #B192EC;
 }
 
 :root {
-  --ikr-cream: #F0EBE0;
+  --ikr-cream: #F0ECCD;
   --ikr-cream-light: #FFF8F1;
   --ikr-navy: #201737;
   --ikr-navy-text: #211636;
-  --ikr-cyan: #0FC1DE;
+  --ikr-cyan: #B192EC;
 }
 
 @keyframes contact-step-in {

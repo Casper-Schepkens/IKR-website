@@ -244,7 +244,7 @@ function CaseDetailHero({ data }: { data: CaseDetail }) {
                 ? {
                     backgroundColor: ikr.creamLight,
                     backgroundImage:
-                      'radial-gradient(ellipse 70% 90% at 50% 45%, rgba(15,193,222,0.14) 0%, transparent 62%), linear-gradient(155deg, #FFF8F1 0%, #F0EBE0 52%, rgba(32,23,55,0.06) 100%)',
+                      'radial-gradient(ellipse 70% 90% at 50% 45%, rgba(177,146,236,0.14) 0%, transparent 62%), linear-gradient(155deg, #FFF8F1 0%, #F0ECCD 52%, rgba(32,23,55,0.06) 100%)',
                     boxShadow:
                       'inset 0 0 0 1.5px rgba(32,23,55,0.12), 0 18px 48px rgba(32,23,55,0.07)',
                   }

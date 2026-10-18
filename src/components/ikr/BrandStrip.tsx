@@ -27,7 +27,7 @@ export function BrandStrip() {
             lineHeight: 1,
             letterSpacing: '-0.04em',
             textTransform: 'uppercase',
-            color: '#00D4FF',
+            color: 'var(--ikr-cyan)',
           }}
         >
           FOOD BRANDS

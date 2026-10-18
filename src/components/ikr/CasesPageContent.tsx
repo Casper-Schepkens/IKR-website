@@ -164,7 +164,7 @@ function CaseClientLabel({ name, hovered }: { name: string; hovered: boolean }) 
         whiteSpace: 'nowrap',
         zIndex: 3,
         boxShadow: hovered
-          ? '0 10px 24px rgba(32,23,55,0.32), 0 3px 8px rgba(15,193,222,0.2), inset 0 1px 0 rgba(255,255,255,0.9)'
+          ? '0 10px 24px rgba(32,23,55,0.32), 0 3px 8px rgba(177,146,236,0.2), inset 0 1px 0 rgba(255,255,255,0.9)'
           : '0 4px 14px rgba(32,23,55,0.2), 0 1px 3px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.85)',
         transition: 'transform 0.25s ease, box-shadow 0.25s ease',
       }}
@@ -273,7 +273,7 @@ function CaseLogoCard({
         textDecoration: 'none',
         backgroundColor: ikr.creamLight,
         backgroundImage:
-          'radial-gradient(ellipse 80% 55% at 50% 38%, rgba(15,193,222,0.16) 0%, transparent 70%), linear-gradient(165deg, #FFF8F1 0%, #F0EBE0 58%, rgba(32,23,55,0.05) 100%)',
+          'radial-gradient(ellipse 80% 55% at 50% 38%, rgba(177,146,236,0.16) 0%, transparent 70%), linear-gradient(165deg, #FFF8F1 0%, #F0ECCD 58%, rgba(32,23,55,0.05) 100%)',
         boxShadow: hovered
           ? 'inset 0 0 0 1.5px rgba(32,23,55,0.18), 0 16px 36px rgba(32,23,55,0.14)'
           : 'inset 0 0 0 1.5px rgba(32,23,55,0.12), 0 8px 24px rgba(32,23,55,0.06)',
