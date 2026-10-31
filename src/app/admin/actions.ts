@@ -79,7 +79,6 @@ export async function createClientAction(form: FormData) {
   const client = await s.repo.createClient({
     name,
     stage: STAGES.includes(stage) ? stage : 'lead',
-    owner: str(form, 'owner'),
     source: str(form, 'source'),
     sector: str(form, 'sector'),
     website: str(form, 'website'),
@@ -99,7 +98,6 @@ export async function updateClientAction(clientId: string, form: FormData) {
     const { s } = await loadClient(clientId)
     await s.repo.updateClient(clientId, {
       name: str(form, 'name') ?? undefined,
-      owner: str(form, 'owner'),
       source: str(form, 'source'),
       sector: str(form, 'sector'),
       website: str(form, 'website'),

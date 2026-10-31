@@ -11,7 +11,6 @@ export type Todo = {
   detail: string
   tag: TodoTag
   href: string
-  owner: string | null
   action?:
     | { kind: 'invoice'; invoiceId: string }
     | { kind: 'email'; clientId: string; clientName: string; purpose: 'idea_feedback' | 'renewal' | 'lead_intro' }
@@ -44,7 +43,6 @@ export async function computeTodos(session: AdminSession): Promise<Todo[]> {
       detail: `${c?.name ?? '—'} · ${euro(inv.amount_cents)} · ${d < 0 ? `${-d} dagen te laat` : d === 0 ? 'vandaag' : `deadline ${fmtDate(inv.send_date, { weekday: 'short', day: 'numeric', month: 'short' })}`}`,
       tag: 'factuur',
       href: `/admin/klanten/${inv.client_id}?tab=contract`,
-      owner: c?.owner ?? null,
       action: { kind: 'invoice', invoiceId: inv.id },
     })
   }
@@ -58,7 +56,6 @@ export async function computeTodos(session: AdminSession): Promise<Todo[]> {
         detail: `${c.name} · ${inStage} dagen geen beslissing`,
         tag: 'ideeen',
         href: `/admin/klanten/${c.id}?tab=ideeen`,
-        owner: c.owner,
         action: { kind: 'email', clientId: c.id, clientName: c.name, purpose: 'idea_feedback' },
       })
     }
@@ -69,7 +66,6 @@ export async function computeTodos(session: AdminSession): Promise<Todo[]> {
         detail: `${c.name} · ${c.source ? `via ${c.source} · ` : ''}${inStage} dagen geleden`,
         tag: 'lead',
         href: `/admin/klanten/${c.id}`,
-        owner: c.owner,
         action: { kind: 'email', clientId: c.id, clientName: c.name, purpose: 'lead_intro' },
       })
     }
@@ -86,7 +82,6 @@ export async function computeTodos(session: AdminSession): Promise<Todo[]> {
       detail: `${c?.name ?? '—'} · ${k.package_name ?? ''} · verlenging bespreken`,
       tag: 'contract',
       href: `/admin/klanten/${k.client_id}?tab=contract`,
-      owner: c?.owner ?? null,
       action: { kind: 'email', clientId: k.client_id, clientName: c?.name ?? 'de klant', purpose: 'renewal' },
     })
   }
@@ -100,7 +95,6 @@ export async function computeTodos(session: AdminSession): Promise<Todo[]> {
       detail: `${c?.name ?? e.title} · ${fmtDate(e.starts_at, { weekday: 'long', day: 'numeric', month: 'short' })}`,
       tag: 'draaidag',
       href: `/admin/kalender?event=${e.id}`,
-      owner: c?.owner ?? null,
       action: {
         kind: 'brief',
         eventId: e.id,

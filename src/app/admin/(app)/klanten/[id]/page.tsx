@@ -204,7 +204,6 @@ export default async function ClientPage({
           </Title>
           <div className="flex flex-wrap items-center gap-2">
             <Pill tone={STAGE_TONE[client.stage]}>{STAGE_LABELS[client.stage]}</Pill>
-            {client.owner && <Pill tone="light" className="capitalize">Eigenaar: {client.owner}</Pill>}
             <Pill tone="light">
               Klant sinds {fmtDate(client.created_at, { month: 'short', year: 'numeric' })}
             </Pill>
@@ -773,14 +772,6 @@ export default async function ClientPage({
                 <label className={label}>
                   Naam
                   <input name="name" defaultValue={client.name} className={input} required />
-                </label>
-                <label className={label}>
-                  Eigenaar
-                  <select name="owner" defaultValue={client.owner ?? ''} className={input}>
-                    <option value="">—</option>
-                    <option value="casper">Casper</option>
-                    <option value="cedric">Cedric</option>
-                  </select>
                 </label>
                 <label className={label}>
                   Sector

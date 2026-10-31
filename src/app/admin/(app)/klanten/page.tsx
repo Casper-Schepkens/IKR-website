@@ -6,7 +6,6 @@ import { SubmitButton } from '@/components/admin/SubmitButton'
 import { euro, fmtDate, isoDay } from '@/lib/admin/format'
 import { nextSendDate } from '@/lib/admin/billing'
 import {
-  Avatar,
   buttonClass,
   Card,
   Empty,
@@ -84,14 +83,6 @@ export default async function ClientsPage({
               </select>
             </label>
             <label className={label}>
-              Eigenaar
-              <select name="owner" className={input} defaultValue="">
-                <option value="">—</option>
-                <option value="casper">Casper</option>
-                <option value="cedric">Cedric</option>
-              </select>
-            </label>
-            <label className={label}>
               Bron
               <input name="source" placeholder="bv. doorverwezen" className={input} />
             </label>
@@ -144,9 +135,6 @@ export default async function ClientsPage({
                   Fase
                 </th>
                 <th scope="col" className="px-3 py-4 font-semibold">
-                  Eigenaar
-                </th>
-                <th scope="col" className="px-3 py-4 font-semibold">
                   Contract
                 </th>
                 <th scope="col" className="px-3 py-4 font-semibold">
@@ -176,9 +164,6 @@ export default async function ClientsPage({
                     </td>
                     <td className="px-3 py-3.5">
                       <Pill tone={STAGE_TONE[c.stage]}>{STAGE_LABELS[c.stage]}</Pill>
-                    </td>
-                    <td className="px-3 py-3.5">
-                      {c.owner ? <Avatar text={c.owner.slice(0, 2).toUpperCase()} /> : '—'}
                     </td>
                     <td className="px-3 py-3.5">
                       {contract ? `${euro(contract.monthly_amount_cents)}/mnd` : '—'}

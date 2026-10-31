@@ -5,14 +5,13 @@ import { useOptimistic, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { moveStageAction } from '@/app/admin/actions'
 import { BOARD_STAGES, STAGE_LABELS, type Stage } from '@/lib/admin/types'
-import { Avatar, muted, Pill } from './ui'
+import { muted, Pill } from './ui'
 import { cn } from '@/utilities/ui'
 
 export type KanbanCard = {
   id: string
   name: string
   stage: Stage
-  owner: string | null
   daysInStage: number
   meta: string | null
   amount: string | null
@@ -101,7 +100,6 @@ export function Kanban({ cards }: { cards: KanbanCard[] }) {
                           : `${c.daysInStage} ${c.daysInStage === 1 ? 'dag' : 'dagen'}`}{' '}
                         in fase
                       </Pill>
-                      {c.owner && <Avatar text={c.owner.slice(0, 2).toUpperCase()} />}
                     </div>
                     {c.amount && <span className={cn('text-xs', muted)}>{c.amount}</span>}
                     <label className="sr-only" htmlFor={`stage-${c.id}`}>

@@ -17,7 +17,6 @@ import { CommandBar } from '@/components/admin/CommandBar'
 import { ActionButton } from '@/components/admin/ActionButton'
 import { EmailDraftButton } from '@/components/admin/EmailDraftButton'
 import {
-  Avatar,
   buttonClass,
   Card,
   Empty,
@@ -187,7 +186,6 @@ export default async function TodayPage() {
                 <span className={cn('text-[13px]', muted)}>{t.detail}</span>
               </Link>
               <Pill tone={TAG[t.tag].tone}>{TAG[t.tag].label}</Pill>
-              {t.owner && <Avatar text={t.owner.slice(0, 2).toUpperCase()} />}
               {t.action?.kind === 'invoice' &&
                 (billit ? (
                   <ActionButton
