@@ -1,184 +1,69 @@
-# IKR Admin Panel — implementatieplan
+# IKR Admin: plan & status
 
-> **Status:** nog niet gebouwd — plan voor later. Backend = Supabase. Auth = magic link + email whitelist.
+> **Status (31 okt 2026):** fase 1 en grote delen van fase 2–4 zijn gebouwd. Setup in [`admin-setup.md`](admin-setup.md).
+> Dit plan vervangt het eerdere CMS-achtige plan (magic link, media library, cases uit de DB). Dat valt nu onder "later".
 
-## Context
+## Wat het is
 
-De site in `IKR website/` is nu puur statisch: cases staan hardcoded in `src/data/cases.ts`, formulieren gaan alleen via Resend-mail (`/api/contact`, `/api/pricing/request`) zonder opslag. Er is geen auth, geen uploads, geen admin.
-
-**Beslissing (nog te loggen in `decisions.md` → Algemeen):** Supabase als backend voor admin — DB, Auth (email whitelist), Storage. Payload blijft weg; dit is een lichte custom admin, geen CMS.
-
-**Auth-keuze:** magic link via Supabase Auth, alleen whitelisted e-mailadressen.
-
----
+Een intern dashboard op `iknowright.be/admin`. Het is niet vindbaar (`robots.txt` disallow, `noindex`-header en metadata, geen sitemap-entry) en afgeschermd met Google-login (alleen `@iknowright.be` + whitelist). Elke klant heeft een dossier waar alles aan hangt: fase, contacten, notities, contract, facturen, ideeën, decks, draaidagen en resultaten. Overal zit AI (Claude) in, met gedeelde IKR-context.
 
 ## Architectuur
 
-```mermaid
-flowchart TB
-  subgraph public [Publieke site]
-    CasesPage["/cases"]
-    CaseDetail["/cases/slug"]
-    Forms["/contact + /pricing"]
-  end
-
-  subgraph admin [Admin /admin]
-    Dashboard
-    ClientsUI[Klanten + resources]
-    CasesUI[Cases beheer]
-    MediaUI[Media library]
-    SuggestionsUI[Suggesties]
-    SubmissionsUI[Formulieren]
-    AnalyticsUI[Analytics]
-  end
-
-  subgraph supabase [Supabase]
-    Auth[Auth magic link]
-    DB[(PostgreSQL)]
-    Storage[Storage buckets]
-  end
-
-  Forms -->|"POST + insert"| DB
-  Forms -->|Resend mail blijft| Email[Resend]
-  admin --> Auth
-  admin --> DB
-  admin --> Storage
-  CasesPage -->|"fetch published cases"| DB
-  CaseDetail --> DB
-  Storage -->|"public URLs"| CasesPage
+```
+iknowright.be (Next.js 16 op Vercel)
+├─ publieke site (ongewijzigd)  ──formulieren──▶ lead + form_submission (service role, via after())
+└─ /admin  (src/app/admin)
+     ├─ proxy.ts: sessie verversen + niet-ingelogd → /admin/login, X-Robots-Tag
+     ├─ (app)/layout: requireAdmin() → sidebar
+     ├─ actions.ts: alle server actions (CRUD + AI)
+     └─ lib/admin
+          ├─ data/repo.ts   interface; supabase.ts (RLS, sessie van gebruiker) | demo.ts (geheugen)
+          ├─ ai/run.ts      IKR-brein (gecachet) + klantcontext + taak → gestructureerde output, gelogd in ai_runs
+          ├─ ai/tasks.ts    ideeën, uitwerken, samenvatten, mails, briefing, draaiboek, assistent, analyse
+          ├─ ai/decks.ts    pptx via Claude code execution + pptx-skill (+ template via Files API)
+          ├─ integrations/  billit.ts, tiktok.ts
+          ├─ todos.ts       actiepunten berekend uit de data (geen aparte takenlijst)
+          └─ billing.ts     factuurdata, looptijd
+Supabase: Postgres + Auth (Google) + Storage (templates, decks). Schema: supabase/migrations/.
+Cron: /api/cron/admin-daily (facturen klaarzetten, te laat markeren, TikTok-stats).
 ```
 
----
+**AI-context in 3 lagen:** (1) IKR-kennis uit `/admin/kennis`, met prompt caching; (2) klantprofiel + eerdere ideeën (incl. afgekeurde met reden) + recente activiteit; (3) de taak. Afgekeurde ideeën met feedback komen automatisch in het klantprofiel (leerlus).
 
-## Database schema (Supabase migrations)
+## Status per module
 
-| Tabel | Doel | Belangrijkste velden |
-|-------|------|----------------------|
-| `admin_users` | Whitelist | `email`, `name`, `active` |
-| `clients` | Klanten (Wasbar, Ohma, …) | `name`, `slug`, `logo_url`, `status`, `notes` |
-| `client_resources` | Assets per klant | `client_id`, `file_id`, `type` (video/image/logo/doc) |
-| `media_files` | Team media library | `storage_path`, `filename`, `mime_type`, `size`, `uploaded_by`, `client_id?`, `tags[]` |
-| `cases` | Portfolio items | `client_id`, `slug`, `title`, `hero_video_url`, `logo_url`, `testimonial_*`, `published`, `sort_order` |
-| `suggestions` | Website feedback | `title`, `description`, `page_url`, `status`, `created_by` |
-| `form_submissions` | Opgeslagen leads | `type` (contact/pricing), `payload` (jsonb), `read`, `status` (new/contacted/converted/lost) |
+| Module | Status |
+|---|---|
+| Login (Google via Supabase), noindex, demomodus | ✅ |
+| Vandaag: AI-briefing, KPI's, actiepunten met AI-knoppen, agenda, pipeline | ✅ |
+| Klanten + dossier (overzicht, ideeën, decks, contract, notities, gegevens/AI-profiel) | ✅ |
+| Pipeline-kanban (slepen + dropdown, dagen in fase, AI-tip voor blijvende leads) | ✅ |
+| Formulieren → lead (contact: alleen bedrijven; pricing: altijd) | ✅ |
+| Ideeën: genereren, uitwerken, herschrijven, bewerken, goed-/afkeuren met leerlus | ✅ |
+| Decks: "Maak presentatie" (achtergrond, polling, download) + template-upload | ✅ (te testen met echte API-sleutel + template) |
+| Kalender: weekweergave, afspraken, AI-draaiboek, facturen op de kalender | ✅ eigen kalender · ⏳ Google Calendar-sync |
+| Contracten: looptijd, volgende factuur, facturen klaarzetten, statussen | ✅ |
+| Billit: concept-factuur aanmaken | ✅ code · ⚠️ headers/flow verifiëren met sandbox |
+| Resultaten: KPI's, views/week, top-video's, per klant, AI-analyse | ✅ UI · ⏳ echte data na TikTok-app |
+| TikTok OAuth per klant + dagelijkse sync | ✅ code · ⏳ TikTok-app + review |
+| IKR-kennis (bewerkbaar) | ✅ |
+| Instellingen: koppelingsstatus, toegang, templates | ✅ |
+| Assistent (⌘K) | ✅ alleen lezen · ⏳ acties uitvoeren (tool use) |
 
-**RLS:** publiek mag alleen `cases` lezen waar `published = true`. Alle writes + overige tabellen alleen voor ingelogde admin met email in whitelist. Storage bucket `ikr-media`: authenticated upload, public read voor gepubliceerde assets.
+## Volgende stappen
 
-**Client → Case flow:** klant aanmaken → resources uploaden (logo, video's) → "Maak case" knop pre-fillt case-formulier met klant + gekozen resources → publish zet case live op `/cases`.
+1. **Setup** volgens `admin-setup.md` (Supabase, Google, Claude-sleutel). Daarna echte klanten invoeren.
+2. **IKR-kennis invullen.** Dit bepaalt hoe goed alle AI-output is.
+3. **Google Calendar-sync:** draaidagen en calls tweerichtingen syncen (service account op een gedeelde agenda).
+4. **Assistent met acties:** ⌘K mag ook dingen doen ("plan draaidag", "zet Wasbar op Live"), met bevestiging.
+5. **Maandrapport-deck** uit resultaten (zelfde deck-pipeline, ander template).
+6. **MCP-server / claude.ai-connector** zodat het dashboard ook vanuit de Claude-app bevraagd kan worden.
+7. **Klant-deellinks** om ideeën te laten goedkeuren.
+8. Later: cases/testimonials uit de DB (oud plan), media library.
 
----
+## Risico's / aandachtspunten
 
-## Admin UI — secties
-
-Route: **`/admin`** (layout zonder publieke navbar/footer; functioneel dashboard in IKR-kleuren).
-
-| Sectie | Wat je vroeg | Implementatie |
-|--------|--------------|---------------|
-| **Dashboard** | Overzicht + analytics | KPI-cards: nieuwe leads (7d), open suggesties, actieve klanten, gepubliceerde cases. Analytics-widget (zie onder). |
-| **Klanten** | Klanten + resources | Tabel + detail: naam, status, gekoppelde files, knop "Nieuwe case". |
-| **Cases** | Cases toevoegen | CRUD-form: koppel klant, kies hero-video + logo uit media, testimonial, publish/draft, sort order. Preview link. |
-| **Media** | Team uploads | Drag-and-drop upload (video/image/pdf), filter op type/klant, optioneel taggen. Max file size via Supabase config (~100MB voor video). |
-| **Suggesties** | Website fixes droppen | Snel formulier: titel, beschrijving, optioneel pagina-URL. Status: open → in progress → done. |
-| **Formulieren** | Laatste inzendingen | Lijst contact + pricing submissions, markeer gelezen, status pipeline. Resend-mail blijft parallel lopen. |
-| **Analytics** | Bezoekers | `@vercel/analytics` + `@vercel/speed-insights` op publieke layout; dashboard toont pageviews (Vercel dashboard embed/link of simpele custom counter via middleware — fase 2 als Vercel nog niet live). |
-
-### Extra secties (aanbevolen)
-
-1. **Lead pipeline** — status op formulieren (new/contacted/converted/lost) zodat niets in de inbox verdwijnt.
-2. **Testimonials beheer** — testimonials staan nu fake/hardcoded in `CasesPageContent.tsx`; verplaats naar DB, koppel optioneel aan case/klant.
-3. **Publish/draft** — cases pas zichtbaar op site na expliciete publish (voorkomt half-af werk live).
-4. **Activiteitlog** — simpele `activity_log` tabel (wie uploadte wat, wanneer case gepubliceerd) — handig met meerdere teamleden.
-5. **Zoek/filter** — globale zoekbalk in admin op klantnaam, bestandsnaam, lead-email.
-
----
-
-## Publieke site — aanpassingen
-
-1. **Cases dynamisch maken** — `CasesPageContent.tsx` en homepage `CasesSection.tsx` fetchen published cases uit Supabase (Server Component + `revalidatePath` na admin-mutatie, of ISR 60s).
-2. **Detailpagina's** — nieuwe route `/cases/[slug]/page.tsx`. Data uit `cases` + gekoppelde `client`.
-3. **Play-knoppen** — linken naar detailpagina (nu `pointerEvents: 'none'`).
-4. **Migratie** — seed script migreert huidige 4 cases uit `cases.ts` naar Supabase; daarna fallback verwijderen.
-5. **Form API's uitbreiden** — na succesvolle Resend-send ook `insert` in `form_submissions` (non-blocking: mail faalt niet als DB insert faalt, maar log wel).
-
----
-
-## Tech stack toevoegingen
-
-```bash
-npm install @supabase/supabase-js @supabase/ssr
-# optioneel admin UI: shadcn/ui voor snelle forms/tables
-npm install @vercel/analytics  # na Vercel deploy
-```
-
-Nieuwe bestanden (indicatief):
-
-- `src/lib/supabase/client.ts` — browser client
-- `src/lib/supabase/server.ts` — server + cookies
-- `src/lib/supabase/middleware.ts` — session refresh
-- `src/middleware.ts` — protect `/admin/*`
-- `src/app/admin/` — layout + pagina's per sectie
-- `src/app/api/admin/` — upload, revalidate, etc.
-- `supabase/migrations/` — schema + RLS
-
-Env vars (uitbreiden `.env.example`):
-
-```
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=   # alleen server-side voor whitelist-check + admin writes
-ADMIN_EMAILS=casper@...,team@...   # bootstrap whitelist
-```
-
----
-
-## Fasering
-
-### Fase 1 — Fundament (eerst doen)
-- [ ] Supabase project aanmaken
-- [ ] Schema + RLS + storage bucket
-- [ ] Auth magic link + middleware op `/admin`
-- [ ] Admin shell (login + sidebar + lege secties)
-- [ ] Whitelist bootstrap uit `ADMIN_EMAILS`
-
-### Fase 2 — Klanten, media, cases
-- [ ] Media upload + library UI
-- [ ] Klanten CRUD + resource-koppeling
-- [ ] Cases CRUD + "publish naar site"
-- [ ] Publieke `/cases` + `/cases/[slug]` op DB
-- [ ] Seed huidige 4 cases
-
-### Fase 3 — Operatie
-- [ ] Form submissions opslaan + admin lijst + lead status
-- [ ] Suggesties CRUD
-- [ ] Dashboard KPI's
-- [ ] Testimonials uit DB
-
-### Fase 4 — Analytics + polish
-- [ ] Vercel Analytics na deploy
-- [ ] Activiteitlog
-- [ ] Zoek/filter
-- [ ] OG-images per case (optioneel)
-
----
-
-## Wat jij moet doen (niet door agent)
-
-1. Supabase project aanmaken op [supabase.com](https://supabase.com) (free tier volstaat voor start).
-2. Whitelist e-mails doorgeven (jij + team).
-3. Na Fase 4: Vercel deploy + Analytics enablen.
-
----
-
-## Risico's
-
-- **Video's groot** — Supabase free tier = 1GB storage; grote TikTok-clips snel vol. Overweeg later Cloudflare R2 of alleen gecomprimeerde previews in Supabase, originals extern.
-- **Supabase MCP timeout** — bij implementatie handmatig migrations draaien als MCP faalt.
-- **Resend blijft primair** — DB is backup/admin view; als insert faalt, mail komt nog binnen.
-
----
-
-## Scope buiten dit plan
-
-- Geen publieke login / klantportaal
-- Geen Notion-sync
-- Geen volledig CMS voor homepage-secties (suggesties-vak dekt dat deels)
+- **Vercel Hobby** is niet voor commercieel gebruik en heeft kortere functietijden. Decks (1–4 min) hebben Pro nodig (`maxDuration = 300`).
+- **Kosten Claude API:** maandlimiet zetten. Decks zijn de duurste taak.
+- **TikTok Display API** vraagt app-review. Diepere stats (watch time) vragen mogelijk de Business API.
+- **Klantdata naar Anthropic:** opnemen in het verwerkersregister.

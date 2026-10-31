@@ -38,3 +38,9 @@ Live test creator/solliciteren topics + mail subject `[Creator]`/`[Sollicitatie]
 _(Done aug 2026: Aïki/O'Tacos/Panos lokale mp4; speech-bubble tails; Tempus A + cijfers; Maison Slash Metricool i.p.v. %)_
 _(Done jul 2026: blauwe play/pijl-button weggehaald bij food-werk — niet clickable)_
 _(Done jul 2026: single-source — `caseGridItems` afgeleid van `caseDetails`; Aanpak/homepage/`/cases` delen bron)_
+
+## Admin (`/admin`)
+1. Setup volgens `docs/product/admin-setup.md` → eerste login testen.
+2. IKR-kennis invullen in `/admin/kennis`.
+3. Echte klanten + contracten invoeren; template uploaden; eerste deck testen.
+4. Volgende bouwstappen: Google Calendar-sync, ⌘K met acties, maandrapport-deck (zie `admin-plan.md`).

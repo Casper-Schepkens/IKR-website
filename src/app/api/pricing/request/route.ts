@@ -1,10 +1,11 @@
 import { readFile } from 'fs/promises'
 import path from 'path'
-import { NextResponse } from 'next/server'
+import { after, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import type { PricingRequestPayload } from '@/lib/pricing-types'
 import { getNotifyEmail, getResendFrom, getResendNotifyFrom } from '@/lib/resend-mail'
 import { isDevTurnstileBypass, verifyTurnstileToken } from '@/lib/turnstile'
+import { recordFormLead } from '@/lib/admin/leads'
 
 const PDF_FILENAME = 'IKnowRight-tarieven.pdf'
 
@@ -119,6 +120,19 @@ export async function POST(request: Request) {
       console.error('Resend error:', userResult.error ?? notifyResult.error)
       return NextResponse.json({ error: 'Verzenden mislukt. Probeer later opnieuw.' }, { status: 502 })
     }
+
+    // Admin: lead aanmaken — na de response, faalt nooit hard.
+    after(() =>
+      recordFormLead({
+        type: 'pricing',
+        firstName,
+        lastName,
+        email,
+        phone,
+        isBusiness: true,
+        topic: 'Tarieven aangevraagd',
+      }),
+    )
 
     return NextResponse.json({ success: true })
   } catch (error) {

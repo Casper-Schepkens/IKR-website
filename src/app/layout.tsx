@@ -10,6 +10,7 @@ import {
 } from '@/lib/site'
 import { Analytics } from '@vercel/analytics/next'
 import { OpenAIAdsPixel } from '@/components/ikr/OpenAIAdsPixel'
+import { PublicOnly } from '@/components/ikr/PublicOnly'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -60,8 +61,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd()) }}
         />
         {children}
-        <Analytics />
-        <OpenAIAdsPixel />
+        <PublicOnly>
+          <Analytics />
+          <OpenAIAdsPixel />
+        </PublicOnly>
       </body>
     </html>
   )
