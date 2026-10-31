@@ -31,6 +31,12 @@ Alle variabelen staan ook in [`.env.example`](../../.env.example). Zet ze in **V
    - Redirect URLs: `https://iknowright.be/admin/auth/callback`, `http://localhost:3000/admin/auth/callback`, en eventueel je Vercel-preview-URL's (Supabase ondersteunt wildcards, bv. `https://ikr-website-*.vercel.app/admin/auth/callback`).
 5. Toegang: iedereen met `@iknowright.be` mag binnen. Extra adressen → `IKR_ADMIN_EMAILS` (komma-gescheiden) **én** de tabel `admin_users`.
 
+### Testen op een Vercel-preview
+
+- Zet de Supabase-variabelen in Vercel ook op **Preview** (niet alleen Production). `NEXT_PUBLIC_*` wordt tijdens de build ingebakken: na het toevoegen is een **nieuwe build** nodig. Een "redeploy" via de API neemt de oude variabelen over, een git-push niet.
+- Voeg de preview-callback toe aan de Supabase Redirect URLs, bv. `https://ikr-website-git-<branch>-casper-schepkens.vercel.app/admin/auth/callback`.
+- Ontbreekt er iets, dan toont `/admin/login` welke variabelen deze omgeving mist.
+
 ## 3. Claude API (alle AI-knoppen)
 
 1. [platform.claude.com](https://platform.claude.com) → API Keys → nieuwe sleutel → `ANTHROPIC_API_KEY`.
