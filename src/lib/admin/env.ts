@@ -35,13 +35,13 @@ export const AI_MODEL = process.env.IKR_AI_MODEL || 'claude-opus-5-5'
 export const AI_MODEL_SMALL = process.env.IKR_AI_MODEL_SMALL || 'claude-sonnet-5-5'
 
 /**
- * Standaard lopen enkel kleine taken via de API; grote taken openen Claude (connector, abonnement).
- * Met IKR_AI_ALL_API=true lopen ook de grote taken via de API.
+ * Met een API-sleutel lopen alle AI-taken via de API (grote taken op AI_MODEL, kleine op
+ * AI_MODEL_SMALL). Presentaties openen altijd Claude (abonnement); ideeën uitwerken kan ook via Grok.
  */
 export function aiRouting() {
   return {
     api: isAiConfigured(),
-    bigViaApi: isAiConfigured() && process.env.IKR_AI_ALL_API === 'true',
+    bigViaApi: isAiConfigured(),
     grok: Boolean(process.env.GROK_WEBHOOK_URL && process.env.GROK_WEBHOOK_SECRET),
   }
 }

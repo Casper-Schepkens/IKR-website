@@ -508,7 +508,32 @@ function seed(): Store {
     knowledge,
     videos,
     stats,
-    aiRuns: [],
+    // Voorbeeld-oproepen zodat het kostenoverzicht in demomodus iets toont.
+    aiRuns: (
+      [
+        ['daily_briefing', null, 'claude-sonnet-5-5', 1, 1800, 900, 6200, 0],
+        ['generate_ideas', wasbar.id, 'claude-opus-5-5', 1, 3200, 5400, 6200, 0],
+        ['develop_idea', wasbar.id, 'claude-opus-5-5', 1, 2100, 2600, 6200, 0],
+        ['draft_email', tempus.id, 'claude-sonnet-5-5', 2, 1500, 700, 6200, 0],
+        ['ask', null, 'claude-sonnet-5-5', 3, 2400, 600, 0, 6200],
+        ['shoot_brief', maison.id, 'claude-sonnet-5-5', 5, 2600, 1900, 6200, 0],
+        ['summarize_client', tempus.id, 'claude-sonnet-5-5', 8, 2200, 800, 6200, 0],
+      ] as const
+    ).map(([task, client_id, model, ago, inp, out, read, write]) => ({
+      id: id(),
+      task,
+      client_id,
+      model,
+      status: 'ok' as const,
+      input_tokens: inp,
+      output_tokens: out,
+      cache_read_tokens: read,
+      cache_write_tokens: write,
+      output: null,
+      error: null,
+      created_by: 'demo@iknowright.be',
+      created_at: daysAgo(ago),
+    })),
   }
 }
 
@@ -766,10 +791,19 @@ export function createDemoRepo(): AdminRepo {
         client_id: run.client_id,
         model: run.model,
         status: run.status,
+        input_tokens: run.input_tokens ?? null,
+        output_tokens: run.output_tokens ?? null,
+        cache_read_tokens: run.cache_read_tokens ?? null,
+        cache_write_tokens: run.cache_write_tokens ?? null,
         output: run.output,
         error: run.error,
         created_by: run.created_by,
       })
+    },
+    async listAiRuns(sinceIso) {
+      return s.aiRuns
+        .filter((r) => r.created_at >= sinceIso)
+        .sort((a, b) => b.created_at.localeCompare(a.created_at))
     },
   }
 }

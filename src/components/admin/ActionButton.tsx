@@ -36,7 +36,7 @@ export function ActionButton({
   onDone?: (data: unknown) => void
   /** Zonder API-sleutel: open Claude met deze vraag in plaats van de actie uit te voeren. */
   claudePrompt?: string
-  /** small = via API als er een sleutel is; big = standaard via Claude (abonnement). */
+  /** small/big = via de API als er een sleutel is; account = altijd in Claude (abonnement). */
   aiSize?: AiSize
 }) {
   const [pending, start] = useTransition()

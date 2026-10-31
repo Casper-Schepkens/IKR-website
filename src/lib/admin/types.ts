@@ -229,6 +229,10 @@ export type AiRun = {
   client_id: string | null
   model: string | null
   status: 'ok' | 'error'
+  input_tokens: number | null
+  output_tokens: number | null
+  cache_read_tokens: number | null
+  cache_write_tokens: number | null
   output: unknown
   error: string | null
   created_by: string | null

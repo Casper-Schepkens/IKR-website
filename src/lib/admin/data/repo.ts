@@ -83,11 +83,8 @@ export type ContractInput = Omit<Contract, 'id'> & { id?: string }
 
 export type VideoWithStats = Video & { client_name: string; stats: VideoStatsSnapshot[] }
 
-export type NewAiRun = Omit<AiRun, 'id' | 'created_at'> & {
-  input_tokens?: number | null
-  output_tokens?: number | null
-  cache_read_tokens?: number | null
-}
+type TokenFields = 'input_tokens' | 'output_tokens' | 'cache_read_tokens' | 'cache_write_tokens'
+export type NewAiRun = Omit<AiRun, 'id' | 'created_at' | TokenFields> & Partial<Pick<AiRun, TokenFields>>
 
 /** Alles wat /admin met data doet loopt via deze interface (Supabase in productie, geheugen in demomodus). */
 export interface AdminRepo {
@@ -154,4 +151,6 @@ export interface AdminRepo {
 
   latestAiRun(task: string, opts?: { sinceIso?: string; clientId?: string }): Promise<AiRun | null>
   logAiRun(run: NewAiRun): Promise<void>
+  /** Alle runs sinds een datum, zonder output (voor het kostenoverzicht). */
+  listAiRuns(sinceIso: string): Promise<AiRun[]>
 }

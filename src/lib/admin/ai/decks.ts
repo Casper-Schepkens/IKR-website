@@ -162,6 +162,7 @@ ${ideas.map((i, n) => ideaBlock(i, n + 1)).join('\n\n')}`
       input_tokens: response.usage.input_tokens,
       output_tokens: response.usage.output_tokens,
       cache_read_tokens: response.usage.cache_read_input_tokens ?? null,
+      cache_write_tokens: response.usage.cache_creation_input_tokens ?? null,
       output: { deckId, storage_path: saved },
       error: null,
       created_by: session.user.email,

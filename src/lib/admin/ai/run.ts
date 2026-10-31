@@ -46,6 +46,15 @@ export function buildSystem(knowledge: KnowledgeDoc[]) {
   return `${BASE_INSTRUCTIONS}\n\n${docs}`
 }
 
+function tokens(u: Anthropic.Beta.BetaUsage) {
+  return {
+    input_tokens: u.input_tokens,
+    output_tokens: u.output_tokens,
+    cache_read_tokens: u.cache_read_input_tokens ?? null,
+    cache_write_tokens: u.cache_creation_input_tokens ?? null,
+  }
+}
+
 type RunOpts<S extends z.ZodType> = {
   session: AdminSession
   task: string
@@ -81,6 +90,8 @@ export async function runStructured<S extends z.ZodType>(opts: RunOpts<S>): Prom
   if (context) userContent.push({ type: 'text', text: context })
   userContent.push({ type: 'text', text: prompt })
 
+  let usage: Anthropic.Beta.BetaUsage | null = null
+  let model: string = modelFor(task)
   try {
     const res = await anthropic().beta.messages.parse({
       model: modelFor(task),
@@ -94,6 +105,8 @@ export async function runStructured<S extends z.ZodType>(opts: RunOpts<S>): Prom
       output_config: { effort, format: betaZodOutputFormat(schema) },
     })
 
+    usage = res.usage
+    model = res.model
     if (res.stop_reason === 'refusal')
       throw new Error('Claude weigerde deze vraag. Probeer ze anders te formuleren.')
     if (res.stop_reason === 'max_tokens')
@@ -107,9 +120,7 @@ export async function runStructured<S extends z.ZodType>(opts: RunOpts<S>): Prom
         client_id: clientId,
         model: res.model,
         status: 'ok',
-        input_tokens: res.usage.input_tokens,
-        output_tokens: res.usage.output_tokens,
-        cache_read_tokens: res.usage.cache_read_input_tokens ?? null,
+        ...tokens(res.usage),
         output: parsed,
         error: null,
         created_by: session.user.email,
@@ -123,8 +134,10 @@ export async function runStructured<S extends z.ZodType>(opts: RunOpts<S>): Prom
       .logAiRun({
         task,
         client_id: clientId,
-        model: modelFor(task),
+        model,
         status: 'error',
+        // Ook mislukte antwoorden (weigering, te lang) kosten tokens.
+        ...(usage ? tokens(usage) : {}),
         output: null,
         error: message,
         created_by: session.user.email,
