@@ -50,6 +50,10 @@ dashboard is ontworpen zonder onze processen te kennen. Nu functioneel maken, zo
 3. Casper legt het **productieproces** uit. Claude stelt voor hoe dat als **workflow** in het dashboard
    komt (stappen, wie, wanneer), eerst als voorstel.
 4. Daarna schrappen wat niet gebruikt wordt; elke scherm-/knopkeuze moet een echte stap in het proces dienen.
+5. **IKR AI-harness.** De IKR AI in het dashboard moet zelf kunnen zoeken en lezen in Google Drive,
+   Gmail, Notion (en Calendar), niet alleen in Supabase. Uitzoeken: tools via de Claude API (eigen
+   tool-loop met Google/Notion-API's of MCP-connector), welke OAuth-koppelingen nodig zijn, wat de AI
+   alleen mag lezen en wat ze mag schrijven (bv. mails enkel als concept), en hoe dat in de kosten past.
 
 Stand na PR #29 (klanten/leads gesplitst, logo's, alle AI via API, API-kosten in instellingen):
 - Contracten in Supabase bijgewerkt uit Drive (Tempus nieuw contract vanaf 1/11/2026, Chez Albert €1.500/mnd).
