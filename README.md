@@ -38,6 +38,7 @@ Push naar `master` deployt automatisch naar Vercel (Hobby). **Vercel Root Direct
 | `/cases` | Portfolio + food werk |
 | `/cases/[slug]` | Case-detail |
 | `/privacy`, `/cookies`, `/algemene-voorwaarden`, `/legal` | Legal |
+| `/admin` | Intern dashboard (CRM, pipeline, kalender, AI). Niet geïndexeerd, Google-login. Zie [`docs/product/admin-setup.md`](docs/product/admin-setup.md) |
 
 ## Waar content zit
 

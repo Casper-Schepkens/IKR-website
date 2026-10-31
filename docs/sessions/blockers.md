@@ -23,3 +23,10 @@
 ## Cases (`/cases`)
 - **Content:** tekst Maison Slash & Anneke nog niet juist — wacht op copy
 - Optioneel later: echte shoot-foto's Maison Slash & Anneke; echte food retainer-cases.
+
+## Admin (`/admin`)
+- Supabase-project + Google OAuth-client aanmaken (zie `docs/product/admin-setup.md`)
+- `ANTHROPIC_API_KEY` (platform.claude.com) + maandlimiet
+- Billit API-sleutel + PartyID; headernamen verifiëren in sandbox
+- TikTok developer-app + review (Display API)
+- Vercel Pro nodig voor decks (functies tot 5 min)

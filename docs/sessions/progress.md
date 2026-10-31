@@ -125,3 +125,19 @@
 - Tempus: één layout kiezen, v2/v3 daarna weg
 
 **jul 2026:** single-source — `caseGridItems`/`caseCarouselItems` afgeleid van `caseDetails`
+
+---
+
+## Admin (`/admin`)
+
+**Status:** gebouwd (31 okt 2026) op branch `claude/adoring-carson-4zzotu`, nog niet live (Supabase + sleutels nodig)
+
+- Intern dashboard: Vandaag, Klanten + dossier, Pipeline (kanban), Kalender, Contracten, Resultaten, IKR-kennis, Instellingen
+- Supabase-schema + RLS: `supabase/migrations/20261031000000_admin_core.sql`
+- Login: Google via Supabase, alleen `@iknowright.be` + `IKR_ADMIN_EMAILS`; `src/proxy.ts` beschermt `/admin`
+- AI (Claude API): ideeën genereren/uitwerken, samenvatten, mails, dagbriefing, draaiboeken, ⌘K-assistent, resultaatanalyse, decks (.pptx)
+- Formulieren (`/api/contact`, `/api/pricing/request`) maken na verzending een lead aan (non-blocking, alleen als Supabase actief is)
+- Billit-concepten + TikTok OAuth/sync gebouwd, wachten op sleutels
+- Demomodus: zonder Supabase lokaal voorbeelddata
+- Analytics en ads-pixel laden niet meer op `/admin` (`PublicOnly`)
+- Plan + status: `docs/product/admin-plan.md` · setup: `docs/product/admin-setup.md`

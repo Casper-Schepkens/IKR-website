@@ -142,3 +142,14 @@ Portfolio in **twee lagen** — geen fake case-pagina's.
 **Beslissing (aug 2026):** Tempus-detail = layout A (tijdlijn). Foto's in de stappen vervangen door cijfers (Metricool `@tempusverpleging` sep 2025–aug 2026; 1–2 sollicitaties/dag uit Drive-calls). v2/v3 weg. Maison Slash: absolute Metricool-cijfers (1.2M views / 170K top), geen groeipercentages vs bijna-leeg vorig jaar, geen "binnen één maand". Food-werk host Aïki/O'Tacos/Panos lokaal als H.264. Speech-bubble: staart sibling van de box, overlap + paddingBottom zodat marquee de tail niet afknipt.
 
 **Beslissing (31 aug 2026):** Maison Slash cover = merkbanner met logo, geen videoframe van de seksenquete. Anneke geen cover i.p.v. IKR-teamfoto. `heroImage` is optioneel; `heroVariant: 'logo'` voor een contain-banner.
+
+---
+
+## Admin (`/admin`)
+
+### Intern dashboard op Supabase + Claude (okt 2026)
+**Beslissing:** `/admin` in dezelfde Next.js-app, Supabase (Postgres, Auth, Storage) als backend, Google-login in plaats van magic link, Claude API voor alle AI. De Grok-bot vervalt: ideeën worden in het dashboard met IKR-context gemaakt.
+
+**Waarom:** één deploy, huisstijl hergebruiken, Google Workspace is er al. Gedeelde IKR-context maakt AI-output consistenter dan losse bots.
+
+**Details:** facturen worden niet zelf gemaakt maar als concept in Billit gezet (Peppol). TikTok-stats via de Display API, per klant gekoppeld met OAuth (geen wachtwoorden opslaan). Decks via Claude code execution + pptx-skill op basis van eigen templates.

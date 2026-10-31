@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { after, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import {
   CONTACT_TYPE_LABELS,
@@ -10,6 +10,7 @@ import {
 } from '@/lib/contact-types'
 import { getNotifyEmail, getResendNotifyFrom } from '@/lib/resend-mail'
 import { isDevTurnstileBypass, verifyTurnstileToken } from '@/lib/turnstile'
+import { recordFormLead } from '@/lib/admin/leads'
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -122,6 +123,21 @@ export async function POST(request: Request) {
       console.error('Resend error:', result.error)
       return NextResponse.json({ error: 'Verzenden mislukt. Probeer later opnieuw.' }, { status: 502 })
     }
+
+    // Admin: inzending bewaren en (voor bedrijven) een lead aanmaken — na de response, faalt nooit hard.
+    after(() =>
+      recordFormLead({
+        type: 'contact',
+        firstName: voornaam,
+        lastName: achternaam,
+        email,
+        phone: telefoon,
+        company: bedrijf ?? null,
+        isBusiness: contactType === 'bedrijf',
+        topic: messageLabel,
+        message: bericht ?? null,
+      }),
+    )
 
     return NextResponse.json({ success: true })
   } catch (error) {
