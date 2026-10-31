@@ -19,6 +19,7 @@ import {
 import { createEventAction, deleteEventAction, shootBriefAction } from '../../actions'
 import { integrationStatus } from '@/lib/admin/env'
 import { cn } from '@/utilities/ui'
+import { claudePrompts } from '@/lib/admin/claude-prompts'
 
 export const metadata = { title: 'Kalender' }
 
@@ -391,6 +392,9 @@ export default async function CalendarPage({
                     )}
                     <ActionButton
                       action={shootBriefAction.bind(null, selected.id)}
+                      claudePrompt={claudePrompts.shootBrief(
+                        `${selectedClient ? `bij ${selectedClient.name} ` : ''}“${selected.title}” op ${fmtDate(selected.starts_at, { weekday: 'long', day: 'numeric', month: 'long' })}`,
+                      )}
                       variant="navy"
                       ai
                       pendingText="Draaiboek maken…"

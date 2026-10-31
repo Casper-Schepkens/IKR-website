@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { askAction } from '@/app/admin/actions'
 import { Icon } from './ui'
+import { useApiAi } from './AiMode'
+import { claudePrompts, claudeUrl } from '@/lib/admin/claude-prompts'
 
 /** Zoekbalk = IKR AI. ⌘K / Ctrl+K zet de focus. */
 export function CommandBar({ placeholder }: { placeholder?: string }) {
@@ -11,6 +13,7 @@ export function CommandBar({ placeholder }: { placeholder?: string }) {
   const [error, setError] = useState<string | null>(null)
   const [pending, start] = useTransition()
   const inputRef = useRef<HTMLInputElement>(null)
+  const apiAi = useApiAi()
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -31,6 +34,13 @@ export function CommandBar({ placeholder }: { placeholder?: string }) {
         onSubmit={(e) => {
           e.preventDefault()
           if (!question.trim()) return
+          if (!apiAi) {
+            const prompt = claudePrompts.ask(question)
+            navigator.clipboard?.writeText(prompt).catch(() => {})
+            window.open(claudeUrl(prompt), '_blank', 'noopener')
+            setAnswer('Geopend in Claude. De vraag staat ook op je klembord.')
+            return
+          }
           setError(null)
           start(async () => {
             const res = await askAction(question)

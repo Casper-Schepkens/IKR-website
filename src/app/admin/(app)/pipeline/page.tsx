@@ -79,6 +79,7 @@ export default async function PipelinePage({
           </p>
           <EmailDraftButton
             clientId={stuckLead.c.id}
+            clientName={stuckLead.c.name}
             purpose="lead_intro"
             label="Mail opstellen"
             variant="cyan"

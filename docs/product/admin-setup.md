@@ -37,7 +37,21 @@ Alle variabelen staan ook in [`.env.example`](../../.env.example). Zet ze in **V
 - Voeg de preview-callback toe aan de Supabase Redirect URLs, bv. `https://ikr-website-git-<branch>-casper-schepkens.vercel.app/admin/auth/callback`.
 - Ontbreekt er iets, dan toont `/admin/login` welke variabelen deze omgeving mist.
 
-## 3. Claude API (alle AI-knoppen)
+## 3. Claude-connector (AI via je Claude-abonnement, geen credits)
+
+Het dashboard is een MCP-server op `/api/mcp`. Claude logt in via de OAuth 2.1-server van Supabase.
+
+1. Supabase → **Authentication → OAuth Server**:
+   - **Enable** OAuth 2.1 server
+   - **Authorization path:** `/admin/oauth/consent`
+   - **Dynamic client registration:** aan (Claude registreert zich zelf)
+2. De Site URL (`https://iknowright.be`) + dat pad vormen de toestemmingspagina. Die werkt dus pas na een deploy naar productie.
+3. In Claude: **Settings → Connectors → Add custom connector** → URL `https://iknowright.be/api/mcp` → Connect → inloggen met Google → **Toestaan**.
+4. Zonder `ANTHROPIC_API_KEY` openen de AI-knoppen in het dashboard Claude met de juiste vraag ("Open in Claude").
+
+Tools: ikr_kennis, zoek_klanten, klant_dossier, week_overzicht, agenda, resultaten, ideeen_opslaan, idee_uitwerken, idee_status, notitie_toevoegen, fase_wijzigen, klant_aanmaken, klantprofiel_bijwerken, afspraak_plannen, draaiboek_opslaan, kennis_bijwerken. Niet mogelijk via de connector: klanten verwijderen, facturen versturen, TikTok-tokens.
+
+## 3b. Claude API (optioneel: AI-knoppen rechtstreeks in het dashboard)
 
 1. [platform.claude.com](https://platform.claude.com) → API Keys → nieuwe sleutel → `ANTHROPIC_API_KEY`.
 2. Zet een **maandlimiet** in de Console (Billing → Limits).

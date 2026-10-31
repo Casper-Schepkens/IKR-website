@@ -36,6 +36,7 @@ import {
   updateClientAction,
 } from '../../../actions'
 import { cn } from '@/utilities/ui'
+import { claudePrompts } from '@/lib/admin/claude-prompts'
 
 const TABS = [
   { key: 'overzicht', label: 'Overzicht' },
@@ -286,12 +287,13 @@ export default async function ClientPage({
                 <div className="flex flex-wrap gap-2">
                   <ActionButton
                     action={summarizeClientAction.bind(null, id)}
+                    claudePrompt={claudePrompts.summarize(client.name)}
                     ai
                     pendingText="Samenvatten…"
                   >
                     Vat samen
                   </ActionButton>
-                  <EmailDraftButton clientId={id} purpose="follow_up" label="Opvolgmail" />
+                  <EmailDraftButton clientId={id} clientName={client.name} purpose="follow_up" label="Opvolgmail" />
                 </div>
               </div>
               {client.summary && (
@@ -445,7 +447,7 @@ export default async function ClientPage({
         </div>
       )}
 
-      {tab === 'ideeen' && <IdeasPanel clientId={id} ideas={ideas} templates={templates} />}
+      {tab === 'ideeen' && <IdeasPanel clientId={id} clientName={client.name} ideas={ideas} templates={templates} />}
 
       {tab === 'decks' && (
         <Card className="flex flex-col gap-3">
@@ -615,7 +617,12 @@ export default async function ClientPage({
               <div className="flex items-center justify-between">
                 <Title className="m-0 text-2xl">Facturen</Title>
                 {contract?.end_date && (
-                  <EmailDraftButton clientId={id} purpose="renewal" label="Verlengingsvoorstel" />
+                  <EmailDraftButton
+                    clientId={id}
+                    clientName={client.name}
+                    purpose="renewal"
+                    label="Verlengingsvoorstel"
+                  />
                 )}
               </div>
               {!billit && (
@@ -703,6 +710,7 @@ export default async function ClientPage({
             </FormAction>
             <ActionButton
               action={summarizeClientAction.bind(null, id)}
+              claudePrompt={claudePrompts.summarize(client.name)}
               ai
               pendingText="Samenvatten…"
             >

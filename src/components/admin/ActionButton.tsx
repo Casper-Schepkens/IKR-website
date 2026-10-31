@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import type { ActionResult } from '@/app/admin/actions'
 import { buttonClass, Icon, Spinner } from './ui'
 import { cn } from '@/utilities/ui'
+import { useApiAi } from './AiMode'
+import { OpenInClaude } from './OpenInClaude'
 
 /**
  * Knop die een server action uitvoert, laadtekst toont, fouten netjes meldt en de pagina ververst.
@@ -20,6 +22,7 @@ export function ActionButton({
   confirm,
   className,
   onDone,
+  claudePrompt,
 }: {
   action: () => Promise<ActionResult<unknown>>
   children: ReactNode
@@ -30,10 +33,21 @@ export function ActionButton({
   confirm?: string
   className?: string
   onDone?: (data: unknown) => void
+  /** Zonder API-sleutel: open Claude met deze vraag in plaats van de actie uit te voeren. */
+  claudePrompt?: string
 }) {
   const [pending, start] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const apiAi = useApiAi()
+
+  if (claudePrompt && !apiAi) {
+    return (
+      <OpenInClaude prompt={claudePrompt} variant={variant} small={small} className={className}>
+        {children}
+      </OpenInClaude>
+    )
+  }
 
   return (
     <span className={cn('inline-flex flex-col items-start gap-1', className)}>

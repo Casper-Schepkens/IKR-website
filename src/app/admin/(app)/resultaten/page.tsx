@@ -17,6 +17,7 @@ import {
 } from '@/components/admin/ui'
 import { analyzeResultsAction } from '../../actions'
 import { cn } from '@/utilities/ui'
+import { claudePrompts } from '@/lib/admin/claude-prompts'
 
 export const metadata = { title: 'Resultaten' }
 
@@ -177,6 +178,9 @@ export default async function ResultsPage({
               <div className="mt-auto">
                 <ActionButton
                   action={analyzeResultsAction.bind(null, klant || null)}
+                  claudePrompt={claudePrompts.results(
+                    klant ? clients.find((c) => c.id === klant)?.name : undefined,
+                  )}
                   variant="cyan"
                   small={false}
                   ai

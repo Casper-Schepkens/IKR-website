@@ -16,6 +16,7 @@ import { buttonClass, Icon, input, label, muted, Pill, type Tone } from './ui'
 import { ActionButton } from './ActionButton'
 import { FormAction } from './FormAction'
 import { cn } from '@/utilities/ui'
+import { claudePrompts } from '@/lib/admin/claude-prompts'
 
 const STATUS_TONE: Record<IdeaStatus, Tone> = {
   proposal: 'neutral',
@@ -57,10 +58,12 @@ function Section({ title, items, ordered }: { title: string; items: string[]; or
 
 function IdeaCard({
   idea,
+  clientName,
   selected,
   onToggle,
 }: {
   idea: ContentIdea
+  clientName: string
   selected: boolean
   onToggle: () => void
 }) {
@@ -208,6 +211,7 @@ function IdeaCard({
         {!developed ? (
           <ActionButton
             action={() => developIdeaAction(idea.id)}
+            claudePrompt={claudePrompts.develop(clientName, idea.title)}
             variant="cyan"
             ai
             pendingText="Uitwerken…"
@@ -231,6 +235,11 @@ function IdeaCard({
                 if (!instruction) return Promise.resolve({ ok: true as const, data: undefined })
                 return developIdeaAction(idea.id, instruction)
               }}
+              claudePrompt={claudePrompts.develop(
+                clientName,
+                idea.title,
+                '[schrijf hier wat er anders moet]',
+              )}
               ai
               pendingText="Herschrijven…"
             >
@@ -272,10 +281,12 @@ function IdeaCard({
 
 export function IdeasPanel({
   clientId,
+  clientName,
   ideas,
   templates,
 }: {
   clientId: string
+  clientName: string
   ideas: ContentIdea[]
   templates: Template[]
 }) {
@@ -355,6 +366,7 @@ export function IdeasPanel({
             </label>
             <ActionButton
               action={() => generateIdeasAction(clientId, count, focus)}
+              claudePrompt={claudePrompts.ideas(clientName, count || 5, focus.trim() || undefined)}
               variant="cyan"
               small={false}
               pendingText="IKR AI denkt na…"
@@ -405,6 +417,7 @@ export function IdeasPanel({
         <IdeaCard
           key={idea.id}
           idea={idea}
+          clientName={clientName}
           selected={selected.includes(idea.id)}
           onToggle={() => toggle(idea.id)}
         />
@@ -435,6 +448,11 @@ export function IdeasPanel({
           </label>
           <ActionButton
             action={() => createDeckAction(clientId, selected, templateId || null)}
+            claudePrompt={claudePrompts.deck(
+              clientName,
+              ideas.filter((i) => selected.includes(i.id)).map((i) => i.title),
+              templates.find((t) => t.id === templateId)?.name,
+            )}
             variant="cyan"
             small={false}
             ai

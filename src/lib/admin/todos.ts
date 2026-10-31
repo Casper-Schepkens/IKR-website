@@ -14,8 +14,8 @@ export type Todo = {
   owner: string | null
   action?:
     | { kind: 'invoice'; invoiceId: string }
-    | { kind: 'email'; clientId: string; purpose: 'idea_feedback' | 'renewal' | 'lead_intro' }
-    | { kind: 'brief'; eventId: string }
+    | { kind: 'email'; clientId: string; clientName: string; purpose: 'idea_feedback' | 'renewal' | 'lead_intro' }
+    | { kind: 'brief'; eventId: string; label: string }
 }
 
 /** Actiepunten worden berekend uit de data — geen aparte takenlijst om bij te houden. */
@@ -59,7 +59,7 @@ export async function computeTodos(session: AdminSession): Promise<Todo[]> {
         tag: 'ideeen',
         href: `/admin/klanten/${c.id}?tab=ideeen`,
         owner: c.owner,
-        action: { kind: 'email', clientId: c.id, purpose: 'idea_feedback' },
+        action: { kind: 'email', clientId: c.id, clientName: c.name, purpose: 'idea_feedback' },
       })
     }
     if (c.stage === 'lead' && inStage >= 2) {
@@ -70,7 +70,7 @@ export async function computeTodos(session: AdminSession): Promise<Todo[]> {
         tag: 'lead',
         href: `/admin/klanten/${c.id}`,
         owner: c.owner,
-        action: { kind: 'email', clientId: c.id, purpose: 'lead_intro' },
+        action: { kind: 'email', clientId: c.id, clientName: c.name, purpose: 'lead_intro' },
       })
     }
   }
@@ -87,7 +87,7 @@ export async function computeTodos(session: AdminSession): Promise<Todo[]> {
       tag: 'contract',
       href: `/admin/klanten/${k.client_id}?tab=contract`,
       owner: c?.owner ?? null,
-      action: { kind: 'email', clientId: k.client_id, purpose: 'renewal' },
+      action: { kind: 'email', clientId: k.client_id, clientName: c?.name ?? 'de klant', purpose: 'renewal' },
     })
   }
 
@@ -101,7 +101,11 @@ export async function computeTodos(session: AdminSession): Promise<Todo[]> {
       tag: 'draaidag',
       href: `/admin/kalender?event=${e.id}`,
       owner: c?.owner ?? null,
-      action: { kind: 'brief', eventId: e.id },
+      action: {
+        kind: 'brief',
+        eventId: e.id,
+        label: `bij ${c?.name ?? e.title} op ${fmtDate(e.starts_at, { weekday: 'long', day: 'numeric', month: 'long' })}`,
+      },
     })
   }
 

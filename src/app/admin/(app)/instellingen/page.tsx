@@ -1,13 +1,17 @@
+import { headers } from 'next/headers'
 import { requireAdmin } from '@/lib/admin/session'
-import { AI_MODEL, extraAdminEmails, integrationStatus } from '@/lib/admin/env'
+import { AI_MODEL, extraAdminEmails, integrationStatus, isAiConfigured } from '@/lib/admin/env'
 import { FormAction } from '@/components/admin/FormAction'
-import { Card, Empty, input, label, muted, PageHeader, Pill, Title } from '@/components/admin/ui'
+import { Icon, Card, Empty, input, label, muted, PageHeader, Pill, Title } from '@/components/admin/ui'
 import { uploadTemplateAction } from '../../actions'
 import { cn } from '@/utilities/ui'
 
 export const metadata = { title: 'Instellingen' }
 
 export default async function SettingsPage() {
+  const host = (await headers()).get('host') ?? 'iknowright.be'
+  const mcpUrl = `${host.startsWith('localhost') ? 'http' : 'https'}://${host}/api/mcp`
+  const aiApi = isAiConfigured()
   const { repo, mode, user } = await requireAdmin()
   const [templates, integrations] = await Promise.all([
     repo.listTemplates(),
@@ -36,6 +40,34 @@ export default async function SettingsPage() {
           Variabelen stel je in via Vercel → Project → Settings → Environment Variables. Model voor
           AI-taken: <code>{AI_MODEL}</code>
           {mode === 'demo' ? ' · draait nu in demomodus.' : '.'}
+        </p>
+      </Card>
+
+      <Card dark className="flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <Icon.sparkle className="text-ikr-cyan" />
+          <Title className="m-0 text-2xl">Claude-connector</Title>
+        </div>
+        <p className="m-0 text-[15px] text-[#E7E2F0]">
+          Werk met IKR Admin vanuit Claude, op je eigen Claude-abonnement (geen API-credits). Claude
+          leest dossiers en zet ideeën, notities, afspraken en draaiboeken rechtstreeks in het
+          dashboard.
+        </p>
+        <ol className="m-0 flex flex-col gap-1.5 pl-5 text-sm leading-relaxed text-[#E7E2F0]">
+          <li>
+            Ga in Claude naar <strong className="text-ikr-cream-light">Settings → Connectors → Add custom connector</strong>.
+          </li>
+          <li>
+            Naam: <strong className="text-ikr-cream-light">IKR Admin</strong> · URL:{' '}
+            <code className="rounded bg-white/10 px-1.5 py-0.5 text-ikr-cyan">{mcpUrl}</code>
+          </li>
+          <li>Klik op Connect, log in met je @iknowright.be-account en klik op Toestaan.</li>
+          <li>Vraag bv.: “Maak 5 nieuwe ideeën voor Wasbar via IKR Admin”.</li>
+        </ol>
+        <p className="m-0 text-xs text-[#B9B2C9]">
+          {aiApi
+            ? 'Er staat ook een Claude API-sleutel: de AI-knoppen in het dashboard werken rechtstreeks.'
+            : 'Zonder API-sleutel openen de AI-knoppen in het dashboard Claude met de juiste vraag.'}
         </p>
       </Card>
 

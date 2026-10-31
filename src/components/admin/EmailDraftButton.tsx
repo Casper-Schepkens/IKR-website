@@ -4,6 +4,9 @@ import { useState, useTransition } from 'react'
 import { draftEmailAction } from '@/app/admin/actions'
 import type { EmailPurpose } from '@/lib/admin/ai/tasks'
 import { buttonClass, Icon, input, Spinner } from './ui'
+import { useApiAi } from './AiMode'
+import { OpenInClaude } from './OpenInClaude'
+import { claudePrompts } from '@/lib/admin/claude-prompts'
 
 type Draft = { subject: string; body: string; to: string | null }
 
@@ -13,8 +16,10 @@ export function EmailDraftButton({
   purpose,
   label,
   variant = 'soft',
+  clientName,
 }: {
   clientId: string
+  clientName: string
   purpose: EmailPurpose
   label: string
   variant?: 'soft' | 'cyan' | 'navy' | 'light'
@@ -23,6 +28,15 @@ export function EmailDraftButton({
   const [draft, setDraft] = useState<Draft | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const apiAi = useApiAi()
+
+  if (!apiAi) {
+    return (
+      <OpenInClaude prompt={claudePrompts.email(clientName, purpose)} variant={variant}>
+        {label}
+      </OpenInClaude>
+    )
+  }
 
   return (
     <span className="inline-flex flex-col items-start gap-1">

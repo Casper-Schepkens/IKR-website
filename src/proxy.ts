@@ -42,7 +42,7 @@ export async function proxy(request: NextRequest) {
     const login = request.nextUrl.clone()
     login.pathname = '/admin/login'
     login.search = ''
-    if (path !== '/admin') login.searchParams.set('next', path)
+    if (path !== '/admin') login.searchParams.set('next', path + request.nextUrl.search)
     return NextResponse.redirect(login)
   }
 

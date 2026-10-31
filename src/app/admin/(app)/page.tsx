@@ -35,6 +35,7 @@ import {
   shootBriefAction,
 } from '../actions'
 import { cn } from '@/utilities/ui'
+import { claudePrompts } from '@/lib/admin/claude-prompts'
 
 export const metadata = { title: 'Vandaag' }
 
@@ -118,6 +119,7 @@ export default async function TodayPage() {
         <div className="flex flex-[1_1_220px] flex-wrap justify-end gap-2.5">
           <ActionButton
             action={dailyBriefingAction}
+            claudePrompt={claudePrompts.briefing()}
             variant="cyan"
             small={false}
             ai
@@ -204,6 +206,7 @@ export default async function TodayPage() {
               {t.action?.kind === 'email' && (
                 <EmailDraftButton
                   clientId={t.action.clientId}
+                  clientName={t.action.clientName}
                   purpose={t.action.purpose}
                   label={t.action.purpose === 'renewal' ? 'Verlengingsvoorstel' : 'Mail opstellen'}
                 />
@@ -211,6 +214,7 @@ export default async function TodayPage() {
               {t.action?.kind === 'brief' && (
                 <ActionButton
                   action={shootBriefAction.bind(null, t.action.eventId)}
+                  claudePrompt={claudePrompts.shootBrief(t.action.label)}
                   ai
                   pendingText="Draaiboek maken…"
                 >
