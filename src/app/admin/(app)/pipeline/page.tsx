@@ -7,26 +7,19 @@ import { buttonClass, Icon, PageHeader } from '@/components/admin/ui'
 
 export const metadata = { title: 'Pipeline' }
 
-export default async function PipelinePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ eigenaar?: string }>
-}) {
-  const { eigenaar } = await searchParams
+export default async function PipelinePage() {
   const { repo } = await requireAdmin()
   const [clients, contracts] = await Promise.all([repo.listClients(), repo.listContracts()])
   const now = new Date()
-  const visible = clients.filter(
-    (c) => c.stage !== 'churned' && (!eigenaar || c.owner === eigenaar),
-  )
+  const visible = clients.filter((c) => c.stage !== 'churned')
 
   const cards: KanbanCard[] = visible.map((c) => {
     const contract = contracts.find((k) => k.client_id === c.id && k.status === 'active')
     return {
       id: c.id,
       name: c.name,
+      logo_url: c.logo_url,
       stage: c.stage,
-      owner: c.owner,
       daysInStage: Math.max(0, daysBetween(c.stage_changed_at, now)),
       meta:
         c.source && (c.stage === 'lead' || c.stage === 'sales_call') ? `via ${c.source}` : c.sector,
@@ -45,21 +38,6 @@ export default async function PipelinePage({
         eyebrow={`${visible.length} klanten in het proces · sleep een kaart naar een andere fase`}
         title="Pipeline"
       >
-        <Link href="/admin/pipeline" className={buttonClass(!eigenaar ? 'navy' : 'light')}>
-          Iedereen
-        </Link>
-        <Link
-          href="/admin/pipeline?eigenaar=casper"
-          className={buttonClass(eigenaar === 'casper' ? 'navy' : 'light')}
-        >
-          Casper
-        </Link>
-        <Link
-          href="/admin/pipeline?eigenaar=cedric"
-          className={buttonClass(eigenaar === 'cedric' ? 'navy' : 'light')}
-        >
-          Cedric
-        </Link>
         <Link href="/admin/klanten?nieuw=1" className={buttonClass('cyan')}>
           + Lead
         </Link>

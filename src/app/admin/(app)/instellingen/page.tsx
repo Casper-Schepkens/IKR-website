@@ -5,6 +5,7 @@ import { FormAction } from '@/components/admin/FormAction'
 import { Icon, Card, Empty, input, label, muted, PageHeader, Pill, Title } from '@/components/admin/ui'
 import { uploadTemplateAction } from '../../actions'
 import { cn } from '@/utilities/ui'
+import { ApiCosts } from './ApiCosts'
 
 export const metadata = { title: 'Instellingen' }
 
@@ -13,9 +14,14 @@ export default async function SettingsPage() {
   const mcpUrl = `${host.startsWith('localhost') ? 'http' : 'https'}://${host}/api/mcp`
   const aiApi = isAiConfigured()
   const { repo, mode, user } = await requireAdmin()
-  const [templates, integrations] = await Promise.all([
+  const now = new Date()
+  // Vanaf de 1e van vorige maand: genoeg voor 'deze maand', 'vorige maand' en 'laatste 30 dagen'.
+  const since = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1) - 2 * 3_600_000)
+  const [templates, integrations, runs, clients] = await Promise.all([
     repo.listTemplates(),
     Promise.resolve(integrationStatus()),
+    repo.listAiRuns(since.toISOString()),
+    repo.listClients(),
   ])
 
   return (
@@ -42,6 +48,8 @@ export default async function SettingsPage() {
           {mode === 'demo' ? ' · draait nu in demomodus.' : '.'}
         </p>
       </Card>
+
+      <ApiCosts runs={runs} clients={clients} now={now} />
 
       <Card dark className="flex flex-col gap-4">
         <div className="flex items-center gap-2">

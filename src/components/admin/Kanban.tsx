@@ -5,14 +5,15 @@ import { useOptimistic, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { moveStageAction } from '@/app/admin/actions'
 import { BOARD_STAGES, STAGE_LABELS, type Stage } from '@/lib/admin/types'
-import { Avatar, muted, Pill } from './ui'
+import { muted, Pill } from './ui'
+import { ClientLogo } from './ClientLogo'
 import { cn } from '@/utilities/ui'
 
 export type KanbanCard = {
   id: string
   name: string
+  logo_url: string | null
   stage: Stage
-  owner: string | null
   daysInStage: number
   meta: string | null
   amount: string | null
@@ -89,8 +90,9 @@ export function Kanban({ cards }: { cards: KanbanCard[] }) {
                   >
                     <Link
                       href={`/admin/klanten/${c.id}`}
-                      className="text-[15px] font-bold text-ikr-navy no-underline hover:text-[#0B7F93]"
+                      className="flex items-center gap-2 text-[15px] font-bold text-ikr-navy no-underline hover:text-[#0B7F93]"
                     >
+                      <ClientLogo client={c} size={26} />
                       {c.name}
                     </Link>
                     {c.meta && <span className={cn('text-[13px]', muted)}>{c.meta}</span>}
@@ -101,7 +103,6 @@ export function Kanban({ cards }: { cards: KanbanCard[] }) {
                           : `${c.daysInStage} ${c.daysInStage === 1 ? 'dag' : 'dagen'}`}{' '}
                         in fase
                       </Pill>
-                      {c.owner && <Avatar text={c.owner.slice(0, 2).toUpperCase()} />}
                     </div>
                     {c.amount && <span className={cn('text-xs', muted)}>{c.amount}</span>}
                     <label className="sr-only" htmlFor={`stage-${c.id}`}>

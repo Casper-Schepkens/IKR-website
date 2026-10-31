@@ -76,7 +76,7 @@ export function buildMcpServer(session: AdminSession) {
     'zoek_klanten',
     {
       title: 'Klanten zoeken',
-      description: 'Lijst van klanten en leads met fase en eigenaar. Optioneel filteren op naam of fase.',
+      description: 'Lijst van klanten en leads met fase. Optioneel filteren op naam of fase.',
       inputSchema: {
         zoekterm: z.string().optional().describe('Deel van de naam'),
         fase: z.enum(STAGES).optional().describe('Filter op fase'),
@@ -94,7 +94,6 @@ export function buildMcpServer(session: AdminSession) {
           naam: c.name,
           fase: STAGE_LABELS[c.stage],
           fase_code: c.stage,
-          eigenaar: c.owner,
           sector: c.sector,
           in_fase_sinds: fmtDate(c.stage_changed_at, { day: 'numeric', month: 'short', year: 'numeric' }),
         })),
@@ -130,7 +129,6 @@ export function buildMcpServer(session: AdminSession) {
           id: c.id,
           naam: c.name,
           fase: STAGE_LABELS[c.stage],
-          eigenaar: c.owner,
           sector: c.sector,
           website: c.website,
           tiktok: c.tiktok_handle,
@@ -204,7 +202,7 @@ export function buildMcpServer(session: AdminSession) {
       const name = (id: string | null) => clients.find((c) => c.id === id)?.name ?? null
       return text({
         vandaag: fmtDate(now, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
-        actiepunten: todos.map((t) => ({ wat: t.title, detail: t.detail, soort: t.tag, eigenaar: t.owner })),
+        actiepunten: todos.map((t) => ({ wat: t.title, detail: t.detail, soort: t.tag })),
         agenda: events.map((e) => ({
           id: e.id,
           wanneer: `${fmtDate(e.starts_at, { weekday: 'short', day: 'numeric', month: 'short' })} ${fmtTime(e.starts_at)}${e.ends_at ? `–${fmtTime(e.ends_at)}` : ''}`,
@@ -401,17 +399,16 @@ export function buildMcpServer(session: AdminSession) {
       inputSchema: {
         naam: z.string(),
         fase: z.enum(STAGES).default('lead'),
-        eigenaar: z.enum(['casper', 'cedric']).optional(),
         sector: z.string().optional(),
         bron: z.string().optional(),
         website: z.string().optional(),
         omschrijving: z.string().optional(),
       },
     },
-    async ({ naam, fase, eigenaar, sector, bron, website, omschrijving }) => {
+    async ({ naam, fase, sector, bron, website, omschrijving }) => {
       const existing = (await repo.listClients()).find((c) => c.name.toLowerCase() === naam.toLowerCase())
       if (existing) return fail(`${existing.name} bestaat al (id ${existing.id}).`)
-      const c = await repo.createClient({ name: naam, stage: fase as Stage, owner: eigenaar ?? null, sector: sector ?? null, source: bron ?? null, website: website ?? null, summary: omschrijving ?? null })
+      const c = await repo.createClient({ name: naam, stage: fase as Stage, owner: null, sector: sector ?? null, source: bron ?? null, website: website ?? null, summary: omschrijving ?? null })
       await repo.addActivity({ client_id: c.id, kind: 'system', title: 'Klant aangemaakt via Claude', created_by: BY })
       return text({ ok: true, id: c.id, naam: c.name })
     },

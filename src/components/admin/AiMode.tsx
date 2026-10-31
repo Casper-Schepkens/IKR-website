@@ -3,11 +3,13 @@
 import { createContext, useContext, type ReactNode } from 'react'
 
 export type AiRouting = { api: boolean; bigViaApi: boolean; grok: boolean }
-export type AiSize = 'small' | 'big'
+/** small/big = via de API (als er een sleutel is); account = altijd in Claude (eigen abonnement). */
+export type AiSize = 'small' | 'big' | 'account'
 
 /**
  * Bepaalt per AI-knop of die de Claude API gebruikt (in het dashboard) of Claude opent
- * (connector, op het eigen abonnement). Standaard: kleine taken via API, grote via Claude.
+ * (connector, op het eigen abonnement). Met een sleutel loopt alles via de API, behalve
+ * knoppen met size 'account' (presentaties), die altijd Claude openen.
  */
 const AiModeContext = createContext<AiRouting>({ api: false, bigViaApi: false, grok: false })
 
@@ -22,5 +24,6 @@ export function useGrok() {
 
 export function useApiAi(size: AiSize = 'small') {
   const r = useContext(AiModeContext)
+  if (size === 'account') return false
   return size === 'big' ? r.bigViaApi : r.api
 }

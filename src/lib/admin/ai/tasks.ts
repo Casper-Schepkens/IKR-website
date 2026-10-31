@@ -86,7 +86,7 @@ export async function companySnapshot(session: AdminSession) {
     'Klanten:',
     ...clients.map(
       (c) =>
-        `- ${c.name} · fase ${STAGE_LABELS[c.stage]} sinds ${fmtDate(c.stage_changed_at)} · eigenaar ${c.owner ?? '—'}`,
+        `- ${c.name} · fase ${STAGE_LABELS[c.stage]} sinds ${fmtDate(c.stage_changed_at)}`,
     ),
     '',
     'Agenda (komende 3 weken):',

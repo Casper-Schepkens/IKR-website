@@ -79,7 +79,6 @@ export async function createClientAction(form: FormData) {
   const client = await s.repo.createClient({
     name,
     stage: STAGES.includes(stage) ? stage : 'lead',
-    owner: str(form, 'owner'),
     source: str(form, 'source'),
     sector: str(form, 'sector'),
     website: str(form, 'website'),
@@ -94,12 +93,34 @@ export async function createClientAction(form: FormData) {
   redirect(`/admin/klanten/${client.id}`)
 }
 
+const LOGO_TYPES: Record<string, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/webp': 'webp',
+  'image/svg+xml': 'svg',
+}
+
 export async function updateClientAction(clientId: string, form: FormData) {
   return attempt(async () => {
-    const { s } = await loadClient(clientId)
+    const { s, client } = await loadClient(clientId)
+    let logo_url = client.logo_url
+    const logo = form.get('logo')
+    if (logo instanceof File && logo.size > 0) {
+      const ext = LOGO_TYPES[logo.type]
+      if (!ext) throw new Error('Logo moet een PNG, JPG, WebP of SVG zijn')
+      if (logo.size > 900 * 1024) throw new Error('Logo is te groot (max 900 KB)')
+      logo_url = `${clientId}/${Date.now()}.${ext}`
+      await putFile('logos', logo_url, Buffer.from(await logo.arrayBuffer()), logo.type)
+    } else if (form.has('logo_url')) {
+      const u = str(form, 'logo_url')
+      // Lege waarde = logo weghalen; een https-URL = extern logo; een geüpload pad blijft staan.
+      if (!u) logo_url = null
+      else if (/^https:\/\//i.test(u)) logo_url = u
+      else if (u !== client.logo_url) throw new Error('Logo-URL moet met https:// beginnen')
+    }
     await s.repo.updateClient(clientId, {
       name: str(form, 'name') ?? undefined,
-      owner: str(form, 'owner'),
+      logo_url,
       source: str(form, 'source'),
       sector: str(form, 'sector'),
       website: str(form, 'website'),

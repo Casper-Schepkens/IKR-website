@@ -253,5 +253,18 @@ export function createSupabaseRepo(db: SupabaseClient): AdminRepo {
     async logAiRun(run) {
       check(await db.from('ai_runs').insert(run))
     },
+    async listAiRuns(sinceIso) {
+      const rows = must<Omit<AiRun, 'output'>[]>(
+        await db
+          .from('ai_runs')
+          .select(
+            'id, task, client_id, model, status, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, error, created_by, created_at',
+          )
+          .gte('created_at', sinceIso)
+          .order('created_at', { ascending: false })
+          .limit(5000),
+      )
+      return rows.map((r) => ({ ...r, output: null }))
+    },
   }
 }

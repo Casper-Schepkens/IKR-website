@@ -485,7 +485,7 @@ export function IdeasPanel({
           </label>
           <ActionButton
             action={() => createDeckAction(clientId, selected, templateId || null)}
-            aiSize="big"
+            aiSize="account"
             claudePrompt={claudePrompts.deck(
               clientName,
               ideas.filter((i) => selected.includes(i.id)).map((i) => i.title),

@@ -13,7 +13,7 @@ function memory() {
   return g.__ikrDemoFiles
 }
 
-export type Bucket = 'templates' | 'decks'
+export type Bucket = 'templates' | 'decks' | 'logos'
 
 export async function putFile(bucket: Bucket, path: string, data: Buffer, contentType: string) {
   if (!isServiceRoleConfigured()) {
