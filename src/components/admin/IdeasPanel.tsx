@@ -211,6 +211,7 @@ function IdeaCard({
         {!developed ? (
           <ActionButton
             action={() => developIdeaAction(idea.id)}
+            aiSize="big"
             claudePrompt={claudePrompts.develop(clientName, idea.title)}
             variant="cyan"
             ai
@@ -235,6 +236,7 @@ function IdeaCard({
                 if (!instruction) return Promise.resolve({ ok: true as const, data: undefined })
                 return developIdeaAction(idea.id, instruction)
               }}
+              aiSize="big"
               claudePrompt={claudePrompts.develop(
                 clientName,
                 idea.title,
@@ -366,6 +368,7 @@ export function IdeasPanel({
             </label>
             <ActionButton
               action={() => generateIdeasAction(clientId, count, focus)}
+              aiSize="big"
               claudePrompt={claudePrompts.ideas(clientName, count || 5, focus.trim() || undefined)}
               variant="cyan"
               small={false}
@@ -448,6 +451,7 @@ export function IdeasPanel({
           </label>
           <ActionButton
             action={() => createDeckAction(clientId, selected, templateId || null)}
+            aiSize="big"
             claudePrompt={claudePrompts.deck(
               clientName,
               ideas.filter((i) => selected.includes(i.id)).map((i) => i.title),

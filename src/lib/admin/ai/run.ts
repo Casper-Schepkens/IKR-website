@@ -2,7 +2,13 @@ import 'server-only'
 import Anthropic from '@anthropic-ai/sdk'
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod'
 import type { z } from 'zod'
-import { AI_MODEL, isAiConfigured } from '../env'
+import { AI_MODEL, AI_MODEL_SMALL, isAiConfigured } from '../env'
+
+/** Grote taken krijgen het sterkste model; de rest een sneller, goedkoper model. */
+const BIG_TASKS = new Set(['generate_ideas', 'develop_idea'])
+export function modelFor(task: string) {
+  return BIG_TASKS.has(task) ? AI_MODEL : AI_MODEL_SMALL
+}
 import type { AdminSession } from '../session'
 import type { KnowledgeDoc } from '../types'
 
@@ -77,7 +83,7 @@ export async function runStructured<S extends z.ZodType>(opts: RunOpts<S>): Prom
 
   try {
     const res = await anthropic().beta.messages.parse({
-      model: AI_MODEL,
+      model: modelFor(task),
       max_tokens: maxTokens,
       betas: ['server-side-fallback-2026-07-01'],
       fallbacks: 'default',
@@ -117,7 +123,7 @@ export async function runStructured<S extends z.ZodType>(opts: RunOpts<S>): Prom
       .logAiRun({
         task,
         client_id: clientId,
-        model: AI_MODEL,
+        model: modelFor(task),
         status: 'error',
         output: null,
         error: message,

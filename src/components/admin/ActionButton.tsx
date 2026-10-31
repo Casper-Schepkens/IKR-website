@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import type { ActionResult } from '@/app/admin/actions'
 import { buttonClass, Icon, Spinner } from './ui'
 import { cn } from '@/utilities/ui'
-import { useApiAi } from './AiMode'
+import { useApiAi, type AiSize } from './AiMode'
 import { OpenInClaude } from './OpenInClaude'
 
 /**
@@ -23,6 +23,7 @@ export function ActionButton({
   className,
   onDone,
   claudePrompt,
+  aiSize = 'small',
 }: {
   action: () => Promise<ActionResult<unknown>>
   children: ReactNode
@@ -35,11 +36,13 @@ export function ActionButton({
   onDone?: (data: unknown) => void
   /** Zonder API-sleutel: open Claude met deze vraag in plaats van de actie uit te voeren. */
   claudePrompt?: string
+  /** small = via API als er een sleutel is; big = standaard via Claude (abonnement). */
+  aiSize?: AiSize
 }) {
   const [pending, start] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const apiAi = useApiAi()
+  const apiAi = useApiAi(aiSize)
 
   if (claudePrompt && !apiAi) {
     return (

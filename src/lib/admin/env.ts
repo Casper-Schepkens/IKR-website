@@ -29,7 +29,18 @@ export function isAiConfigured() {
   return Boolean(process.env.ANTHROPIC_API_KEY)
 }
 
+/** Model voor grote taken (ideeën, uitwerkingen, decks) als die via de API lopen. */
 export const AI_MODEL = process.env.IKR_AI_MODEL || 'claude-opus-5-5'
+/** Model voor kleine taken (briefing, samenvatting, mails, draaiboek, vragen, analyse). */
+export const AI_MODEL_SMALL = process.env.IKR_AI_MODEL_SMALL || 'claude-sonnet-5-5'
+
+/**
+ * Standaard lopen enkel kleine taken via de API; grote taken openen Claude (connector, abonnement).
+ * Met IKR_AI_ALL_API=true lopen ook de grote taken via de API.
+ */
+export function aiRouting() {
+  return { api: isAiConfigured(), bigViaApi: isAiConfigured() && process.env.IKR_AI_ALL_API === 'true' }
+}
 
 /** Domein dat altijd toegang heeft. */
 export const ADMIN_DOMAIN = 'iknowright.be'
