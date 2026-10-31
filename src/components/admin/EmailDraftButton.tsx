@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { draftEmailAction } from '@/app/admin/actions'
 import type { EmailPurpose } from '@/lib/admin/ai/tasks'
-import { buttonClass, Icon, input } from './ui'
+import { buttonClass, Icon, input, Spinner } from './ui'
 
 type Draft = { subject: string; body: string; to: string | null }
 
@@ -29,6 +29,8 @@ export function EmailDraftButton({
       <button
         type="button"
         disabled={pending}
+        data-pending={pending}
+        aria-busy={pending}
         className={buttonClass(variant, true)}
         onClick={() => {
           setError(null)
@@ -39,7 +41,7 @@ export function EmailDraftButton({
           })
         }}
       >
-        <Icon.sparkle size={14} className="text-[#0B7F93]" />
+        {pending ? <Spinner /> : <Icon.sparkle size={14} className="text-[#0B7F93]" />}
         {pending ? 'Mail opstellen…' : label}
       </button>
       {error && (

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createBrowserSupabase } from '@/lib/admin/supabase/browser'
-import { buttonClass } from '@/components/admin/ui'
+import { buttonClass, Spinner } from '@/components/admin/ui'
 
 export function LoginButton({ next }: { next?: string }) {
   const [pending, setPending] = useState(false)
@@ -12,6 +12,8 @@ export function LoginButton({ next }: { next?: string }) {
       <button
         type="button"
         disabled={pending}
+        data-pending={pending}
+        aria-busy={pending}
         className={buttonClass('cyan', false, 'w-full')}
         onClick={async () => {
           setPending(true)
@@ -31,6 +33,7 @@ export function LoginButton({ next }: { next?: string }) {
           }
         }}
       >
+        {pending && <Spinner />}
         {pending ? 'Doorsturen naar Google…' : 'Inloggen met Google'}
       </button>
       {error && <p className="m-0 text-sm text-[#A3470F]">{error}</p>}

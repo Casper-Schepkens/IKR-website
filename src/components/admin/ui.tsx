@@ -6,7 +6,7 @@ import { cn } from '@/utilities/ui'
 export const muted = 'text-[#5E5670]'
 
 export const btn = {
-  base: 'inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full px-[18px] text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0FC1DE]',
+  base: 'ikr-btn inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full px-[18px] text-sm font-semibold disabled:cursor-not-allowed [&:disabled:not([data-pending=true])]:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0FC1DE]',
   cyan: 'bg-ikr-cyan text-ikr-navy hover:bg-[#3dd0e8]',
   navy: 'bg-ikr-navy text-ikr-cream-light hover:bg-[#2c2247]',
   soft: 'bg-ikr-cream text-ikr-navy hover:bg-[#e6dfd2]',
@@ -168,6 +168,11 @@ export function Stat({
       )}
     </div>
   )
+}
+
+/** Draaiend icoontje voor knoppen die bezig zijn. */
+export function Spinner() {
+  return <span className="ikr-spinner" aria-hidden="true" />
 }
 
 export function Empty({ children }: { children: ReactNode }) {

@@ -16,6 +16,8 @@ export function StageSelect({ clientId, stage }: { clientId: string; stage: Stag
       <select
         value={value}
         disabled={pending}
+        data-pending={pending}
+        aria-busy={pending}
         onChange={(e) => {
           const next = e.target.value as Stage
           setValue(next)

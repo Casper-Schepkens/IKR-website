@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import type { ActionResult } from '@/app/admin/actions'
-import { buttonClass } from './ui'
+import { buttonClass, Spinner } from './ui'
 import { cn } from '@/utilities/ui'
 
 /** Formulier dat een server action met FormData aanroept, met laad- en foutstatus. */
@@ -53,7 +53,14 @@ export function FormAction({
     >
       {children}
       <div className="flex flex-wrap items-center gap-3">
-        <button type="submit" disabled={pending} className={buttonClass(submitVariant, true)}>
+        <button
+          type="submit"
+          disabled={pending}
+          data-pending={pending}
+          aria-busy={pending}
+          className={buttonClass(submitVariant, true)}
+        >
+          {pending && <Spinner />}
           {pending ? pendingText : submitLabel}
         </button>
         {error && (

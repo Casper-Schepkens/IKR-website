@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { requireAdmin } from '@/lib/admin/session'
 import { STAGE_LABELS, STAGES } from '@/lib/admin/types'
 import { STAGE_TONE } from '@/components/admin/stage'
+import { SubmitButton } from '@/components/admin/SubmitButton'
 import { euro, fmtDate, isoDay } from '@/lib/admin/format'
 import { nextSendDate } from '@/lib/admin/billing'
 import {
@@ -103,9 +104,7 @@ export default async function ClientsPage({
               <input name="website" type="url" placeholder="https://" className={input} />
             </label>
             <div className="flex items-end gap-3">
-              <button type="submit" className={buttonClass('cyan')}>
-                Aanmaken
-              </button>
+              <SubmitButton pendingText="Aanmaken…">Aanmaken</SubmitButton>
               <Link href="/admin/klanten" className={buttonClass('soft')}>
                 Annuleren
               </Link>

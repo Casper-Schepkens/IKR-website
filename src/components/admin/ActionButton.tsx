@@ -3,7 +3,7 @@
 import { useState, useTransition, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import type { ActionResult } from '@/app/admin/actions'
-import { buttonClass, Icon } from './ui'
+import { buttonClass, Icon, Spinner } from './ui'
 import { cn } from '@/utilities/ui'
 
 /**
@@ -40,6 +40,8 @@ export function ActionButton({
       <button
         type="button"
         disabled={pending}
+        data-pending={pending}
+        aria-busy={pending}
         className={buttonClass(variant, small)}
         onClick={() => {
           if (confirm && !window.confirm(confirm)) return
@@ -54,7 +56,9 @@ export function ActionButton({
           })
         }}
       >
-        {ai && (
+        {pending ? (
+          <Spinner />
+        ) : ai && (
           <Icon.sparkle
             size={14}
             className={

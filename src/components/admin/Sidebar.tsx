@@ -50,7 +50,7 @@ export function Sidebar({ name, email, demo }: { name: string; email: string; de
               href={item.href}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm no-underline transition-colors',
+                'ikr-nav flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm no-underline transition-colors',
                 active
                   ? 'bg-ikr-cyan font-bold text-ikr-navy'
                   : 'font-medium text-ikr-cream hover:bg-white/10 hover:text-ikr-cream-light',
