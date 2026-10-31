@@ -40,7 +40,21 @@ _(Done jul 2026: blauwe play/pijl-button weggehaald bij food-werk — niet click
 _(Done jul 2026: single-source — `caseGridItems` afgeleid van `caseDetails`; Aanpak/homepage/`/cases` delen bron)_
 
 ## Admin (`/admin`)
-1. Setup volgens `docs/product/admin-setup.md` → eerste login testen.
-2. IKR-kennis invullen in `/admin/kennis`.
-3. Echte klanten + contracten invoeren; template uploaden; eerste deck testen.
-4. Volgende bouwstappen: Google Calendar-sync, ⌘K met acties, maandrapport-deck (zie `admin-plan.md`).
+**Volgende sessie (Casper, 31 okt 2026): van "cool" naar "praktisch".** Het frame is goed, maar het
+dashboard is ontworpen zonder onze processen te kennen. Nu functioneel maken, zonder bloat.
+1. **Eerst onderzoeken, niet bouwen.** Lees heel Notion, heel de Drive en vooral de **Lucidchart**-diagrammen
+   (processen) om te voelen hoe IKR werkt.
+2. Twee perspectieven:
+   - **Casper: salesgericht.** Leads → sales call → voorstel → getekend.
+   - **Cedric + Milan: klantgericht.** Productie, draaidagen, content, opvolging.
+3. Casper legt het **productieproces** uit. Claude stelt voor hoe dat als **workflow** in het dashboard
+   komt (stappen, wie, wanneer), eerst als voorstel.
+4. Daarna schrappen wat niet gebruikt wordt; elke scherm-/knopkeuze moet een echte stap in het proces dienen.
+
+Stand na PR #29 (klanten/leads gesplitst, logo's, alle AI via API, API-kosten in instellingen):
+- Contracten in Supabase bijgewerkt uit Drive (Tempus nieuw contract vanaf 1/11/2026, Chez Albert €1.500/mnd).
+  Nog aanvullen: bedrag + data Wasbar en Lilalou (staan als concept), verlenging Oh!ma, startdatum Chez Albert.
+- Logo Oh!ma ontbreekt nog (uploaden via Gegevens).
+- Geparkeerd: TikTok-cijfers (Metricool Starter heeft geen API; opties: upgrade Advanced of TikTok Display API),
+  eigenaar per klant (geen ding), Google Calendar-sync.
+- Open setup: Supabase e-mailprovider uit, wildcard-redirect voor previews, connector end-to-end testen.
