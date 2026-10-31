@@ -39,7 +39,11 @@ export const AI_MODEL_SMALL = process.env.IKR_AI_MODEL_SMALL || 'claude-sonnet-5
  * Met IKR_AI_ALL_API=true lopen ook de grote taken via de API.
  */
 export function aiRouting() {
-  return { api: isAiConfigured(), bigViaApi: isAiConfigured() && process.env.IKR_AI_ALL_API === 'true' }
+  return {
+    api: isAiConfigured(),
+    bigViaApi: isAiConfigured() && process.env.IKR_AI_ALL_API === 'true',
+    grok: Boolean(process.env.GROK_WEBHOOK_URL && process.env.GROK_WEBHOOK_SECRET),
+  }
 }
 
 /** Domein dat altijd toegang heeft. */

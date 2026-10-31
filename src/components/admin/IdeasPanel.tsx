@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import type { ContentIdea, IdeaStatus, Template } from '@/lib/admin/types'
 import { IDEA_STATUS_LABELS } from '@/lib/admin/types'
@@ -9,10 +9,12 @@ import {
   createDeckAction,
   developIdeaAction,
   generateIdeasAction,
+  grokDevelopIdeaAction,
   setIdeaStatusAction,
   updateIdeaAction,
 } from '@/app/admin/actions'
-import { buttonClass, Icon, input, label, muted, Pill, type Tone } from './ui'
+import { buttonClass, Icon, input, label, muted, Pill, Spinner, type Tone } from './ui'
+import { useGrok } from './AiMode'
 import { ActionButton } from './ActionButton'
 import { FormAction } from './FormAction'
 import { cn } from '@/utilities/ui'
@@ -70,8 +72,20 @@ function IdeaCard({
   const [open, setOpen] = useState(idea.status === 'developed' && Boolean(idea.hook))
   const [editing, setEditing] = useState(false)
   const developed = Boolean(idea.hook || idea.structure.length)
+  // Komt er een (nieuwe) uitwerking binnen, bv. van Grok: kaart openklappen.
+  const lastHook = useRef(idea.hook)
+  useEffect(() => {
+    if (idea.hook && idea.hook !== lastHook.current) setOpen(true)
+    lastHook.current = idea.hook
+  }, [idea.hook])
   const router = useRouter()
   const [pending, start] = useTransition()
+  const grok = useGrok()
+  // Bij Grok: nog geen antwoord, en minder dan 30 minuten geleden gevraagd (anders opnieuw toelaten).
+  const atGrok =
+    idea.dev_status === 'requested' &&
+    Boolean(idea.dev_requested_at) &&
+    Date.now() - Date.parse(idea.dev_requested_at!) < 30 * 60_000
 
   const reject = () => {
     const feedback = window.prompt('Waarom afgekeurd? (IKR AI leert hieruit voor deze klant)') ?? ''
@@ -110,6 +124,11 @@ function IdeaCard({
             <Pill tone={STATUS_TONE[idea.status]}>{IDEA_STATUS_LABELS[idea.status]}</Pill>
             {idea.format && <Pill>{idea.format}</Pill>}
             {idea.source === 'manual' && <Pill tone="light">Manueel</Pill>}
+            {atGrok && (
+              <Pill tone="purple">
+                <Spinner /> Bij Grok…
+              </Pill>
+            )}
           </div>
           {idea.summary && (
             <p className={cn('m-0 text-sm leading-normal', muted)}>{idea.summary}</p>
@@ -248,6 +267,21 @@ function IdeaCard({
               Herschrijf
             </ActionButton>
           </>
+        )}
+        {grok && !atGrok && (
+          <ActionButton
+            action={() => {
+              const instruction = developed
+                ? window.prompt('Wat moet Grok anders doen? (leeg = gewoon opnieuw uitwerken)')
+                : null
+              if (developed && instruction === null)
+                return Promise.resolve({ ok: true as const, data: undefined })
+              return grokDevelopIdeaAction(idea.id, instruction?.trim() || undefined)
+            }}
+            pendingText="Naar Grok…"
+          >
+            {developed ? 'Herschrijf met Grok' : 'Uitwerken met Grok'}
+          </ActionButton>
         )}
         <button
           type="button"

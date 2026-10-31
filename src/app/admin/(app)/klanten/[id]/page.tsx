@@ -96,7 +96,9 @@ export default async function ClientPage({
   const primary = contacts.find((c) => c.is_primary) ?? contacts[0]
   const stageIndex = BOARD_STAGES.indexOf(client.stage)
   const billit = isBillitConfigured()
-  const generating = decks.some((d) => d.status === 'queued' || d.status === 'generating')
+  const generating =
+    decks.some((d) => d.status === 'queued' || d.status === 'generating') ||
+    ideas.some((i) => i.dev_status === 'requested')
   const tabCount: Partial<Record<TabKey, number>> = {
     ideeen: ideas.filter((i) => i.status !== 'rejected').length,
     decks: decks.length,

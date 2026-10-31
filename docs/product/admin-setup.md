@@ -51,6 +51,31 @@ Het dashboard is een MCP-server op `/api/mcp`. Claude logt in via de OAuth 2.1-s
 
 Tools: ikr_kennis, zoek_klanten, klant_dossier, week_overzicht, agenda, resultaten, ideeen_opslaan, idee_uitwerken, idee_status, notitie_toevoegen, fase_wijzigen, klant_aanmaken, klantprofiel_bijwerken, afspraak_plannen, draaiboek_opslaan, kennis_bijwerken. Niet mogelijk via de connector: klanten verwijderen, facturen versturen, TikTok-tokens.
 
+## 3c. Grok-bot (ideeën uitwerken)
+
+Zet `GROK_WEBHOOK_URL` (de webhook van de Cursor-automation) en `GROK_WEBHOOK_SECRET` (zelf gekozen lang geheim). Daarna staat bij elk idee een knop **Uitwerken met Grok**.
+
+**Wat de bot ontvangt** (`POST GROK_WEBHOOK_URL`, header `Authorization: Bearer <GROK_WEBHOOK_SECRET>`):
+
+```json
+{
+  "task": "develop_idea",
+  "instructions": "volledige opdracht in het Nederlands, incl. terugkoppel-URL",
+  "idea": { "id": "…", "titel": "…", "omschrijving": "…", "format": "…" },
+  "client": { "naam": "Wasbar", "context": "klantprofiel, eerdere ideeën, activiteit" },
+  "ikr_kennis": "…",
+  "callback": { "url": "https://iknowright.be/api/integrations/grok?idee=…&token=…", "method": "POST" }
+}
+```
+
+**Wat de bot terugstuurt** (`POST` naar `callback.url`, JSON):
+
+```json
+{ "titel": "optioneel", "hook": "…", "opbouw": ["…"], "shots": ["…"], "nodig": ["…"], "cta": "…" }
+```
+
+De link is per idee ondertekend; een andere of aangepaste link wordt geweigerd (401). Na 30 minuten zonder antwoord kan je het opnieuw vragen.
+
 ## 3b. Claude API (optioneel: AI-knoppen rechtstreeks in het dashboard)
 
 1. [platform.claude.com](https://platform.claude.com) → API Keys → nieuwe sleutel → `ANTHROPIC_API_KEY`.

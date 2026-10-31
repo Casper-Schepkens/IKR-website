@@ -68,6 +68,9 @@ export type IdeaPatch = Partial<
     | 'needs'
     | 'cta'
     | 'feedback'
+    | 'dev_status'
+    | 'dev_provider'
+    | 'dev_requested_at'
   >
 >
 

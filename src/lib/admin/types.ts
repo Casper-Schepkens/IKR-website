@@ -163,6 +163,10 @@ export type ContentIdea = {
   needs: string[]
   cta: string | null
   feedback: string | null
+  /** Externe uitwerking (bv. Grok-bot): 'requested' terwijl het bezig is. */
+  dev_status?: 'requested' | 'failed' | null
+  dev_provider?: string | null
+  dev_requested_at?: string | null
   created_at: string
   updated_at: string
 }

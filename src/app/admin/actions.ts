@@ -28,6 +28,8 @@ import { generateDeck, uploadTemplateToClaude } from '@/lib/admin/ai/decks'
 import { computeTodos } from '@/lib/admin/todos'
 import { prepareUpcomingInvoices } from '@/lib/admin/jobs'
 import { createBillitInvoice } from '@/lib/admin/integrations/billit'
+import { requestGrokDevelopment } from '@/lib/admin/integrations/grok'
+import { headers } from 'next/headers'
 import { putFile } from '@/lib/admin/storage'
 import { isSupabaseConfigured } from '@/lib/admin/env'
 import { createServerSupabase } from '@/lib/admin/supabase/server'
@@ -437,6 +439,20 @@ export async function developIdeaAction(ideaId: string, instruction?: string) {
     const client = await s.repo.getClient(idea.client_id)
     if (!client) throw new Error('Klant niet gevonden')
     await developIdea(s, client, idea, instruction)
+  })
+}
+
+export async function grokDevelopIdeaAction(ideaId: string, instruction?: string) {
+  return attempt(async () => {
+    const s = await requireAdmin()
+    const idea = await s.repo.getIdea(ideaId)
+    if (!idea) throw new Error('Idee niet gevonden')
+    const client = await s.repo.getClient(idea.client_id)
+    if (!client) throw new Error('Klant niet gevonden')
+    const h = await headers()
+    const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'iknowright.be'
+    const proto = h.get('x-forwarded-proto') ?? (host.startsWith('localhost') ? 'http' : 'https')
+    await requestGrokDevelopment({ session: s, client, idea, origin: `${proto}://${host}`, instruction })
   })
 }
 
