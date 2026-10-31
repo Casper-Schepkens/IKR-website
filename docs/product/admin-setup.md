@@ -8,6 +8,8 @@ Alle variabelen staan ook in [`.env.example`](../../.env.example). Zet ze in **V
 
 ## 1. Supabase (database + login) — verplicht
 
+> ✅ **Gedaan (31 okt 2026):** project `IKR` (`inmhplytfppamsriipuo`, eu-west-1). Beide migraties zijn toegepast. `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` en `SUPABASE_SERVICE_ROLE_KEY` staan in Vercel. Nog te doen: stap 2 (Google-login) en e-mail/wachtwoord-login uitzetten in Supabase.
+
 1. Maak een project op [supabase.com](https://supabase.com) (regio: Frankfurt `eu-central-1`, dicht bij België en GDPR-vriendelijk).
 2. **SQL Editor** → plak en draai [`supabase/migrations/20261031000000_admin_core.sql`](../../supabase/migrations/20261031000000_admin_core.sql).
    - Maakt alle tabellen, RLS-regels, de opslagbuckets `templates` en `decks`, en startinhoud voor het IKR-brein.
