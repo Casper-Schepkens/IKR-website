@@ -18,6 +18,7 @@ export default async function PipelinePage() {
     return {
       id: c.id,
       name: c.name,
+      logo_url: c.logo_url,
       stage: c.stage,
       daysInStage: Math.max(0, daysBetween(c.stage_changed_at, now)),
       meta:

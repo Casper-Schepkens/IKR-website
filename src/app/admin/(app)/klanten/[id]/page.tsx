@@ -36,6 +36,7 @@ import {
   updateClientAction,
 } from '../../../actions'
 import { cn } from '@/utilities/ui'
+import { ClientLogo } from '@/components/admin/ClientLogo'
 import { claudePrompts } from '@/lib/admin/claude-prompts'
 
 const TABS = [
@@ -192,12 +193,7 @@ export default async function ClientPage({
       </nav>
 
       <div className="flex flex-wrap items-center gap-5">
-        <span
-          aria-hidden="true"
-          className="flex size-[88px] shrink-0 items-center justify-center rounded-full bg-ikr-navy font-display text-4xl font-black text-ikr-cyan"
-        >
-          {initials(client.name)}
-        </span>
+        <ClientLogo client={client} size={88} />
         <div className="flex min-w-[280px] flex-1 flex-col gap-2">
           <Title as="h1" className="m-0 text-5xl leading-[0.9] md:text-[72px] md:leading-[0.88]">
             {client.name}
@@ -777,6 +773,26 @@ export default async function ClientPage({
                   Sector
                   <input name="sector" defaultValue={client.sector ?? ''} className={input} />
                 </label>
+                <div className={cn(label, 'col-span-full')}>
+                  Logo
+                  <div className="flex flex-wrap items-center gap-3">
+                    <ClientLogo client={client} size={48} />
+                    <input
+                      name="logo"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      aria-label="Logo uploaden"
+                      className={cn(input, 'min-w-0 flex-1')}
+                    />
+                    <input
+                      name="logo_url"
+                      defaultValue={client.logo_url ?? ''}
+                      placeholder="of plak een https://-link"
+                      aria-label="Logo-URL"
+                      className={cn(input, 'min-w-0 flex-1')}
+                    />
+                  </div>
+                </div>
                 <label className={label}>
                   Bron
                   <input name="source" defaultValue={client.source ?? ''} className={input} />

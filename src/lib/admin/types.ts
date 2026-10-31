@@ -40,6 +40,8 @@ export type Client = {
   website: string | null
   tiktok_handle: string | null
   drive_folder_url: string | null
+  /** Externe https-URL, of pad in de privé bucket 'logos'. */
+  logo_url: string | null
   vat_number: string | null
   billing_email: string | null
   summary: string | null
@@ -237,3 +239,7 @@ export type AdminUser = {
   email: string
   name: string
 }
+
+/** Leads: nog niet getekend. Klanten: getekend en in productie. */
+export const LEAD_STAGES: Stage[] = ['lead', 'sales_call', 'ideas', 'proposal']
+export const CLIENT_STAGES: Stage[] = ['signed', 'shoot_planned', 'editing', 'live']

@@ -33,6 +33,7 @@ export type ClientPatch = Partial<
     | 'website'
     | 'tiktok_handle'
     | 'drive_folder_url'
+    | 'logo_url'
     | 'vat_number'
     | 'billing_email'
     | 'summary'
