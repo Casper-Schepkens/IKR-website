@@ -38,6 +38,20 @@ export default async function LoginPage({
             {ERRORS[error]}
           </p>
         )}
+        {mode === 'unconfigured' && (
+          <p className="m-0 text-sm text-[#5E5670]">
+            Ontbrekende variabelen in deze omgeving:{' '}
+            <code className="font-mono text-xs">
+              {[
+                !process.env.NEXT_PUBLIC_SUPABASE_URL && 'NEXT_PUBLIC_SUPABASE_URL',
+                !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+              ]
+                .filter(Boolean)
+                .join(', ')}
+            </code>
+            . Na het toevoegen in Vercel is een nieuwe build nodig.
+          </p>
+        )}
         {mode === 'supabase' && <LoginButton next={next} />}
         {mode === 'demo' && (
           <Link
