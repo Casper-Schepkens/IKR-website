@@ -9,6 +9,9 @@ export interface LeadsRepo {
   update(id: string, input: LeadInput): Promise<void>
   setStage(id: string, stage: Stage): Promise<void>
   markLost(id: string, reason: LostReason, note: string | null): Promise<void>
+  /** Geen lead: verwijderen en het adres onthouden, zodat de inbox er geen nieuwe lead van maakt. */
+  removeNotALead(id: string): Promise<void>
+  ignoredEmails(): Promise<Set<string>>
 }
 
 function friendly(message: string) {
@@ -42,15 +45,25 @@ export function supabaseLeads(db: SupabaseClient): LeadsRepo {
     async markLost(id, reason, note) {
       check(await db.from('leads').update({ stage: 'lost', lost_reason: reason, lost_note: note }).eq('id', id))
     },
+    async removeNotALead(id) {
+      const lead = check(await db.from('leads').select('email').eq('id', id).maybeSingle())
+      if (lead?.email) check(await db.from('sales_ignored_emails').upsert({ email: lead.email.toLowerCase() }))
+      check(await db.from('leads').delete().eq('id', id))
+    },
+    async ignoredEmails() {
+      const rows = check(await db.from('sales_ignored_emails').select('email')) ?? []
+      return new Set(rows.map((r: { email: string }) => r.email))
+    },
   }
 }
 
 /** Alleen lokaal zonder Supabase: leads in het geheugen, zodat het scherm testbaar is. */
-const g = globalThis as unknown as { __ikrLeads?: Lead[] }
+const g = globalThis as unknown as { __ikrLeads?: Lead[]; __ikrIgnored?: Set<string> }
 export function memoryLeads(): LeadsRepo {
   const now = () => new Date().toISOString()
   if (!g.__ikrLeads) g.__ikrLeads = []
   const all = g.__ikrLeads
+  const ignored = (g.__ikrIgnored ??= new Set())
   const find = (id: string) => {
     const l = all.find((x) => x.id === id)
     if (!l) throw new Error('Lead niet gevonden')
@@ -93,6 +106,16 @@ export function memoryLeads(): LeadsRepo {
     async markLost(id, reason, note) {
       const l = find(id)
       Object.assign(l, { stage: 'lost', lost_reason: reason, lost_note: note, updated_at: now(), stage_changed_at: now() })
+    },
+    async removeNotALead(id) {
+      const i = all.findIndex((x) => x.id === id)
+      if (i >= 0) {
+        if (all[i].email) ignored.add(all[i].email!.toLowerCase())
+        all.splice(i, 1)
+      }
+    },
+    async ignoredEmails() {
+      return ignored
     },
   }
 }

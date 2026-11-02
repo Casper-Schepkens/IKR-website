@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { useEffect, useState, useTransition } from 'react'
-import { getAiJobAction, markLostAction, retryAiJobAction, sendInboxReplyAction } from '@/app/admin/actions'
-import { buttonClass, Card, input, muted, Pill, Spinner } from '../ui'
+import { dismissInboxAction, getAiJobAction, markLostAction, removeNotALeadAction, retryAiJobAction, sendInboxReplyAction } from '@/app/admin/actions'
+import { buttonClass, Card, Icon, input, muted, Pill, Spinner } from '../ui'
 import { cn } from '@/utilities/ui'
 
 const KIND: Record<string, { label: string; tone: 'green' | 'teal' | 'purple' | 'yellow' | 'orange' | 'light' }> = {
@@ -66,7 +66,7 @@ export function InboxCard(props: InboxCardProps) {
   if (sent) return null
 
   return (
-    <Card className="flex flex-col gap-3">
+    <Card className="relative flex flex-col gap-3 pb-16">
       <div className="flex flex-wrap items-center gap-2">
         <Link href={`/admin/sales/leads/${p.leadId}`} className="text-lg font-bold text-ikr-navy no-underline hover:text-[#0B7F93]">
           {p.leadName}
@@ -172,6 +172,29 @@ export function InboxCard(props: InboxCardProps) {
         <span role="alert" className="text-sm font-medium text-[#A3470F]">
           {error}
         </span>
+      )}
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => {
+          if (window.confirm(`${p.leadName} is geen lead? Dan wordt die verwijderd en verschijnen mails van dit adres niet meer in de inbox.`))
+            run(() => removeNotALeadAction(p.leadId), () => setSent(true))
+        }}
+        className={cn('absolute bottom-6 left-6 text-xs underline', muted)}
+      >
+        Geen lead
+      </button>
+      {job && (
+        <button
+          type="button"
+          disabled={pending}
+          aria-label="Geen antwoord nodig, verbergen"
+          title="Geen antwoord nodig"
+          onClick={() => run(() => dismissInboxAction(job.id), () => setSent(true))}
+          className="ikr-btn absolute right-4 bottom-4 flex size-9 items-center justify-center rounded-full bg-ikr-cream text-ikr-navy hover:bg-[#e6dfd2] disabled:opacity-60"
+        >
+          <Icon.close size={16} />
+        </button>
       )}
     </Card>
   )

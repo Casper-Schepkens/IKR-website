@@ -12,7 +12,8 @@ import {
 } from '@/lib/admin/sales/types'
 import { FormAction } from '@/components/admin/FormAction'
 import { Card, input, label, muted, Pill, Title } from '@/components/admin/ui'
-import { markLostAction, setStageAction, updateLeadAction } from '../../../../actions'
+import { markLostAction, removeNotALeadAndBackAction, setStageAction, updateLeadAction } from '../../../../actions'
+import { ConfirmSubmit } from '@/components/admin/ConfirmSubmit'
 import { cn } from '@/utilities/ui'
 
 export const metadata = { title: 'Lead' }
@@ -111,6 +112,16 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
                 ))}
               </select>
             </FormAction>
+          </Card>
+
+          <Card className="flex flex-col gap-2">
+            <Title className="m-0 text-2xl">Geen lead?</Title>
+            <p className={cn('m-0 text-sm', muted)}>
+              Verwijdert deze lead zonder lost te zetten (bv. een freelancer). Mails van dit adres verschijnen niet meer in de inbox.
+            </p>
+            <form action={removeNotALeadAndBackAction.bind(null, lead.id)}>
+              <ConfirmSubmit message={`${lead.name} definitief verwijderen?`}>Verwijderen</ConfirmSubmit>
+            </form>
           </Card>
 
           {!lost && (
