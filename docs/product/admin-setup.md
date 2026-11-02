@@ -10,6 +10,11 @@ de workflow staat, geen extra features.
   - `/admin/sales/cold-mails`: cold mails-dashboard (Apollo, enkel lezen). Toont het aantal nieuwe
     adressen dat nog gemaild moet worden in de actieve sequence (oranje onder 20 → Grokbot vragen),
     verstuurd → reacties → leads → setter calls → sales calls → gewonnen, en een overzicht per sequence;
+  - `/admin/sales/inbox`: sales-inbox (Gmail van casper@). Threads die Casper begon (cold mail) of met
+    een bekende lead, waarvan de laatste mail van de lead komt. Tabs "Nieuwe leads" en "Al gemaild" (met
+    context). Per reactie zet de AI een antwoord klaar (taak `inbox_reply` in `ai_jobs`); Casper past aan en
+    klikt Verstuur. Niet geïnteresseerd/uitschrijven: geen antwoord, wel "Markeer als lost". Een nieuwe
+    afzender wordt automatisch een lead; een telefoonnummer uit de mail komt bij de lead.
   - `/admin/sales`:
   - leads-overzicht met de funnel;
   - knop "Nieuwe lead";
@@ -60,9 +65,18 @@ de workflow staat, geen extra features.
 
 Volgens de sales-workflow in Lucid:
 1. ~~cold mails-dashboard (Apollo)~~ klaar;
-2. sales-inbox (Gmail + AI-antwoorden);
+2. ~~sales-inbox (Gmail + AI-antwoorden)~~ klaar;
 3. boekingspagina en agenda;
 4. lead-scan en scripts;
 5. Record, Fireflies, Drive en analyse;
 6. sales call plannen met reminders;
 7. opvolging.
+
+## AI-taken
+
+- Tabel `ai_jobs` = wachtrij. Engine `api` (standaard): de taak loopt meteen via de Claude API
+  (`ANTHROPIC_API_KEY`, model `claude-sonnet-5-5`). Met `IKR_AI_ENGINE=worker` blijven taken op `pending`
+  staan voor een worker op een eigen server (Claude Code), zonder dat het dashboard verandert.
+- Per taak worden model, tokens en kost (USD) bewaard. Overzicht: Instellingen → AI-kosten (enkel Casper).
+- Testweek: na een week de kost per maand bekijken en kiezen tussen API en een eigen server.
+- Vaste IKR-context: `src/lib/admin/ai/context.ts`. Taken: `src/lib/admin/ai/handlers.ts`.

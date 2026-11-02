@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto'
 import { requireAdmin } from '@/lib/admin/session'
 import { authUrl, isGoogleConfigured, SCOPES } from '@/lib/admin/google'
 import { CONTACT_EMAIL } from '@/lib/admin/weekly/types'
+import { canSeeSales } from '@/lib/admin/env'
 
 /** Start "Connect calendar": voor jezelf (?voor=mij) of voor de contact-agenda (?voor=contact). */
 export async function GET(req: NextRequest) {
@@ -19,8 +20,13 @@ export async function GET(req: NextRequest) {
       redirectUri: `${req.nextUrl.origin}/admin/auth/google/callback`,
       state,
       loginHint: forContact ? CONTACT_EMAIL : user.email,
-      // contact@ krijgt ook Drive: daar komen de opnames en transcripts van de weeklies.
-      scopes: forContact ? [SCOPES.calendar, SCOPES.drive] : [SCOPES.calendar],
+      // contact@: agenda + Drive (opnames en transcripts). Casper: enkel Gmail (sales-inbox); zijn
+      // agenda is persoonlijk en krijgt uitnodigingen. Cedric en Milan: hun agenda.
+      scopes: forContact
+        ? [SCOPES.calendar, SCOPES.drive]
+        : canSeeSales(user.email)
+          ? [SCOPES.gmailRead, SCOPES.gmailSend]
+          : [SCOPES.calendar],
     }),
   )
   res.cookies.set('ikr_google_state', `${state}:${forContact ? 'contact' : 'mij'}`, {

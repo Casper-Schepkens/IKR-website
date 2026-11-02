@@ -1,7 +1,8 @@
+/** `calendar`: waar agenda-uitnodigingen naartoe gaan (Casper gebruikt een persoonlijke agenda). */
 export const TEAM = [
-  { key: 'casper', name: 'Casper', email: 'casper@iknowright.be' },
-  { key: 'cedric', name: 'Cedric', email: 'cedric@iknowright.be' },
-  { key: 'milan', name: 'Milan', email: 'milan@iknowright.be' },
+  { key: 'casper', name: 'Casper', email: 'casper@iknowright.be', calendar: 'tandloosispam@gmail.com' },
+  { key: 'cedric', name: 'Cedric', email: 'cedric@iknowright.be', calendar: 'cedric@iknowright.be' },
+  { key: 'milan', name: 'Milan', email: 'milan@iknowright.be', calendar: 'milan@iknowright.be' },
 ] as const
 export type Owner = (typeof TEAM)[number]['key']
 export const OWNERS = TEAM.map((t) => t.key) as Owner[]
