@@ -4,6 +4,8 @@ import { CONTACT_EMAIL, TEAM } from '@/lib/admin/weekly/types'
 import { fmtDate } from '@/lib/admin/format'
 import { buttonClass, Card, muted, PageHeader, Pill, Title } from '@/components/admin/ui'
 import { cn } from '@/utilities/ui'
+import { canSeeSales } from '@/lib/admin/env'
+import { AiCosts } from './AiCosts'
 
 export const metadata = { title: 'Instellingen' }
 
@@ -13,24 +15,31 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const connections = await listConnections()
   const status = (email: string) => connections.find((c) => c.email === email)
   const rows = [
-    ...TEAM.map((t) => ({ label: t.name, email: t.email, mine: t.email === user.email.toLowerCase(), contact: false })),
-    { label: 'Contact-agenda', email: CONTACT_EMAIL, mine: false, contact: true },
+    ...TEAM.map((t) => ({
+      label: t.key === 'casper' ? 'Casper · Gmail (sales-inbox)' : t.name,
+      email: t.email,
+      note: t.calendar !== t.email ? `Agenda-uitnodigingen gaan naar ${t.calendar}` : null,
+      button: t.key === 'casper' ? 'Connect Gmail' : 'Connect calendar',
+      mine: t.email === user.email.toLowerCase(),
+      contact: false,
+    })),
+    { label: 'Contact-agenda', email: CONTACT_EMAIL, note: null, button: 'Connect calendar', mine: false, contact: true },
   ]
 
   return (
     <>
       <PageHeader eyebrow={`Ingelogd als ${user.email}`} title="Instellingen" />
-      {ok && <p className="m-0 rounded-2xl bg-[#DDF2DF] p-4 text-sm text-[#1E5B27]">Agenda gekoppeld.</p>}
+      {ok && <p className="m-0 rounded-2xl bg-[#DDF2DF] p-4 text-sm text-[#1E5B27]">Gekoppeld.</p>}
       {fout && (
         <p role="alert" className="m-0 rounded-2xl bg-[#FCE3D2] p-4 text-sm text-[#6E2E09]">
           {fout}
         </p>
       )}
       <Card className="flex flex-col gap-1">
-        <Title className="m-0 mb-1 text-2xl">Agenda&apos;s</Title>
+        <Title className="m-0 mb-1 text-2xl">Koppelingen</Title>
         <p className={cn('m-0 mb-2 text-sm', muted)}>
-          Elke weekly komt in de contact-agenda en in die van Casper; Cedric en Milan krijgen ze zodra hun agenda gekoppeld is.
-          Iedereen koppelt zijn eigen agenda; de contact-agenda koppel je één keer met contact@iknowright.be.
+          Elke weekly komt in de contact-agenda, met een uitnodiging voor Casper; Cedric en Milan krijgen ze zodra hun agenda
+          gekoppeld is. Iedereen koppelt zijn eigen account; de contact-agenda koppel je één keer met contact@iknowright.be.
         </p>
         {!isGoogleConfigured() && (
           <p className="m-0 mb-2 text-sm text-[#A3470F]">Google is nog niet ingesteld (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).</p>
@@ -42,6 +51,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               <div className="flex flex-[1_1_240px] flex-col">
                 <span className="font-semibold">{r.label}</span>
                 <span className={cn('text-xs', muted)}>{r.email}</span>
+                {r.note && <span className={cn('text-xs', muted)}>{r.note}</span>}
               </div>
               {c ? (
                 <Pill tone="green">Gekoppeld · {fmtDate(c.connected_at)}</Pill>
@@ -53,13 +63,14 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                   href={`/admin/auth/google/start?voor=${r.contact ? 'contact' : 'mij'}`}
                   className={buttonClass(c ? 'soft' : 'navy', true)}
                 >
-                  {c ? 'Opnieuw koppelen' : 'Connect calendar'}
+                  {c ? 'Opnieuw koppelen' : r.button}
                 </a>
               )}
             </div>
           )
         })}
       </Card>
+      {canSeeSales(user.email) && process.env.SUPABASE_SERVICE_ROLE_KEY && <AiCosts />}
     </>
   )
 }

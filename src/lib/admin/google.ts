@@ -10,6 +10,13 @@ import { createServiceSupabase } from './supabase/server'
 export const SCOPES = {
   calendar: 'https://www.googleapis.com/auth/calendar.events',
   drive: 'https://www.googleapis.com/auth/drive.file',
+  // Sales-inbox (enkel Casper): mails lezen en antwoorden versturen. Geen verwijderen.
+  gmailRead: 'https://www.googleapis.com/auth/gmail.readonly',
+  gmailSend: 'https://www.googleapis.com/auth/gmail.send',
+}
+
+export function hasScopes(c: { scopes: string } | undefined, needed: string[]) {
+  return Boolean(c && needed.every((s) => c.scopes.split(' ').includes(s)))
 }
 
 export function isGoogleConfigured() {
@@ -86,7 +93,7 @@ export async function listConnections(): Promise<Connection[]> {
   return data ?? []
 }
 
-async function accessToken(email: string) {
+export async function accessToken(email: string) {
   const { data } = await createServiceSupabase()
     .from('google_connections')
     .select('refresh_token')

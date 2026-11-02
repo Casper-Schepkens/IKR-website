@@ -38,8 +38,9 @@ async function scheduleWeekly(session: AdminSession, form: FormData) {
     if (!isGoogleConfigured()) throw new Error('Google is nog niet ingesteld, dus er is geen agenda-item gemaakt.')
     const connected = new Set((await listConnections()).map((c) => c.email))
     if (!connected.has(CONTACT_EMAIL)) throw new Error('De contact-agenda is nog niet gekoppeld (Instellingen).')
-    // Casper krijgt altijd een uitnodiging; Cedric en Milan zodra ze hun agenda gekoppeld hebben.
-    const attendees = TEAM.filter((t) => t.key === 'casper' || connected.has(t.email)).map((t) => t.email)
+    // Casper krijgt altijd een uitnodiging (in zijn persoonlijke agenda); Cedric en Milan zodra ze
+    // hun agenda gekoppeld hebben.
+    const attendees = TEAM.filter((t) => t.key === 'casper' || connected.has(t.email)).map((t) => t.calendar)
     const ev = await createEvent({
       calendarOwner: CONTACT_EMAIL,
       summary: `IKR weekly (${mode === 'online' ? 'online' : 'live'})`,
@@ -59,7 +60,9 @@ export async function planWeeklyAction(form: FormData) {
   return attempt(async () => {
     const session = await requireAdmin()
     if (currentWeekly(await session.weekly.listWeeklies())) throw new Error('Er staat al een weekly ingepland.')
-    await scheduleWeekly(session, form)
+    const weekly = await scheduleWeekly(session, form)
+    // To-do's die al klaarstonden, horen bij deze eerste weekly.
+    await session.weekly.assignPending(weekly.id)
   })
 }
 
