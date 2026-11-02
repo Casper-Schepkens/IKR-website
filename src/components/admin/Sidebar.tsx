@@ -21,12 +21,16 @@ export function Sidebar({
   sales: boolean
 }) {
   const pathname = usePathname()
-  const nav: NavItem[] = sales
-    ? [
-        { href: '/admin/sales/cold-mails', label: 'Cold mails', icon: Icon.mail },
-        { href: '/admin/sales', label: 'Leads', icon: Icon.users, exact: true },
-      ]
-    : []
+  const nav: NavItem[] = [
+    ...(sales
+      ? [
+          { href: '/admin/sales/cold-mails', label: 'Cold mails', icon: Icon.mail },
+          { href: '/admin/sales', label: 'Leads', icon: Icon.users, exact: true },
+        ]
+      : []),
+    { href: '/admin/weekly', label: 'Weekly', icon: Icon.calendar },
+    { href: '/admin/instellingen', label: 'Instellingen', icon: Icon.settings },
+  ]
   return (
     <nav
       aria-label="Hoofdmenu"
@@ -48,7 +52,7 @@ export function Sidebar({
           </span>
         )}
       </div>
-      {nav.length > 0 && (
+      {(
         <div className="flex flex-row flex-wrap gap-0.5 lg:flex-col">
           {nav.map((item) => {
             const active = item.exact

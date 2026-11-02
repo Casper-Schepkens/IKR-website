@@ -1,0 +1,85 @@
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { requireAdmin } from '@/lib/admin/session'
+import { ownerOf } from '@/lib/admin/weekly/types'
+import { fmtDate, fmtTime, isoDay } from '@/lib/admin/format'
+import { buttonClass, Card, muted, PageHeader, Pill, Title } from '@/components/admin/ui'
+import { TodoBoard } from '@/components/admin/weekly/TodoBoard'
+import { NewTodoForm } from '@/components/admin/weekly/NewTodoForm'
+import { PlanWeeklyForm } from '@/components/admin/weekly/PlanWeeklyForm'
+import { concludeWeeklyAction } from '../../../weekly-actions'
+import { cn } from '@/utilities/ui'
+
+export const metadata = { title: 'Weekly' }
+
+export default async function MeetingPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const { weekly, user } = await requireAdmin()
+  const [w, weeklies, todos] = await Promise.all([weekly.getWeekly(id), weekly.listWeeklies(), weekly.listTodos()])
+  if (!w) notFound()
+
+  const nextDefault = new Date(new Date(w.starts_at).getTime() + 7 * 86_400_000)
+
+  return (
+    <>
+      <nav aria-label="Kruimelpad" className={cn('text-sm', muted)}>
+        <Link href="/admin/weekly" className={cn(muted, 'no-underline hover:underline')}>
+          Weekly
+        </Link>{' '}
+        / <span className="font-semibold text-ikr-navy">Meeting</span>
+      </nav>
+      <PageHeader
+        eyebrow={`${fmtDate(w.starts_at, { weekday: 'long', day: 'numeric', month: 'long' })} · ${fmtTime(w.starts_at)}`}
+        title="Weekly"
+      >
+        <Pill tone={w.mode === 'online' ? 'teal' : 'purple'}>{w.mode === 'online' ? 'Online' : 'Live'}</Pill>
+      </PageHeader>
+
+      {w.status === 'concluded' ? (
+        <Card>
+          <p className={cn('m-0', muted)}>
+            Deze weekly is afgesloten. <Link href="/admin/weekly">Naar de volgende</Link>.
+          </p>
+        </Card>
+      ) : (
+        w.mode === 'online' && (
+          <Card className="flex flex-wrap items-center gap-4">
+            {w.meet_url ? (
+              <a href={w.meet_url} target="_blank" rel="noreferrer" className={buttonClass('cyan')}>
+                Open Google Meet
+              </a>
+            ) : (
+              <span className="text-sm text-[#A3470F]">Geen Meet-link ({w.calendar_error ?? 'agenda niet gekoppeld'}).</span>
+            )}
+            <label className="flex items-center gap-2 text-sm font-semibold">
+              <input type="checkbox" className="size-4 accent-[#0FC1DE]" />
+              Is Fireflies actief?
+            </label>
+          </Card>
+        )
+      )}
+
+      <TodoBoard todos={todos} weeklies={weeklies} />
+
+      {w.status !== 'concluded' && (
+        <>
+          <Card className="flex flex-col gap-3">
+            <Title className="m-0 text-2xl">To-do voor de volgende keer</Title>
+            <NewTodoForm defaultOwner={ownerOf(user.email)} />
+          </Card>
+          <Card dark className="flex flex-col gap-3">
+            <Title className="m-0 text-2xl text-ikr-cream-light">Conclude meeting</Title>
+            <p className="m-0 text-sm text-[#E7E2F0]">Plan de volgende weekly in. Bij online wordt de Meet meteen aangemaakt.</p>
+            <div className="rounded-2xl bg-ikr-cream-light p-4">
+              <PlanWeeklyForm
+                action={concludeWeeklyAction.bind(null, w.id)}
+                submitLabel="Afsluiten en inplannen"
+                defaults={{ date: isoDay(nextDefault), time: fmtTime(w.starts_at), mode: w.mode }}
+              />
+            </div>
+          </Card>
+        </>
+      )}
+    </>
+  )
+}

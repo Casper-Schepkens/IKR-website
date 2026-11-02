@@ -16,8 +16,13 @@ de workflow staat, geen extra features.
   - leadfiche met gegevens, volgende actie, opvolgdatum, notities, fase (voorlopig manueel)
     en "Lead lost" met reden en notitie;
   - lopende leads gesorteerd op opvolgdatum; achterstallige opvolging in het oranje.
-- Andere teamleden (@iknowright.be) kunnen inloggen en zien een lege startpagina tot hun
-  workflow in kaart is gebracht.
+- **Weekly** (`/admin/weekly`), gedeeld voor het hele team:
+  - to-do's per persoon en lange to-do's: Done, Notitie, Schuif door;
+  - de weekly inplannen (live of online met Meet) in de contact-agenda, met uitnodigingen
+    (Casper altijd, Cedric en Milan zodra hun agenda gekoppeld is);
+  - "Meeting starten", "Conclude meeting" (plant de volgende in) en "Vorige weeklies".
+- **Instellingen** (`/admin/instellingen`): "Connect calendar" per persoon en voor contact@iknowright.be.
+- Nog niet gebouwd voor de weekly: Fireflies-check, Record-knop, opname/transcript in de Drive.
 
 ## Toegang
 
@@ -43,6 +48,8 @@ de workflow staat, geen extra features.
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `APOLLO_API_KEY` (cold mails-dashboard)
+- `SUPABASE_SERVICE_ROLE_KEY` (Google-tokens server-side lezen)
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (agenda/Meet)
 
 ## Volgende stappen (sales)
 
