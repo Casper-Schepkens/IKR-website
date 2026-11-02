@@ -1,121 +1,47 @@
 # IKR Admin — setup
 
-Stap voor stap om `/admin` live te zetten. Zonder deze stappen draait `/admin` **lokaal in demomodus** (voorbeelddata, niets wordt bewaard). In productie toont `/admin` zonder Supabase alleen een "niet geconfigureerd"-melding.
+`/admin` is het interne dashboard van IKR. Het wordt per persoon gebouwd, op basis van de
+workflows in Lucidchart ("IKR Customer Journey – Volledige Flow"). Kernregel: enkel wat in
+de workflow staat, geen extra features.
 
-Alle variabelen staan ook in [`.env.example`](../../.env.example). Zet ze in **Vercel → Project → Settings → Environment Variables** (Production + Preview) en lokaal in `.env.local`.
+## Stand (2 nov 2026)
 
----
+- **Sales (Casper)**, `/admin/sales`, enkel voor `casper@iknowright.be`:
+  - leads-overzicht met de funnel;
+  - knop "Nieuwe lead";
+  - leadfiche met gegevens, fase (voorlopig manueel) en "Lead lost" met reden en notitie.
+- Andere teamleden (@iknowright.be) kunnen inloggen en zien een lege startpagina tot hun
+  workflow in kaart is gebracht.
 
-## 1. Supabase (database + login) — verplicht
+## Toegang
 
-> ✅ **Gedaan (31 okt 2026):** project `IKR` (`inmhplytfppamsriipuo`, eu-west-1). Beide migraties zijn toegepast. `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` en `SUPABASE_SERVICE_ROLE_KEY` staan in Vercel. Nog te doen: stap 2 (Google-login) en e-mail/wachtwoord-login uitzetten in Supabase.
+- Login: Google via Supabase Auth. Enkel @iknowright.be-adressen.
+- Sales is twee keer afgeschermd:
+  - in de app (`canSeeSales` in `src/lib/admin/env.ts`);
+  - in de database (RLS-policy op `public.leads` via `public.is_sales_user()`).
 
-1. Maak een project op [supabase.com](https://supabase.com) (regio: Frankfurt `eu-central-1`, dicht bij België en GDPR-vriendelijk).
-2. **SQL Editor** → plak en draai [`supabase/migrations/20261031000000_admin_core.sql`](../../supabase/migrations/20261031000000_admin_core.sql).
-   - Maakt alle tabellen, RLS-regels, de opslagbuckets `templates` en `decks`, en startinhoud voor het IKR-brein.
-   - Gebruik je een niet-`@iknowright.be`-adres (bv. gmail)? Voeg het toe onderaan de migratie:
-     `insert into public.admin_users (email, name) values ('jij@gmail.com', 'Casper');`
-3. **Project Settings → API**: kopieer
-   - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
-   - `anon public` key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `service_role` key → `SUPABASE_SERVICE_ROLE_KEY` (geheim, nooit in de browser)
+## Database
 
-## 2. Google-login — verplicht
+- `public.leads`: één tabel als bron van waarheid. Een lead bestaat pas vanaf het eerste
+  mailverkeer; contacten in Apollo zijn nog geen leads.
+- Fases: `lead`, `setter_planned`, `setter_done`, `sales_planned`, `sales_done`, `next_steps`,
+  `won`, `lost`.
+- Migratie: `supabase/migrations/20261102000000_sales_leads.sql`.
+- Oude tabellen van de eerste versie (`clients`, `contracts`, …) staan nog in de database maar
+  worden niet meer gebruikt.
 
-1. [Google Cloud Console](https://console.cloud.google.com) → nieuw project "IKR Admin" → **APIs & Services → OAuth consent screen**: type **Internal** (alleen jullie Workspace-accounts).
-2. **Credentials → Create OAuth client ID → Web application**
-   - Authorized redirect URI: `https://<jouw-project>.supabase.co/auth/v1/callback`
-3. Supabase → **Authentication → Providers → Google**: plak Client ID + Secret, zet aan.
-4. Supabase → **Authentication → URL Configuration**:
-   - Site URL: `https://iknowright.be`
-   - Redirect URLs: `https://iknowright.be/admin/auth/callback`, `http://localhost:3000/admin/auth/callback`, en eventueel je Vercel-preview-URL's (Supabase ondersteunt wildcards, bv. `https://ikr-website-*.vercel.app/admin/auth/callback`).
-5. Toegang: iedereen met `@iknowright.be` mag binnen. Extra adressen → `IKR_ADMIN_EMAILS` (komma-gescheiden) **én** de tabel `admin_users`.
+## Omgevingsvariabelen
 
-### Testen op een Vercel-preview
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-- Zet de Supabase-variabelen in Vercel ook op **Preview** (niet alleen Production). `NEXT_PUBLIC_*` wordt tijdens de build ingebakken: na het toevoegen is een **nieuwe build** nodig. Een "redeploy" via de API neemt de oude variabelen over, een git-push niet.
-- Voeg de preview-callback toe aan de Supabase Redirect URLs, bv. `https://ikr-website-git-<branch>-casper-schepkens.vercel.app/admin/auth/callback`.
-- Ontbreekt er iets, dan toont `/admin/login` welke variabelen deze omgeving mist.
+## Volgende stappen (sales)
 
-## 3. Claude-connector (AI via je Claude-abonnement, geen credits)
-
-Het dashboard is een MCP-server op `/api/mcp`. Claude logt in via de OAuth 2.1-server van Supabase.
-
-1. Supabase → **Authentication → OAuth Server**:
-   - **Enable** OAuth 2.1 server
-   - **Authorization path:** `/admin/oauth/consent`
-   - **Dynamic client registration:** aan (Claude registreert zich zelf)
-2. De Site URL (`https://iknowright.be`) + dat pad vormen de toestemmingspagina. Die werkt dus pas na een deploy naar productie.
-3. In Claude: **Settings → Connectors → Add custom connector** → URL `https://iknowright.be/api/mcp` → Connect → inloggen met Google → **Toestaan**.
-4. Zonder `ANTHROPIC_API_KEY` openen de AI-knoppen in het dashboard Claude met de juiste vraag ("Open in Claude").
-
-Tools: ikr_kennis, zoek_klanten, klant_dossier, week_overzicht, agenda, resultaten, ideeen_opslaan, idee_uitwerken, idee_status, notitie_toevoegen, fase_wijzigen, klant_aanmaken, klantprofiel_bijwerken, afspraak_plannen, draaiboek_opslaan, kennis_bijwerken. Niet mogelijk via de connector: klanten verwijderen, facturen versturen, TikTok-tokens.
-
-## 3c. Grok-bot (ideeën uitwerken)
-
-Zet `GROK_WEBHOOK_URL` (de webhook van de Cursor-automation) en `GROK_WEBHOOK_SECRET` (zelf gekozen lang geheim). Daarna staat bij elk idee een knop **Uitwerken met Grok**.
-
-**Wat de bot ontvangt** (`POST GROK_WEBHOOK_URL`, header `Authorization: Bearer <GROK_WEBHOOK_SECRET>`):
-
-```json
-{
-  "task": "develop_idea",
-  "instructions": "volledige opdracht in het Nederlands, incl. terugkoppel-URL",
-  "idea": { "id": "…", "titel": "…", "omschrijving": "…", "format": "…" },
-  "client": { "naam": "Wasbar", "context": "klantprofiel, eerdere ideeën, activiteit" },
-  "ikr_kennis": "…",
-  "callback": { "url": "https://iknowright.be/api/integrations/grok?idee=…&token=…", "method": "POST" }
-}
-```
-
-**Wat de bot terugstuurt** (`POST` naar `callback.url`, JSON):
-
-```json
-{ "titel": "optioneel", "hook": "…", "opbouw": ["…"], "shots": ["…"], "nodig": ["…"], "cta": "…" }
-```
-
-De link is per idee ondertekend; een andere of aangepaste link wordt geweigerd (401). Na 30 minuten zonder antwoord kan je het opnieuw vragen.
-
-## 3b. Claude API (optioneel: AI-knoppen rechtstreeks in het dashboard)
-
-1. [platform.claude.com](https://platform.claude.com) → API Keys → nieuwe sleutel → `ANTHROPIC_API_KEY`.
-2. Zet een **maandlimiet** in de Console (Billing → Limits).
-3. Let op: dit staat los van jullie claude.ai-abonnementen. De API wordt per gebruik betaald.
-4. Optioneel: `IKR_AI_MODEL` om een ander model te kiezen (standaard `claude-opus-5-5`).
-
-## 4. Dagelijkse job
-
-`CRON_SECRET` bestaat al (wekelijkse analytics-mail). De nieuwe job `/api/cron/admin-daily` (elke dag 05:00 UTC, zie `vercel.json`) gebruikt dezelfde sleutel en:
-- zet facturen van de komende 14 dagen klaar,
-- zet verstuurde facturen van > 30 dagen oud op "te laat",
-- haalt TikTok-statistieken op.
-
-## 5. Billit (facturen) — optioneel
-
-1. MyBillit → je **API-sleutel** en **PartyID** (sandbox en productie hebben een andere PartyID).
-2. Zet `BILLIT_API_KEY` en `BILLIT_PARTY_ID`. Test eerst met `BILLIT_API_BASE=https://api.sandbox.billit.be`.
-3. Vul per klant het **btw-nummer** en **facturatie-e-mail** in (Klantdossier → Gegevens).
-4. "Concept in Billit" maakt een verkoopfactuur aan (`POST /v1/orders`). Verzenden via Peppol doe je in Billit zelf.
-5. ⚠️ Te verifiëren met de sandbox: de headernamen `ApiKey` / `PartyID` (Billit-docs noemen ze niet letterlijk). Werkt het niet, pas `src/lib/admin/integrations/billit.ts` aan.
-6. Billit vermeldt dat API-sleutels voor "niet-commerciële integraties" zijn. Voor een eigen intern dashboard is dat normaal ok, maar check het met Billit support. Alternatief is hun OAuth-flow.
-
-## 6. TikTok (resultaten) — optioneel
-
-1. [developers.tiktok.com](https://developers.tiktok.com) → app aanmaken → producten **Login Kit** + **Display API** (scopes `user.info.basic`, `video.list`).
-2. Redirect URI: `https://iknowright.be/admin/auth/tiktok/callback`.
-3. `TIKTOK_CLIENT_KEY` + `TIKTOK_CLIENT_SECRET` instellen. TikTok laat de app eerst reviewen voor productie.
-4. Per klant: Klantdossier → Gegevens → **Koppel TikTok-account** → inloggen met het account van de klant.
-
-## 7. Templates voor decks
-
-Instellingen → **Presentatie-templates** → upload jullie .pptx. Tip: zet plaatshouders zoals `{{klant}}` en `{{idee_titel}}` in de slides. Dan blijft de lay-out exact behouden.
-
----
-
-## Lokaal ontwikkelen
-
-```bash
-npm run dev
-```
-
-Open `http://localhost:3000/admin`. Zonder `.env.local`-Supabase-variabelen krijg je de demomodus. Met `ANTHROPIC_API_KEY` in `.env.local` werken de AI-knoppen ook in demomodus.
+Volgens de sales-workflow in Lucid:
+1. cold mails-dashboard (Apollo);
+2. sales-inbox (Gmail + AI-antwoorden);
+3. boekingspagina en agenda;
+4. lead-scan en scripts;
+5. Record, Fireflies, Drive en analyse;
+6. sales call plannen met reminders;
+7. opvolging.
