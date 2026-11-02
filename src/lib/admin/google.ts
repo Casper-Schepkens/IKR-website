@@ -131,3 +131,59 @@ export async function createEvent(opts: {
   if (!res.ok || !json.id) throw new Error(`Agenda-item maken mislukt: ${json.error?.message ?? res.status}`)
   return { eventId: json.id, meetUrl: json.hangoutLink ?? null }
 }
+
+/** Zoekt (of maakt) een map in de Drive van `owner`. Met drive.file ziet het dashboard enkel zijn eigen mappen. */
+async function driveFolder(at: string, name: string) {
+  const q = `name = '${name.replace(/'/g, "\\'")}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`
+  const found = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)`, {
+    headers: { Authorization: `Bearer ${at}` },
+    cache: 'no-store',
+  }).then((r) => r.json() as Promise<{ files?: { id: string }[] }>)
+  if (found.files?.[0]) return found.files[0].id
+  const res = await fetch('https://www.googleapis.com/drive/v3/files?fields=id', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder' }),
+    cache: 'no-store',
+  })
+  const json = (await res.json()) as { id?: string; error?: { message?: string } }
+  if (!json.id) throw new Error(`Map maken in de Drive mislukt: ${json.error?.message ?? res.status}`)
+  return json.id
+}
+
+/**
+ * Start een upload naar de Drive van `owner`. De browser stuurt het bestand daarna rechtstreeks
+ * naar de teruggegeven URL (zo gaat de opname niet door de server, die een limiet van 4,5 MB heeft).
+ */
+export async function startDriveUpload(opts: { owner: string; folder: string; name: string; mimeType: string; origin: string }) {
+  const at = await accessToken(opts.owner)
+  const parent = await driveFolder(at, opts.folder)
+  const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${at}`,
+      'Content-Type': 'application/json; charset=UTF-8',
+      'X-Upload-Content-Type': opts.mimeType,
+      // Nodig zodat de browser daarna rechtstreeks naar Google mag uploaden (CORS).
+      Origin: opts.origin,
+    },
+    body: JSON.stringify({ name: opts.name, parents: [parent] }),
+    cache: 'no-store',
+  })
+  const url = res.headers.get('location')
+  if (!res.ok || !url) throw new Error(`Upload starten mislukt (${res.status}).`)
+  return url
+}
+
+/** Deelt een bestand met iedereen van het domein (lezen) en geeft de link terug. */
+export async function shareWithDomain(owner: string, fileId: string, domain: string) {
+  const at = await accessToken(owner)
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}/permissions?sendNotificationEmail=false`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'domain', role: 'reader', domain }),
+    cache: 'no-store',
+  })
+  if (!res.ok) throw new Error(`Delen in de Drive mislukt (${res.status}).`)
+  return `https://drive.google.com/file/d/${fileId}/view`
+}

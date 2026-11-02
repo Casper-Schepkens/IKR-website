@@ -22,7 +22,8 @@ de workflow staat, geen extra features.
     (Casper altijd, Cedric en Milan zodra hun agenda gekoppeld is);
   - "Meeting starten", "Conclude meeting" (plant de volgende in) en "Vorige weeklies".
 - **Instellingen** (`/admin/instellingen`): "Connect calendar" per persoon en voor contact@iknowright.be.
-- Nog niet gebouwd voor de weekly: Fireflies-check, Record-knop, opname/transcript in de Drive.
+- Live weeklies: Record-knop; de opname gaat naar de Drive van contact@ (map "IKR Dashboard – Weeklies"), gedeeld met iknowright.be.
+- Nog niet gebouwd voor de weekly: Fireflies-check en transcript naar de Drive (online).
 
 ## Toegang
 

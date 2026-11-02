@@ -3,8 +3,8 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { requireAdmin, type AdminSession } from '@/lib/admin/session'
-import { brusselsToIso } from '@/lib/admin/format'
-import { createEvent, isGoogleConfigured, listConnections } from '@/lib/admin/google'
+import { brusselsToIso, isoDay } from '@/lib/admin/format'
+import { createEvent, isGoogleConfigured, listConnections, shareWithDomain, startDriveUpload } from '@/lib/admin/google'
 import { CONTACT_EMAIL, OWNERS, TEAM, type Owner, type WeeklyMode } from '@/lib/admin/weekly/types'
 import { currentWeekly } from '@/lib/admin/weekly/board'
 import type { ActionResult } from './actions'
@@ -119,5 +119,31 @@ export async function pushTodoAction(id: string) {
   return attempt(async () => {
     const session = await requireAdmin()
     await session.weekly.push(id)
+  })
+}
+
+/** Start de upload van een opname van een live weekly naar de Drive van contact@. */
+export async function startWeeklyRecordingAction(id: string, mimeType: string, origin: string) {
+  try {
+    const session = await requireAdmin()
+    const w = await session.weekly.getWeekly(id)
+    if (!w) throw new Error('Weekly niet gevonden.')
+    if (!/^audio\/[a-z0-9.+-]+(;.*)?$/i.test(mimeType)) throw new Error('Onbekend opnameformaat.')
+    const ext = mimeType.includes('mp4') ? 'm4a' : mimeType.includes('ogg') ? 'ogg' : 'webm'
+    const name = `Weekly ${isoDay(new Date(w.starts_at))}.${ext}`
+    const url = await startDriveUpload({ owner: CONTACT_EMAIL, folder: 'IKR Dashboard – Weeklies', name, mimeType, origin })
+    return { ok: true as const, data: url }
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : 'Upload starten mislukt.' }
+  }
+}
+
+/** Na de upload: delen met het team en de link bij de weekly bewaren. */
+export async function finishWeeklyRecordingAction(id: string, fileId: string) {
+  return attempt(async () => {
+    const session = await requireAdmin()
+    if (!/^[\w-]{10,}$/.test(fileId)) throw new Error('Ongeldig bestand.')
+    const url = await shareWithDomain(CONTACT_EMAIL, fileId, 'iknowright.be')
+    await session.weekly.updateWeekly(id, { recording_url: url })
   })
 }

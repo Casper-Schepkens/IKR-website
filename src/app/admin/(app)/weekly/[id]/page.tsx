@@ -7,7 +7,8 @@ import { buttonClass, Card, muted, PageHeader, Pill, Title } from '@/components/
 import { TodoBoard } from '@/components/admin/weekly/TodoBoard'
 import { NewTodoForm } from '@/components/admin/weekly/NewTodoForm'
 import { PlanWeeklyForm } from '@/components/admin/weekly/PlanWeeklyForm'
-import { concludeWeeklyAction } from '../../../weekly-actions'
+import { concludeWeeklyAction, finishWeeklyRecordingAction, startWeeklyRecordingAction } from '../../../weekly-actions'
+import { RecordButton } from '@/components/admin/RecordButton'
 import { cn } from '@/utilities/ui'
 
 export const metadata = { title: 'Weekly' }
@@ -41,8 +42,22 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
             Deze weekly is afgesloten. <Link href="/admin/weekly">Naar de volgende</Link>.
           </p>
         </Card>
+      ) : w.mode === 'live' ? (
+        <Card className="flex flex-wrap items-center gap-4">
+          <span className="text-sm font-semibold">Live: neem de meeting op</span>
+          <RecordButton
+            startUpload={startWeeklyRecordingAction.bind(null, w.id)}
+            finish={finishWeeklyRecordingAction.bind(null, w.id)}
+            existingUrl={w.recording_url}
+          />
+          {w.recording_url && (
+            <a href={w.recording_url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-[#0B7F93]">
+              Open opname
+            </a>
+          )}
+        </Card>
       ) : (
-        w.mode === 'online' && (
+        (
           <Card className="flex flex-wrap items-center gap-4">
             {w.meet_url ? (
               <a href={w.meet_url} target="_blank" rel="noreferrer" className={buttonClass('cyan')}>
