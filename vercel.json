@@ -5,8 +5,8 @@
       "schedule": "0 7 * * 1"
     },
     {
-      "path": "/api/cron/admin-daily",
-      "schedule": "0 5 * * *"
+      "path": "/api/cron/weekly-transcripts",
+      "schedule": "0 6 * * *"
     }
   ]
 }

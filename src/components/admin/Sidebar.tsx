@@ -6,19 +6,31 @@ import { cn } from '@/utilities/ui'
 import { Icon } from './ui'
 import { signOutAction } from '@/app/admin/actions'
 
-const NAV = [
-  { href: '/admin', label: 'Vandaag', icon: Icon.home, exact: true },
-  { href: '/admin/klanten', label: 'Klanten', icon: Icon.users },
-  { href: '/admin/pipeline', label: 'Pipeline', icon: Icon.board },
-  { href: '/admin/kalender', label: 'Kalender', icon: Icon.calendar },
-  { href: '/admin/contracten', label: 'Contracten', icon: Icon.file },
-  { href: '/admin/resultaten', label: 'Resultaten', icon: Icon.chart },
-  { href: '/admin/kennis', label: 'IKR-kennis', icon: Icon.book },
-  { href: '/admin/instellingen', label: 'Instellingen', icon: Icon.settings },
-]
+type NavItem = { href: string; label: string; icon: (typeof Icon)[keyof typeof Icon]; exact?: boolean }
 
-export function Sidebar({ name, email, demo }: { name: string; email: string; demo: boolean }) {
+/** Menu per persoon: enkel wat bij iemands eigen workflow hoort. */
+export function Sidebar({
+  name,
+  email,
+  demo,
+  sales,
+}: {
+  name: string
+  email: string
+  demo: boolean
+  sales: boolean
+}) {
   const pathname = usePathname()
+  const nav: NavItem[] = [
+    ...(sales
+      ? [
+          { href: '/admin/sales/cold-mails', label: 'Cold mails', icon: Icon.mail },
+          { href: '/admin/sales', label: 'Leads', icon: Icon.users, exact: true },
+        ]
+      : []),
+    { href: '/admin/weekly', label: 'Weekly', icon: Icon.calendar },
+    { href: '/admin/instellingen', label: 'Instellingen', icon: Icon.settings },
+  ]
   return (
     <nav
       aria-label="Hoofdmenu"
@@ -32,7 +44,7 @@ export function Sidebar({ name, email, demo }: { name: string; email: string; de
           IKR.
         </Link>
         <span className="rounded-full bg-ikr-cyan px-2.5 py-1 text-xs font-semibold text-ikr-navy">
-          ADMIN
+          {sales ? 'SALES' : 'ADMIN'}
         </span>
         {demo && (
           <span className="rounded-full bg-[#FFF0C2] px-2.5 py-1 text-xs font-semibold text-[#6B5300]">
@@ -40,28 +52,32 @@ export function Sidebar({ name, email, demo }: { name: string; email: string; de
           </span>
         )}
       </div>
-      <div className="flex flex-row flex-wrap gap-0.5 lg:flex-col">
-        {NAV.map((item) => {
-          const active = item.exact ? pathname === item.href : pathname.startsWith(item.href)
-          const I = item.icon
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? 'page' : undefined}
-              className={cn(
-                'ikr-nav flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm no-underline transition-colors',
-                active
-                  ? 'bg-ikr-cyan font-bold text-ikr-navy'
-                  : 'font-medium text-ikr-cream hover:bg-white/10 hover:text-ikr-cream-light',
-              )}
-            >
-              <I />
-              {item.label}
-            </Link>
-          )
-        })}
-      </div>
+      {(
+        <div className="flex flex-row flex-wrap gap-0.5 lg:flex-col">
+          {nav.map((item) => {
+            const active = item.exact
+              ? pathname === item.href || pathname.startsWith(`${item.href}/leads`)
+              : pathname.startsWith(item.href)
+            const I = item.icon
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? 'page' : undefined}
+                className={cn(
+                  'ikr-nav flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm no-underline transition-colors',
+                  active
+                    ? 'bg-ikr-cyan font-bold text-ikr-navy'
+                    : 'font-medium text-ikr-cream hover:bg-white/10 hover:text-ikr-cream-light',
+                )}
+              >
+                <I />
+                {item.label}
+              </Link>
+            )
+          })}
+        </div>
+      )}
       <div className="mt-auto hidden flex-col gap-3 px-2.5 lg:flex">
         <span className="text-xs text-[#B9B2C9]">Ingelogd als</span>
         <div className="flex items-center gap-2.5">
@@ -75,10 +91,7 @@ export function Sidebar({ name, email, demo }: { name: string; email: string; de
         </div>
         {!demo && (
           <form action={signOutAction}>
-            <button
-              type="submit"
-              className="text-xs text-[#B9B2C9] underline hover:text-ikr-cream-light"
-            >
+            <button type="submit" className="text-xs text-[#B9B2C9] underline hover:text-ikr-cream-light">
               Afmelden
             </button>
           </form>

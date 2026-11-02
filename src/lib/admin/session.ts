@@ -2,19 +2,13 @@ import 'server-only'
 import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { connection } from 'next/server'
-import { isAllowedAdminEmail, isDemoMode, isSupabaseConfigured } from './env'
+import { canSeeSales, isAllowedAdminEmail, isDemoMode, isSupabaseConfigured, SALES_EMAIL } from './env'
 import { createServerSupabase } from './supabase/server'
-import { createSupabaseRepo } from './data/supabase'
-import { createDemoRepo } from './data/demo'
-import type { AdminRepo } from './data/repo'
-import type { AdminUser } from './types'
+import { memoryLeads, supabaseLeads, type LeadsRepo } from './sales/repo'
+import { memoryWeekly, supabaseWeekly, type WeeklyRepo } from './weekly/repo'
 
-export type AdminSession = {
-  user: AdminUser
-  repo: AdminRepo
-  mode: 'supabase' | 'demo'
-}
-
+export type AdminUser = { email: string; name: string }
+export type AdminSession = { user: AdminUser; mode: 'supabase' | 'demo'; leads: LeadsRepo; weekly: WeeklyRepo }
 export type AdminMode = 'supabase' | 'demo' | 'unconfigured'
 
 export function adminMode(): AdminMode {
@@ -23,25 +17,18 @@ export function adminMode(): AdminMode {
   return 'unconfigured'
 }
 
-function nameFromEmail(email: string, metaName?: string | null) {
+function firstName(email: string, metaName?: string | null) {
   if (metaName) return metaName.split(' ')[0]
   const local = email.split('@')[0]
   return local.charAt(0).toUpperCase() + local.slice(1).split(/[._-]/)[0]
 }
 
-/**
- * Ingelogde admin + datalaag. Stuurt naar /admin/login als er geen (geldige) sessie is.
- * Gebruik in elke admin-pagina en server action.
- */
+/** Ingelogd teamlid. Stuurt naar /admin/login als er geen geldige sessie is. */
 export const requireAdmin = cache(async (): Promise<AdminSession> => {
-  // Admin-data is altijd per request en per gebruiker: nooit statisch voorrenderen.
   await connection()
   const mode = adminMode()
   if (mode === 'unconfigured') redirect('/admin/login?error=niet-geconfigureerd')
-
-  if (mode === 'demo') {
-    return { user: { email: 'demo@iknowright.be', name: 'Casper' }, repo: createDemoRepo(), mode }
-  }
+  if (mode === 'demo') return { user: { email: SALES_EMAIL, name: 'Casper' }, mode, leads: memoryLeads(), weekly: memoryWeekly() }
 
   const supabase = await createServerSupabase()
   const {
@@ -49,13 +36,18 @@ export const requireAdmin = cache(async (): Promise<AdminSession> => {
   } = await supabase.auth.getUser()
   if (!user) redirect('/admin/login')
   if (!isAllowedAdminEmail(user.email)) redirect('/admin/login?error=geen-toegang')
-
-  const metaName =
-    (user.user_metadata?.full_name as string | undefined) ??
-    (user.user_metadata?.name as string | undefined)
+  const meta = user.user_metadata ?? {}
   return {
-    user: { email: user.email!, name: nameFromEmail(user.email!, metaName) },
-    repo: createSupabaseRepo(supabase),
+    user: { email: user.email!, name: firstName(user.email!, (meta.full_name ?? meta.name) as string | undefined) },
     mode,
+    leads: supabaseLeads(supabase),
+    weekly: supabaseWeekly(supabase),
   }
 })
+
+/** Sales-onderdelen: enkel voor Casper. Anderen gaan terug naar hun eigen startpagina. */
+export async function requireSales() {
+  const session = await requireAdmin()
+  if (!canSeeSales(session.user.email)) redirect('/admin')
+  return session
+}
