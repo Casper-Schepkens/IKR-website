@@ -6,7 +6,11 @@ de workflow staat, geen extra features.
 
 ## Stand (2 nov 2026)
 
-- **Sales (Casper)**, `/admin/sales`, enkel voor `casper@iknowright.be`:
+- **Sales (Casper)**, enkel voor `casper@iknowright.be`:
+  - `/admin/sales/cold-mails`: cold mails-dashboard (Apollo, enkel lezen). Toont het aantal nieuwe
+    adressen dat nog gemaild moet worden in de actieve sequence (oranje onder 20 → Grokbot vragen),
+    verstuurd → reacties → leads → setter calls → sales calls → gewonnen, en een overzicht per sequence;
+  - `/admin/sales`:
   - leads-overzicht met de funnel;
   - knop "Nieuwe lead";
   - leadfiche met gegevens, volgende actie, opvolgdatum, notities, fase (voorlopig manueel)
@@ -38,11 +42,12 @@ de workflow staat, geen extra features.
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `APOLLO_API_KEY` (cold mails-dashboard)
 
 ## Volgende stappen (sales)
 
 Volgens de sales-workflow in Lucid:
-1. cold mails-dashboard (Apollo);
+1. ~~cold mails-dashboard (Apollo)~~ klaar;
 2. sales-inbox (Gmail + AI-antwoorden);
 3. boekingspagina en agenda;
 4. lead-scan en scripts;

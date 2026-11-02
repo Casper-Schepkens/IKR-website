@@ -6,7 +6,7 @@ import { cn } from '@/utilities/ui'
 import { Icon } from './ui'
 import { signOutAction } from '@/app/admin/actions'
 
-type NavItem = { href: string; label: string; icon: (typeof Icon)[keyof typeof Icon] }
+type NavItem = { href: string; label: string; icon: (typeof Icon)[keyof typeof Icon]; exact?: boolean }
 
 /** Menu per persoon: enkel wat bij iemands eigen workflow hoort. */
 export function Sidebar({
@@ -21,7 +21,12 @@ export function Sidebar({
   sales: boolean
 }) {
   const pathname = usePathname()
-  const nav: NavItem[] = sales ? [{ href: '/admin/sales', label: 'Leads', icon: Icon.users }] : []
+  const nav: NavItem[] = sales
+    ? [
+        { href: '/admin/sales/cold-mails', label: 'Cold mails', icon: Icon.mail },
+        { href: '/admin/sales', label: 'Leads', icon: Icon.users, exact: true },
+      ]
+    : []
   return (
     <nav
       aria-label="Hoofdmenu"
@@ -46,7 +51,9 @@ export function Sidebar({
       {nav.length > 0 && (
         <div className="flex flex-row flex-wrap gap-0.5 lg:flex-col">
           {nav.map((item) => {
-            const active = pathname.startsWith(item.href)
+            const active = item.exact
+              ? pathname === item.href || pathname.startsWith(`${item.href}/leads`)
+              : pathname.startsWith(item.href)
             const I = item.icon
             return (
               <Link
