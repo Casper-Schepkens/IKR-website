@@ -55,6 +55,24 @@ dashboard is ontworpen zonder onze processen te kennen. Nu functioneel maken, zo
    tool-loop met Google/Notion-API's of MCP-connector), welke OAuth-koppelingen nodig zijn, wat de AI
    alleen mag lezen en wat ze mag schrijven (bv. mails enkel als concept), en hoe dat in de kosten past.
 
+**Aanpak sinds 2 nov 2026: eerst workflows in kaart, pas daarna bouwen.**
+- Workflows staan in Lucidchart "IKR Customer Journey – Volledige Flow":
+  https://lucid.app/lucidchart/0d936f74-586c-4d45-bed3-04e9d6abbea3/edit
+- Klaar (v1): pagina "Sales workflow (Casper)", van cold mail tot beslissing.
+- Volgende workflow: productie (Cedric & Milan).
+- Beslissingen sales:
+  - geen diskwalificatie op grootte (enkel een inschatting);
+  - opnemen via een Record-knop, tenzij bellen via de laptop gratis en makkelijk blijkt;
+  - één leads-tabel in Supabase waar dashboard en Grokbot in lezen en schrijven.
+
+**Voor later (Casper):**
+- Financiën automatiseren.
+- De weekly automatiseren.
+- De IKR AI via Claude Code laten lopen (Casper heeft een idee).
+- Out of office-reacties afhandelen.
+- Proces na de sales call uitschrijven (opvolgmails, voorstel, contract).
+- Brug sales → onboarding.
+
 Stand na PR #29 (klanten/leads gesplitst, logo's, alle AI via API, API-kosten in instellingen):
 - Contracten in Supabase bijgewerkt uit Drive (Tempus nieuw contract vanaf 1/11/2026, Chez Albert €1.500/mnd).
   Nog aanvullen: bedrag + data Wasbar en Lilalou (staan als concept), verlenging Oh!ma, startdatum Chez Albert.
