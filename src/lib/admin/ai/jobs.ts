@@ -17,7 +17,7 @@ export type AiJob = {
   type: JobType
   ref: string | null
   input: Record<string, unknown>
-  status: 'pending' | 'running' | 'done' | 'error' | 'waiting_limit'
+  status: 'pending' | 'running' | 'done' | 'error' | 'waiting_limit' | 'dismissed'
   output: Record<string, unknown> | null
   error: string | null
   engine: string | null
@@ -70,6 +70,12 @@ export async function jobsByRef(type: JobType, refs: string[]): Promise<AiJob[]>
   const { data, error } = await db().from('ai_jobs').select('*').eq('type', type).in('ref', refs)
   if (error) throw new Error(error.message)
   return (data ?? []) as AiJob[]
+}
+
+/** Weggeklikt: niet meer tonen (en niet meer uitvoeren). */
+export async function dismissJob(id: string) {
+  const { error } = await db().from('ai_jobs').update({ status: 'dismissed' }).eq('id', id)
+  if (error) throw new Error(error.message)
 }
 
 export async function getJob(id: string): Promise<AiJob | null> {

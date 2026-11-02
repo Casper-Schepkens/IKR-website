@@ -83,6 +83,7 @@ export async function loadInbox(session: AdminSession): Promise<InboxResult> {
         session.user.email,
       )
     }
+    if (job.status === 'dismissed') continue
     if (job.status === 'pending') pendingJobIds.push(job.id)
     withJobs.push({ ...i, job })
   }
