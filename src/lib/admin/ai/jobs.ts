@@ -72,6 +72,11 @@ export async function jobsByRef(type: JobType, refs: string[]): Promise<AiJob[]>
   return (data ?? []) as AiJob[]
 }
 
+export async function getJob(id: string): Promise<AiJob | null> {
+  const { data } = await db().from('ai_jobs').select('*').eq('id', id).maybeSingle()
+  return (data as AiJob | null) ?? null
+}
+
 export async function listJobs(sinceIso: string): Promise<AiJob[]> {
   const { data, error } = await db()
     .from('ai_jobs')

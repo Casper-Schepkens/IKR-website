@@ -6,7 +6,7 @@ import { requireSales } from '@/lib/admin/session'
 import { createServerSupabase } from '@/lib/admin/supabase/server'
 import { isSupabaseConfigured, SALES_EMAIL } from '@/lib/admin/env'
 import { getThread, sendReply } from '@/lib/admin/gmail'
-import { runJob } from '@/lib/admin/ai/jobs'
+import { getJob, runJob } from '@/lib/admin/ai/jobs'
 import {
   LOST_REASONS,
   SOURCES,
@@ -131,4 +131,12 @@ export async function retryAiJobAction(jobId: string) {
     await runJob(jobId)
     revalidatePath('/admin/sales/inbox')
   })
+}
+
+/** Status van een AI-taak opvragen (de inbox wacht hierop, zonder Gmail opnieuw te bevragen). */
+export async function getAiJobAction(jobId: string) {
+  await requireSales()
+  const job = await getJob(jobId)
+  if (!job) return null
+  return { id: job.id, status: job.status, error: job.error, output: job.output }
 }

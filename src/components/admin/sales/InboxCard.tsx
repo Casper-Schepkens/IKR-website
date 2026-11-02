@@ -2,8 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
-import { markLostAction, retryAiJobAction, sendInboxReplyAction } from '@/app/admin/actions'
+import { getAiJobAction, markLostAction, retryAiJobAction, sendInboxReplyAction } from '@/app/admin/actions'
 import { buttonClass, Card, input, muted, Pill, Spinner } from '../ui'
 import { cn } from '@/utilities/ui'
 
@@ -30,27 +29,38 @@ export type InboxCardProps = {
   job: { id: string; status: string; error: string | null; output: { kind?: string; draft?: string | null; context?: string | null } | null } | null
 }
 
-export function InboxCard(p: InboxCardProps) {
-  const [body, setBody] = useState(p.job?.output?.draft ?? '')
+type Job = NonNullable<InboxCardProps['job']>
+
+export function InboxCard(props: InboxCardProps) {
+  const [job, setJob] = useState<Job | null>(props.job)
+  const p = { ...props, job }
+  const [body, setBody] = useState(props.job?.output?.draft ?? '')
   const [pending, start] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [sent, setSent] = useState(false)
-  const router = useRouter()
   const out = p.job?.output
   const kind = out?.kind ? KIND[out.kind] : null
   const lostHint = out?.kind === 'not_interested' || out?.kind === 'unsubscribe'
 
-  useEffect(() => setBody(p.job?.output?.draft ?? ''), [p.job?.output?.draft])
+  useEffect(() => setBody(job?.output?.draft ?? ''), [job?.output?.draft])
+
+  // Zolang de AI bezig is: enkel de status van deze taak opvragen (geen Gmail).
+  const waiting = !job || job.status === 'pending' || job.status === 'running'
+  useEffect(() => {
+    if (!waiting || !job) return
+    const t = setInterval(async () => {
+      const fresh = await getAiJobAction(job.id)
+      if (fresh) setJob(fresh as Job)
+    }, 4000)
+    return () => clearInterval(t)
+  }, [waiting, job])
 
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>, after?: () => void) =>
     start(async () => {
       setError(null)
       const res = await fn()
       if (!res.ok) setError(res.error ?? 'Er ging iets mis.')
-      else {
-        after?.()
-        router.refresh()
-      }
+      else after?.()
     })
 
   if (sent) return null
@@ -86,7 +96,21 @@ export function InboxCard(p: InboxCardProps) {
       {p.job && (p.job.status === 'error' || p.job.status === 'waiting_limit') && (
         <span className="flex flex-wrap items-center gap-2 text-sm text-[#A3470F]">
           {p.job.error}
-          <button type="button" disabled={pending} onClick={() => run(() => retryAiJobAction(p.job!.id))} className={buttonClass('soft', true)}>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() =>
+              start(async () => {
+                setError(null)
+                setJob({ ...p.job!, status: 'running', error: null })
+                const res = await retryAiJobAction(p.job!.id)
+                if (!res.ok) setError(res.error)
+                const fresh = await getAiJobAction(p.job!.id)
+                if (fresh) setJob(fresh as Job)
+              })
+            }
+            className={buttonClass('soft', true)}
+          >
             {pending && <Spinner />} Opnieuw
           </button>
         </span>
@@ -151,15 +175,4 @@ export function InboxCard(p: InboxCardProps) {
       )}
     </Card>
   )
-}
-
-/** Ververst de pagina zolang er nog antwoorden klaargezet worden. */
-export function RefreshWhilePending({ active }: { active: boolean }) {
-  const router = useRouter()
-  useEffect(() => {
-    if (!active) return
-    const t = setInterval(() => router.refresh(), 5000)
-    return () => clearInterval(t)
-  }, [active, router])
-  return null
 }

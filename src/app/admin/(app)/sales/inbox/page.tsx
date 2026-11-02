@@ -1,10 +1,12 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
+import type { AdminSession } from '@/lib/admin/session'
 import { after } from 'next/server'
 import { requireSales } from '@/lib/admin/session'
 import { loadInbox } from '@/lib/admin/sales/inbox'
 import { isAiConfigured, runJob } from '@/lib/admin/ai/jobs'
-import { buttonClass, Card, Empty, muted, PageHeader } from '@/components/admin/ui'
-import { InboxCard, RefreshWhilePending } from '@/components/admin/sales/InboxCard'
+import { buttonClass, Card, Empty, muted, PageHeader, Spinner } from '@/components/admin/ui'
+import { InboxCard } from '@/components/admin/sales/InboxCard'
 import { cn } from '@/utilities/ui'
 
 export const metadata = { title: 'Inbox' }
@@ -14,7 +16,23 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
   const { tab: tabParam } = await searchParams
   const tab = tabParam === 'gemaild' ? 'gemaild' : 'nieuw'
   const session = await requireSales()
+  return (
+    <Suspense
+      fallback={
+        <>
+          <PageHeader title="Inbox" />
+          <Card className="flex items-center gap-2 text-sm font-semibold">
+            <Spinner /> Inbox laden…
+          </Card>
+        </>
+      }
+    >
+      <Inbox session={session} tab={tab} />
+    </Suspense>
+  )
+}
 
+async function Inbox({ session, tab }: { session: AdminSession; tab: 'nieuw' | 'gemaild' }) {
   let result: Awaited<ReturnType<typeof loadInbox>>
   try {
     result = await loadInbox(session)
@@ -55,11 +73,9 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
 
   const items = result.items.filter((i) => i.tab === tab)
   const count = (t: 'nieuw' | 'gemaild') => result.items.filter((i) => i.tab === t).length
-  const busy = result.items.some((i) => !i.job || i.job.status === 'pending' || i.job.status === 'running')
 
   return (
     <>
-      <RefreshWhilePending active={busy} />
       <PageHeader eyebrow={`${result.items.length} sales-mails wachten op een antwoord`} title="Inbox" />
       {!isAiConfigured() && (
         <p className="m-0 rounded-2xl bg-[#FCE3D2] p-4 text-sm text-[#6E2E09]">

@@ -23,16 +23,43 @@ type RawMessage = { id: string; threadId: string; internalDate: string; payload:
 
 const API = 'https://gmail.googleapis.com/gmail/v1/users/me'
 
-async function gmail<T>(owner: string, path: string, init?: RequestInit): Promise<T> {
+async function gmail<T>(owner: string, path: string, init?: RequestInit, retry = true): Promise<T> {
   const at = await accessToken(owner)
   const res = await fetch(`${API}${path}`, {
     ...init,
     headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json', ...init?.headers },
     cache: 'no-store',
   })
+  // Gmail-quotum per seconde: even wachten en één keer opnieuw proberen.
+  if ((res.status === 429 || res.status === 403) && retry) {
+    const body = await res.clone().text()
+    if (res.status === 429 || /quota|rate/i.test(body)) {
+      await new Promise((r) => setTimeout(r, 2000))
+      return gmail<T>(owner, path, init, false)
+    }
+  }
   const json = (await res.json()) as T & { error?: { message?: string } }
-  if (!res.ok) throw new Error(`Gmail: ${json.error?.message ?? res.status}`)
+  if (!res.ok) {
+    if (res.status === 429 || /quota/i.test(json.error?.message ?? ''))
+      throw new Error('Gmail is even te druk bevraagd. Wacht een minuutje en herlaad de inbox.')
+    throw new Error(`Gmail: ${json.error?.message ?? res.status}`)
+  }
   return json
+}
+
+/** Voert taken uit met hooguit `n` tegelijk (Gmail laat per seconde maar een beperkt aantal toe). */
+async function limited<T, R>(items: T[], n: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = new Array(items.length)
+  let next = 0
+  await Promise.all(
+    Array.from({ length: Math.min(n, items.length) }, async () => {
+      while (next < items.length) {
+        const i = next++
+        out[i] = await fn(items[i])
+      }
+    }),
+  )
+  return out
 }
 
 const decode = (d?: string) => (d ? Buffer.from(d, 'base64url').toString('utf8') : '')
@@ -83,16 +110,29 @@ function toMail(m: RawMessage): Mail {
   }
 }
 
-/** Recente inbox-threads van de laatste 45 dagen. */
-export async function recentThreads(owner: string, max = 40): Promise<Thread[]> {
-  const list = await gmail<{ threads?: { id: string }[] }>(
+const g = globalThis as unknown as { __ikrThreads?: Map<string, { historyId: string; thread: Thread }> }
+function threadCache() {
+  if (!g.__ikrThreads) g.__ikrThreads = new Map()
+  if (g.__ikrThreads.size > 500) g.__ikrThreads.clear()
+  return g.__ikrThreads
+}
+
+/** Recente inbox-threads (30 dagen) met minstens één mail die niet van jezelf is. */
+export async function recentThreads(owner: string, max = 25): Promise<Thread[]> {
+  const list = await gmail<{ threads?: { id: string; historyId: string }[] }>(
     owner,
-    `/threads?maxResults=${max}&q=${encodeURIComponent('in:inbox newer_than:45d')}`,
+    `/threads?maxResults=${max}&q=${encodeURIComponent('in:inbox newer_than:30d -from:me')}`,
   )
-  const threads = await Promise.all(
-    (list.threads ?? []).map((t) => gmail<{ id: string; messages: RawMessage[] }>(owner, `/threads/${t.id}?format=full`)),
-  )
-  return threads.map((t) => ({ id: t.id, mails: t.messages.map(toMail) }))
+  // Enkel threads ophalen die veranderd zijn sinds de vorige keer (historyId), de rest uit het geheugen.
+  const cache = threadCache()
+  return limited(list.threads ?? [], 4, async (t) => {
+    const hit = cache.get(t.id)
+    if (hit && hit.historyId === t.historyId) return hit.thread
+    const raw = await gmail<{ id: string; messages: RawMessage[] }>(owner, `/threads/${t.id}?format=full`)
+    const thread = { id: raw.id, mails: raw.messages.map(toMail) }
+    cache.set(t.id, { historyId: t.historyId, thread })
+    return thread
+  })
 }
 
 const encodeHeader = (v: string) => (/^[\x20-\x7e]*$/.test(v) ? v : `=?UTF-8?B?${Buffer.from(v).toString('base64')}?=`)
