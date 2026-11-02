@@ -32,12 +32,16 @@ export async function loadInbox(session: AdminSession): Promise<InboxResult> {
   if (!hasScopes(conn, [SCOPES.gmailRead, SCOPES.gmailSend]))
     return { status: 'not_connected', reason: 'Gmail is nog niet gekoppeld: klik in Instellingen op "Connect Gmail".' }
 
-  const [threads, leads] = await Promise.all([recentThreads(SALES_EMAIL), session.leads.list()])
+  const [threads, leads, ignored] = await Promise.all([
+    recentThreads(SALES_EMAIL),
+    session.leads.list(),
+    session.leads.ignoredEmails(),
+  ])
   const byEmail = new Map(leads.filter((l) => l.email).map((l) => [l.email!.toLowerCase(), l]))
 
   const waiting = threads.filter((t) => {
     const last = t.mails[t.mails.length - 1]
-    if (!last || isInternal(last)) return false
+    if (!last || isInternal(last) || ignored.has(last.fromEmail)) return false
     return isCasper(t.mails[0]) || byEmail.has(last.fromEmail)
   })
 

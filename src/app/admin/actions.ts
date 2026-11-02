@@ -148,3 +148,19 @@ export async function dismissInboxAction(jobId: string) {
     await dismissJob(jobId)
   })
 }
+
+/** Geen lead (bv. een freelancer): verwijderen zonder lost te zetten; de inbox negeert het adres voortaan. */
+export async function removeNotALeadAction(id: string) {
+  return attempt(async () => {
+    const { leads } = await requireSales()
+    await leads.removeNotALead(id)
+    revalidatePath('/admin/sales')
+  })
+}
+
+export async function removeNotALeadAndBackAction(id: string) {
+  const { leads } = await requireSales()
+  await leads.removeNotALead(id)
+  revalidatePath('/admin/sales')
+  redirect('/admin/sales')
+}

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState, useTransition } from 'react'
-import { dismissInboxAction, getAiJobAction, markLostAction, retryAiJobAction, sendInboxReplyAction } from '@/app/admin/actions'
+import { dismissInboxAction, getAiJobAction, markLostAction, removeNotALeadAction, retryAiJobAction, sendInboxReplyAction } from '@/app/admin/actions'
 import { buttonClass, Card, Icon, input, muted, Pill, Spinner } from '../ui'
 import { cn } from '@/utilities/ui'
 
@@ -173,6 +173,17 @@ export function InboxCard(props: InboxCardProps) {
           {error}
         </span>
       )}
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => {
+          if (window.confirm(`${p.leadName} is geen lead? Dan wordt die verwijderd en verschijnen mails van dit adres niet meer in de inbox.`))
+            run(() => removeNotALeadAction(p.leadId), () => setSent(true))
+        }}
+        className={cn('absolute bottom-6 left-6 text-xs underline', muted)}
+      >
+        Geen lead
+      </button>
       {job && (
         <button
           type="button"
