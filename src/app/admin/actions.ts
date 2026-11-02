@@ -32,6 +32,12 @@ function str(form: FormData, key: string) {
   return t.length ? t : null
 }
 
+function followUpInput(form: FormData) {
+  const date = str(form, 'follow_up_on')
+  if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('Kies een geldige datum.')
+  return { next_action: str(form, 'next_action'), follow_up_on: date, notes: str(form, 'notes') }
+}
+
 function leadInput(form: FormData): LeadInput {
   const name = str(form, 'name')
   if (!name) throw new Error('Naam is verplicht.')
@@ -70,7 +76,7 @@ export async function createLeadAction(form: FormData) {
 export async function updateLeadAction(id: string, form: FormData) {
   return attempt(async () => {
     const { leads } = await requireSales()
-    await leads.update(id, leadInput(form))
+    await leads.update(id, { ...leadInput(form), ...followUpInput(form) })
     revalidatePath('/admin/sales')
   })
 }

@@ -9,7 +9,9 @@ de workflow staat, geen extra features.
 - **Sales (Casper)**, `/admin/sales`, enkel voor `casper@iknowright.be`:
   - leads-overzicht met de funnel;
   - knop "Nieuwe lead";
-  - leadfiche met gegevens, fase (voorlopig manueel) en "Lead lost" met reden en notitie.
+  - leadfiche met gegevens, volgende actie, opvolgdatum, notities, fase (voorlopig manueel)
+    en "Lead lost" met reden en notitie;
+  - lopende leads gesorteerd op opvolgdatum; achterstallige opvolging in het oranje.
 - Andere teamleden (@iknowright.be) kunnen inloggen en zien een lege startpagina tot hun
   workflow in kaart is gebracht.
 
@@ -27,8 +29,10 @@ de workflow staat, geen extra features.
 - Fases: `lead`, `setter_planned`, `setter_done`, `sales_planned`, `sales_done`, `next_steps`,
   `won`, `lost`.
 - Migratie: `supabase/migrations/20261102000000_sales_leads.sql`.
-- Oude tabellen van de eerste versie (`clients`, `contracts`, …) staan nog in de database maar
-  worden niet meer gebruikt.
+- Velden voor opvolging en context: `next_action`, `follow_up_on`, `notes`.
+- 24 leads geïmporteerd uit de Notion-tabel "Leads" (2 nov 2026). De status en de bron uit
+  Notion staan onderaan de notities.
+- De tabellen van de eerste versie zijn verwijderd (`20261102000100_drop_v1_admin.sql`).
 
 ## Omgevingsvariabelen
 

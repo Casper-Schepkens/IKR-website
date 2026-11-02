@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { requireSales } from '@/lib/admin/session'
-import { daysBetween } from '@/lib/admin/format'
+import { daysBetween, fmtDate, isoDay } from '@/lib/admin/format'
 import {
   OPEN_STAGES,
   SOURCE_LABELS,
@@ -33,12 +33,22 @@ export default async function LeadsPage({
   const view: View = weergave === 'won' || weergave === 'lost' ? weergave : 'open'
   const { leads } = await requireSales()
   const all = await leads.list()
-  const rows = all.filter((l) => inView(l, view))
-  const now = new Date()
+  // Lopende leads: wie het eerst opgevolgd moet worden staat bovenaan.
+  const rows = all
+    .filter((l) => inView(l, view))
+    .sort((a, b) =>
+      view === 'open' ? (a.follow_up_on ?? '9999').localeCompare(b.follow_up_on ?? '9999') : 0,
+    )
+  const today = isoDay(new Date())
 
   return (
     <>
-      <PageHeader eyebrow={`${all.filter((l) => inView(l, 'open')).length} lopende leads`} title="Leads">
+      <PageHeader
+        eyebrow={`${all.filter((l) => inView(l, 'open')).length} lopende leads · ${
+          all.filter((l) => inView(l, 'open') && l.follow_up_on && l.follow_up_on <= today).length
+        } op te volgen`}
+        title="Leads"
+      >
         <Link href="/admin/sales?nieuw=1" className={buttonClass('navy')}>
           + Nieuwe lead
         </Link>
@@ -133,19 +143,19 @@ export default async function LeadsPage({
             <Empty>{view === 'open' ? 'Nog geen lopende leads.' : 'Niets in deze lijst.'}</Empty>
           </div>
         ) : (
-          <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+          <table className="w-full min-w-[760px] border-collapse text-left text-sm">
             <thead>
               <tr className={cn('text-xs', muted)}>
                 <th scope="col" className="px-6 py-4 font-semibold">Lead</th>
                 <th scope="col" className="px-3 py-4 font-semibold">Fase</th>
-                <th scope="col" className="px-3 py-4 font-semibold">Bron</th>
-                <th scope="col" className="px-3 py-4 font-semibold">In deze fase</th>
+                <th scope="col" className="px-3 py-4 font-semibold">Volgende actie</th>
+                <th scope="col" className="px-3 py-4 font-semibold">Opvolgen</th>
                 <th scope="col" className="px-6 py-4"><span className="sr-only">Openen</span></th>
               </tr>
             </thead>
             <tbody>
               {rows.map((l) => {
-                const days = Math.max(0, daysBetween(l.stage_changed_at, now))
+                const due = l.follow_up_on ? daysBetween(today, l.follow_up_on) : null
                 return (
                   <tr key={l.id} className="border-t border-[#E6DFD2] hover:bg-ikr-cream/60">
                     <td className="px-6 py-3">
@@ -159,9 +169,17 @@ export default async function LeadsPage({
                         {STAGE_LABELS[l.stage]}
                       </Pill>
                     </td>
-                    <td className="px-3 py-3">{SOURCE_LABELS[l.source]}</td>
-                    <td className={cn('px-3 py-3', muted)}>
-                      {days === 0 ? 'vandaag' : `${days} ${days === 1 ? 'dag' : 'dagen'}`}
+                    <td className={cn('max-w-[360px] px-3 py-3', muted)}>
+                      <span className="line-clamp-2">{l.next_action ?? '—'}</span>
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      {l.follow_up_on && due !== null ? (
+                        <Pill tone={due <= 0 && view === 'open' ? 'orange' : 'light'}>
+                          {due === 0 ? 'vandaag' : fmtDate(l.follow_up_on, { day: 'numeric', month: 'short', year: due > 300 || due < -300 ? 'numeric' : undefined })}
+                        </Pill>
+                      ) : (
+                        '—'
+                      )}
                     </td>
                     <td className="px-6 py-3 text-right">
                       <Link href={`/admin/sales/leads/${l.id}`} className={buttonClass('soft', true)}>

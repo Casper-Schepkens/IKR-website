@@ -68,6 +68,9 @@ export function memoryLeads(): LeadsRepo {
         throw new Error('Er bestaat al een lead met dit e-mailadres.')
       const t = now()
       const lead: Lead = {
+        next_action: null,
+        follow_up_on: null,
+        notes: null,
         ...input,
         id: crypto.randomUUID(),
         stage: 'lead',

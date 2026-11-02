@@ -53,7 +53,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
 
       <div className="flex flex-wrap items-start gap-5">
         <Card className="flex min-w-0 flex-[2_1_420px] flex-col gap-4">
-          <Title className="m-0 text-2xl">Gegevens</Title>
+          <Title className="m-0 text-2xl">Gegevens & opvolging</Title>
           <FormAction action={updateLeadAction.bind(null, lead.id)}>
             <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
               <label className={label}>
@@ -81,6 +81,18 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
                     </option>
                   ))}
                 </select>
+              </label>
+              <label className={label}>
+                Opvolgen op
+                <input name="follow_up_on" type="date" defaultValue={lead.follow_up_on ?? ''} className={input} />
+              </label>
+              <label className={cn(label, 'col-span-full')}>
+                Volgende actie
+                <input name="next_action" defaultValue={lead.next_action ?? ''} className={input} />
+              </label>
+              <label className={cn(label, 'col-span-full')}>
+                Notities
+                <textarea name="notes" rows={8} defaultValue={lead.notes ?? ''} className={cn(input, 'py-2 leading-relaxed')} />
               </label>
             </div>
           </FormAction>

@@ -54,9 +54,14 @@ export type Lead = {
   stage: Stage
   lost_reason: LostReason | null
   lost_note: string | null
+  next_action: string | null
+  /** 'YYYY-MM-DD' */
+  follow_up_on: string | null
+  notes: string | null
   stage_changed_at: string
   created_at: string
   updated_at: string
 }
 
-export type LeadInput = Pick<Lead, 'name' | 'company' | 'email' | 'phone' | 'source'>
+export type LeadInput = Pick<Lead, 'name' | 'company' | 'email' | 'phone' | 'source'> &
+  Partial<Pick<Lead, 'next_action' | 'follow_up_on' | 'notes'>>
