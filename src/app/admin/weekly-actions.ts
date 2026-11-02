@@ -8,6 +8,7 @@ import { createEvent, isGoogleConfigured, listConnections, shareWithDomain, star
 import { CONTACT_EMAIL, OWNERS, TEAM, type Owner, type WeeklyMode } from '@/lib/admin/weekly/types'
 import { currentWeekly } from '@/lib/admin/weekly/board'
 import type { ActionResult } from './actions'
+import { addBotToMeeting, isBotInMeeting, isFirefliesConfigured } from '@/lib/admin/fireflies'
 
 async function attempt(fn: () => Promise<void>): Promise<ActionResult> {
   try {
@@ -145,5 +146,27 @@ export async function finishWeeklyRecordingAction(id: string, fileId: string) {
     if (!/^[\w-]{10,}$/.test(fileId)) throw new Error('Ongeldig bestand.')
     const url = await shareWithDomain(CONTACT_EMAIL, fileId, 'iknowright.be')
     await session.weekly.updateWeekly(id, { recording_url: url })
+  })
+}
+
+/** Zit de Fireflies-bot in de Meet van deze weekly? */
+export async function firefliesStatusAction(id: string) {
+  try {
+    const session = await requireAdmin()
+    const w = await session.weekly.getWeekly(id)
+    if (!w?.meet_url) throw new Error('Deze weekly heeft geen Meet-link.')
+    if (!isFirefliesConfigured()) throw new Error('Fireflies is nog niet gekoppeld (FIREFLIES_API_KEY).')
+    return { ok: true as const, data: await isBotInMeeting(w.meet_url) }
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : 'Fireflies niet bereikbaar.' }
+  }
+}
+
+export async function addFirefliesAction(id: string) {
+  return attempt(async () => {
+    const session = await requireAdmin()
+    const w = await session.weekly.getWeekly(id)
+    if (!w?.meet_url) throw new Error('Deze weekly heeft geen Meet-link.')
+    await addBotToMeeting(w.meet_url, `IKR weekly ${isoDay(new Date(w.starts_at))}`)
   })
 }

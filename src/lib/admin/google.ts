@@ -185,5 +185,25 @@ export async function shareWithDomain(owner: string, fileId: string, domain: str
     cache: 'no-store',
   })
   if (!res.ok) throw new Error(`Delen in de Drive mislukt (${res.status}).`)
-  return `https://drive.google.com/file/d/${fileId}/view`
+  return `https://drive.google.com/open?id=${fileId}`
+}
+
+/** Zet tekst als Google Doc in een map van de Drive van `owner`; geeft het bestands-id terug. */
+export async function uploadDoc(opts: { owner: string; folder: string; name: string; text: string }) {
+  const at = await accessToken(opts.owner)
+  const parent = await driveFolder(at, opts.folder)
+  const boundary = `ikr${crypto.randomUUID()}`
+  const meta = JSON.stringify({ name: opts.name, parents: [parent], mimeType: 'application/vnd.google-apps.document' })
+  const body =
+    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n` +
+    `--${boundary}\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n${opts.text}\r\n--${boundary}--`
+  const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${at}`, 'Content-Type': `multipart/related; boundary=${boundary}` },
+    body,
+    cache: 'no-store',
+  })
+  const json = (await res.json()) as { id?: string; error?: { message?: string } }
+  if (!json.id) throw new Error(`Transcript opslaan in de Drive mislukt: ${json.error?.message ?? res.status}`)
+  return json.id
 }

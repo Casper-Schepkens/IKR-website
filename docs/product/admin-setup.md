@@ -23,7 +23,9 @@ de workflow staat, geen extra features.
   - "Meeting starten", "Conclude meeting" (plant de volgende in) en "Vorige weeklies".
 - **Instellingen** (`/admin/instellingen`): "Connect calendar" per persoon en voor contact@iknowright.be.
 - Live weeklies: Record-knop; de opname gaat naar de Drive van contact@ (map "IKR Dashboard – Weeklies"), gedeeld met iknowright.be.
-- Nog niet gebouwd voor de weekly: Fireflies-check en transcript naar de Drive (online).
+- Online weeklies: check om de 30 s of de Fireflies-bot in de Meet zit, met knop "Fireflies toevoegen".
+  Elke ochtend (06:00 UTC, `/api/cron/weekly-transcripts`) gaat het transcript als Google Doc naar de
+  Drive van contact@ en komt de link bij de weekly.
 
 ## Toegang
 
@@ -51,6 +53,8 @@ de workflow staat, geen extra features.
 - `APOLLO_API_KEY` (cold mails-dashboard)
 - `SUPABASE_SERVICE_ROLE_KEY` (Google-tokens server-side lezen)
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (agenda/Meet)
+- `FIREFLIES_API_KEY` (weekly: bot-check en transcripts)
+- `CRON_SECRET` (dagelijkse transcript-taak)
 
 ## Volgende stappen (sales)
 

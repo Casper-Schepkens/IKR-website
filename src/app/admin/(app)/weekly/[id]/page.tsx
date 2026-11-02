@@ -9,6 +9,7 @@ import { NewTodoForm } from '@/components/admin/weekly/NewTodoForm'
 import { PlanWeeklyForm } from '@/components/admin/weekly/PlanWeeklyForm'
 import { concludeWeeklyAction, finishWeeklyRecordingAction, startWeeklyRecordingAction } from '../../../weekly-actions'
 import { RecordButton } from '@/components/admin/RecordButton'
+import { FirefliesCheck } from '@/components/admin/weekly/FirefliesCheck'
 import { cn } from '@/utilities/ui'
 
 export const metadata = { title: 'Weekly' }
@@ -66,10 +67,7 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
             ) : (
               <span className="text-sm text-[#A3470F]">Geen Meet-link ({w.calendar_error ?? 'agenda niet gekoppeld'}).</span>
             )}
-            <label className="flex items-center gap-2 text-sm font-semibold">
-              <input type="checkbox" className="size-4 accent-[#0FC1DE]" />
-              Is Fireflies actief?
-            </label>
+            {w.meet_url && <FirefliesCheck weeklyId={w.id} />}
           </Card>
         )
       )}
