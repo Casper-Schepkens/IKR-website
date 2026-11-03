@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Roboto_Condensed } from 'next/font/google'
+import localFont from 'next/font/local'
 import { cn } from '@/utilities/ui'
 import {
   organizationJsonLd,
@@ -13,11 +13,19 @@ import { OpenAIAdsPixel } from '@/components/ikr/OpenAIAdsPixel'
 import { PublicOnly } from '@/components/ikr/PublicOnly'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-const robotoCondensed = Roboto_Condensed({
-  subsets: ['latin'],
-  weight: ['400', '700', '900'],
+// Lettertypes zitten in de repo (Google Fonts, Latin, variabel): de build hangt zo niet af van
+// fonts.googleapis.com, dat soms niet antwoordt en dan de deploy liet mislukken.
+const inter = localFont({
+  src: './fonts/Inter-latin.woff2',
+  weight: '100 900',
+  variable: '--font-inter',
+  display: 'swap',
+})
+const robotoCondensed = localFont({
+  src: './fonts/RobotoCondensed-latin.woff2',
+  weight: '100 900',
   variable: '--font-roboto-condensed',
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
