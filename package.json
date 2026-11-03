@@ -1,7 +1,7 @@
 {
   "name": "ikr-website",
   "version": "1.0.0",
-  "description": "IKR — TikTok bureau website",
+  "description": "IKR \u2014 TikTok bureau website",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -9,7 +9,8 @@
     "dev": "next dev",
     "lint": "eslint .",
     "audit:legacy": "node scripts/audit-legacy-site.mjs",
-    "start": "next start"
+    "start": "next start",
+    "test": "vitest run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",
@@ -39,7 +40,8 @@
     "postcss": "^8.4.38",
     "prettier": "^3.4.2",
     "tailwindcss": "^4.1.18",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "^3.2.4"
   },
   "engines": {
     "node": ">=18.0.0"

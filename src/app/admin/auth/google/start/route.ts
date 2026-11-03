@@ -20,10 +20,11 @@ export async function GET(req: NextRequest) {
       redirectUri: `${req.nextUrl.origin}/admin/auth/google/callback`,
       state,
       loginHint: forContact ? CONTACT_EMAIL : user.email,
-      // contact@: agenda + Drive (opnames en transcripts). Casper: enkel Gmail (sales-inbox); zijn
-      // agenda is persoonlijk en krijgt uitnodigingen. Cedric en Milan: hun agenda.
+      // contact@: agenda + Drive (opnames en transcripts) + mails versturen (concepten vanaf contact@).
+      // Casper: enkel Gmail (sales-inbox); zijn agenda is persoonlijk en krijgt uitnodigingen.
+      // Cedric en Milan: hun agenda.
       scopes: forContact
-        ? [SCOPES.calendar, SCOPES.drive]
+        ? [SCOPES.calendar, SCOPES.drive, SCOPES.gmailSend]
         : canSeeSales(user.email)
           ? [SCOPES.gmailRead, SCOPES.gmailSend]
           : [SCOPES.calendar],

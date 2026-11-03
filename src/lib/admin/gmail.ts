@@ -137,22 +137,40 @@ export async function recentThreads(owner: string, max = 25): Promise<Thread[]> 
 
 const encodeHeader = (v: string) => (/^[\x20-\x7e]*$/.test(v) ? v : `=?UTF-8?B?${Buffer.from(v).toString('base64')}?=`)
 
-/** Verstuurt een antwoord in dezelfde thread, vanaf het Gmail-account van `owner`. */
-export async function sendReply(owner: string, opts: { threadId: string; to: string; subject: string; inReplyTo: string | null; references: string | null; body: string }) {
-  const subject = /^re:/i.test(opts.subject) ? opts.subject : `Re: ${opts.subject}`
+/** Verstuurt een mail vanaf het Gmail-account van `owner` (optioneel in een bestaande thread). */
+export async function sendMail(
+  owner: string,
+  opts: {
+    to: string
+    cc?: string[]
+    subject: string
+    body: string
+    html?: boolean
+    threadId?: string | null
+    inReplyTo?: string | null
+    references?: string | null
+  },
+) {
   const headers = [
     `To: ${opts.to}`,
-    `Subject: ${encodeHeader(subject)}`,
+    ...(opts.cc?.length ? [`Cc: ${opts.cc.join(', ')}`] : []),
+    `Subject: ${encodeHeader(opts.subject)}`,
     'MIME-Version: 1.0',
-    'Content-Type: text/plain; charset=UTF-8',
+    `Content-Type: ${opts.html ? 'text/html' : 'text/plain'}; charset=UTF-8`,
     'Content-Transfer-Encoding: base64',
     ...(opts.inReplyTo ? [`In-Reply-To: ${opts.inReplyTo}`, `References: ${[opts.references, opts.inReplyTo].filter(Boolean).join(' ')}`] : []),
   ]
   const raw = `${headers.join('\r\n')}\r\n\r\n${Buffer.from(opts.body, 'utf8').toString('base64')}`
   await gmail(owner, '/messages/send', {
     method: 'POST',
-    body: JSON.stringify({ raw: Buffer.from(raw).toString('base64url'), threadId: opts.threadId }),
+    body: JSON.stringify({ raw: Buffer.from(raw).toString('base64url'), ...(opts.threadId ? { threadId: opts.threadId } : {}) }),
   })
+}
+
+/** Antwoord in dezelfde thread (Re: …). */
+export async function sendReply(owner: string, opts: { threadId: string; to: string; subject: string; inReplyTo: string | null; references: string | null; body: string }) {
+  const subject = /^re:/i.test(opts.subject) ? opts.subject : `Re: ${opts.subject}`
+  await sendMail(owner, { to: opts.to, subject, body: opts.body, threadId: opts.threadId, inReplyTo: opts.inReplyTo, references: opts.references })
 }
 
 export async function getThread(owner: string, id: string): Promise<Thread> {

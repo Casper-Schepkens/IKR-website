@@ -8,6 +8,8 @@ import { aiEngine, isAiConfigured, runJob } from '@/lib/admin/ai/jobs'
 import { notifyGrok } from '@/lib/admin/ai/notify'
 import { buttonClass, Card, Empty, muted, PageHeader, Spinner } from '@/components/admin/ui'
 import { InboxCard } from '@/components/admin/sales/InboxCard'
+import { DraftCard } from '@/components/admin/sales/DraftCard'
+import type { MailDraft } from '@/lib/admin/sales/drafts'
 import { cn } from '@/utilities/ui'
 
 export const metadata = { title: 'Inbox' }
@@ -15,8 +17,10 @@ export const maxDuration = 120
 
 export default async function InboxPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const { tab: tabParam } = await searchParams
-  const tab = tabParam === 'gemaild' ? 'gemaild' : 'nieuw'
   const session = await requireSales()
+  const concepts = await session.drafts.list({ status: 'concept' })
+  if (tabParam === 'concepten') return <Concepts session={session} concepts={concepts} />
+  const tab = tabParam === 'gemaild' ? 'gemaild' : 'nieuw'
   return (
     <Suspense
       fallback={
@@ -28,12 +32,12 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
         </>
       }
     >
-      <Inbox session={session} tab={tab} />
+      <Inbox session={session} tab={tab} concepts={concepts.length} />
     </Suspense>
   )
 }
 
-async function Inbox({ session, tab }: { session: AdminSession; tab: 'nieuw' | 'gemaild' }) {
+async function Inbox({ session, tab, concepts }: { session: AdminSession; tab: 'nieuw' | 'gemaild'; concepts: number }) {
   let result: Awaited<ReturnType<typeof loadInbox>>
   try {
     result = await loadInbox(session)
@@ -88,18 +92,7 @@ async function Inbox({ session, tab }: { session: AdminSession; tab: 'nieuw' | '
           ANTHROPIC_API_KEY ontbreekt in Vercel: er worden nog geen antwoorden klaargezet.
         </p>
       )}
-      <nav aria-label="Tabs" className="flex flex-wrap gap-2">
-        {(['nieuw', 'gemaild'] as const).map((t) => (
-          <Link
-            key={t}
-            href={t === 'nieuw' ? '/admin/sales/inbox' : '/admin/sales/inbox?tab=gemaild'}
-            aria-current={tab === t ? 'page' : undefined}
-            className={buttonClass(tab === t ? 'navy' : 'light', true)}
-          >
-            {t === 'nieuw' ? 'Nieuwe leads' : 'Al gemaild'} <span className="opacity-60">{count(t)}</span>
-          </Link>
-        ))}
-      </nav>
+      <Tabs active={tab} counts={{ nieuw: count('nieuw'), gemaild: count('gemaild'), concepten: concepts }} />
       {!items.length && (
         <Card>
           <Empty>Niets dat op een antwoord wacht.</Empty>
@@ -119,6 +112,59 @@ async function Inbox({ session, tab }: { session: AdminSession; tab: 'nieuw' | '
           showContext={i.tab === 'gemaild'}
           waitingLabel={aiEngine() === 'grokbot' ? 'Wacht op Grokbot…' : aiEngine() === 'worker' ? 'Wacht op de AI-server…' : 'AI zet een antwoord klaar…'}
           job={i.job ? { id: i.job.id, status: i.job.status, error: i.job.error, output: i.job.output as never } : null}
+        />
+      ))}
+    </>
+  )
+}
+
+type Tab = 'nieuw' | 'gemaild' | 'concepten'
+const TAB_LABEL: Record<Tab, string> = { nieuw: 'Nieuwe leads', gemaild: 'Al gemaild', concepten: 'Concepten' }
+
+function Tabs({ active, counts }: { active: Tab; counts: Partial<Record<Tab, number>> }) {
+  return (
+    <nav aria-label="Tabs" className="flex flex-wrap gap-2">
+      {(['nieuw', 'gemaild', 'concepten'] as const).map((t) => (
+        <Link
+          key={t}
+          href={t === 'nieuw' ? '/admin/sales/inbox' : `/admin/sales/inbox?tab=${t}`}
+          aria-current={active === t ? 'page' : undefined}
+          className={buttonClass(active === t ? 'navy' : 'light', true)}
+        >
+          {TAB_LABEL[t]} {counts[t] !== undefined && <span className="opacity-60">{counts[t]}</span>}
+        </Link>
+      ))}
+    </nav>
+  )
+}
+
+/** Nieuwe uitgaande mails die klaarstaan (bv. van Grokbot); geen Gmail nodig om te tonen. */
+async function Concepts({ session, concepts }: { session: AdminSession; concepts: MailDraft[] }) {
+  const leads = new Map((await session.leads.list()).map((l) => [l.id, l.name]))
+  return (
+    <>
+      <PageHeader eyebrow={`${concepts.length} mailconcepten wachten op jouw akkoord`} title="Inbox" />
+      <Tabs active="concepten" counts={{ concepten: concepts.length }} />
+      {!concepts.length && (
+        <Card>
+          <Empty>Geen mailconcepten.</Empty>
+        </Card>
+      )}
+      {concepts.map((d) => (
+        <DraftCard
+          key={d.id}
+          id={d.id}
+          leadId={d.lead_id}
+          leadName={leads.get(d.lead_id) ?? null}
+          from={d.from_email}
+          to={d.to_email}
+          cc={d.cc}
+          subject={d.subject}
+          body={d.body}
+          isHtml={d.is_html}
+          inThread={Boolean(d.thread_id)}
+          createdBy={d.created_by}
+          createdAt={d.created_at}
         />
       ))}
     </>
