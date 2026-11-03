@@ -177,3 +177,36 @@ export async function getThread(owner: string, id: string): Promise<Thread> {
   const t = await gmail<{ id: string; messages: RawMessage[] }>(owner, `/threads/${encodeURIComponent(id)}?format=full`)
   return { id: t.id, mails: t.messages.map(toMail) }
 }
+
+/**
+ * Echte antwoorden van `owner` uit de laatste `days` dagen: mails die hij stuurde als reactie op iemand
+ * anders. Eerste mails van een thread en mails na zijn eigen mail (cold mails en opvolgingen van
+ * Apollo) vallen weg.
+ */
+export async function sentReplies(owner: string, opts: { days: number; maxThreads: number; maxReplies: number }) {
+  const ids: string[] = []
+  let pageToken: string | undefined
+  do {
+    const q = encodeURIComponent(`in:sent newer_than:${opts.days}d`)
+    const page = await gmail<{ threads?: { id: string }[]; nextPageToken?: string }>(
+      owner,
+      `/threads?maxResults=100&q=${q}${pageToken ? `&pageToken=${pageToken}` : ''}`,
+    )
+    ids.push(...(page.threads ?? []).map((t) => t.id))
+    pageToken = page.nextPageToken
+  } while (pageToken && ids.length < opts.maxThreads)
+
+  const threads = await limited(ids.slice(0, opts.maxThreads), 4, (id) =>
+    gmail<{ id: string; messages: RawMessage[] }>(owner, `/threads/${id}?format=full`).then((t) => t.messages.map(toMail)),
+  )
+  const me = owner.toLowerCase()
+  const replies: { subject: string; date: string; text: string }[] = []
+  for (const mails of threads) {
+    mails.forEach((m, i) => {
+      if (i === 0 || m.fromEmail !== me || mails[i - 1].fromEmail === me) return
+      if (m.text.length < 20) return
+      replies.push({ subject: m.subject, date: m.date, text: m.text.slice(0, 1200) })
+    })
+  }
+  return replies.sort((a, b) => b.date.localeCompare(a.date)).slice(0, opts.maxReplies)
+}

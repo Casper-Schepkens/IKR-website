@@ -81,10 +81,25 @@ describe('mailconcepten via MCP', () => {
     expect(logs).toEqual([expect.objectContaining({ tool: 'mail_concept_aanmaken', ok: true })])
   })
 
-  it('kiest contact@ als afzender en tekst als formaat wanneer gevraagd', async () => {
-    const r = await call('mail_concept_aanmaken', { lead_id: leadId, to: 'jan@peeters.be', subject: 'Hoi', body: 'Gewone tekst', van: 'contact@iknowright.be', thread_id: 't123', in_reply_to: '<abc@mail>' })
+  it('bewaart de context die de bot meegeeft en laat die aanpassen', async () => {
+    const r = await call('mail_concept_aanmaken', {
+      lead_id: leadId,
+      to: 'jan@peeters.be',
+      subject: 'Opvolging',
+      body: 'Hey Jan',
+      context: 'Jan had in oktober interesse maar wou wachten tot na de feestdagen.',
+    })
     expect(r.isError).toBe(false)
-    expect(store[0]).toMatchObject({ from_email: 'contact@iknowright.be', is_html: false, thread_id: 't123', in_reply_to: '<abc@mail>' })
+    expect(r.json?.context).toBe('Jan had in oktober interesse maar wou wachten tot na de feestdagen.')
+    await call('mail_concept_bijwerken', { concept_id: r.json!.concept_id, context: 'Nieuwe context' })
+    expect(store[0].context).toBe('Nieuwe context')
+    expect((await call('mail_concept_aanmaken', { lead_id: leadId, to: 'jan@peeters.be', subject: 'x', body: 'x', context: 'a'.repeat(4001) })).isError).toBe(true)
+  })
+
+  it('verstuurt concepten altijd vanaf casper@ (contact@ kan niet meer)', async () => {
+    const r = await call('mail_concept_aanmaken', { lead_id: leadId, to: 'jan@peeters.be', subject: 'Hoi', body: 'Gewone tekst', van: 'contact@iknowright.be', formaat: 'text', thread_id: 't123', in_reply_to: '<abc@mail>' })
+    expect(r.isError).toBe(false)
+    expect(store[0]).toMatchObject({ from_email: 'casper@iknowright.be', is_html: false, thread_id: 't123', in_reply_to: '<abc@mail>', original_body: 'Gewone tekst' })
   })
 
   it('weigert een ongeldig e-mailadres en logt de fout', async () => {

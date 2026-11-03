@@ -6,6 +6,7 @@ import { buttonClass, Card, muted, PageHeader, Pill, Title } from '@/components/
 import { cn } from '@/utilities/ui'
 import { canSeeSales } from '@/lib/admin/env'
 import { AiCosts } from './AiCosts'
+import { StyleProfiles } from './StyleProfiles'
 
 export const metadata = { title: 'Instellingen' }
 
@@ -70,6 +71,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           )
         })}
       </Card>
+      {canSeeSales(user.email) && process.env.SUPABASE_SERVICE_ROLE_KEY && <StyleProfiles />}
       {canSeeSales(user.email) && process.env.SUPABASE_SERVICE_ROLE_KEY && <AiCosts />}
     </>
   )

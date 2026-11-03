@@ -8,7 +8,7 @@ import { fmtDate, fmtTime, isoDay } from '../format'
 import type { AdminSession } from '../session'
 import { supabaseLeads } from '../sales/repo'
 import { supabaseWeekly } from '../weekly/repo'
-import { DRAFT_FROM, supabaseDrafts, type MailDraft } from '../sales/drafts'
+import { supabaseDrafts, type MailDraft } from '../sales/drafts'
 import {
   LOST_REASON_LABELS,
   LOST_REASONS,
@@ -21,9 +21,9 @@ import {
 } from '../sales/types'
 import { coldMailStats } from '../sales/apollo'
 import { loadInbox } from '../sales/inbox'
-import { aiEngine, completeJob, dismissJob, openJobs, runJob } from '../ai/jobs'
+import { aiEngine, completeJob, dismissJob, instructionsFor, openJobs, runJob } from '../ai/jobs'
+import { styleInstructions, styleKeyFor } from '../ai/style-profile'
 import { HANDLERS } from '../ai/handlers'
-import { IKR_CONTEXT } from '../ai/context'
 import { boardTodos, currentWeekly } from '../weekly/board'
 import { scheduleWeekly } from '../weekly/schedule'
 import { OWNERS, TEAM } from '../weekly/types'
@@ -96,14 +96,14 @@ function nonEmpty(v: string, field: string, max: number) {
 }
 const optional = (v: string | undefined) => (v === undefined ? undefined : v.trim() || null)
 
-type DraftArgs = { lead_id: string; to: string; cc?: string[]; subject: string; body: string; van?: MailDraft['from_email']; formaat?: 'text' | 'html'; thread_id?: string; in_reply_to?: string }
+type DraftArgs = { lead_id: string; to: string; cc?: string[]; subject: string; body: string; formaat?: 'text' | 'html'; thread_id?: string; in_reply_to?: string; context?: string }
 
 /** Strenge controle van een nieuw concept (fouten worden zo ook gelogd). */
 export function validateDraft(a: DraftArgs) {
   const body = nonEmpty(a.body, 'body', 50_000)
   return {
     lead_id: uuid(a.lead_id, 'lead_id'),
-    from_email: a.van ?? 'casper@iknowright.be',
+    from_email: 'casper@iknowright.be' as const,
     to_email: email(a.to, 'to'),
     cc: (a.cc ?? []).map((c, i) => email(c, `cc[${i}]`)),
     subject: nonEmpty(a.subject, 'subject', 300),
@@ -111,7 +111,14 @@ export function validateDraft(a: DraftArgs) {
     is_html: a.formaat ? a.formaat === 'html' : HTML.test(body),
     thread_id: optional(a.thread_id) ?? null,
     in_reply_to: optional(a.in_reply_to) ?? null,
+    context: a.context === undefined ? null : contextText(a.context),
   }
+}
+
+function contextText(v: string) {
+  const t = v.trim()
+  if (t.length > 4000) throw new Error('context is te lang (max 4000 tekens).')
+  return t || null
 }
 
 function validateDraftPatch(a: Partial<DraftArgs>) {
@@ -121,10 +128,10 @@ function validateDraftPatch(a: Partial<DraftArgs>) {
     cc: a.cc?.map((c, i) => email(c, `cc[${i}]`)),
     subject: a.subject === undefined ? undefined : nonEmpty(a.subject, 'subject', 300),
     body,
-    from_email: a.van,
     is_html: a.formaat ? a.formaat === 'html' : body !== undefined ? HTML.test(body) : undefined,
     thread_id: optional(a.thread_id),
     in_reply_to: optional(a.in_reply_to),
+    context: a.context === undefined ? undefined : contextText(a.context),
   }
   const clean = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined))
   if (!Object.keys(clean).length) throw new Error('Niets om aan te passen.')
@@ -329,27 +336,38 @@ export function buildMcpServer(session: AdminSession) {
     formaat: d.is_html ? 'html' : 'text',
     thread_id: d.thread_id,
     in_reply_to: d.in_reply_to,
+    context: d.context,
   })
   tool(
+    'schrijfstijl',
+    'Het schrijfstijlprofiel van Casper (gids + voorbeelden), afgeleid uit zijn echte verzonden mails. Lees dit voor je een mail schrijft.',
+    {},
+    true,
+    async () => (await styleInstructions(styleKeyFor())) || 'Nog geen schrijfstijlprofiel.',
+  )
+  tool(
     'mail_concept_aanmaken',
-    'Zet een NIEUWE uitgaande mail als concept klaar bij een lead. Er wordt niets verstuurd: Casper keurt het concept in het dashboard goed en verstuurt het zelf. Geeft het concept_id terug.',
+    'Zet een NIEUWE uitgaande mail als concept klaar bij een lead. Lees eerst lead_fiche en schrijfstijl en geef altijd context mee. Afzender is altijd casper@iknowright.be. Er wordt niets verstuurd: Casper keurt het concept in het dashboard goed en verstuurt het zelf. Geeft het concept_id terug.',
     {
       lead_id: z.string().describe('id van de lead (zie leads_lijst of lead_fiche)'),
       to: z.string().describe('e-mailadres van de ontvanger'),
       cc: z.array(z.string()).optional(),
       subject: z.string(),
       body: z.string().describe('tekst of HTML'),
-      van: z.enum(DRAFT_FROM).optional().describe('afzender, standaard casper@iknowright.be'),
       formaat: z.enum(['text', 'html']).optional().describe('standaard: automatisch (html als de body HTML-tags bevat)'),
       thread_id: z.string().optional().describe('Gmail-thread om in te antwoorden (van de mailbox van de afzender)'),
       in_reply_to: z.string().optional().describe('Message-ID van de mail waarop geantwoord wordt'),
+      context: z
+        .string()
+        .optional()
+        .describe('Korte uitleg voor Casper (2–5 zinnen): wie is de lead, wat gebeurde er al, waarom deze mail nu. Wordt naast het concept getoond.'),
     },
     false,
     async (a) => {
       const input = validateDraft(a)
       const lead = await leads.get(input.lead_id)
       if (!lead) throw new Error(`Geen lead met id ${input.lead_id}.`)
-      const d = await drafts.create({ ...input, created_by: BY })
+      const d = await drafts.create({ ...input, original_body: input.body, created_by: BY })
       return draftView(d)
     },
   )
@@ -362,10 +380,10 @@ export function buildMcpServer(session: AdminSession) {
       cc: z.array(z.string()).optional(),
       subject: z.string().optional(),
       body: z.string().optional(),
-      van: z.enum(DRAFT_FROM).optional(),
       formaat: z.enum(['text', 'html']).optional(),
       thread_id: z.string().optional(),
       in_reply_to: z.string().optional(),
+      context: z.string().optional(),
     },
     false,
     async (a) => {
@@ -394,16 +412,18 @@ export function buildMcpServer(session: AdminSession) {
     { aantal: z.number().int().min(1).max(20).optional() },
     true,
     async ({ aantal = 10 }) =>
-      (await openJobs(aantal)).map((j) => {
-        const h = HANDLERS[j.type]
-        return {
-          job_id: j.id,
-          type: j.type,
-          instructies: `${IKR_CONTEXT}\n\n${h.instructions}`,
-          opdracht: h.prompt(j.input),
-          resultaat_vorm: z.toJSONSchema(h.schema),
-        }
-      }),
+      Promise.all(
+        (await openJobs(aantal)).map(async (j) => {
+          const h = HANDLERS[j.type]
+          return {
+            job_id: j.id,
+            type: j.type,
+            instructies: await instructionsFor(j),
+            opdracht: h.prompt(j.input),
+            resultaat_vorm: z.toJSONSchema(h.schema),
+          }
+        }),
+      ),
   )
   tool(
     'ai_taak_klaarzetten',
