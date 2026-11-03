@@ -114,6 +114,19 @@ export async function dismissJob(id: string) {
   if (error) throw new Error(error.message)
 }
 
+/** Sluit een chat-taak af nadat het antwoord via ai_chat_antwoorden in de chat kwam. */
+export async function closeChatJob(id: string, userId: string, by: string) {
+  const job = await getJob(id)
+  if (!job || job.type !== 'chat') throw new Error('Geen chat-taak met dit id.')
+  if ((job.input as { user_id?: string }).user_id !== userId) throw new Error('Deze taak hoort bij een andere gebruiker.')
+  if (job.status === 'done' || job.status === 'dismissed') return
+  const { error } = await db()
+    .from('ai_jobs')
+    .update({ status: 'done', engine: by, model: by, cost_usd: 0, error: null, finished_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
 export async function getJob(id: string): Promise<AiJob | null> {
   const { data } = await db().from('ai_jobs').select('*').eq('id', id).maybeSingle()
   return (data as AiJob | null) ?? null

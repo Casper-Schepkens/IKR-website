@@ -206,7 +206,7 @@ export async function deleteDraftAction(id: string) {
  */
 export async function requestRewriteAction(target: 'draft' | 'inbox', targetId: string, leadId: string, form: FormData) {
   try {
-    const { leads, user } = await requireSales()
+    const { leads, user, chat } = await requireSales()
     const instruction = str(form, 'instruction')
     const body = str(form, 'body')
     if (!instruction) throw new Error('Leg kort uit hoe de mail herschreven moet worden.')
@@ -228,6 +228,17 @@ export async function requestRewriteAction(target: 'draft' | 'inbox', targetId: 
       },
       user.email,
     )
+    // Ook in de chat bewaren, zodat "doe hetzelfde" later begrepen wordt.
+    await chat
+      .add({
+        user_id: user.id,
+        role: 'user',
+        text: `Herschrijf ${target === 'draft' ? 'dit concept' : 'dit antwoord'}: ${instruction}`,
+        page: str(form, 'page'),
+        object_type: target === 'draft' ? 'concept' : 'inbox_reply',
+        object_id: targetId,
+      })
+      .catch((e) => console.error('[chat] herschrijf-bericht', e))
     if (aiEngine() === 'grokbot') after(() => notifyGrok([job.id]))
     else if (aiEngine() === 'api') after(() => runJob(job.id))
     return { ok: true as const, data: job.id }

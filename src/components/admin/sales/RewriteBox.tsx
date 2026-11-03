@@ -76,6 +76,7 @@ export function RewriteBox({
             if (c.subject) data.set('subject', c.subject)
             if (c.context) data.set('context', c.context)
             if (c.from) data.set('from', c.from)
+            data.set('page', window.location.pathname)
             const res = await requestRewriteAction(target, targetId, leadId, data)
             if (!res.ok) setError(res.error)
             else setJobId(res.data)

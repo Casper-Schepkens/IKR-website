@@ -18,9 +18,11 @@ import { buildMcpServer } from './server'
 import { memoryLeads } from '../sales/repo'
 import { memoryWeekly } from '../weekly/repo'
 import { memoryDrafts, type MailDraft } from '../sales/drafts'
+import { memoryChat, type ChatMessage } from '../chat/repo'
 import type { AdminSession } from '../session'
 
 let store: MailDraft[]
+let chatStore: ChatMessage[]
 let session: AdminSession
 let client: Client
 let leadId: string
@@ -42,7 +44,15 @@ beforeEach(async () => {
   vi.clearAllMocks()
   ;(globalThis as { __ikrLeads?: unknown }).__ikrLeads = []
   store = []
-  session = { user: { email: 'casper@iknowright.be', name: 'Grokbot' }, mode: 'demo', leads: memoryLeads(), weekly: memoryWeekly(), drafts: memoryDrafts(store) }
+  chatStore = []
+  session = {
+    user: { id: 'grokbot', email: 'casper@iknowright.be', name: 'Grokbot' },
+    mode: 'demo',
+    leads: memoryLeads(),
+    weekly: memoryWeekly(),
+    drafts: memoryDrafts(store),
+    chat: memoryChat(chatStore),
+  }
   leadId = (await session.leads.create({ name: 'Jan Peeters', company: 'Bakkerij Peeters', email: 'jan@peeters.be', phone: null, source: 'cold_mail' })).id
   const [a, b] = InMemoryTransport.createLinkedPair()
   await buildMcpServer(session).connect(a)
@@ -158,5 +168,47 @@ describe('mailconcepten via MCP', () => {
     const r = await call('mail_concept_bijwerken', { concept_id: 'abc', subject: 'x' })
     expect(r.isError).toBe(true)
     expect(r.text).toMatch(/geen geldig id/)
+  })
+})
+
+const CASPER = '11111111-1111-4111-8111-111111111111'
+const CEDRIC = '22222222-2222-4222-8222-222222222222'
+
+describe('chat met Grok Bot via MCP', () => {
+  beforeEach(async () => {
+    await session.chat.add({ user_id: CASPER, role: 'user', text: 'Welke leads moet ik opvolgen?', page: '/admin/sales' })
+    await session.chat.add({ user_id: CEDRIC, role: 'user', text: 'Wat staat er op de weekly?', page: '/admin/weekly' })
+  })
+
+  it('ai_chat_geschiedenis geeft enkel de chat van die gebruiker', async () => {
+    const r = await call('ai_chat_geschiedenis', { user_id: CASPER })
+    expect(r.isError).toBe(false)
+    const msgs = r.json as unknown as { tekst: string; pagina: string }[]
+    expect(msgs.map((m) => m.tekst)).toEqual(['Welke leads moet ik opvolgen?'])
+    expect(msgs[0].pagina).toBe('/admin/sales')
+  })
+
+  it('ai_chat_antwoorden zet het antwoord in de chat van die gebruiker en logt het', async () => {
+    const r = await call('ai_chat_antwoorden', { user_id: CASPER, tekst: 'Je moet Lotte en Jan opvolgen.' })
+    expect(r.isError).toBe(false)
+    expect(chatStore.filter((m) => m.user_id === CASPER).map((m) => m.role)).toEqual(['user', 'bot'])
+    expect(chatStore.filter((m) => m.user_id === CEDRIC)).toHaveLength(1)
+    expect(logs).toEqual([expect.objectContaining({ tool: 'ai_chat_antwoorden', ok: true })])
+    expect(gmail.sendMail).not.toHaveBeenCalled()
+  })
+
+  it('weigert een onbekende gebruiker of een leeg antwoord', async () => {
+    expect((await call('ai_chat_antwoorden', { user_id: '33333333-3333-4333-8333-333333333333', tekst: 'Hoi' })).isError).toBe(true)
+    expect((await call('ai_chat_antwoorden', { user_id: CASPER, tekst: '   ' })).isError).toBe(true)
+    expect((await call('ai_chat_antwoorden', { user_id: 'geen-id', tekst: 'Hoi' })).isError).toBe(true)
+    expect(chatStore.filter((m) => m.role === 'bot')).toHaveLength(0)
+  })
+
+  it('mail_concepten_lijst geeft open concepten met lead, thread en tekst', async () => {
+    await call('mail_concept_aanmaken', { lead_id: leadId, to: 'jan@peeters.be', subject: 'Hoi', body: 'Tekst', thread_id: 't1' })
+    const r = await call('mail_concepten_lijst', {})
+    const list = r.json as unknown as { lead: string; thread_id: string; body: string; concept_id: string }[]
+    expect(list).toHaveLength(1)
+    expect(list[0]).toMatchObject({ lead: 'Jan Peeters', thread_id: 't1', body: 'Tekst' })
   })
 })

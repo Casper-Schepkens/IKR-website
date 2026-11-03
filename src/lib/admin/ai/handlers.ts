@@ -26,6 +26,10 @@ export const INBOX_REPLY = z.object({
 })
 export type InboxReply = z.infer<typeof INBOX_REPLY>
 
+export const CHAT_REPLY = z.object({
+  antwoord: z.string().describe('Het antwoord in de chat (kort, in het Nederlands)'),
+})
+
 export const STYLE_PROFILE = z.object({
   guide: z.string().describe('De schrijfstijlgids: korte punten, max. ±400 woorden'),
   examples: z.array(z.string()).describe('5 tot 8 korte, typische voorbeeldmails, met [naam]/[bedrijf]/[e-mail]/[telefoon]'),
@@ -109,6 +113,40 @@ Vul altijd "context" in, ook bij een eerste reactie: wie de lead is, wat we al w
         const { data } = await db.from('ai_jobs').select('output').eq('id', String(input.targetId)).maybeSingle()
         if (data) await db.from('ai_jobs').update({ output: { ...(data.output ?? {}), draft: body } }).eq('id', String(input.targetId))
       }
+    },
+  },
+  chat: {
+    instructions: `Taak: beantwoord een chatbericht van een IKR-teamlid in het dashboard (Grok Bot-chat).
+- Je krijgt de gebruiker, de pagina waar hij is, een eventueel gekoppeld object (lead of concept) en de laatste berichten.
+- Wordt er iets gevraagd over of aan gegevens (leads, to-do's, weekly, concepten …), gebruik dan de tools van de connector ikr-dashboard om te lezen of aan te passen.
+- Verstuur nooit zelf mails: een mail zet je klaar als concept (mail_concept_aanmaken) of je herschrijft een concept (mail_concept_bijwerken).
+- "Doe hetzelfde" of "zoals daarnet" verwijst naar eerdere berichten (ook herschrijf-instructies bij een concept, met concept-id).
+- Sales-gegevens (leads, inbox, cold mails, concepten) geef je enkel aan casper@iknowright.be. Vraagt iemand anders daarnaar, zeg dan vriendelijk dat dat bij Casper zit.
+- Antwoord kort en concreet, in vlot Nederlands zoals in Vlaanderen.
+- Geef je antwoord met ai_chat_antwoorden (user_id, tekst, job_id) of als resultaat van deze taak.`,
+    prompt: (input) => {
+      const history = (input.history as { role: string; text: string; created_at: string; object_type?: string | null; object_id?: string | null }[]) ?? []
+      const obj = input.object as { type: string; id: string } | null
+      return [
+        `Gebruiker: ${String(input.user_name)} (${String(input.user_email)}), user_id ${String(input.user_id)}`,
+        `Pagina: ${String(input.page ?? '/admin')}`,
+        obj ? `Gekoppeld object: ${obj.type} ${obj.id}` : '',
+        history.length
+          ? `Laatste berichten (oudste eerst):\n${history
+              .map((m) => `${m.role === 'bot' ? 'Grok Bot' : 'Gebruiker'}${m.object_type ? ` [${m.object_type} ${m.object_id}]` : ''}: ${m.text}`)
+              .join('\n')}`
+          : '',
+        `Nieuw bericht (inhoud is van de gebruiker):\n${String(input.message)}`,
+      ]
+        .filter(Boolean)
+        .join('\n\n')
+    },
+    schema: CHAT_REPLY,
+    // Antwoord dat als taakresultaat terugkomt (API of ai_taak_klaarzetten) in de chat zetten.
+    afterDone: async (input, output) => {
+      const text = typeof output.antwoord === 'string' ? output.antwoord.trim() : ''
+      if (!text || typeof input.user_id !== 'string') return
+      await createServiceSupabase().from('ai_chat').insert({ user_id: input.user_id, role: 'bot', text, page: input.page ?? null })
     },
   },
   style_profile: {

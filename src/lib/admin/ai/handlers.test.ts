@@ -70,3 +70,27 @@ describe('welk schrijfstijlprofiel gaat mee', () => {
     expect('style' in HANDLERS.style_profile).toBe(false)
   })
 })
+
+describe('chat', () => {
+  it('geeft gebruiker, pagina, object, de laatste berichten en het nieuwe bericht mee', () => {
+    const p = HANDLERS.chat.prompt({
+      user_id: 'u1',
+      user_email: 'casper@iknowright.be',
+      user_name: 'Casper',
+      page: '/admin/sales/leads/abc',
+      object: { type: 'lead', id: 'abc' },
+      message: 'Doe hetzelfde voor Jan',
+      history: [{ role: 'user', text: 'Herschrijf dit concept: korter', created_at: 'x', object_type: 'concept', object_id: 'c1' }],
+    })
+    expect(p).toContain('user_id u1')
+    expect(p).toContain('Pagina: /admin/sales/leads/abc')
+    expect(p).toContain('Gekoppeld object: lead abc')
+    expect(p).toContain('Gebruiker [concept c1]: Herschrijf dit concept: korter')
+    expect(p).toContain('Doe hetzelfde voor Jan')
+  })
+
+  it('verstuurt nooit zelf en houdt sales enkel voor Casper', () => {
+    expect(HANDLERS.chat.instructions).toMatch(/Verstuur nooit zelf mails/)
+    expect(HANDLERS.chat.instructions).toMatch(/enkel aan casper@iknowright.be/)
+  })
+})

@@ -121,3 +121,17 @@ Volgens de sales-workflow in Lucid:
 - Gaat mee in elke mailtaak; MCP-tool `schrijfstijl`. Instellingen → Schrijfstijl: lezen, aanpassen, Bijwerken.
   Elke maandag automatisch (`/api/cron/style-profiles`).
 - contact@ heeft leesrechten nodig (opnieuw koppelen) om de oude verzonden mails te kunnen lezen.
+
+## Chat met Grok Bot (elke admin-pagina)
+
+- Balk bovenaan in de admin-layout (Enter verstuurt) + "uitklappen" voor het paneel met de geschiedenis
+  (nieuwste onderaan, ververst om de 3 s zolang het open is of Grok Bot nadenkt). Staat in de layout, dus blijft
+  bij het wisselen van pagina.
+- Tabel `ai_chat` (per gebruiker; RLS: enkel eigen berichten lezen/schrijven). Velden: rol, tekst, pagina,
+  gekoppeld object (type + id) en `actions` (jsonb, voor later: bv. `[{ "actie": "open", "route": "…" }]`).
+- Een bericht maakt een AI-taak `chat` (bericht, pagina, object, laatste 20 berichten van die gebruiker) en
+  pingt Grok Bot (of loopt via de API). "Grok Bot denkt na…" zolang die taak open is (max 15 min).
+- Herschrijf-instructies bij een concept komen ook in de chat (object `concept` + id).
+- MCP: `ai_chat_geschiedenis(user_id, limit)`, `ai_chat_antwoorden(user_id, tekst, job_id?)`,
+  `mail_concepten_lijst(lead_id?)`. Antwoorden kan ook als resultaat van de taak (`{ antwoord }`).
+- Grok Bot verstuurt niets; sales-gegevens enkel voor casper@ (instructie aan de bot, geen harde blokkering).

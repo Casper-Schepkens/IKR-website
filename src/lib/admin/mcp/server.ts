@@ -9,6 +9,7 @@ import type { AdminSession } from '../session'
 import { supabaseLeads } from '../sales/repo'
 import { supabaseWeekly } from '../weekly/repo'
 import { supabaseDrafts, type MailDraft } from '../sales/drafts'
+import { supabaseChat } from '../chat/repo'
 import {
   LOST_REASON_LABELS,
   LOST_REASONS,
@@ -21,7 +22,7 @@ import {
 } from '../sales/types'
 import { coldMailStats } from '../sales/apollo'
 import { loadInbox } from '../sales/inbox'
-import { aiEngine, completeJob, dismissJob, instructionsFor, openJobs, runJob } from '../ai/jobs'
+import { aiEngine, closeChatJob, completeJob, dismissJob, instructionsFor, openJobs, runJob } from '../ai/jobs'
 import { styleInstructions, styleKeyFor } from '../ai/style-profile'
 import { HANDLERS } from '../ai/handlers'
 import { boardTodos, currentWeekly } from '../weekly/board'
@@ -143,11 +144,18 @@ const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Gebruik YYYY-MM-DD')
 /** Grokbot werkt als Casper, rechtstreeks op de database (service role). */
 export function botSession(): AdminSession {
   const db = createServiceSupabase()
-  return { user: { email: SALES_EMAIL, name: 'Grokbot' }, mode: 'supabase', leads: supabaseLeads(db), weekly: supabaseWeekly(db), drafts: supabaseDrafts(db) }
+  return {
+    user: { id: 'grokbot', email: SALES_EMAIL, name: 'Grokbot' },
+    mode: 'supabase',
+    leads: supabaseLeads(db),
+    weekly: supabaseWeekly(db),
+    drafts: supabaseDrafts(db),
+    chat: supabaseChat(db),
+  }
 }
 
 export function buildMcpServer(session: AdminSession) {
-  const { leads, weekly, drafts } = session
+  const { leads, weekly, drafts, chat } = session
   const server = new McpServer({ name: 'ikr-dashboard', version: '1.0.0' }, { instructions: INSTRUCTIONS })
 
   /** Registreert een tool; elke oproep wordt gelogd in bot_actions. */
@@ -404,6 +412,49 @@ export function buildMcpServer(session: AdminSession) {
     if (!(await drafts.remove(id))) throw new Error('Dit concept kan niet verwijderd worden.')
     return { verwijderd: id }
   })
+
+  // ─── Chat met Grok Bot (per gebruiker) ────────────────────
+  tool(
+    'ai_chat_geschiedenis',
+    'De chat van één gebruiker met Grok Bot (oudste eerst), met pagina en gekoppeld object per bericht.',
+    { user_id: z.string(), limit: z.number().int().min(1).max(100).optional() },
+    true,
+    async ({ user_id, limit = 20 }) =>
+      (await chat.list(uuid(user_id, 'user_id'), limit)).map((m) => ({
+        id: m.id,
+        rol: m.role,
+        tekst: m.text,
+        pagina: m.page,
+        object: m.object_type ? { type: m.object_type, id: m.object_id } : null,
+        aangemaakt: m.created_at,
+      })),
+  )
+  tool(
+    'ai_chat_antwoorden',
+    'Zet een antwoord van Grok Bot in de chat van een gebruiker. Geef job_id mee om de chat-taak af te sluiten (dan verdwijnt "Grok Bot denkt na…").',
+    { user_id: z.string(), tekst: z.string(), job_id: z.string().optional() },
+    false,
+    async ({ user_id, tekst, job_id }) => {
+      const userId = uuid(user_id, 'user_id')
+      const text = nonEmpty(tekst, 'tekst', 8000)
+      if (!(await chat.hasUser(userId))) throw new Error('Deze gebruiker heeft nog geen chat.')
+      // Eerst de taak controleren, zodat een verkeerd job_id geen bericht achterlaat.
+      if (job_id) await closeChatJob(uuid(job_id, 'job_id'), userId, BY)
+      const m = await chat.add({ user_id: userId, role: 'bot', text })
+      return { bericht_id: m.id }
+    },
+  )
+  tool(
+    'mail_concepten_lijst',
+    'Open mailconcepten (nog niet verstuurd) met id, lead, thread_id en tekst.',
+    { lead_id: z.string().optional() },
+    true,
+    async ({ lead_id }) => {
+      const list = await drafts.list({ status: 'concept', ...(lead_id ? { leadId: uuid(lead_id, 'lead_id') } : {}) })
+      const names = new Map((await leads.list()).map((l) => [l.id, l.name]))
+      return list.map((d) => ({ ...draftView(d), lead: names.get(d.lead_id) ?? null, body: d.body }))
+    },
+  )
 
   // ─── AI-taken (Grokbot als uitvoerder) ────────────────────
   tool(
