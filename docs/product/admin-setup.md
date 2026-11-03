@@ -80,3 +80,14 @@ Volgens de sales-workflow in Lucid:
 - Per taak worden model, tokens en kost (USD) bewaard. Overzicht: Instellingen → AI-kosten (enkel Casper).
 - Testweek: na een week de kost per maand bekijken en kiezen tussen API en een eigen server.
 - Vaste IKR-context: `src/lib/admin/ai/context.ts`. Taken: `src/lib/admin/ai/handlers.ts`.
+
+## Grokbot (MCP)
+
+- Endpoint: `https://iknowright.be/api/mcp` (header `Authorization: Bearer <GROKBOT_API_KEY>` of `x-api-key`),
+  of `https://iknowright.be/api/mcp/<GROKBOT_API_KEY>` voor apps die geen headers kunnen instellen.
+- Grokbot werkt als Casper, op de database met de service role, via dezelfde logica als het dashboard.
+- Tools: leads (lijst, fiche, aanmaken, bijwerken, notitie, fase, lost, verwijderen), cold mails, inbox (lijst,
+  versturen, wegklikken), weekly (overzicht, vorige, to-do aanmaken/bijwerken/af/notitie/doorschuiven/verwijderen,
+  inplannen, afsluiten). Geen toegang tot Google-tokens.
+- Elke wijziging (en elke fout) wordt gelogd in `bot_actions`.
+- Code: `src/lib/admin/mcp/server.ts`.
