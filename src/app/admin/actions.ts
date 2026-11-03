@@ -4,8 +4,8 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { requireSales } from '@/lib/admin/session'
 import { createServerSupabase } from '@/lib/admin/supabase/server'
-import { isSupabaseConfigured, SALES_EMAIL } from '@/lib/admin/env'
-import { getThread, sendReply } from '@/lib/admin/gmail'
+import { isSupabaseConfigured } from '@/lib/admin/env'
+import { sendInboxReply } from '@/lib/admin/sales/send'
 import { dismissJob, getJob, runJob } from '@/lib/admin/ai/jobs'
 import {
   LOST_REASONS,
@@ -108,19 +108,7 @@ export async function markLostAction(id: string, form: FormData) {
 export async function sendInboxReplyAction(threadId: string, form: FormData) {
   return attempt(async () => {
     await requireSales()
-    const body = str(form, 'body')
-    if (!body) throw new Error('Het antwoord is leeg.')
-    const thread = await getThread(SALES_EMAIL, threadId)
-    const last = [...thread.mails].reverse().find((m) => m.fromEmail !== SALES_EMAIL)
-    if (!last) throw new Error('Geen mail van de lead gevonden in deze thread.')
-    await sendReply(SALES_EMAIL, {
-      threadId,
-      to: last.fromEmail,
-      subject: last.subject,
-      inReplyTo: last.messageId,
-      references: last.references,
-      body,
-    })
+    await sendInboxReply(threadId, str(form, 'body') ?? '')
     revalidatePath('/admin/sales/inbox')
   })
 }

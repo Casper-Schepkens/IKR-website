@@ -7,6 +7,8 @@ export interface LeadsRepo {
   get(id: string): Promise<Lead | null>
   create(input: LeadInput): Promise<Lead>
   update(id: string, input: LeadInput): Promise<void>
+  /** Enkel de meegegeven velden aanpassen. */
+  patch(id: string, input: Partial<LeadInput>): Promise<void>
   setStage(id: string, stage: Stage): Promise<void>
   markLost(id: string, reason: LostReason, note: string | null): Promise<void>
   /** Geen lead: verwijderen en het adres onthouden, zodat de inbox er geen nieuwe lead van maakt. */
@@ -37,6 +39,9 @@ export function supabaseLeads(db: SupabaseClient): LeadsRepo {
       return lead
     },
     async update(id, input) {
+      check(await db.from('leads').update(input).eq('id', id))
+    },
+    async patch(id, input) {
       check(await db.from('leads').update(input).eq('id', id))
     },
     async setStage(id, stage) {
@@ -97,6 +102,9 @@ export function memoryLeads(): LeadsRepo {
       return lead
     },
     async update(id, input) {
+      Object.assign(find(id), input, { updated_at: now() })
+    },
+    async patch(id, input) {
       Object.assign(find(id), input, { updated_at: now() })
     },
     async setStage(id, stage) {

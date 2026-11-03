@@ -15,6 +15,8 @@ export interface WeeklyRepo {
   updateWeekly(id: string, patch: WeeklyPatch): Promise<void>
   listTodos(): Promise<Todo[]>
   createTodo(input: NewTodo, note: string | null): Promise<void>
+  updateTodo(id: string, patch: Partial<Pick<Todo, 'title' | 'owner' | 'kind'>>): Promise<void>
+  deleteTodo(id: string): Promise<void>
   setDone(id: string, by: string | null): Promise<void>
   addNote(todoId: string, body: string, author: string): Promise<void>
   /** Schuift een to-do door naar de volgende weekly (die nog ingepland wordt). */
@@ -59,6 +61,12 @@ export function supabaseWeekly(db: SupabaseClient): WeeklyRepo {
     async createTodo(input, note) {
       const t = check(await db.from('weekly_todos').insert(input).select('id').single())
       if (note && t) check(await db.from('weekly_todo_notes').insert({ todo_id: t.id, body: note, author: input.created_by }))
+    },
+    async updateTodo(id, patch) {
+      check(await db.from('weekly_todos').update(patch).eq('id', id))
+    },
+    async deleteTodo(id) {
+      check(await db.from('weekly_todos').delete().eq('id', id))
     },
     async setDone(id, by) {
       check(await db.from('weekly_todos').update({ done_at: by ? new Date().toISOString() : null, done_by: by }).eq('id', id))
@@ -127,6 +135,12 @@ export function memoryWeekly(): WeeklyRepo {
       const id = crypto.randomUUID()
       const notes: TodoNote[] = note ? [{ id: crypto.randomUUID(), todo_id: id, body: note, author: input.created_by, created_at: now() }] : []
       s.todos.push({ ...input, id, pushed_count: 0, done_at: null, done_by: null, created_at: now(), notes })
+    },
+    async updateTodo(id, patch) {
+      Object.assign(todo(id), patch)
+    },
+    async deleteTodo(id) {
+      s.todos = s.todos.filter((t) => t.id !== id)
     },
     async setDone(id, by) {
       Object.assign(todo(id), { done_at: by ? now() : null, done_by: by })
