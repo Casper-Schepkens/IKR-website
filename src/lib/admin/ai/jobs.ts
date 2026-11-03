@@ -8,8 +8,8 @@ import { HANDLERS, type JobType } from './handlers'
 
 /**
  * AI-taken via de tabel ai_jobs. Engine 'api' (standaard): de taak loopt meteen via de Claude API.
- * Met IKR_AI_ENGINE=worker blijven taken op 'pending' staan voor een worker op een eigen server
- * (Claude Code), zonder dat het dashboard verandert.
+ * Met IKR_AI_ENGINE=grokbot (of =worker) blijven taken op 'pending' staan; Grokbot (via de
+ * MCP-connector) of een worker op een eigen server haalt ze op en zet het resultaat terug.
  */
 
 export type AiJob = {
@@ -33,8 +33,43 @@ export type AiJob = {
 
 export const MODEL = process.env.IKR_AI_MODEL || 'claude-sonnet-5-5'
 
+/** Wie de AI-taken uitvoert. */
+export function aiEngine(): 'api' | 'grokbot' | 'worker' {
+  const e = process.env.IKR_AI_ENGINE
+  return e === 'grokbot' || e === 'worker' ? e : 'api'
+}
+
 export function isAiConfigured() {
-  return Boolean(process.env.ANTHROPIC_API_KEY) || process.env.IKR_AI_ENGINE === 'worker'
+  return aiEngine() !== 'api' || Boolean(process.env.ANTHROPIC_API_KEY)
+}
+
+/** Open taken voor een externe uitvoerder (Grokbot of worker), oudste eerst. */
+export async function openJobs(limit = 10): Promise<AiJob[]> {
+  const { data, error } = await db().from('ai_jobs').select('*').eq('status', 'pending').order('created_at').limit(limit)
+  if (error) throw new Error(error.message)
+  return (data ?? []) as AiJob[]
+}
+
+/** Resultaat van een externe uitvoerder bewaren, gecontroleerd tegen de vorm van de taak. */
+export async function completeJob(id: string, output: unknown, engine: string) {
+  const job = await getJob(id)
+  if (!job) throw new Error('Taak niet gevonden.')
+  if (job.status === 'done' || job.status === 'dismissed') throw new Error('Deze taak is al afgehandeld.')
+  const handler = HANDLERS[job.type]
+  // Ontbrekende velden (bv. geen telefoonnummer) als leeg beschouwen.
+  const shape = (handler.schema as unknown as { shape?: Record<string, unknown> }).shape
+  const filled =
+    shape && output && typeof output === 'object'
+      ? { ...Object.fromEntries(Object.keys(shape).map((k) => [k, null])), ...(output as object) }
+      : output
+  const parsed = handler.schema.safeParse(filled)
+  if (!parsed.success) throw new Error(`Resultaat klopt niet met de gevraagde vorm: ${parsed.error.message}`)
+  const { error } = await db()
+    .from('ai_jobs')
+    .update({ status: 'done', output: parsed.data, engine, model: engine, cost_usd: 0, error: null, finished_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw new Error(error.message)
+  await handler.afterDone?.(job.input, parsed.data as Record<string, unknown>).catch((e) => console.error('[ai] afterDone', e))
 }
 
 /** USD per miljoen tokens (standaardtarief). Cache schrijven = 1,25× input. */
@@ -97,7 +132,7 @@ let client: Anthropic | null = null
 
 /** Voert een taak uit via de Claude API (tenzij een worker dat doet). Faalt nooit hard. */
 export async function runJob(id: string) {
-  if (process.env.IKR_AI_ENGINE === 'worker') return
+  if (aiEngine() !== 'api') return
   // Enkel een taak die nog wacht oppikken (voorkomt dubbel werk).
   const claimed = await db()
     .from('ai_jobs')

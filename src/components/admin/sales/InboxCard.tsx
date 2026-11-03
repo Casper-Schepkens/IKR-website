@@ -26,6 +26,7 @@ export type InboxCardProps = {
   subject: string
   text: string
   showContext: boolean
+  waitingLabel: string
   job: { id: string; status: string; error: string | null; output: { kind?: string; draft?: string | null; context?: string | null } | null } | null
 }
 
@@ -90,7 +91,7 @@ export function InboxCard(props: InboxCardProps) {
 
       {(!p.job || p.job.status === 'pending' || p.job.status === 'running') && (
         <span className="flex items-center gap-2 text-sm font-semibold">
-          <Spinner /> AI zet een antwoord klaar…
+          <Spinner /> {p.waitingLabel}
         </span>
       )}
       {p.job && (p.job.status === 'error' || p.job.status === 'waiting_limit') && (
