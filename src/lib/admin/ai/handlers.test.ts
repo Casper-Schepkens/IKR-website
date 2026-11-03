@@ -38,8 +38,8 @@ describe('inbox_reply', () => {
 
 describe('style_profile', () => {
   const input = {
-    key: 'ikr',
-    mailbox: 'contact@iknowright.be',
+    key: 'casper',
+    mailbox: 'casper@iknowright.be + contact@iknowright.be',
     mails: [{ subject: 'Re: Voorstel', date: '2026-10-01', text: 'Hey Jan, top! Zullen we donderdag bellen? Groetjes, Casper' }],
     feedback: [{ ai_text: 'Beste Jan, hartelijk dank voor uw bericht.', sent_text: 'Hey Jan, merci!' }],
     current: { guide: '- Altijd "Groetjes" als afsluiting' },
@@ -64,10 +64,9 @@ describe('style_profile', () => {
 })
 
 describe('welk schrijfstijlprofiel gaat mee', () => {
-  it('inbox: altijd Casper; herschrijven: volgens de afzender', () => {
+  it('één profiel: inbox en herschrijven gebruiken altijd dat van Casper', () => {
     expect(HANDLERS.inbox_reply.style!()).toBe('casper')
-    expect(HANDLERS.mail_rewrite.style!({ from: 'contact@iknowright.be' })).toBe('ikr')
-    expect(HANDLERS.mail_rewrite.style!({ from: 'casper@iknowright.be' })).toBe('casper')
+    expect(HANDLERS.mail_rewrite.style!()).toBe('casper')
     expect('style' in HANDLERS.style_profile).toBe(false)
   })
 })

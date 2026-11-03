@@ -92,7 +92,7 @@ Vul altijd "context" in, ook bij een eerste reactie: wie de lead is, wat we al w
         .join('\n\n')
     },
     schema: MAIL_REWRITE,
-    style: (input) => styleKeyFor(typeof input.from === 'string' ? input.from : null),
+    style: () => styleKeyFor(),
     // Het resultaat meteen op de juiste plek zetten (concept of voorstel in de inbox).
     afterDone: async (input, output) => {
       const body = typeof output.body === 'string' ? output.body : null
@@ -112,7 +112,7 @@ Vul altijd "context" in, ook bij een eerste reactie: wie de lead is, wat we al w
     },
   },
   style_profile: {
-    instructions: `Taak: maak een schrijfstijlgids uit echte mails die verstuurd werden vanaf één mailbox.
+    instructions: `Taak: maak een schrijfstijlgids uit echte mails die Casper verstuurde (vanaf casper@ en contact@).
 Doel: een AI die nadien mails schrijft, moet klinken zoals deze mails. Beschrijf dus hoe er écht geschreven wordt, niet hoe het zou moeten.
 Behandel in de gids (beknopt, in het Nederlands, als korte punten, max. ±400 woorden):
 - aanhef en afsluiting (letterlijk, met varianten);
@@ -141,7 +141,7 @@ Kies ook 5 tot 8 korte voorbeelden (echte mails, mag ingekort) die typisch zijn.
     },
     schema: STYLE_PROFILE,
     afterDone: async (input, output) => {
-      const key = input.key === 'ikr' ? 'ikr' : 'casper'
+      const key = 'casper' as const
       const guide = typeof output.guide === 'string' ? output.guide.trim() : ''
       if (!guide) return
       const examples = Array.isArray(output.examples) ? output.examples.filter((e): e is string => typeof e === 'string').slice(0, 8) : []

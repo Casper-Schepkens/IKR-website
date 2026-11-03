@@ -86,10 +86,7 @@ export function DraftCard(d: DraftCardProps) {
           <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
             <label className={label}>
               Van
-              <select name="from" defaultValue={d.from} className={input}>
-                <option value="casper@iknowright.be">casper@iknowright.be</option>
-                <option value="contact@iknowright.be">contact@iknowright.be</option>
-              </select>
+              <input value={d.from} readOnly aria-readonly className={cn(input, 'opacity-70')} />
             </label>
             <label className={label}>
               Aan

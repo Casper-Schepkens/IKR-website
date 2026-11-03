@@ -131,7 +131,7 @@ export async function listJobs(sinceIso: string): Promise<AiJob[]> {
 
 /** Vaste IKR-context + (voor mailtaken) het schrijfstijlprofiel + de instructies van de taak. */
 export async function instructionsFor(job: Pick<AiJob, 'type' | 'input'>) {
-  const h = HANDLERS[job.type] as { instructions: string; style?: (i: Record<string, unknown>) => 'casper' | 'ikr' }
+  const h = HANDLERS[job.type] as { instructions: string; style?: (i: Record<string, unknown>) => 'casper' }
   const style = h.style ? await styleInstructions(h.style(job.input)) : ''
   return [IKR_CONTEXT, style, h.instructions].filter(Boolean).join('\n\n')
 }

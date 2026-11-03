@@ -1,14 +1,17 @@
 import 'server-only'
 import { createServiceSupabase } from '../supabase/server'
 
-/** Twee profielen: Casper (casper@) en één IKR-profiel (contact@, ook Cedric en Milan). */
-export const STYLE_KEYS = ['casper', 'ikr'] as const
+/**
+ * Eén profiel: de schrijfstijl van Casper. Opgebouwd uit zijn verzonden mails van casper@ én contact@
+ * (vroeger stuurde hij meestal via contact@; voortaan enkel via casper@).
+ */
+export const STYLE_KEYS = ['casper'] as const
 export type StyleKey = (typeof STYLE_KEYS)[number]
-export const STYLE_MAILBOX: Record<StyleKey, string> = { casper: 'casper@iknowright.be', ikr: 'contact@iknowright.be' }
-export const STYLE_LABEL: Record<StyleKey, string> = { casper: 'Casper (casper@iknowright.be)', ikr: 'IKR (contact@iknowright.be)' }
+export const STYLE_SOURCES = ['casper@iknowright.be', 'contact@iknowright.be'] as const
+export const STYLE_LABEL: Record<StyleKey, string> = { casper: 'Jouw schrijfstijl (uit casper@ en contact@)' }
 
-export function styleKeyFor(mailbox: string | null | undefined): StyleKey {
-  return mailbox?.toLowerCase() === STYLE_MAILBOX.ikr ? 'ikr' : 'casper'
+export function styleKeyFor(): StyleKey {
+  return 'casper'
 }
 
 export type StyleProfile = { key: StyleKey; guide: string; examples: string[]; mail_count: number; updated_at: string; updated_by: string | null }

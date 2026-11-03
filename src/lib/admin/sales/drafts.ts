@@ -1,8 +1,8 @@
 import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-/** Afzenders waarvandaan een concept verstuurd mag worden. */
-export const DRAFT_FROM = ['casper@iknowright.be', 'contact@iknowright.be'] as const
+/** Afzender van concepten: enkel casper@ (er wordt niet meer via contact@ verstuurd). */
+export const DRAFT_FROM = ['casper@iknowright.be'] as const
 export type DraftFrom = (typeof DRAFT_FROM)[number]
 
 export type MailDraft = {

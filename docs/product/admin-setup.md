@@ -108,6 +108,14 @@ Volgens de sales-workflow in Lucid:
 - **Een bot verstuurt nooit zelf.** De MCP-server heeft geen enkele verzendtool (ook `inbox_versturen` is weg);
   versturen kan enkel via de knop Verstuur in het dashboard (server action, ingelogd als Casper).
 - Concepten staan in de inbox (tab Concepten) en op de leadfiche (Mailconcepten): bewerken, versturen, verwijderen.
-- Afzender casper@ of contact@. Versturen vanaf contact@ vraagt dat contact@ opnieuw gekoppeld wordt in
-  Instellingen (scope gmail.send).
+- Afzender is altijd casper@ (er wordt niet meer via contact@ verstuurd).
 - Tests: `npm test` (Vitest, `src/lib/admin/mcp/server.test.ts`).
+
+### Schrijfstijl
+
+- Eén profiel (`style_profiles`, key `casper`): gids + voorbeelden, door de AI (Grokbot of API) gemaakt uit Caspers
+  echte verzonden antwoorden van casper@ en contact@ (laatste 6 maanden, zonder Apollo-mails) en uit
+  `style_feedback` (AI-voorstel tegenover wat echt verstuurd werd).
+- Gaat mee in elke mailtaak; MCP-tool `schrijfstijl`. Instellingen → Schrijfstijl: lezen, aanpassen, Bijwerken.
+  Elke maandag automatisch (`/api/cron/style-profiles`).
+- contact@ heeft leesrechten nodig (opnieuw koppelen) om de oude verzonden mails te kunnen lezen.

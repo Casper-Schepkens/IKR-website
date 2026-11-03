@@ -7,7 +7,7 @@ import { buttonClass, muted, Spinner } from './ui'
 import { cn } from '@/utilities/ui'
 
 /** "Bijwerken": verzamelt verzonden mails en laat de AI (Grokbot of API) het profiel opnieuw opbouwen. */
-export function StyleRebuildButton({ styleKey, rewriter }: { styleKey: 'casper' | 'ikr'; rewriter: string }) {
+export function StyleRebuildButton({ styleKey, rewriter }: { styleKey: 'casper'; rewriter: string }) {
   const [pending, start] = useTransition()
   const [jobId, setJobId] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)

@@ -6,7 +6,6 @@ import { requireSales } from '@/lib/admin/session'
 import { createServerSupabase } from '@/lib/admin/supabase/server'
 import { isSupabaseConfigured } from '@/lib/admin/env'
 import { sendDraft, sendInboxReply } from '@/lib/admin/sales/send'
-import { DRAFT_FROM, type DraftFrom } from '@/lib/admin/sales/drafts'
 import { aiEngine, dismissJob, enqueue, getJob, isAiConfigured, runJob } from '@/lib/admin/ai/jobs'
 import { notifyGrok } from '@/lib/admin/ai/notify'
 import { recordFeedback, saveProfile, STYLE_KEYS, type StyleKey } from '@/lib/admin/ai/style-profile'
@@ -174,14 +173,12 @@ export async function updateDraftAction(id: string, form: FormData) {
     const to = str(form, 'to')?.toLowerCase()
     const subject = str(form, 'subject')
     const body = str(form, 'body')
-    const from = str(form, 'from') as DraftFrom | null
     const isEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)
     if (!to || !isEmail(to)) throw new Error('Vul een geldig e-mailadres in bij "Aan".')
     const cc = (str(form, 'cc') ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
     if (cc.some((e) => !isEmail(e))) throw new Error('Een adres bij "Cc" klopt niet.')
     if (!subject || !body) throw new Error('Onderwerp en tekst zijn verplicht.')
-    if (from && !DRAFT_FROM.includes(from)) throw new Error('Onbekende afzender.')
-    const ok = await drafts.update(id, { to_email: to, cc, subject, body, ...(from ? { from_email: from } : {}) })
+    const ok = await drafts.update(id, { to_email: to, cc, subject, body })
     if (!ok) throw new Error('Dit concept kan niet meer aangepast worden.')
     revalidatePath('/admin/sales', 'layout')
   })

@@ -16,8 +16,8 @@ export async function StyleProfiles() {
       <div>
         <Title className="m-0 text-2xl">Schrijfstijl</Title>
         <p className={cn('m-0 text-sm', muted)}>
-          Afgeleid uit je echte verzonden antwoorden (laatste 6 maanden, zonder Apollo-mails) en uit wat je aanpast aan
-          AI-voorstellen. Gaat mee bij elk mailvoorstel, herschrijven en concept. Elke maandag automatisch bijgewerkt;
+          Afgeleid uit je echte verzonden antwoorden van casper@ en contact@ (laatste 6 maanden, zonder Apollo-mails) en
+          uit wat je aanpast aan AI-voorstellen. Gaat mee bij elk mailvoorstel, herschrijven en concept. Elke maandag automatisch bijgewerkt;
           jouw correcties hieronder blijven behouden.
         </p>
       </div>

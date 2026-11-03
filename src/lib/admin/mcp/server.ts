@@ -8,7 +8,7 @@ import { fmtDate, fmtTime, isoDay } from '../format'
 import type { AdminSession } from '../session'
 import { supabaseLeads } from '../sales/repo'
 import { supabaseWeekly } from '../weekly/repo'
-import { DRAFT_FROM, supabaseDrafts, type MailDraft } from '../sales/drafts'
+import { supabaseDrafts, type MailDraft } from '../sales/drafts'
 import {
   LOST_REASON_LABELS,
   LOST_REASONS,
@@ -22,7 +22,7 @@ import {
 import { coldMailStats } from '../sales/apollo'
 import { loadInbox } from '../sales/inbox'
 import { aiEngine, completeJob, dismissJob, instructionsFor, openJobs, runJob } from '../ai/jobs'
-import { STYLE_MAILBOX, styleInstructions, styleKeyFor } from '../ai/style-profile'
+import { styleInstructions, styleKeyFor } from '../ai/style-profile'
 import { HANDLERS } from '../ai/handlers'
 import { boardTodos, currentWeekly } from '../weekly/board'
 import { scheduleWeekly } from '../weekly/schedule'
@@ -96,14 +96,14 @@ function nonEmpty(v: string, field: string, max: number) {
 }
 const optional = (v: string | undefined) => (v === undefined ? undefined : v.trim() || null)
 
-type DraftArgs = { lead_id: string; to: string; cc?: string[]; subject: string; body: string; van?: MailDraft['from_email']; formaat?: 'text' | 'html'; thread_id?: string; in_reply_to?: string; context?: string }
+type DraftArgs = { lead_id: string; to: string; cc?: string[]; subject: string; body: string; formaat?: 'text' | 'html'; thread_id?: string; in_reply_to?: string; context?: string }
 
 /** Strenge controle van een nieuw concept (fouten worden zo ook gelogd). */
 export function validateDraft(a: DraftArgs) {
   const body = nonEmpty(a.body, 'body', 50_000)
   return {
     lead_id: uuid(a.lead_id, 'lead_id'),
-    from_email: a.van ?? 'casper@iknowright.be',
+    from_email: 'casper@iknowright.be' as const,
     to_email: email(a.to, 'to'),
     cc: (a.cc ?? []).map((c, i) => email(c, `cc[${i}]`)),
     subject: nonEmpty(a.subject, 'subject', 300),
@@ -128,7 +128,6 @@ function validateDraftPatch(a: Partial<DraftArgs>) {
     cc: a.cc?.map((c, i) => email(c, `cc[${i}]`)),
     subject: a.subject === undefined ? undefined : nonEmpty(a.subject, 'subject', 300),
     body,
-    from_email: a.van,
     is_html: a.formaat ? a.formaat === 'html' : body !== undefined ? HTML.test(body) : undefined,
     thread_id: optional(a.thread_id),
     in_reply_to: optional(a.in_reply_to),
@@ -341,21 +340,20 @@ export function buildMcpServer(session: AdminSession) {
   })
   tool(
     'schrijfstijl',
-    'Het schrijfstijlprofiel (gids + voorbeelden) van een afzender, afgeleid uit echte verzonden mails. Lees dit voor je een mail schrijft.',
-    { afzender: z.enum(DRAFT_FROM).optional().describe('standaard casper@iknowright.be') },
+    'Het schrijfstijlprofiel van Casper (gids + voorbeelden), afgeleid uit zijn echte verzonden mails. Lees dit voor je een mail schrijft.',
+    {},
     true,
-    async ({ afzender }) => (await styleInstructions(styleKeyFor(afzender ?? STYLE_MAILBOX.casper))) || 'Nog geen schrijfstijlprofiel.',
+    async () => (await styleInstructions(styleKeyFor())) || 'Nog geen schrijfstijlprofiel.',
   )
   tool(
     'mail_concept_aanmaken',
-    'Zet een NIEUWE uitgaande mail als concept klaar bij een lead. Lees eerst lead_fiche en schrijfstijl (van de afzender) en geef altijd context mee. Er wordt niets verstuurd: Casper keurt het concept in het dashboard goed en verstuurt het zelf. Geeft het concept_id terug.',
+    'Zet een NIEUWE uitgaande mail als concept klaar bij een lead. Lees eerst lead_fiche en schrijfstijl en geef altijd context mee. Afzender is altijd casper@iknowright.be. Er wordt niets verstuurd: Casper keurt het concept in het dashboard goed en verstuurt het zelf. Geeft het concept_id terug.',
     {
       lead_id: z.string().describe('id van de lead (zie leads_lijst of lead_fiche)'),
       to: z.string().describe('e-mailadres van de ontvanger'),
       cc: z.array(z.string()).optional(),
       subject: z.string(),
       body: z.string().describe('tekst of HTML'),
-      van: z.enum(DRAFT_FROM).optional().describe('afzender, standaard casper@iknowright.be'),
       formaat: z.enum(['text', 'html']).optional().describe('standaard: automatisch (html als de body HTML-tags bevat)'),
       thread_id: z.string().optional().describe('Gmail-thread om in te antwoorden (van de mailbox van de afzender)'),
       in_reply_to: z.string().optional().describe('Message-ID van de mail waarop geantwoord wordt'),
@@ -382,7 +380,6 @@ export function buildMcpServer(session: AdminSession) {
       cc: z.array(z.string()).optional(),
       subject: z.string().optional(),
       body: z.string().optional(),
-      van: z.enum(DRAFT_FROM).optional(),
       formaat: z.enum(['text', 'html']).optional(),
       thread_id: z.string().optional(),
       in_reply_to: z.string().optional(),
