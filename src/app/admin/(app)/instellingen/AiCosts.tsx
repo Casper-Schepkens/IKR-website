@@ -3,7 +3,7 @@ import { fmtDate } from '@/lib/admin/format'
 import { Card, Empty, muted, Stat, Title } from '@/components/admin/ui'
 import { cn } from '@/utilities/ui'
 
-const LABELS: Record<string, string> = { inbox_reply: 'Antwoord klaarzetten (inbox)' }
+const LABELS: Record<string, string> = { inbox_reply: 'Antwoord klaarzetten (inbox)', mail_rewrite: 'Mail herschrijven' }
 const usd = (n: number) => `$${n.toFixed(n < 1 ? 3 : 2)}`
 
 /** Testweek: wat kost elke AI-taak via de API? Basis om te kiezen tussen API en een eigen server. */

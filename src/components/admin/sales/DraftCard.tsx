@@ -7,6 +7,7 @@ import { deleteDraftAction, sendDraftAction, updateDraftAction } from '@/app/adm
 import { buttonClass, Card, input, label, muted, Pill, Spinner } from '../ui'
 import { cn } from '@/utilities/ui'
 import { ContextBox } from './ContextBox'
+import { RewriteBox } from './RewriteBox'
 
 export type DraftCardProps = {
   id: string
@@ -22,6 +23,8 @@ export type DraftCardProps = {
   createdBy: string | null
   createdAt: string
   context: string | null
+  /** Wie herschrijft: "Grokbot" of "De AI" */
+  rewriter: string
 }
 
 /** Mailconcept (bv. van Grokbot): Casper bewerkt, verstuurt of verwijdert het. */
@@ -29,6 +32,8 @@ export function DraftCard(d: DraftCardProps) {
   const [pending, start] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [gone, setGone] = useState<string | null>(null)
+  const [subject, setSubject] = useState(d.subject)
+  const [body, setBody] = useState(d.body)
   const router = useRouter()
 
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>, done?: string) =>
@@ -97,15 +102,16 @@ export function DraftCard(d: DraftCardProps) {
           </div>
           <label className={label}>
             Onderwerp
-            <input name="subject" required defaultValue={d.subject} className={input} />
+            <input name="subject" required value={subject} onChange={(e) => setSubject(e.target.value)} className={input} />
           </label>
           <label className={label}>
             Tekst{d.isHtml ? ' (HTML)' : ''}
             <textarea
               name="body"
               required
-              defaultValue={d.body}
-              rows={Math.min(16, Math.max(6, d.body.split('\n').length + 1))}
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              rows={Math.min(16, Math.max(6, body.split('\n').length + 1))}
               className={cn(input, 'py-3 leading-relaxed', d.isHtml && 'font-mono text-xs')}
             />
           </label>
@@ -141,6 +147,17 @@ export function DraftCard(d: DraftCardProps) {
             <button type="submit" disabled={pending} className={buttonClass('soft')}>
               Opslaan
             </button>
+            <RewriteBox
+              target="draft"
+              targetId={d.id}
+              leadId={d.leadId}
+              rewriter={d.rewriter}
+              current={() => ({ subject, body, context: d.context })}
+              onResult={(r) => {
+                setBody(r.body)
+                if (r.subject) setSubject(r.subject)
+              }}
+            />
             <button
               type="button"
               disabled={pending}

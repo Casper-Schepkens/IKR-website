@@ -15,6 +15,7 @@ import { Card, input, label, muted, Pill, Title } from '@/components/admin/ui'
 import { markLostAction, removeNotALeadAndBackAction, setStageAction, updateLeadAction } from '../../../../actions'
 import { ConfirmSubmit } from '@/components/admin/ConfirmSubmit'
 import { DraftCard } from '@/components/admin/sales/DraftCard'
+import { aiEngine } from '@/lib/admin/ai/jobs'
 import { cn } from '@/utilities/ui'
 
 export const metadata = { title: 'Lead' }
@@ -73,6 +74,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
               createdBy={d.created_by}
               createdAt={d.created_at}
               context={d.context}
+              rewriter={aiEngine() === 'grokbot' ? 'Grokbot' : 'De AI'}
             />
           ))}
         </section>

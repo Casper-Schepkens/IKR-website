@@ -7,7 +7,9 @@ import { createServerSupabase } from '@/lib/admin/supabase/server'
 import { isSupabaseConfigured } from '@/lib/admin/env'
 import { sendDraft, sendInboxReply } from '@/lib/admin/sales/send'
 import { DRAFT_FROM, type DraftFrom } from '@/lib/admin/sales/drafts'
-import { dismissJob, getJob, runJob } from '@/lib/admin/ai/jobs'
+import { aiEngine, dismissJob, enqueue, getJob, isAiConfigured, runJob } from '@/lib/admin/ai/jobs'
+import { notifyGrok } from '@/lib/admin/ai/notify'
+import { after } from 'next/server'
 import {
   LOST_REASONS,
   SOURCES,
@@ -189,4 +191,39 @@ export async function deleteDraftAction(id: string) {
     if (!(await drafts.remove(id))) throw new Error('Dit concept kan niet verwijderd worden.')
     revalidatePath('/admin/sales', 'layout')
   })
+}
+
+/**
+ * Herschrijven: de mail met Caspers uitleg naar de AI (Grokbot of API). Het resultaat komt in hetzelfde
+ * concept of voorstel terecht; er wordt niets verstuurd.
+ */
+export async function requestRewriteAction(target: 'draft' | 'inbox', targetId: string, leadId: string, form: FormData) {
+  try {
+    const { leads, user } = await requireSales()
+    const instruction = str(form, 'instruction')
+    const body = str(form, 'body')
+    if (!instruction) throw new Error('Leg kort uit hoe de mail herschreven moet worden.')
+    if (!body) throw new Error('De mail is leeg.')
+    if (!isAiConfigured()) throw new Error('Er is geen AI ingesteld (IKR_AI_ENGINE of ANTHROPIC_API_KEY).')
+    const lead = await leads.get(leadId)
+    const job = await enqueue(
+      'mail_rewrite',
+      `rewrite:${targetId}:${Date.now()}`,
+      {
+        target,
+        targetId,
+        instruction,
+        subject: str(form, 'subject'),
+        body,
+        context: str(form, 'context'),
+        lead: lead ? { name: lead.name, company: lead.company, notes: lead.notes } : null,
+      },
+      user.email,
+    )
+    if (aiEngine() === 'grokbot') after(() => notifyGrok([job.id]))
+    else if (aiEngine() === 'api') after(() => runJob(job.id))
+    return { ok: true as const, data: job.id }
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : 'Herschrijven mislukt.' }
+  }
 }

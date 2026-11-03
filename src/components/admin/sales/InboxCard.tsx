@@ -13,6 +13,7 @@ import {
 import { buttonClass, Card, Icon, input, muted, Pill, Spinner } from '../ui'
 import { cn } from '@/utilities/ui'
 import { ContextBox } from './ContextBox'
+import { RewriteBox } from './RewriteBox'
 
 const KIND: Record<
   string,
@@ -37,6 +38,7 @@ export type InboxCardProps = {
   subject: string
   text: string
   waitingLabel: string
+  rewriter: string
   job: {
     id: string
     status: string
@@ -161,7 +163,7 @@ export function InboxCard(props: InboxCardProps) {
               onChange={(e) => setBody(e.target.value)}
               className={cn(input, 'py-3 leading-relaxed')}
             />
-            <div>
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="submit"
                 disabled={pending || !body.trim()}
@@ -170,6 +172,14 @@ export function InboxCard(props: InboxCardProps) {
               >
                 {pending && <Spinner />} Verstuur
               </button>
+              <RewriteBox
+                target="inbox"
+                targetId={job!.id}
+                leadId={p.leadId}
+                rewriter={p.rewriter}
+                current={() => ({ subject: p.subject, body, context: out?.context ?? null })}
+                onResult={(r) => setBody(r.body)}
+              />
             </div>
           </form>
         )}

@@ -109,6 +109,7 @@ async function Inbox({ session, tab, concepts }: { session: AdminSession; tab: '
           date={i.last.date}
           subject={i.last.subject}
           text={i.last.text}
+          rewriter={aiEngine() === 'grokbot' ? 'Grokbot' : 'De AI'}
           waitingLabel={aiEngine() === 'grokbot' ? 'Wacht op Grokbot…' : aiEngine() === 'worker' ? 'Wacht op de AI-server…' : 'AI zet een antwoord klaar…'}
           job={i.job ? { id: i.job.id, status: i.job.status, error: i.job.error, output: i.job.output as never } : null}
         />
@@ -165,6 +166,7 @@ async function Concepts({ session, concepts }: { session: AdminSession; concepts
           createdBy={d.created_by}
           createdAt={d.created_at}
           context={d.context}
+          rewriter={aiEngine() === 'grokbot' ? 'Grokbot' : 'De AI'}
         />
       ))}
     </>
