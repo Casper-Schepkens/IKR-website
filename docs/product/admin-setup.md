@@ -87,7 +87,7 @@ Volgens de sales-workflow in Lucid:
   of `https://iknowright.be/api/mcp/<GROKBOT_API_KEY>` voor apps die geen headers kunnen instellen.
 - Grokbot werkt als Casper, op de database met de service role, via dezelfde logica als het dashboard.
 - Tools: leads (lijst, fiche, aanmaken, bijwerken, notitie, fase, lost, verwijderen), cold mails, inbox (lijst,
-  versturen, wegklikken), weekly (overzicht, vorige, to-do aanmaken/bijwerken/af/notitie/doorschuiven/verwijderen,
+  wegklikken), mailconcepten (aanmaken, bijwerken, verwijderen), weekly (overzicht, vorige, to-do aanmaken/bijwerken/af/notitie/doorschuiven/verwijderen,
   inplannen, afsluiten). Geen toegang tot Google-tokens.
 - Elke wijziging (en elke fout) wordt gelogd in `bot_actions`.
 - Code: `src/lib/admin/mcp/server.ts`.
@@ -101,3 +101,13 @@ Volgens de sales-workflow in Lucid:
   het dashboard een ondertekende POST (Standard Webhooks).
 - Prompt van de automation: "Haal de open AI-taken op met ai_taken_open van de connector ikr-dashboard, voer
   elke taak uit volgens de instructies en zet het resultaat terug met ai_taak_klaarzetten. Verstuur geen mails."
+
+### Mailconcepten (nieuwe uitgaande mails)
+
+- MCP: `mail_concept_aanmaken`, `mail_concept_bijwerken`, `mail_concept_verwijderen`. Tabel `mail_drafts`.
+- **Een bot verstuurt nooit zelf.** De MCP-server heeft geen enkele verzendtool (ook `inbox_versturen` is weg);
+  versturen kan enkel via de knop Verstuur in het dashboard (server action, ingelogd als Casper).
+- Concepten staan in de inbox (tab Concepten) en op de leadfiche (Mailconcepten): bewerken, versturen, verwijderen.
+- Afzender casper@ of contact@. Versturen vanaf contact@ vraagt dat contact@ opnieuw gekoppeld wordt in
+  Instellingen (scope gmail.send).
+- Tests: `npm test` (Vitest, `src/lib/admin/mcp/server.test.ts`).

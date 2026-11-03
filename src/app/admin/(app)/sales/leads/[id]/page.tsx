@@ -14,15 +14,17 @@ import { FormAction } from '@/components/admin/FormAction'
 import { Card, input, label, muted, Pill, Title } from '@/components/admin/ui'
 import { markLostAction, removeNotALeadAndBackAction, setStageAction, updateLeadAction } from '../../../../actions'
 import { ConfirmSubmit } from '@/components/admin/ConfirmSubmit'
+import { DraftCard } from '@/components/admin/sales/DraftCard'
 import { cn } from '@/utilities/ui'
 
 export const metadata = { title: 'Lead' }
 
 export default async function LeadPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { leads } = await requireSales()
+  const { leads, drafts } = await requireSales()
   const lead = await leads.get(id)
   if (!lead) notFound()
+  const concepts = await drafts.list({ leadId: id, status: 'concept' })
   const lost = lead.stage === 'lost'
 
   return (
@@ -51,6 +53,29 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
           </p>
         )}
       </div>
+
+      {concepts.length > 0 && (
+        <section className="flex flex-col gap-3" aria-label="Mailconcepten">
+          <Title className="m-0 text-2xl">Mailconcepten</Title>
+          {concepts.map((d) => (
+            <DraftCard
+              key={d.id}
+              id={d.id}
+              leadId={d.lead_id}
+              leadName={null}
+              from={d.from_email}
+              to={d.to_email}
+              cc={d.cc}
+              subject={d.subject}
+              body={d.body}
+              isHtml={d.is_html}
+              inThread={Boolean(d.thread_id)}
+              createdBy={d.created_by}
+              createdAt={d.created_at}
+            />
+          ))}
+        </section>
+      )}
 
       <div className="flex flex-wrap items-start gap-5">
         <Card className="flex min-w-0 flex-[2_1_420px] flex-col gap-4">

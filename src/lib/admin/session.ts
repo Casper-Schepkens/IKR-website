@@ -6,9 +6,10 @@ import { canSeeSales, isAllowedAdminEmail, isDemoMode, isSupabaseConfigured, SAL
 import { createServerSupabase } from './supabase/server'
 import { memoryLeads, supabaseLeads, type LeadsRepo } from './sales/repo'
 import { memoryWeekly, supabaseWeekly, type WeeklyRepo } from './weekly/repo'
+import { demoDrafts, supabaseDrafts, type DraftsRepo } from './sales/drafts'
 
 export type AdminUser = { email: string; name: string }
-export type AdminSession = { user: AdminUser; mode: 'supabase' | 'demo'; leads: LeadsRepo; weekly: WeeklyRepo }
+export type AdminSession = { user: AdminUser; mode: 'supabase' | 'demo'; leads: LeadsRepo; weekly: WeeklyRepo; drafts: DraftsRepo }
 export type AdminMode = 'supabase' | 'demo' | 'unconfigured'
 
 export function adminMode(): AdminMode {
@@ -28,7 +29,7 @@ export const requireAdmin = cache(async (): Promise<AdminSession> => {
   await connection()
   const mode = adminMode()
   if (mode === 'unconfigured') redirect('/admin/login?error=niet-geconfigureerd')
-  if (mode === 'demo') return { user: { email: SALES_EMAIL, name: 'Casper' }, mode, leads: memoryLeads(), weekly: memoryWeekly() }
+  if (mode === 'demo') return { user: { email: SALES_EMAIL, name: 'Casper' }, mode, leads: memoryLeads(), weekly: memoryWeekly(), drafts: demoDrafts() }
 
   const supabase = await createServerSupabase()
   const {
@@ -42,6 +43,7 @@ export const requireAdmin = cache(async (): Promise<AdminSession> => {
     mode,
     leads: supabaseLeads(supabase),
     weekly: supabaseWeekly(supabase),
+    drafts: supabaseDrafts(supabase),
   }
 })
 
