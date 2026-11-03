@@ -91,3 +91,13 @@ Volgens de sales-workflow in Lucid:
   inplannen, afsluiten). Geen toegang tot Google-tokens.
 - Elke wijziging (en elke fout) wordt gelogd in `bot_actions`.
 - Code: `src/lib/admin/mcp/server.ts`.
+
+### Grokbot als AI-uitvoerder
+
+- `IKR_AI_ENGINE=grokbot`: AI-taken (zoals antwoorden in de inbox) gaan niet naar de API maar blijven open
+  staan. Grokbot haalt ze op met `ai_taken_open` en zet het resultaat terug met `ai_taak_klaarzetten`.
+- Porren: maak in Grok een Automation met een **Webhook**-trigger (docs.x.ai/grok/automations/webhooks) en zet
+  de endpoint als `GROK_WEBHOOK_URL` en het signing secret als `GROK_WEBHOOK_SECRET`. Bij elke nieuwe taak stuurt
+  het dashboard een ondertekende POST (Standard Webhooks).
+- Prompt van de automation: "Haal de open AI-taken op met ai_taken_open van de connector ikr-dashboard, voer
+  elke taak uit volgens de instructies en zet het resultaat terug met ai_taak_klaarzetten. Verstuur geen mails."

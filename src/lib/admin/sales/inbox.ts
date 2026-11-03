@@ -17,7 +17,7 @@ export type InboxItem = {
 
 export type InboxResult =
   | { status: 'not_connected'; reason: string }
-  | { status: 'ok'; items: InboxItem[]; pendingJobIds: string[] }
+  | { status: 'ok'; items: InboxItem[]; pendingJobIds: string[]; newJobIds: string[] }
 
 const isCasper = (m: Mail) => m.fromEmail === SALES_EMAIL
 const isInternal = (m: Mail) => m.fromEmail.endsWith('@iknowright.be')
@@ -72,6 +72,7 @@ export async function loadInbox(session: AdminSession): Promise<InboxResult> {
   const refs = items.map((i) => `gmail:${i.last.id}`)
   const existing = new Map((await jobsByRef('inbox_reply', refs)).map((j) => [j.ref, j]))
   const pendingJobIds: string[] = []
+  const newJobIds: string[] = []
   const withJobs: InboxItem[] = []
   for (const i of items) {
     const ref = `gmail:${i.last.id}`
@@ -86,11 +87,12 @@ export async function loadInbox(session: AdminSession): Promise<InboxResult> {
         },
         session.user.email,
       )
+      newJobIds.push(job.id)
     }
     if (job.status === 'dismissed') continue
     if (job.status === 'pending') pendingJobIds.push(job.id)
     withJobs.push({ ...i, job })
   }
   withJobs.sort((a, b) => b.last.date.localeCompare(a.last.date))
-  return { status: 'ok', items: withJobs, pendingJobIds }
+  return { status: 'ok', items: withJobs, pendingJobIds, newJobIds }
 }

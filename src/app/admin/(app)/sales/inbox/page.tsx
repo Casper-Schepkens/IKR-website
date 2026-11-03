@@ -4,7 +4,8 @@ import type { AdminSession } from '@/lib/admin/session'
 import { after } from 'next/server'
 import { requireSales } from '@/lib/admin/session'
 import { loadInbox } from '@/lib/admin/sales/inbox'
-import { isAiConfigured, runJob } from '@/lib/admin/ai/jobs'
+import { aiEngine, isAiConfigured, runJob } from '@/lib/admin/ai/jobs'
+import { notifyGrok } from '@/lib/admin/ai/notify'
 import { buttonClass, Card, Empty, muted, PageHeader, Spinner } from '@/components/admin/ui'
 import { InboxCard } from '@/components/admin/sales/InboxCard'
 import { cn } from '@/utilities/ui'
@@ -64,7 +65,12 @@ async function Inbox({ session, tab }: { session: AdminSession; tab: 'nieuw' | '
   }
 
   // Antwoorden klaarzetten na het tonen van de pagina; de pagina ververst zichzelf tot ze klaar zijn.
-  if (result.pendingJobIds.length && isAiConfigured()) {
+  // Grokbot: enkel porren voor taken die net aangemaakt zijn (niet bij elk bezoek opnieuw).
+  if (aiEngine() === 'grokbot' && result.newJobIds.length) {
+    const ids = result.newJobIds
+    after(() => notifyGrok(ids))
+  }
+  if (result.pendingJobIds.length && aiEngine() === 'api' && isAiConfigured()) {
     const ids = result.pendingJobIds
     after(async () => {
       for (const id of ids) await runJob(id)
@@ -111,6 +117,7 @@ async function Inbox({ session, tab }: { session: AdminSession; tab: 'nieuw' | '
           subject={i.last.subject}
           text={i.last.text}
           showContext={i.tab === 'gemaild'}
+          waitingLabel={aiEngine() === 'grokbot' ? 'Wacht op Grokbot…' : aiEngine() === 'worker' ? 'Wacht op de AI-server…' : 'AI zet een antwoord klaar…'}
           job={i.job ? { id: i.job.id, status: i.job.status, error: i.job.error, output: i.job.output as never } : null}
         />
       ))}
