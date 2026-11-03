@@ -96,7 +96,7 @@ function nonEmpty(v: string, field: string, max: number) {
 }
 const optional = (v: string | undefined) => (v === undefined ? undefined : v.trim() || null)
 
-type DraftArgs = { lead_id: string; to: string; cc?: string[]; subject: string; body: string; van?: MailDraft['from_email']; formaat?: 'text' | 'html'; thread_id?: string; in_reply_to?: string }
+type DraftArgs = { lead_id: string; to: string; cc?: string[]; subject: string; body: string; van?: MailDraft['from_email']; formaat?: 'text' | 'html'; thread_id?: string; in_reply_to?: string; context?: string }
 
 /** Strenge controle van een nieuw concept (fouten worden zo ook gelogd). */
 export function validateDraft(a: DraftArgs) {
@@ -111,7 +111,14 @@ export function validateDraft(a: DraftArgs) {
     is_html: a.formaat ? a.formaat === 'html' : HTML.test(body),
     thread_id: optional(a.thread_id) ?? null,
     in_reply_to: optional(a.in_reply_to) ?? null,
+    context: a.context === undefined ? null : contextText(a.context),
   }
+}
+
+function contextText(v: string) {
+  const t = v.trim()
+  if (t.length > 4000) throw new Error('context is te lang (max 4000 tekens).')
+  return t || null
 }
 
 function validateDraftPatch(a: Partial<DraftArgs>) {
@@ -125,6 +132,7 @@ function validateDraftPatch(a: Partial<DraftArgs>) {
     is_html: a.formaat ? a.formaat === 'html' : body !== undefined ? HTML.test(body) : undefined,
     thread_id: optional(a.thread_id),
     in_reply_to: optional(a.in_reply_to),
+    context: a.context === undefined ? undefined : contextText(a.context),
   }
   const clean = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined))
   if (!Object.keys(clean).length) throw new Error('Niets om aan te passen.')
@@ -329,10 +337,11 @@ export function buildMcpServer(session: AdminSession) {
     formaat: d.is_html ? 'html' : 'text',
     thread_id: d.thread_id,
     in_reply_to: d.in_reply_to,
+    context: d.context,
   })
   tool(
     'mail_concept_aanmaken',
-    'Zet een NIEUWE uitgaande mail als concept klaar bij een lead. Er wordt niets verstuurd: Casper keurt het concept in het dashboard goed en verstuurt het zelf. Geeft het concept_id terug.',
+    'Zet een NIEUWE uitgaande mail als concept klaar bij een lead. Lees eerst lead_fiche en geef altijd context mee. Er wordt niets verstuurd: Casper keurt het concept in het dashboard goed en verstuurt het zelf. Geeft het concept_id terug.',
     {
       lead_id: z.string().describe('id van de lead (zie leads_lijst of lead_fiche)'),
       to: z.string().describe('e-mailadres van de ontvanger'),
@@ -343,6 +352,10 @@ export function buildMcpServer(session: AdminSession) {
       formaat: z.enum(['text', 'html']).optional().describe('standaard: automatisch (html als de body HTML-tags bevat)'),
       thread_id: z.string().optional().describe('Gmail-thread om in te antwoorden (van de mailbox van de afzender)'),
       in_reply_to: z.string().optional().describe('Message-ID van de mail waarop geantwoord wordt'),
+      context: z
+        .string()
+        .optional()
+        .describe('Korte uitleg voor Casper (2–5 zinnen): wie is de lead, wat gebeurde er al, waarom deze mail nu. Wordt naast het concept getoond.'),
     },
     false,
     async (a) => {
@@ -366,6 +379,7 @@ export function buildMcpServer(session: AdminSession) {
       formaat: z.enum(['text', 'html']).optional(),
       thread_id: z.string().optional(),
       in_reply_to: z.string().optional(),
+      context: z.string().optional(),
     },
     false,
     async (a) => {

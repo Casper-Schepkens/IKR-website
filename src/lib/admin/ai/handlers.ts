@@ -15,7 +15,10 @@ export const INBOX_REPLY = z.object({
     .enum(['interested', 'question', 'referral', 'out_of_office', 'not_interested', 'unsubscribe', 'other'])
     .describe('Soort reactie van de lead'),
   draft: z.string().nullable().describe('Voorgesteld antwoord van Casper; null bij not_interested, unsubscribe of out_of_office'),
-  context: z.string().nullable().describe('Korte samenvatting (2–4 zinnen) van wat er tot nu toe gezegd is; null als dit de eerste reactie is'),
+  context: z
+    .string()
+    .nullable()
+    .describe('Altijd invullen (2–4 zinnen) voor Casper: wie is de lead, wat weten we al (notities), wat is er tot nu toe gezegd en waarom dit antwoord'),
   phone: z.string().nullable().describe('Telefoonnummer van de lead als dat in de mails staat, anders null'),
 })
 export type InboxReply = z.infer<typeof INBOX_REPLY>
@@ -29,7 +32,7 @@ export const HANDLERS = {
 - referral (doorverwezen naar een collega): bedank en vraag of ze Casper in contact willen brengen, of mail de genoemde persoon aan als het adres er staat.
 - out_of_office, not_interested, unsubscribe: geen antwoord (draft = null).
 - other: kort en vriendelijk antwoord als dat zinvol is, anders null.
-Geef bij meerdere reacties in de thread een korte samenvatting in "context".`,
+Vul altijd "context" in, ook bij een eerste reactie: wie de lead is, wat we al weten uit de notities, wat er gezegd is en waarom je dit antwoord voorstelt.`,
     prompt: (input) => {
       const lead = input.lead as { name: string; company: string | null; notes: string | null; next_action: string | null }
       const msgs = (input.messages as Msg[]) ?? []

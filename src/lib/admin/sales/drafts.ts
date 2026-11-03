@@ -16,6 +16,8 @@ export type MailDraft = {
   is_html: boolean
   thread_id: string | null
   in_reply_to: string | null
+  /** Uitleg van de bot: wie de lead is, wat er al gebeurde, waarom deze mail. */
+  context: string | null
   status: 'concept' | 'verstuurd'
   created_by: string | null
   created_at: string
@@ -24,8 +26,8 @@ export type MailDraft = {
   sent_by: string | null
 }
 
-export type NewDraft = Pick<MailDraft, 'lead_id' | 'from_email' | 'to_email' | 'cc' | 'subject' | 'body' | 'is_html' | 'thread_id' | 'in_reply_to' | 'created_by'>
-export type DraftPatch = Partial<Pick<MailDraft, 'from_email' | 'to_email' | 'cc' | 'subject' | 'body' | 'is_html' | 'thread_id' | 'in_reply_to'>>
+export type NewDraft = Pick<MailDraft, 'lead_id' | 'from_email' | 'to_email' | 'cc' | 'subject' | 'body' | 'is_html' | 'thread_id' | 'in_reply_to' | 'context' | 'created_by'>
+export type DraftPatch = Partial<Pick<MailDraft, 'from_email' | 'to_email' | 'cc' | 'subject' | 'body' | 'is_html' | 'thread_id' | 'in_reply_to' | 'context'>>
 
 export interface DraftsRepo {
   list(opts?: { leadId?: string; status?: MailDraft['status'] }): Promise<MailDraft[]>

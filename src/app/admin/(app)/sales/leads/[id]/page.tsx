@@ -72,6 +72,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
               inThread={Boolean(d.thread_id)}
               createdBy={d.created_by}
               createdAt={d.created_at}
+              context={d.context}
             />
           ))}
         </section>

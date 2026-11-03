@@ -2,11 +2,22 @@
 
 import Link from 'next/link'
 import { useEffect, useState, useTransition } from 'react'
-import { dismissInboxAction, getAiJobAction, markLostAction, removeNotALeadAction, retryAiJobAction, sendInboxReplyAction } from '@/app/admin/actions'
+import {
+  dismissInboxAction,
+  getAiJobAction,
+  markLostAction,
+  removeNotALeadAction,
+  retryAiJobAction,
+  sendInboxReplyAction,
+} from '@/app/admin/actions'
 import { buttonClass, Card, Icon, input, muted, Pill, Spinner } from '../ui'
 import { cn } from '@/utilities/ui'
+import { ContextBox } from './ContextBox'
 
-const KIND: Record<string, { label: string; tone: 'green' | 'teal' | 'purple' | 'yellow' | 'orange' | 'light' }> = {
+const KIND: Record<
+  string,
+  { label: string; tone: 'green' | 'teal' | 'purple' | 'yellow' | 'orange' | 'light' }
+> = {
   interested: { label: 'Geïnteresseerd', tone: 'green' },
   question: { label: 'Vraag', tone: 'teal' },
   referral: { label: 'Doorverwezen', tone: 'purple' },
@@ -25,9 +36,13 @@ export type InboxCardProps = {
   date: string
   subject: string
   text: string
-  showContext: boolean
   waitingLabel: string
-  job: { id: string; status: string; error: string | null; output: { kind?: string; draft?: string | null; context?: string | null } | null } | null
+  job: {
+    id: string
+    status: string
+    error: string | null
+    output: { kind?: string; draft?: string | null; context?: string | null } | null
+  } | null
 }
 
 type Job = NonNullable<InboxCardProps['job']>
@@ -67,136 +82,179 @@ export function InboxCard(props: InboxCardProps) {
   if (sent) return null
 
   return (
-    <Card className="relative flex flex-col gap-3 pb-16">
-      <div className="flex flex-wrap items-center gap-2">
-        <Link href={`/admin/sales/leads/${p.leadId}`} className="text-lg font-bold text-ikr-navy no-underline hover:text-[#0B7F93]">
-          {p.leadName}
-        </Link>
-        {p.company && <Pill tone="light">{p.company}</Pill>}
-        {kind && <Pill tone={kind.tone}>{kind.label}</Pill>}
-        <span className={cn('ml-auto text-xs', muted)}>
-          {p.fromEmail} · {new Date(p.date).toLocaleString('nl-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-        </span>
-      </div>
-      <div className="rounded-2xl bg-ikr-cream p-4">
-        <p className={cn('m-0 mb-1 text-xs font-semibold', muted)}>{p.subject}</p>
-        <p className="m-0 text-sm leading-relaxed whitespace-pre-line">{p.text || '(leeg bericht)'}</p>
-      </div>
-      {p.showContext && out?.context && (
-        <div className="rounded-2xl border border-[#E6DFD2] p-3 text-sm">
-          <span className="font-semibold">Context: </span>
-          {out.context}
-        </div>
-      )}
-
-      {(!p.job || p.job.status === 'pending' || p.job.status === 'running') && (
-        <span className="flex items-center gap-2 text-sm font-semibold">
-          <Spinner /> {p.waitingLabel}
-        </span>
-      )}
-      {p.job && (p.job.status === 'error' || p.job.status === 'waiting_limit') && (
-        <span className="flex flex-wrap items-center gap-2 text-sm text-[#A3470F]">
-          {p.job.error}
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() =>
-              start(async () => {
-                setError(null)
-                setJob({ ...p.job!, status: 'running', error: null })
-                const res = await retryAiJobAction(p.job!.id)
-                if (!res.ok) setError(res.error)
-                const fresh = await getAiJobAction(p.job!.id)
-                if (fresh) setJob(fresh as Job)
-              })
-            }
-            className={buttonClass('soft', true)}
+    <Card className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
+      <div className="relative flex min-w-0 flex-col gap-3 pb-14">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/admin/sales/leads/${p.leadId}`}
+            className="text-lg font-bold text-ikr-navy no-underline hover:text-[#0B7F93]"
           >
-            {pending && <Spinner />} Opnieuw
-          </button>
-        </span>
-      )}
-
-      {p.job?.status === 'done' && out?.draft != null && (
-        <form
-          className="flex flex-col gap-2"
-          onSubmit={(e) => {
-            e.preventDefault()
-            const data = new FormData(e.currentTarget)
-            run(() => sendInboxReplyAction(p.threadId, data), () => setSent(true))
-          }}
-        >
-          <label className="sr-only" htmlFor={`body-${p.threadId}`}>
-            Antwoord
-          </label>
-          <textarea
-            id={`body-${p.threadId}`}
-            name="body"
-            rows={Math.min(14, Math.max(5, body.split('\n').length + 1))}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            className={cn(input, 'py-3 leading-relaxed')}
-          />
-          <div>
-            <button type="submit" disabled={pending || !body.trim()} data-pending={pending} className={buttonClass('navy')}>
-              {pending && <Spinner />} Verstuur
-            </button>
-          </div>
-        </form>
-      )}
-
-      {p.job?.status === 'done' && out?.draft == null && (
-        <div className="flex flex-wrap items-center gap-3 text-sm">
-          {lostHint ? (
-            <>
-              <span className="font-semibold">Lead loss gedetecteerd: geen antwoord klaargezet.</span>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  const data = new FormData()
-                  data.set('reason', 'not_interested')
-                  data.set('note', out?.kind === 'unsubscribe' ? 'Wou uitgeschreven worden' : 'Reageerde: niet geïnteresseerd')
-                  run(() => markLostAction(p.leadId, data), () => setSent(true))
-                }}
-              >
-                <button type="submit" disabled={pending} className={buttonClass('soft', true)}>
-                  {pending && <Spinner />} Markeer als lost
-                </button>
-              </form>
-            </>
-          ) : (
-            <span className={muted}>Geen antwoord nodig{out?.kind === 'out_of_office' ? ' (afwezigheidsbericht)' : ''}.</span>
-          )}
+            {p.leadName}
+          </Link>
+          {p.company && <Pill tone="light">{p.company}</Pill>}
+          {kind && <Pill tone={kind.tone}>{kind.label}</Pill>}
+          <span className={cn('ml-auto text-xs', muted)}>
+            {p.fromEmail} ·{' '}
+            {new Date(p.date).toLocaleString('nl-BE', {
+              day: 'numeric',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </span>
         </div>
-      )}
-      {error && (
-        <span role="alert" className="text-sm font-medium text-[#A3470F]">
-          {error}
-        </span>
-      )}
-      <button
-        type="button"
-        disabled={pending}
-        onClick={() => {
-          if (window.confirm(`${p.leadName} is geen lead? Dan wordt die verwijderd en verschijnen mails van dit adres niet meer in de inbox.`))
-            run(() => removeNotALeadAction(p.leadId), () => setSent(true))
-        }}
-        className={cn('absolute bottom-6 left-6 text-xs underline', muted)}
-      >
-        Geen lead
-      </button>
-      {job && (
+        <div className="rounded-2xl bg-ikr-cream p-4">
+          <p className={cn('m-0 mb-1 text-xs font-semibold', muted)}>{p.subject}</p>
+          <p className="m-0 text-sm leading-relaxed whitespace-pre-line">
+            {p.text || '(leeg bericht)'}
+          </p>
+        </div>
+
+        {(!p.job || p.job.status === 'pending' || p.job.status === 'running') && (
+          <span className="flex items-center gap-2 text-sm font-semibold">
+            <Spinner /> {p.waitingLabel}
+          </span>
+        )}
+        {p.job && (p.job.status === 'error' || p.job.status === 'waiting_limit') && (
+          <span className="flex flex-wrap items-center gap-2 text-sm text-[#A3470F]">
+            {p.job.error}
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() =>
+                start(async () => {
+                  setError(null)
+                  setJob({ ...p.job!, status: 'running', error: null })
+                  const res = await retryAiJobAction(p.job!.id)
+                  if (!res.ok) setError(res.error)
+                  const fresh = await getAiJobAction(p.job!.id)
+                  if (fresh) setJob(fresh as Job)
+                })
+              }
+              className={buttonClass('soft', true)}
+            >
+              {pending && <Spinner />} Opnieuw
+            </button>
+          </span>
+        )}
+
+        {p.job?.status === 'done' && out?.draft != null && (
+          <form
+            className="flex flex-col gap-2"
+            onSubmit={(e) => {
+              e.preventDefault()
+              const data = new FormData(e.currentTarget)
+              run(
+                () => sendInboxReplyAction(p.threadId, data),
+                () => setSent(true),
+              )
+            }}
+          >
+            <label className="sr-only" htmlFor={`body-${p.threadId}`}>
+              Antwoord
+            </label>
+            <textarea
+              id={`body-${p.threadId}`}
+              name="body"
+              rows={Math.min(14, Math.max(5, body.split('\n').length + 1))}
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              className={cn(input, 'py-3 leading-relaxed')}
+            />
+            <div>
+              <button
+                type="submit"
+                disabled={pending || !body.trim()}
+                data-pending={pending}
+                className={buttonClass('navy')}
+              >
+                {pending && <Spinner />} Verstuur
+              </button>
+            </div>
+          </form>
+        )}
+
+        {p.job?.status === 'done' && out?.draft == null && (
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            {lostHint ? (
+              <>
+                <span className="font-semibold">
+                  Lead loss gedetecteerd: geen antwoord klaargezet.
+                </span>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    const data = new FormData()
+                    data.set('reason', 'not_interested')
+                    data.set(
+                      'note',
+                      out?.kind === 'unsubscribe'
+                        ? 'Wou uitgeschreven worden'
+                        : 'Reageerde: niet geïnteresseerd',
+                    )
+                    run(
+                      () => markLostAction(p.leadId, data),
+                      () => setSent(true),
+                    )
+                  }}
+                >
+                  <button type="submit" disabled={pending} className={buttonClass('soft', true)}>
+                    {pending && <Spinner />} Markeer als lost
+                  </button>
+                </form>
+              </>
+            ) : (
+              <span className={muted}>
+                Geen antwoord nodig{out?.kind === 'out_of_office' ? ' (afwezigheidsbericht)' : ''}.
+              </span>
+            )}
+          </div>
+        )}
+        {error && (
+          <span role="alert" className="text-sm font-medium text-[#A3470F]">
+            {error}
+          </span>
+        )}
         <button
           type="button"
           disabled={pending}
-          aria-label="Geen antwoord nodig, verbergen"
-          title="Geen antwoord nodig"
-          onClick={() => run(() => dismissInboxAction(job.id), () => setSent(true))}
-          className="ikr-btn absolute right-4 bottom-4 flex size-9 items-center justify-center rounded-full bg-ikr-cream text-ikr-navy hover:bg-[#e6dfd2] disabled:opacity-60"
+          onClick={() => {
+            if (
+              window.confirm(
+                `${p.leadName} is geen lead? Dan wordt die verwijderd en verschijnen mails van dit adres niet meer in de inbox.`,
+              )
+            )
+              run(
+                () => removeNotALeadAction(p.leadId),
+                () => setSent(true),
+              )
+          }}
+          className={cn('absolute bottom-2 left-0 text-xs underline', muted)}
         >
-          <Icon.close size={16} />
+          Geen lead
         </button>
-      )}
+        {job && (
+          <button
+            type="button"
+            disabled={pending}
+            aria-label="Geen antwoord nodig, verbergen"
+            title="Geen antwoord nodig"
+            onClick={() =>
+              run(
+                () => dismissInboxAction(job.id),
+                () => setSent(true),
+              )
+            }
+            className="ikr-btn absolute right-0 bottom-0 flex size-9 items-center justify-center rounded-full bg-ikr-cream text-ikr-navy hover:bg-[#e6dfd2] disabled:opacity-60"
+          >
+            <Icon.close size={16} />
+          </button>
+        )}
+      </div>
+      <ContextBox
+        text={out?.context}
+        pending={!job || job.status === 'pending' || job.status === 'running'}
+      />
     </Card>
   )
 }
