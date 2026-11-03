@@ -146,6 +146,7 @@ export function InboxCard(props: InboxCardProps) {
             onSubmit={(e) => {
               e.preventDefault()
               const data = new FormData(e.currentTarget)
+              if (job) data.set('job_id', job.id)
               run(
                 () => sendInboxReplyAction(p.threadId, data),
                 () => setSent(true),

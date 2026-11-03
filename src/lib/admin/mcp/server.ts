@@ -21,9 +21,9 @@ import {
 } from '../sales/types'
 import { coldMailStats } from '../sales/apollo'
 import { loadInbox } from '../sales/inbox'
-import { aiEngine, completeJob, dismissJob, openJobs, runJob } from '../ai/jobs'
+import { aiEngine, completeJob, dismissJob, instructionsFor, openJobs, runJob } from '../ai/jobs'
+import { STYLE_MAILBOX, styleInstructions, styleKeyFor } from '../ai/style-profile'
 import { HANDLERS } from '../ai/handlers'
-import { IKR_CONTEXT } from '../ai/context'
 import { boardTodos, currentWeekly } from '../weekly/board'
 import { scheduleWeekly } from '../weekly/schedule'
 import { OWNERS, TEAM } from '../weekly/types'
@@ -340,8 +340,15 @@ export function buildMcpServer(session: AdminSession) {
     context: d.context,
   })
   tool(
+    'schrijfstijl',
+    'Het schrijfstijlprofiel (gids + voorbeelden) van een afzender, afgeleid uit echte verzonden mails. Lees dit voor je een mail schrijft.',
+    { afzender: z.enum(DRAFT_FROM).optional().describe('standaard casper@iknowright.be') },
+    true,
+    async ({ afzender }) => (await styleInstructions(styleKeyFor(afzender ?? STYLE_MAILBOX.casper))) || 'Nog geen schrijfstijlprofiel.',
+  )
+  tool(
     'mail_concept_aanmaken',
-    'Zet een NIEUWE uitgaande mail als concept klaar bij een lead. Lees eerst lead_fiche en geef altijd context mee. Er wordt niets verstuurd: Casper keurt het concept in het dashboard goed en verstuurt het zelf. Geeft het concept_id terug.',
+    'Zet een NIEUWE uitgaande mail als concept klaar bij een lead. Lees eerst lead_fiche en schrijfstijl (van de afzender) en geef altijd context mee. Er wordt niets verstuurd: Casper keurt het concept in het dashboard goed en verstuurt het zelf. Geeft het concept_id terug.',
     {
       lead_id: z.string().describe('id van de lead (zie leads_lijst of lead_fiche)'),
       to: z.string().describe('e-mailadres van de ontvanger'),
@@ -362,7 +369,7 @@ export function buildMcpServer(session: AdminSession) {
       const input = validateDraft(a)
       const lead = await leads.get(input.lead_id)
       if (!lead) throw new Error(`Geen lead met id ${input.lead_id}.`)
-      const d = await drafts.create({ ...input, created_by: BY })
+      const d = await drafts.create({ ...input, original_body: input.body, created_by: BY })
       return draftView(d)
     },
   )
@@ -408,16 +415,18 @@ export function buildMcpServer(session: AdminSession) {
     { aantal: z.number().int().min(1).max(20).optional() },
     true,
     async ({ aantal = 10 }) =>
-      (await openJobs(aantal)).map((j) => {
-        const h = HANDLERS[j.type]
-        return {
-          job_id: j.id,
-          type: j.type,
-          instructies: `${IKR_CONTEXT}\n\n${h.instructions}`,
-          opdracht: h.prompt(j.input),
-          resultaat_vorm: z.toJSONSchema(h.schema),
-        }
-      }),
+      Promise.all(
+        (await openJobs(aantal)).map(async (j) => {
+          const h = HANDLERS[j.type]
+          return {
+            job_id: j.id,
+            type: j.type,
+            instructies: await instructionsFor(j),
+            opdracht: h.prompt(j.input),
+            resultaat_vorm: z.toJSONSchema(h.schema),
+          }
+        }),
+      ),
   )
   tool(
     'ai_taak_klaarzetten',

@@ -3,6 +3,7 @@ import { SALES_EMAIL } from '../env'
 import { getThread, sendMail, sendReply } from '../gmail'
 import { hasScopes, listConnections, SCOPES } from '../google'
 import type { DraftsRepo } from './drafts'
+import { recordFeedback, styleKeyFor } from '../ai/style-profile'
 
 /** Antwoord in dezelfde thread naar de laatste afzender die niet Casper is, vanaf casper@. */
 export async function sendInboxReply(threadId: string, body: string) {
@@ -53,4 +54,6 @@ export async function sendDraft(drafts: DraftsRepo, id: string, by: string) {
     references,
   })
   await drafts.markSent(id, by)
+  // Leren: wat de bot schreef tegenover wat Casper verstuurde.
+  await recordFeedback(styleKeyFor(d.from_email), d.original_body, d.body)
 }

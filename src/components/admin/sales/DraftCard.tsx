@@ -152,7 +152,7 @@ export function DraftCard(d: DraftCardProps) {
               targetId={d.id}
               leadId={d.leadId}
               rewriter={d.rewriter}
-              current={() => ({ subject, body, context: d.context })}
+              current={() => ({ subject, body, context: d.context, from: d.from })}
               onResult={(r) => {
                 setBody(r.body)
                 if (r.subject) setSubject(r.subject)

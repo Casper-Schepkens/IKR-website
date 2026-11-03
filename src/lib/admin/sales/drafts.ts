@@ -18,6 +18,8 @@ export type MailDraft = {
   in_reply_to: string | null
   /** Uitleg van de bot: wie de lead is, wat er al gebeurde, waarom deze mail. */
   context: string | null
+  /** Tekst zoals de bot hem schreef (om te leren van Caspers aanpassingen). */
+  original_body: string | null
   status: 'concept' | 'verstuurd'
   created_by: string | null
   created_at: string
@@ -26,7 +28,7 @@ export type MailDraft = {
   sent_by: string | null
 }
 
-export type NewDraft = Pick<MailDraft, 'lead_id' | 'from_email' | 'to_email' | 'cc' | 'subject' | 'body' | 'is_html' | 'thread_id' | 'in_reply_to' | 'context' | 'created_by'>
+export type NewDraft = Pick<MailDraft, 'lead_id' | 'from_email' | 'to_email' | 'cc' | 'subject' | 'body' | 'is_html' | 'thread_id' | 'in_reply_to' | 'context' | 'created_by'> & { original_body?: string | null }
 export type DraftPatch = Partial<Pick<MailDraft, 'from_email' | 'to_email' | 'cc' | 'subject' | 'body' | 'is_html' | 'thread_id' | 'in_reply_to' | 'context'>>
 
 export interface DraftsRepo {
@@ -94,7 +96,7 @@ export function memoryDrafts(store: MailDraft[] = []): DraftsRepo {
       return store.find((d) => d.id === id) ?? null
     },
     async create(input) {
-      const d: MailDraft = { ...input, id: crypto.randomUUID(), status: 'concept', created_at: now(), updated_at: now(), sent_at: null, sent_by: null }
+      const d: MailDraft = { original_body: null, ...input, id: crypto.randomUUID(), status: 'concept', created_at: now(), updated_at: now(), sent_at: null, sent_by: null }
       store.push(d)
       return d
     },

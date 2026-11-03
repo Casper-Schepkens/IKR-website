@@ -9,6 +9,8 @@ import { sendDraft, sendInboxReply } from '@/lib/admin/sales/send'
 import { DRAFT_FROM, type DraftFrom } from '@/lib/admin/sales/drafts'
 import { aiEngine, dismissJob, enqueue, getJob, isAiConfigured, runJob } from '@/lib/admin/ai/jobs'
 import { notifyGrok } from '@/lib/admin/ai/notify'
+import { recordFeedback, saveProfile, STYLE_KEYS, type StyleKey } from '@/lib/admin/ai/style-profile'
+import { enqueueStyleRebuild } from '@/lib/admin/ai/style'
 import { after } from 'next/server'
 import {
   LOST_REASONS,
@@ -111,7 +113,15 @@ export async function markLostAction(id: string, form: FormData) {
 export async function sendInboxReplyAction(threadId: string, form: FormData) {
   return attempt(async () => {
     await requireSales()
-    await sendInboxReply(threadId, str(form, 'body') ?? '')
+    const body = str(form, 'body') ?? ''
+    await sendInboxReply(threadId, body)
+    // Leren: het AI-voorstel tegenover wat Casper echt verstuurde.
+    const jobId = str(form, 'job_id')
+    if (jobId) {
+      const job = await getJob(jobId)
+      const draft = (job?.output as { draft?: string } | null)?.draft
+      await recordFeedback('casper', draft, body)
+    }
     revalidatePath('/admin/sales/inbox')
   })
 }
@@ -216,6 +226,7 @@ export async function requestRewriteAction(target: 'draft' | 'inbox', targetId: 
         subject: str(form, 'subject'),
         body,
         context: str(form, 'context'),
+        from: str(form, 'from') ?? 'casper@iknowright.be',
         lead: lead ? { name: lead.name, company: lead.company, notes: lead.notes } : null,
       },
       user.email,
@@ -225,5 +236,30 @@ export async function requestRewriteAction(target: 'draft' | 'inbox', targetId: 
     return { ok: true as const, data: job.id }
   } catch (e) {
     return { ok: false as const, error: e instanceof Error ? e.message : 'Herschrijven mislukt.' }
+  }
+}
+
+// ─── Schrijfstijl (Instellingen) ───────────────────────────────────────
+
+export async function saveStyleAction(key: StyleKey, form: FormData) {
+  return attempt(async () => {
+    const { user } = await requireSales()
+    if (!STYLE_KEYS.includes(key)) throw new Error('Onbekend profiel.')
+    const guide = str(form, 'guide')
+    if (!guide) throw new Error('De gids mag niet leeg zijn.')
+    await saveProfile(key, { guide }, user.email)
+    revalidatePath('/admin/instellingen')
+  })
+}
+
+export async function rebuildStyleAction(key: StyleKey) {
+  try {
+    const { user } = await requireSales()
+    if (!STYLE_KEYS.includes(key)) throw new Error('Onbekend profiel.')
+    if (!isAiConfigured()) throw new Error('Er is geen AI ingesteld (IKR_AI_ENGINE of ANTHROPIC_API_KEY).')
+    const r = await enqueueStyleRebuild(key, user.email)
+    return { ok: true as const, data: r }
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : 'Bijwerken mislukt.' }
   }
 }

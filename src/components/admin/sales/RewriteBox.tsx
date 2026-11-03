@@ -22,7 +22,7 @@ export function RewriteBox({
   leadId: string
   /** "Grokbot" of "De AI" */
   rewriter: string
-  current: () => { subject?: string; body: string; context?: string | null }
+  current: () => { subject?: string; body: string; context?: string | null; from?: string }
   onResult: (r: { subject: string | null; body: string }) => void
 }) {
   const [instruction, setInstruction] = useState('')
@@ -75,6 +75,7 @@ export function RewriteBox({
             data.set('body', c.body)
             if (c.subject) data.set('subject', c.subject)
             if (c.context) data.set('context', c.context)
+            if (c.from) data.set('from', c.from)
             const res = await requestRewriteAction(target, targetId, leadId, data)
             if (!res.ok) setError(res.error)
             else setJobId(res.data)

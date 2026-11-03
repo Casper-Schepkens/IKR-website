@@ -5,6 +5,7 @@ import type { z } from 'zod'
 import { createServiceSupabase } from '../supabase/server'
 import { IKR_CONTEXT } from './context'
 import { HANDLERS, type JobType } from './handlers'
+import { styleInstructions } from './style-profile'
 
 /**
  * AI-taken via de tabel ai_jobs. Engine 'api' (standaard): de taak loopt meteen via de Claude API.
@@ -128,6 +129,13 @@ export async function listJobs(sinceIso: string): Promise<AiJob[]> {
   return (data ?? []) as AiJob[]
 }
 
+/** Vaste IKR-context + (voor mailtaken) het schrijfstijlprofiel + de instructies van de taak. */
+export async function instructionsFor(job: Pick<AiJob, 'type' | 'input'>) {
+  const h = HANDLERS[job.type] as { instructions: string; style?: (i: Record<string, unknown>) => 'casper' | 'ikr' }
+  const style = h.style ? await styleInstructions(h.style(job.input)) : ''
+  return [IKR_CONTEXT, style, h.instructions].filter(Boolean).join('\n\n')
+}
+
 let client: Anthropic | null = null
 
 /** Voert een taak uit via de Claude API (tenzij een worker dat doet). Faalt nooit hard. */
@@ -153,7 +161,7 @@ export async function runJob(id: string) {
       max_tokens: 4000,
       betas: ['server-side-fallback-2026-07-01'],
       fallbacks: 'default',
-      system: [{ type: 'text', text: `${IKR_CONTEXT}\n\n${handler.instructions}`, cache_control: { type: 'ephemeral' } }],
+      system: [{ type: 'text', text: await instructionsFor(job), cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: handler.prompt(job.input) }],
       output_config: { effort: 'medium', format: betaZodOutputFormat(handler.schema as z.ZodType) },
     })

@@ -35,3 +35,39 @@ describe('inbox_reply', () => {
     expect(HANDLERS.inbox_reply.instructions).toMatch(/Vul altijd "context" in/)
   })
 })
+
+describe('style_profile', () => {
+  const input = {
+    key: 'ikr',
+    mailbox: 'contact@iknowright.be',
+    mails: [{ subject: 'Re: Voorstel', date: '2026-10-01', text: 'Hey Jan, top! Zullen we donderdag bellen? Groetjes, Casper' }],
+    feedback: [{ ai_text: 'Beste Jan, hartelijk dank voor uw bericht.', sent_text: 'Hey Jan, merci!' }],
+    current: { guide: '- Altijd "Groetjes" als afsluiting' },
+  }
+
+  it('geeft de mails, de aanpassingen en de vorige gids (met correcties) mee', () => {
+    const p = HANDLERS.style_profile.prompt(input)
+    expect(p).toContain('Hey Jan, top!')
+    expect(p).toContain('<ai>\nBeste Jan, hartelijk dank voor uw bericht.\n</ai>')
+    expect(p).toContain('<verstuurd>\nHey Jan, merci!\n</verstuurd>')
+    expect(p).toContain('Altijd "Groetjes" als afsluiting')
+  })
+
+  it('vraagt om namen en contactgegevens weg te laten in de voorbeelden', () => {
+    expect(HANDLERS.style_profile.instructions).toMatch(/\[naam\], \[bedrijf\], \[e-mail\], \[telefoon\]/)
+  })
+
+  it('verwacht een gids en voorbeelden', () => {
+    expect(HANDLERS.style_profile.schema.safeParse({ guide: '- kort', examples: ['Hey'] }).success).toBe(true)
+    expect(HANDLERS.style_profile.schema.safeParse({ guide: '- kort' }).success).toBe(false)
+  })
+})
+
+describe('welk schrijfstijlprofiel gaat mee', () => {
+  it('inbox: altijd Casper; herschrijven: volgens de afzender', () => {
+    expect(HANDLERS.inbox_reply.style!()).toBe('casper')
+    expect(HANDLERS.mail_rewrite.style!({ from: 'contact@iknowright.be' })).toBe('ikr')
+    expect(HANDLERS.mail_rewrite.style!({ from: 'casper@iknowright.be' })).toBe('casper')
+    expect('style' in HANDLERS.style_profile).toBe(false)
+  })
+})
