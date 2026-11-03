@@ -98,7 +98,9 @@ Volgens de sales-workflow in Lucid:
   staan. Grokbot haalt ze op met `ai_taken_open` en zet het resultaat terug met `ai_taak_klaarzetten`.
 - Porren: maak in Grok een Automation met een **Webhook**-trigger (docs.x.ai/grok/automations/webhooks) en zet
   de endpoint als `GROK_WEBHOOK_URL` en het signing secret als `GROK_WEBHOOK_SECRET`. Bij elke nieuwe taak stuurt
-  het dashboard een ondertekende POST (Standard Webhooks).
+  het dashboard een POST met `Authorization: Bearer <GROK_WEBHOOK_SECRET>` (de waarde van de Authorization-header
+  van de webhook, zonder "Bearer "). Begint het secret met `whsec_`, dan komt er ook een Standard Webhooks-
+  handtekening bij. Bij een netwerkfout, 429 of 5xx probeert het dashboard het nog 2 keer (na 1 s en 4 s).
 - Prompt van de automation: "Haal de open AI-taken op met ai_taken_open van de connector ikr-dashboard, voer
   elke taak uit volgens de instructies en zet het resultaat terug met ai_taak_klaarzetten. Verstuur geen mails."
 
