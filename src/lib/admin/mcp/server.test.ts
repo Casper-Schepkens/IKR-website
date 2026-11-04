@@ -11,7 +11,7 @@ vi.mock('../supabase/server', () => ({
   createServerSupabase: vi.fn(),
 }))
 // Gmail: elke verzendpoging zou hier zichtbaar worden. De tests eisen dat dit nooit gebeurt.
-const gmail = vi.hoisted(() => ({ sendMail: vi.fn(), sendReply: vi.fn(), getThread: vi.fn(), recentThreads: vi.fn() }))
+const gmail = vi.hoisted(() => ({ sendMail: vi.fn(), sendReply: vi.fn(), getThread: vi.fn(), recentThreads: vi.fn(), threadsWith: vi.fn() }))
 vi.mock('../gmail', () => gmail)
 
 import { buildMcpServer } from './server'
@@ -210,5 +210,24 @@ describe('chat met Grok Bot via MCP', () => {
     const list = r.json as unknown as { lead: string; thread_id: string; body: string; concept_id: string }[]
     expect(list).toHaveLength(1)
     expect(list[0]).toMatchObject({ lead: 'Jan Peeters', thread_id: 't1', body: 'Tekst' })
+  })
+})
+
+describe('wachten op antwoord via MCP', () => {
+  it('geeft lead_id, naam, context, laatste mail en dagen (langst wachtend eerst), alleen lezen', async () => {
+    const { seedDemoWaiting } = await import('../sales/waiting')
+    await seedDemoWaiting(session)
+    const tool = (await client.listTools()).tools.find((t) => t.name === 'wachten_op_antwoord_lijst')
+    expect(tool?.annotations?.readOnlyHint).toBe(true)
+    const r = await call('wachten_op_antwoord_lijst', {})
+    expect(r.isError).toBe(false)
+    const leads = (r.json as { leads: { lead_id: string; naam: string; context: string; dagen: number; laatste_mail: { van: string } }[] }).leads
+    expect(leads.map((l) => l.naam)).toEqual(['Bakkerij Peeters', 'Fietsen De Smet', 'Studio Claes'])
+    expect(leads.map((l) => l.dagen)).toEqual([9, 5, 2])
+    expect(leads[0]).toMatchObject({ context: 'Lead · Prijsvoorstel opvolgen', laatste_mail: { van: 'casper@iknowright.be' } })
+    expect(leads.every((l) => typeof l.lead_id === 'string')).toBe(true)
+    expect(gmail.sendMail).not.toHaveBeenCalled()
+    expect(gmail.sendReply).not.toHaveBeenCalled()
+    expect(logs).toEqual([]) // leestool: geen bot_actions-rij
   })
 })
