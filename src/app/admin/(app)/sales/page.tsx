@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { Suspense } from 'react'
 import { requireSales } from '@/lib/admin/session'
 import { daysBetween, fmtDate, isoDay } from '@/lib/admin/format'
 import {
@@ -10,18 +9,15 @@ import {
   type Lead,
 } from '@/lib/admin/sales/types'
 import { SubmitButton } from '@/components/admin/SubmitButton'
-import { buttonClass, Card, Empty, input, label, muted, PageHeader, Pill, Spinner, Title } from '@/components/admin/ui'
+import { buttonClass, Card, Empty, input, label, muted, PageHeader, Pill, Title } from '@/components/admin/ui'
 import { createLeadAction } from '../../actions'
-import { loadWaiting, seedDemoWaiting } from '@/lib/admin/sales/waiting'
-import { WaitingList } from './WaitingList'
 import { cn } from '@/utilities/ui'
 
 export const metadata = { title: 'Leads' }
 
-type View = 'open' | 'wachten' | 'won' | 'lost'
+type View = 'open' | 'won' | 'lost'
 const VIEWS: { id: View; label: string }[] = [
   { id: 'open', label: 'Lopend' },
-  { id: 'wachten', label: 'Wachten op antwoord' },
   { id: 'won', label: 'Gewonnen' },
   { id: 'lost', label: 'Lost' },
 ]
@@ -31,18 +27,12 @@ const inView = (l: Lead, v: View) => (v === 'open' ? OPEN_STAGES.includes(l.stag
 export default async function LeadsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ nieuw?: string; fout?: string; weergave?: string; sorteer?: string; bijwerken?: string }>
+  searchParams: Promise<{ nieuw?: string; fout?: string; weergave?: string }>
 }) {
-  const { nieuw, fout, weergave, sorteer, bijwerken } = await searchParams
-  const view: View = weergave === 'won' || weergave === 'lost' || weergave === 'wachten' ? weergave : 'open'
-  const session = await requireSales()
-  const { leads } = session
-  await seedDemoWaiting(session)
+  const { nieuw, fout, weergave } = await searchParams
+  const view: View = weergave === 'won' || weergave === 'lost' ? weergave : 'open'
+  const { leads } = await requireSales()
   const all = await leads.list()
-  // Teller uit de opgeslagen momentopname (geen Gmail); de lijst zelf werkt die bij als ze verouderd is.
-  const waitingCount = await loadWaiting(session, { sync: 'never' })
-    .then((r) => (r.status === 'ok' ? r.items.length : undefined))
-    .catch(() => undefined)
   // Lopende leads: wie het eerst opgevolgd moet worden staat bovenaan.
   const rows = all
     .filter((l) => inView(l, view))
@@ -142,82 +132,67 @@ export default async function LeadsPage({
             aria-current={view === v.id ? 'page' : undefined}
             className={buttonClass(view === v.id ? 'navy' : 'light', true)}
           >
-            {v.label}{' '}
-            <span className="opacity-60">
-              {v.id === 'wachten' ? (waitingCount ?? '') : all.filter((l) => inView(l, v.id)).length}
-            </span>
+            {v.label} <span className="opacity-60">{all.filter((l) => inView(l, v.id)).length}</span>
           </Link>
         ))}
       </nav>
 
-      {view === 'wachten' ? (
-        <Suspense
-          fallback={
-            <Card className="flex items-center gap-2 text-sm font-semibold">
-              <Spinner /> Mails nakijken…
-            </Card>
-          }
-        >
-          <WaitingList session={session} sort={sorteer === 'kort' ? 'kort' : 'lang'} force={bijwerken === '1'} />
-        </Suspense>
-      ) : (
-        <Card className="relative overflow-x-auto p-0">
-          {!rows.length ? (
-            <div className="p-6">
-              <Empty>{view === 'open' ? 'Nog geen lopende leads.' : 'Niets in deze lijst.'}</Empty>
-            </div>
-          ) : (
-            <table className="w-full min-w-[760px] border-collapse text-left text-sm">
-              <thead>
-                <tr className={cn('text-xs', muted)}>
-                  <th scope="col" className="px-6 py-4 font-semibold">Lead</th>
-                  <th scope="col" className="px-3 py-4 font-semibold">Fase</th>
-                  <th scope="col" className="px-3 py-4 font-semibold">Volgende actie</th>
-                  <th scope="col" className="px-3 py-4 font-semibold">Opvolgen</th>
-                  <th scope="col" className="px-6 py-4"><span className="sr-only">Openen</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((l) => {
-                  const due = l.follow_up_on ? daysBetween(today, l.follow_up_on) : null
-                  return (
-                    <tr key={l.id} className="border-t border-[#E6DFD2] hover:bg-ikr-cream/60">
-                      <td className="px-6 py-3">
-                        <Link href={`/admin/sales/leads/${l.id}`} className="font-bold text-ikr-navy no-underline hover:text-[#0B7F93]">
-                          {l.name}
-                        </Link>
-                        {l.company && <div className={cn('text-xs', muted)}>{l.company}</div>}
-                      </td>
-                      <td className="px-3 py-3">
-                        <Pill tone={l.stage === 'lost' ? 'orange' : l.stage === 'won' ? 'green' : 'teal'}>
-                          {STAGE_LABELS[l.stage]}
+      <Card className="relative overflow-x-auto p-0">
+        {!rows.length ? (
+          <div className="p-6">
+            <Empty>{view === 'open' ? 'Nog geen lopende leads.' : 'Niets in deze lijst.'}</Empty>
+          </div>
+        ) : (
+          <table className="w-full min-w-[760px] border-collapse text-left text-sm">
+            <thead>
+              <tr className={cn('text-xs', muted)}>
+                <th scope="col" className="px-6 py-4 font-semibold">Lead</th>
+                <th scope="col" className="px-3 py-4 font-semibold">Fase</th>
+                <th scope="col" className="px-3 py-4 font-semibold">Volgende actie</th>
+                <th scope="col" className="px-3 py-4 font-semibold">Opvolgen</th>
+                <th scope="col" className="px-6 py-4"><span className="sr-only">Openen</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((l) => {
+                const due = l.follow_up_on ? daysBetween(today, l.follow_up_on) : null
+                return (
+                  <tr key={l.id} className="border-t border-[#E6DFD2] hover:bg-ikr-cream/60">
+                    <td className="px-6 py-3">
+                      <Link href={`/admin/sales/leads/${l.id}`} className="font-bold text-ikr-navy no-underline hover:text-[#0B7F93]">
+                        {l.name}
+                      </Link>
+                      {l.company && <div className={cn('text-xs', muted)}>{l.company}</div>}
+                    </td>
+                    <td className="px-3 py-3">
+                      <Pill tone={l.stage === 'lost' ? 'orange' : l.stage === 'won' ? 'green' : 'teal'}>
+                        {STAGE_LABELS[l.stage]}
+                      </Pill>
+                    </td>
+                    <td className={cn('max-w-[360px] px-3 py-3', muted)}>
+                      <span className="line-clamp-2">{l.next_action ?? '—'}</span>
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      {l.follow_up_on && due !== null ? (
+                        <Pill tone={due <= 0 && view === 'open' ? 'orange' : 'light'}>
+                          {due === 0 ? 'vandaag' : fmtDate(l.follow_up_on, { day: 'numeric', month: 'short', year: due > 300 || due < -300 ? 'numeric' : undefined })}
                         </Pill>
-                      </td>
-                      <td className={cn('max-w-[360px] px-3 py-3', muted)}>
-                        <span className="line-clamp-2">{l.next_action ?? '—'}</span>
-                      </td>
-                      <td className="px-3 py-3 whitespace-nowrap">
-                        {l.follow_up_on && due !== null ? (
-                          <Pill tone={due <= 0 && view === 'open' ? 'orange' : 'light'}>
-                            {due === 0 ? 'vandaag' : fmtDate(l.follow_up_on, { day: 'numeric', month: 'short', year: due > 300 || due < -300 ? 'numeric' : undefined })}
-                          </Pill>
-                        ) : (
-                          '—'
-                        )}
-                      </td>
-                      <td className="px-6 py-3 text-right">
-                        <Link href={`/admin/sales/leads/${l.id}`} className={buttonClass('soft', true)}>
-                          Open lead
-                        </Link>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          )}
-        </Card>
-      )}
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td className="px-6 py-3 text-right">
+                      <Link href={`/admin/sales/leads/${l.id}`} className={buttonClass('soft', true)}>
+                        Open lead
+                      </Link>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
+      </Card>
     </>
   )
 }

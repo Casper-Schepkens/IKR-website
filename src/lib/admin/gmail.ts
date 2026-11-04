@@ -11,12 +11,9 @@ export type Mail = {
   fromName: string
   fromEmail: string
   to: string
-  cc?: string
   subject: string
   date: string
   text: string
-  /** Automatisch antwoord (afwezigheid, out of office, autoresponder). */
-  auto?: boolean
 }
 
 export type Thread = { id: string; mails: Mail[] }
@@ -107,24 +104,10 @@ function toMail(m: RawMessage): Mail {
     fromName: from.name,
     fromEmail: from.email,
     to: h('To'),
-    cc: h('Cc'),
     subject: h('Subject'),
     date: new Date(Number(m.internalDate)).toISOString(),
     text: stripQuoted(findText(m.payload)),
-    auto: isAutoReply(h),
   }
-}
-
-const AUTO_SUBJECT =
-  /^(automatisch antwoord|automatische? (reactie|antwoord)|afwezig|out of (the )?office|automatic reply|auto(matic)?[- ]?reply|autoreply|abwesenheit|automatische antwort|réponse automatique|absence)\b|\b(out of office|afwezigheidsmelding|niet op kantoor)\b/i
-
-/** Afwezigheidsmelding of autoresponder (headers volgens RFC 3834 + gangbare onderwerpen). */
-export function isAutoReply(h: (name: string) => string) {
-  const auto = h('Auto-Submitted').toLowerCase()
-  if (auto && auto !== 'no') return true
-  if (h('X-Autoreply') || h('X-Autorespond') || h('X-Auto-Response-Suppress').toLowerCase().includes('oof')) return true
-  if (/^(auto_reply|auto-reply)$/i.test(h('Precedence').trim())) return true
-  return AUTO_SUBJECT.test(h('Subject').trim())
 }
 
 const g = globalThis as unknown as { __ikrThreads?: Map<string, { historyId: string; thread: Thread }> }
@@ -148,33 +131,6 @@ export async function recentThreads(owner: string, max = 25): Promise<Thread[]> 
     const raw = await gmail<{ id: string; messages: RawMessage[] }>(owner, `/threads/${t.id}?format=full`)
     const thread = { id: raw.id, mails: raw.messages.map(toMail) }
     cache.set(t.id, { historyId: t.historyId, thread })
-    return thread
-  })
-}
-
-/**
- * Threads van de laatste `days` dagen met één van deze adressen (van, aan of cc), in alle mappen.
- * Gebruikt dezelfde historyId-cache als recentThreads: ongewijzigde threads worden niet opnieuw opgehaald.
- */
-export async function threadsWith(owner: string, emails: string[], days = 120): Promise<Thread[]> {
-  const cache = threadCache()
-  const seen = new Map<string, { id: string; historyId: string }>()
-  // Per 15 adressen één zoekopdracht, zodat de query kort blijft.
-  for (let i = 0; i < emails.length; i += 15) {
-    const part = emails.slice(i, i + 15).map((e) => `from:${e} to:${e} cc:${e}`).join(' ')
-    const list = await gmail<{ threads?: { id: string; historyId: string }[] }>(
-      owner,
-      `/threads?maxResults=100&q=${encodeURIComponent(`newer_than:${days}d {${part}}`)}`,
-    )
-    for (const t of list.threads ?? []) seen.set(t.id, t)
-  }
-  return limited([...seen.values()], 4, async (t) => {
-    const key = `${owner}:${t.id}`
-    const hit = cache.get(key)
-    if (hit && hit.historyId === t.historyId) return hit.thread
-    const raw = await gmail<{ id: string; messages: RawMessage[] }>(owner, `/threads/${t.id}?format=full`)
-    const thread = { id: raw.id, mails: raw.messages.map(toMail) }
-    cache.set(key, { historyId: t.historyId, thread })
     return thread
   })
 }
