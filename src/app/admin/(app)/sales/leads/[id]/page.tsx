@@ -15,6 +15,7 @@ import { Card, input, label, muted, Pill, Title } from '@/components/admin/ui'
 import { markLostAction, removeNotALeadAndBackAction, setStageAction, updateLeadAction } from '../../../../actions'
 import { ConfirmSubmit } from '@/components/admin/ConfirmSubmit'
 import { DraftCard } from '@/components/admin/sales/DraftCard'
+import { AfterSendLog } from '@/components/admin/sales/AfterSendLog'
 import { aiEngine } from '@/lib/admin/ai/jobs'
 import { cn } from '@/utilities/ui'
 
@@ -66,6 +67,8 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
           </p>
         )}
       </div>
+
+      <AfterSendLog leadId={lead.id} />
 
       {concepts.length > 0 && (
         <section className="flex flex-col gap-3" aria-label="Mailconcepten">
