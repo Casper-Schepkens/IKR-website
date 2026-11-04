@@ -4,8 +4,9 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { requireSales } from '@/lib/admin/session'
 import { createServerSupabase } from '@/lib/admin/supabase/server'
-import { isSupabaseConfigured } from '@/lib/admin/env'
+import { isSupabaseConfigured, SALES_EMAIL } from '@/lib/admin/env'
 import { sendDraft, sendInboxReply } from '@/lib/admin/sales/send'
+import { scheduleAfterSend } from '@/lib/admin/sales/after-send'
 import { aiEngine, dismissJob, enqueue, getJob, isAiConfigured, runJob } from '@/lib/admin/ai/jobs'
 import { notifyGrok } from '@/lib/admin/ai/notify'
 import { recordFeedback, saveProfile, STYLE_KEYS, type StyleKey } from '@/lib/admin/ai/style-profile'
@@ -111,9 +112,11 @@ export async function markLostAction(id: string, form: FormData) {
 /** Verstuurt het (aangepaste) antwoord vanuit Casper's Gmail, in dezelfde thread. */
 export async function sendInboxReplyAction(threadId: string, form: FormData) {
   return attempt(async () => {
-    await requireSales()
+    const { user } = await requireSales()
     const body = str(form, 'body') ?? ''
-    await sendInboxReply(threadId, body)
+    const to = await sendInboxReply(threadId, body)
+    // Na het versturen (los van de verzending): AI kijkt of de lead bijgewerkt moet worden.
+    scheduleAfterSend({ ref: `inbox:${threadId}:${Date.now()}`, leadEmail: to, threadId, from: SALES_EMAIL, to, subject: '', body, by: user.email })
     // Leren: het AI-voorstel tegenover wat Casper echt verstuurde.
     const jobId = str(form, 'job_id')
     if (jobId) {
@@ -188,6 +191,8 @@ export async function sendDraftAction(id: string) {
   return attempt(async () => {
     const { drafts, user } = await requireSales()
     await sendDraft(drafts, id, user.email)
+    // Na het versturen (los van de verzending): AI kijkt of de lead bijgewerkt moet worden.
+    scheduleAfterSend({ draftId: id, by: user.email })
     revalidatePath('/admin/sales', 'layout')
   })
 }
