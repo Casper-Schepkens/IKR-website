@@ -1,50 +1,98 @@
 'use client'
 
-import { startTransition, useEffect } from 'react'
+import { startTransition, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { adminLiveStamp } from '@/app/admin/live-actions'
-import { isLivePath, refreshSoon } from '@/lib/admin/live'
+import { isLivePath, LIVE_TABLES } from '@/lib/admin/live'
+import { createBrowserSupabase } from '@/lib/admin/supabase/browser'
 
-const POLL_MS = 3000
+/** Wacht even zodat een reeks wijzigingen (bv. 3 concepten na elkaar) één verversing geeft. */
+const DEBOUNCE_MS = 400
+/** Reserve als Realtime niet verbonden is (of lokaal zonder Supabase): de lichte stempel pollen. */
+const FALLBACK_POLL_MS = 3000
 
 /**
- * Op sales- en weekly-pagina's: als Grok Bot (of een AI-taak) data wijzigt, de pagina
- * opnieuw laden. De stempel raakt Gmail en Apollo niet; enkel bij een echte wijziging verversen we.
+ * Op sales- en weekly-pagina's: als Grok Bot, een AI-taak of een collega data wijzigt, de pagina
+ * opnieuw laden. Standaard via Supabase Realtime (RLS bepaalt wie welke wijziging hoort);
+ * enkel zolang Realtime niet verbonden is, valt dit terug op de stempel-poll.
+ * Velden die je zelf aan het typen bent blijven staan (useFollowServer / FormAction serverValues).
  */
-export function LiveData() {
+export function LiveData({ stamp: rendered }: { stamp: string | null }) {
   const pathname = usePathname()
   const router = useRouter()
   const live = isLivePath(pathname)
+  // Laatst gekende stand: eerst die van de server-render, daarna van elke controle of nieuwe render.
+  const known = useRef<string | null>(rendered)
+  useEffect(() => {
+    known.current = rendered
+  }, [rendered])
 
   useEffect(() => {
     if (!live) return
-    let stamp: string | null = null
+    let disposed = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const refresh = () => {
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        if (!disposed) startTransition(() => router.refresh())
+      }, DEBOUNCE_MS)
+    }
+
+    // Stempel vergelijken met de laatst gekende stand; verschil = verversen.
     let seq = 0
-    const tick = async () => {
-      if (document.hidden) return
+    const check = async () => {
       const id = ++seq
       const res = await adminLiveStamp()
-      if (id !== seq || !res.ok) return
-      if (stamp === null) {
-        stamp = res.data
-        return
-      }
-      if (stamp === res.data) return
-      stamp = res.data
-      refreshSoon(() => startTransition(() => router.refresh()))
+      if (disposed || id !== seq || !res.ok) return
+      if (known.current !== null && known.current !== res.data) refresh()
+      known.current = res.data
     }
-    const timer = window.setInterval(tick, POLL_MS)
+
+    // ── Reserve: pollen zolang Realtime niet verbonden is ──
+    let realtimeUp = false
+    const tick = () => {
+      if (!realtimeUp && !document.hidden) void check()
+    }
+    const poll = window.setInterval(tick, FALLBACK_POLL_MS)
+    tick()
+
+    // ── Realtime ──
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const supabase = url && key ? createBrowserSupabase() : null
+    let wasUp = false
+    const channel = supabase?.channel(`admin-live-${pathname}`)
+    if (supabase && channel) {
+      for (const table of LIVE_TABLES) channel.on('postgres_changes', { event: '*', schema: 'public', table }, refresh)
+      channel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          realtimeUp = true
+          // Wijzigingen van vóór de verbinding (sinds de render of tijdens een onderbreking): één controle.
+          if (wasUp) refresh()
+          else void check()
+          wasUp = true
+        } else {
+          realtimeUp = false
+        }
+      })
+    }
+
+    // Terug naar het tabblad: één keer bijwerken (de browser kan de verbinding gepauzeerd hebben).
     const onVisible = () => {
-      if (!document.hidden) void tick()
+      if (document.hidden) return
+      void check()
     }
     document.addEventListener('visibilitychange', onVisible)
-    void tick()
+
     return () => {
+      disposed = true
       seq += 1
-      window.clearInterval(timer)
+      clearTimeout(timer)
+      window.clearInterval(poll)
       document.removeEventListener('visibilitychange', onVisible)
+      if (supabase && channel) void supabase.removeChannel(channel)
     }
-  }, [live, router])
+  }, [live, pathname, router])
 
   return null
 }
