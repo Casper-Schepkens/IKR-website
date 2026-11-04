@@ -16,14 +16,17 @@ function slicePath(cx: number, cy: number, r: number, start: number, pct: number
 
 function AgePie() {
   const { ageSlices } = tiktokBelgium
-  let cursor = 0
-  const slices = ageSlices.map((slice) => {
-    const path = slicePath(80, 80, 72, cursor, slice.pct)
-    const mid = cursor + slice.pct * 1.8
-    cursor += slice.pct * 3.6
-    const labelPos = polar(80, 80, 46, mid)
-    return { ...slice, path, labelPos }
-  })
+  const slices = ageSlices.reduce<{ cursor: number; items: ((typeof ageSlices)[number] & { path: string; labelPos: { x: number; y: number } })[] }>(
+    (acc, slice) => {
+      const path = slicePath(80, 80, 72, acc.cursor, slice.pct)
+      const mid = acc.cursor + slice.pct * 1.8
+      return {
+        cursor: acc.cursor + slice.pct * 3.6,
+        items: [...acc.items, { ...slice, path, labelPos: polar(80, 80, 46, mid) }],
+      }
+    },
+    { cursor: 0, items: [] },
+  ).items
 
   return (
     <svg viewBox="0 0 160 160" width="100%" role="img" aria-label="Leeftijd van TikTok-gebruikers in België" style={{ display: 'block' }}>

@@ -27,6 +27,18 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
   if (!lead) notFound()
   const concepts = await drafts.list({ leadId: id, status: 'concept' })
   const lost = lead.stage === 'lost'
+  // Zodat een wijziging van Grok Bot in de velden komt, zonder een formulier dat Casper aan het invullen is te wissen.
+  const serverValues: Record<string, string> = {
+    name: lead.name,
+    company: lead.company ?? '',
+    email: lead.email ?? '',
+    phone: lead.phone ?? '',
+    source: lead.source,
+    follow_up_on: lead.follow_up_on ?? '',
+    next_action: lead.next_action ?? '',
+    notes: lead.notes ?? '',
+    stage: lost ? 'lead' : lead.stage,
+  }
 
   return (
     <>
@@ -83,7 +95,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
       <div className="flex flex-wrap items-start gap-5">
         <Card className="flex min-w-0 flex-[2_1_420px] flex-col gap-4">
           <Title className="m-0 text-2xl">Gegevens & opvolging</Title>
-          <FormAction action={updateLeadAction.bind(null, lead.id)}>
+          <FormAction action={updateLeadAction.bind(null, lead.id)} serverValues={serverValues}>
             <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
               <label className={label}>
                 Naam
@@ -131,7 +143,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
           <Card className="flex flex-col gap-3">
             <Title className="m-0 text-2xl">Fase</Title>
             <p className={cn('m-0 text-sm', muted)}>Voorlopig manueel; wordt automatisch zodra boekingen en calls gekoppeld zijn.</p>
-            <FormAction action={setStageAction.bind(null, lead.id)} submitLabel={lost ? 'Heropenen' : 'Opslaan'}>
+            <FormAction action={setStageAction.bind(null, lead.id)} serverValues={serverValues} submitLabel={lost ? 'Heropenen' : 'Opslaan'}>
               <select name="stage" aria-label="Fase" defaultValue={lost ? 'lead' : lead.stage} className={input}>
                 {STAGES.filter((s) => s !== 'lost').map((s) => (
                   <option key={s} value={s}>

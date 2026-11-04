@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { deleteDraftAction, sendDraftAction, updateDraftAction } from '@/app/admin/actions'
 import { buttonClass, Card, input, label, muted, Pill, Spinner } from '../ui'
 import { cn } from '@/utilities/ui'
+import { useFollowServer } from '../follow-server'
 import { ContextBox } from './ContextBox'
 import { RewriteBox } from './RewriteBox'
 
@@ -32,8 +33,10 @@ export function DraftCard(d: DraftCardProps) {
   const [pending, start] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [gone, setGone] = useState<string | null>(null)
-  const [subject, setSubject] = useState(d.subject)
-  const [body, setBody] = useState(d.body)
+  const [subject, setSubject] = useFollowServer(d.subject)
+  const [body, setBody] = useFollowServer(d.body)
+  const [to, setTo] = useFollowServer(d.to)
+  const [cc, setCc] = useFollowServer(d.cc.join(', '))
   const router = useRouter()
 
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>, done?: string) =>
@@ -90,11 +93,11 @@ export function DraftCard(d: DraftCardProps) {
             </label>
             <label className={label}>
               Aan
-              <input name="to" type="email" required defaultValue={d.to} className={input} />
+              <input name="to" type="email" required value={to} onChange={(e) => setTo(e.target.value)} className={input} />
             </label>
             <label className={label}>
               Cc (komma-gescheiden)
-              <input name="cc" defaultValue={d.cc.join(', ')} className={input} />
+              <input name="cc" value={cc} onChange={(e) => setCc(e.target.value)} className={input} />
             </label>
           </div>
           <label className={label}>

@@ -71,10 +71,10 @@ export type Connection = { email: string; scopes: string; connected_at: string }
 
 const g = globalThis as unknown as { __ikrGoogle?: Map<string, Connection & { refresh_token: string }> }
 const memory = () => (g.__ikrGoogle ??= new Map())
-const useMemory = () => !isSupabaseConfigured() && isDemoMode()
+const googleInMemory = () => !isSupabaseConfigured() && isDemoMode()
 
 export async function saveConnection(email: string, refreshToken: string, scopes: string, by: string) {
-  if (useMemory()) {
+  if (googleInMemory()) {
     memory().set(email, { email, scopes, refresh_token: refreshToken, connected_at: new Date().toISOString() })
     return
   }
@@ -86,7 +86,7 @@ export async function saveConnection(email: string, refreshToken: string, scopes
 
 /** Welke accounts gekoppeld zijn (zonder tokens). */
 export async function listConnections(): Promise<Connection[]> {
-  if (useMemory()) return [...memory().values()].map(({ email, scopes, connected_at }) => ({ email, scopes, connected_at }))
+  if (googleInMemory()) return [...memory().values()].map(({ email, scopes, connected_at }) => ({ email, scopes, connected_at }))
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return []
   const { data, error } = await createServiceSupabase().from('google_connections').select('email, scopes, connected_at')
   if (error) throw new Error(error.message)
