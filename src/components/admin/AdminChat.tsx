@@ -9,8 +9,21 @@ import { cn } from '@/utilities/ui'
 
 type State = { messages: ChatMessage[]; thinking: boolean }
 
+/** Marge waarbinnen we "onderaan" rekenen (px). */
+const BOTTOM_SLACK = 80
+export const isNearBottom = (el: {
+  scrollHeight: number
+  scrollTop: number
+  clientHeight: number
+}) => el.scrollHeight - el.scrollTop - el.clientHeight <= BOTTOM_SLACK
+
 const time = (iso: string) =>
-  new Date(iso).toLocaleString('nl-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  new Date(iso).toLocaleString('nl-BE', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 
 /**
  * Chat met Grok Bot op elke admin-pagina (staat in de layout, dus blijft bij het wisselen van pagina).
@@ -38,11 +51,43 @@ export function AdminChat({ initial }: { initial: State }) {
     return () => clearInterval(t)
   }, [open, state.thinking, refresh])
 
-  // Nieuwste bericht in beeld houden.
+  // Enkel mee naar onder scrollen als de gebruiker al (bijna) onderaan staat; anders de positie
+  // laten en een knop "Nieuwe berichten" tonen.
+  const atBottomRef = useRef(true)
+  const [newBelow, setNewBelow] = useState(false)
+  const lastId = state.messages.at(-1)?.id ?? null
+
+  const scrollToBottom = useCallback(() => {
+    const el = listRef.current
+    if (el) el.scrollTo({ top: el.scrollHeight })
+    atBottomRef.current = true
+    setNewBelow(false)
+    setSeenId(lastId)
+  }, [lastId])
+
+  const onScroll = () => {
+    const el = listRef.current
+    if (!el) return
+    atBottomRef.current = isNearBottom(el)
+    if (atBottomRef.current) {
+      setNewBelow(false)
+      setSeenId(lastId)
+    }
+  }
+
+  // Bij openen: naar het nieuwste bericht.
   useEffect(() => {
-    if (open) listRef.current?.scrollTo({ top: listRef.current.scrollHeight })
-    if (open) setSeenId(state.messages.at(-1)?.id ?? null)
-  }, [open, state.messages])
+    if (open) scrollToBottom()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
+
+  // Nieuw bericht of "denkt na": enkel volgen als de gebruiker onderaan stond.
+  useEffect(() => {
+    if (!open) return
+    if (atBottomRef.current) scrollToBottom()
+    else if (lastId && lastId !== seenId) setNewBelow(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastId, state.thinking])
 
   useEffect(() => {
     if (!open) return
@@ -60,6 +105,7 @@ export function AdminChat({ initial }: { initial: State }) {
       if (!res.ok) return setError(res.error)
       setText('')
       setState(res.data)
+      atBottomRef.current = true // eigen bericht: altijd naar onder
     })
   }
 
@@ -122,8 +168,15 @@ export function AdminChat({ initial }: { initial: State }) {
             title="Chat uitklappen"
             className="ikr-btn relative flex size-11 shrink-0 items-center justify-center rounded-full bg-ikr-cream-light text-ikr-navy hover:bg-white"
           >
-            <span aria-hidden="true" className="text-lg leading-none">⤢</span>
-            {unseenReply && <span className="absolute top-1.5 right-1.5 size-2.5 rounded-full bg-ikr-cyan" aria-label="Nieuw antwoord" />}
+            <span aria-hidden="true" className="text-lg leading-none">
+              ⤢
+            </span>
+            {unseenReply && (
+              <span
+                className="absolute top-1.5 right-1.5 size-2.5 rounded-full bg-ikr-cyan"
+                aria-label="Nieuw antwoord"
+              />
+            )}
           </button>
         </div>
         {(busy || unseenReply || error) && !open && (
@@ -133,7 +186,11 @@ export function AdminChat({ initial }: { initial: State }) {
                 <Spinner /> Grok Bot denkt na…
               </span>
             ) : unseenReply ? (
-              <button type="button" onClick={() => setOpen(true)} className="min-w-0 truncate text-left">
+              <button
+                type="button"
+                onClick={() => setOpen(true)}
+                className="min-w-0 truncate text-left"
+              >
                 <span className="font-semibold">Grok Bot:</span> {unseenReply.text}
               </button>
             ) : null}
@@ -147,7 +204,10 @@ export function AdminChat({ initial }: { initial: State }) {
       </div>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-ikr-navy/30" onClick={() => setOpen(false)}>
+        <div
+          className="fixed inset-0 z-50 flex justify-end bg-ikr-navy/30"
+          onClick={() => setOpen(false)}
+        >
           <section
             role="dialog"
             aria-modal="true"
@@ -168,29 +228,57 @@ export function AdminChat({ initial }: { initial: State }) {
                 <Icon.close size={16} />
               </button>
             </header>
-            <div ref={listRef} className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
-              {!state.messages.length && <p className={cn('m-0 text-sm', muted)}>Nog geen berichten. Vraag iets!</p>}
-              {state.messages.map((m) => (
-                <div key={m.id} className={cn('flex flex-col gap-0.5', m.role === 'user' ? 'items-end' : 'items-start')}>
+            <div className="relative flex min-h-0 flex-1 flex-col">
+              <div
+                ref={listRef}
+                onScroll={onScroll}
+                data-testid="chat-list"
+                className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1"
+              >
+                {!state.messages.length && (
+                  <p className={cn('m-0 text-sm', muted)}>Nog geen berichten. Vraag iets!</p>
+                )}
+                {state.messages.map((m) => (
                   <div
+                    key={m.id}
                     className={cn(
-                      'max-w-[85%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed whitespace-pre-line',
-                      m.role === 'user' ? 'bg-ikr-navy text-ikr-cream-light' : 'bg-ikr-cream-light text-ikr-navy',
+                      'flex flex-col gap-0.5',
+                      m.role === 'user' ? 'items-end' : 'items-start',
                     )}
                   >
-                    {m.text}
+                    <div
+                      className={cn(
+                        'max-w-[85%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed whitespace-pre-line',
+                        m.role === 'user'
+                          ? 'bg-ikr-navy text-ikr-cream-light'
+                          : 'bg-ikr-cream-light text-ikr-navy',
+                      )}
+                    >
+                      {m.text}
+                    </div>
+                    <span className={cn('px-1 text-[11px]', muted)}>
+                      {time(m.created_at)}
+                      {m.role === 'user' && m.page
+                        ? ` · ${m.page.replace('/admin', '') || '/'}`
+                        : ''}
+                      {m.object_type ? ` · ${m.object_type}` : ''}
+                    </span>
                   </div>
-                  <span className={cn('px-1 text-[11px]', muted)}>
-                    {time(m.created_at)}
-                    {m.role === 'user' && m.page ? ` · ${m.page.replace('/admin', '') || '/'}` : ''}
-                    {m.object_type ? ` · ${m.object_type}` : ''}
-                  </span>
-                </div>
-              ))}
-              {state.thinking && (
-                <div className="flex items-center gap-2 self-start rounded-2xl bg-ikr-cream-light px-3.5 py-2 text-sm font-semibold">
-                  <Spinner /> Grok Bot denkt na…
-                </div>
+                ))}
+                {state.thinking && (
+                  <div className="flex items-center gap-2 self-start rounded-2xl bg-ikr-cream-light px-3.5 py-2 text-sm font-semibold">
+                    <Spinner /> Grok Bot denkt na…
+                  </div>
+                )}
+              </div>
+              {newBelow && (
+                <button
+                  type="button"
+                  onClick={scrollToBottom}
+                  className="ikr-btn absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-ikr-navy px-3.5 py-1.5 text-xs font-semibold text-ikr-cream-light shadow-md"
+                >
+                  Nieuwe berichten ↓
+                </button>
               )}
             </div>
             {error && (
