@@ -10,16 +10,21 @@ import { usePathname, useSearchParams } from 'next/navigation'
 export function NavFeedback() {
   const pathname = usePathname()
   const search = useSearchParams()
+  const route = `${pathname}?${search.toString()}`
   const [busy, setBusy] = useState(false)
-
-  // Nieuwe pagina geladen: alles terug normaal.
-  useEffect(() => {
+  const [seenRoute, setSeenRoute] = useState(route)
+  if (route !== seenRoute) {
+    setSeenRoute(route)
     setBusy(false)
+  }
+
+  // Nieuwe pagina geladen: de pending-staat op de aangeklikte link weghalen.
+  useEffect(() => {
     document.querySelectorAll('[data-nav-pending]').forEach((el) => {
       el.removeAttribute('data-nav-pending')
       el.removeAttribute('data-pending')
     })
-  }, [pathname, search])
+  }, [route])
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined

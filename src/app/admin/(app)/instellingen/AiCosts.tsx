@@ -5,15 +5,21 @@ import { cn } from '@/utilities/ui'
 
 const LABELS: Record<string, string> = { inbox_reply: 'Antwoord klaarzetten (inbox)', mail_rewrite: 'Mail herschrijven', style_profile: 'Schrijfstijl bijwerken' }
 const usd = (n: number) => `$${n.toFixed(n < 1 ? 3 : 2)}`
+const DAY = 86_400_000
+
+function clock() {
+  return Date.now()
+}
 
 /** Testweek: wat kost elke AI-taak via de API? Basis om te kiezen tussen API en een eigen server. */
 export async function AiCosts() {
-  const since = new Date(Date.now() - 30 * 86_400_000)
+  const now = clock()
+  const since = new Date(now - 30 * DAY)
   const jobs = (await listJobs(since.toISOString())).filter((j) => j.status === 'done' || j.cost_usd)
-  const week = jobs.filter((j) => j.created_at >= new Date(Date.now() - 7 * 86_400_000).toISOString())
+  const week = jobs.filter((j) => j.created_at >= new Date(now - 7 * DAY).toISOString())
   const sum = (xs: typeof jobs) => xs.reduce((a, j) => a + Number(j.cost_usd ?? 0), 0)
   const first = jobs.length ? jobs[jobs.length - 1].created_at : null
-  const days = first ? Math.max(1, (Date.now() - new Date(first).getTime()) / 86_400_000) : 1
+  const days = first ? Math.max(1, (now - new Date(first).getTime()) / DAY) : 1
   const perMonth = (sum(jobs) / Math.min(days, 30)) * 30
   const types = [...new Set(jobs.map((j) => j.type))]
 

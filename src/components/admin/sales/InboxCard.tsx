@@ -12,6 +12,7 @@ import {
 } from '@/app/admin/actions'
 import { buttonClass, Card, Icon, input, muted, Pill, Spinner } from '../ui'
 import { cn } from '@/utilities/ui'
+import { useFollowServer } from '../follow-server'
 import { ContextBox } from './ContextBox'
 import { RewriteBox } from './RewriteBox'
 
@@ -49,18 +50,37 @@ export type InboxCardProps = {
 
 type Job = NonNullable<InboxCardProps['job']>
 
+const jobSig = (job: Job | null) =>
+  job ? `${job.id}|${job.status}|${job.error ?? ''}|${job.output?.kind ?? ''}|${job.output?.draft ?? ''}|${job.output?.context ?? ''}` : ''
+
+const rank = (status: string) =>
+  status === 'done' || status === 'dismissed' ? 3 : status === 'error' || status === 'waiting_limit' ? 2 : status === 'running' ? 1 : 0
+
+/** Pagina-verversing mag een nieuwer server-voorstel tonen, maar geen poll-resultaat terugdraaien. */
+function preferJob(local: Job | null, server: Job | null) {
+  if (!server) return server
+  if (!local || local.id !== server.id) return server
+  if (rank(server.status) > rank(local.status)) return server
+  if (server.status === local.status && jobSig(server) !== jobSig(local)) return server
+  return local
+}
+
 export function InboxCard(props: InboxCardProps) {
   const [job, setJob] = useState<Job | null>(props.job)
+  const [seenSig, setSeenSig] = useState(() => jobSig(props.job))
+  const incomingSig = jobSig(props.job)
+  if (incomingSig !== seenSig) {
+    setSeenSig(incomingSig)
+    setJob((cur) => preferJob(cur, props.job))
+  }
   const p = { ...props, job }
-  const [body, setBody] = useState(props.job?.output?.draft ?? '')
+  const [body, setBody] = useFollowServer(job?.output?.draft ?? '')
   const [pending, start] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [sent, setSent] = useState(false)
   const out = p.job?.output
   const kind = out?.kind ? KIND[out.kind] : null
   const lostHint = out?.kind === 'not_interested' || out?.kind === 'unsubscribe'
-
-  useEffect(() => setBody(job?.output?.draft ?? ''), [job?.output?.draft])
 
   // Zolang de AI bezig is: enkel de status van deze taak opvragen (geen Gmail).
   const waiting = !job || job.status === 'pending' || job.status === 'running'

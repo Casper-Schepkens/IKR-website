@@ -55,6 +55,8 @@ function ProcessIcon({ src }: { src: string }) {
 function HeroPhone({ onInteract }: { onInteract?: () => void }) {
   const [feed, setFeed] = useState(aanpakHeroFeedStarters)
   useEffect(() => {
+    // Na hydration: de feed is geschud (Math.random) en mag niet in de SSR-html.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- eenmalig na mount, anders hydration mismatch
     setFeed(buildAanpakPhoneFeed())
   }, [])
 

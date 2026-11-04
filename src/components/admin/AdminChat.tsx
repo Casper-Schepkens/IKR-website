@@ -1,9 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
-import { usePathname } from 'next/navigation'
+import { startTransition, useCallback, useEffect, useRef, useState, useTransition } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { getChatAction, sendChatAction } from '@/app/admin/chat-actions'
 import type { ChatMessage } from '@/lib/admin/chat/repo'
+import { chatContentKey, chatSnap, isNearBottom, refreshSoon, shouldRefreshForChat } from '@/lib/admin/live'
 import { Icon, muted, Spinner } from './ui'
 import { cn } from '@/utilities/ui'
 
@@ -18,6 +19,7 @@ const time = (iso: string) =>
  */
 export function AdminChat({ initial }: { initial: State }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [state, setState] = useState<State>(initial)
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
@@ -25,6 +27,12 @@ export function AdminChat({ initial }: { initial: State }) {
   const [seenId, setSeenId] = useState<string | null>(initial.messages.at(-1)?.id ?? null)
   const [pending, start] = useTransition()
   const listRef = useRef<HTMLDivElement>(null)
+  const contentKey = chatContentKey(state.messages, state.thinking)
+  // null = de lezer zit onderaan en nieuwe berichten mogen meescrollen.
+  // Een sleutel = hij scrolde omhoog; pas bij een nieuwere sleutel tonen we "Nieuw bericht".
+  const [anchor, setAnchor] = useState<string | null>(null)
+  const showJump = open && anchor !== null && anchor !== contentKey
+  const snapRef = useRef(chatSnap(initial.messages, initial.thinking))
 
   const refresh = useCallback(async () => {
     const res = await getChatAction()
@@ -38,22 +46,65 @@ export function AdminChat({ initial }: { initial: State }) {
     return () => clearInterval(t)
   }, [open, state.thinking, refresh])
 
-  // Nieuwste bericht in beeld houden.
+  // Alleen meescrollen als de lezer al onderaan zat. Anders blijft de scrollpositie staan.
   useEffect(() => {
-    if (open) listRef.current?.scrollTo({ top: listRef.current.scrollHeight })
-    if (open) setSeenId(state.messages.at(-1)?.id ?? null)
-  }, [open, state.messages])
+    if (!open || anchor !== null) return
+    const el = listRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [open, anchor, contentKey])
+
+  // Antwoord binnen of nadenken klaar: de open pagina opnieuw laden (inbox, concepten, lead, weekly).
+  useEffect(() => {
+    const next = chatSnap(state.messages, state.thinking)
+    const needsRefresh = shouldRefreshForChat(snapRef.current, next)
+    snapRef.current = next
+    if (needsRefresh) refreshSoon(() => startTransition(() => router.refresh()))
+  }, [state.messages, state.thinking, router])
+
+  const onScroll = () => {
+    const el = listRef.current
+    if (!el) return
+    if (isNearBottom(el)) {
+      setAnchor(null)
+      const id = state.messages.at(-1)?.id ?? null
+      setSeenId((cur) => (cur === id ? cur : id))
+    } else {
+      setAnchor((cur) => (cur === null ? contentKey : cur))
+    }
+  }
+
+  const jumpToBottom = () => {
+    setAnchor(null)
+    const el = listRef.current
+    if (el) el.scrollTop = el.scrollHeight
+    setSeenId(state.messages.at(-1)?.id ?? null)
+  }
+
+  const openPanel = () => {
+    setAnchor(null)
+    setSeenId(state.messages.at(-1)?.id ?? null)
+    setOpen(true)
+  }
+
+  const closePanel = useCallback(() => {
+    if (anchor === null) setSeenId(state.messages.at(-1)?.id ?? null)
+    setOpen(false)
+  }, [anchor, state.messages])
 
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      closePanel()
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [open])
+  }, [open, closePanel])
 
   const send = () => {
     const t = text.trim()
     if (!t || pending) return
+    setAnchor(null)
     start(async () => {
       setError(null)
       const res = await sendChatAction(t, pathname)
@@ -117,7 +168,7 @@ export function AdminChat({ initial }: { initial: State }) {
           <div className="min-w-0 flex-1">{input(false)}</div>
           <button
             type="button"
-            onClick={() => setOpen(true)}
+            onClick={openPanel}
             aria-label="Chat uitklappen"
             title="Chat uitklappen"
             className="ikr-btn relative flex size-11 shrink-0 items-center justify-center rounded-full bg-ikr-cream-light text-ikr-navy hover:bg-white"
@@ -133,7 +184,7 @@ export function AdminChat({ initial }: { initial: State }) {
                 <Spinner /> Grok Bot denkt na…
               </span>
             ) : unseenReply ? (
-              <button type="button" onClick={() => setOpen(true)} className="min-w-0 truncate text-left">
+              <button type="button" onClick={openPanel} className="min-w-0 truncate text-left">
                 <span className="font-semibold">Grok Bot:</span> {unseenReply.text}
               </button>
             ) : null}
@@ -147,7 +198,7 @@ export function AdminChat({ initial }: { initial: State }) {
       </div>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-ikr-navy/30" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-50 flex justify-end bg-ikr-navy/30" onClick={closePanel}>
           <section
             role="dialog"
             aria-modal="true"
@@ -161,36 +212,47 @@ export function AdminChat({ initial }: { initial: State }) {
               <span className={cn('text-xs', muted)}>· enkel jouw chat</span>
               <button
                 type="button"
-                onClick={() => setOpen(false)}
+                onClick={closePanel}
                 aria-label="Sluiten"
                 className="ikr-btn ml-auto flex size-9 items-center justify-center rounded-full bg-ikr-cream-light"
               >
                 <Icon.close size={16} />
               </button>
             </header>
-            <div ref={listRef} className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
-              {!state.messages.length && <p className={cn('m-0 text-sm', muted)}>Nog geen berichten. Vraag iets!</p>}
-              {state.messages.map((m) => (
-                <div key={m.id} className={cn('flex flex-col gap-0.5', m.role === 'user' ? 'items-end' : 'items-start')}>
-                  <div
-                    className={cn(
-                      'max-w-[85%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed whitespace-pre-line',
-                      m.role === 'user' ? 'bg-ikr-navy text-ikr-cream-light' : 'bg-ikr-cream-light text-ikr-navy',
-                    )}
-                  >
-                    {m.text}
+            <div className="relative flex min-h-0 flex-1 flex-col">
+              <div ref={listRef} onScroll={onScroll} className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
+                {!state.messages.length && <p className={cn('m-0 text-sm', muted)}>Nog geen berichten. Vraag iets!</p>}
+                {state.messages.map((m) => (
+                  <div key={m.id} className={cn('flex flex-col gap-0.5', m.role === 'user' ? 'items-end' : 'items-start')}>
+                    <div
+                      className={cn(
+                        'max-w-[85%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed whitespace-pre-line',
+                        m.role === 'user' ? 'bg-ikr-navy text-ikr-cream-light' : 'bg-ikr-cream-light text-ikr-navy',
+                      )}
+                    >
+                      {m.text}
+                    </div>
+                    <span className={cn('px-1 text-[11px]', muted)}>
+                      {time(m.created_at)}
+                      {m.role === 'user' && m.page ? ` · ${m.page.replace('/admin', '') || '/'}` : ''}
+                      {m.object_type ? ` · ${m.object_type}` : ''}
+                    </span>
                   </div>
-                  <span className={cn('px-1 text-[11px]', muted)}>
-                    {time(m.created_at)}
-                    {m.role === 'user' && m.page ? ` · ${m.page.replace('/admin', '') || '/'}` : ''}
-                    {m.object_type ? ` · ${m.object_type}` : ''}
-                  </span>
-                </div>
-              ))}
-              {state.thinking && (
-                <div className="flex items-center gap-2 self-start rounded-2xl bg-ikr-cream-light px-3.5 py-2 text-sm font-semibold">
-                  <Spinner /> Grok Bot denkt na…
-                </div>
+                ))}
+                {state.thinking && (
+                  <div className="flex items-center gap-2 self-start rounded-2xl bg-ikr-cream-light px-3.5 py-2 text-sm font-semibold">
+                    <Spinner /> Grok Bot denkt na…
+                  </div>
+                )}
+              </div>
+              {showJump && (
+                <button
+                  type="button"
+                  onClick={jumpToBottom}
+                  className="absolute bottom-2 left-1/2 z-10 -translate-x-1/2 rounded-full bg-ikr-navy px-3 py-1.5 text-xs font-semibold text-ikr-cream-light shadow-md"
+                >
+                  Nieuw bericht ↓
+                </button>
               )}
             </div>
             {error && (

@@ -19,9 +19,12 @@ export function FirefliesCheck({ weeklyId }: { weeklyId: string }) {
   }, [weeklyId])
 
   useEffect(() => {
-    void check()
-    const t = setInterval(check, 30_000)
-    return () => clearInterval(t)
+    const kick = setTimeout(() => void check(), 0)
+    const t = setInterval(() => void check(), 30_000)
+    return () => {
+      clearTimeout(kick)
+      clearInterval(t)
+    }
   }, [check])
 
   return (

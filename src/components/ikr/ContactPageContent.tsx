@@ -3,7 +3,7 @@
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   getMessageTopicsForType,
   isValidMessageTopicForType,
@@ -377,20 +377,20 @@ function ContactInfoCard() {
 
 export function ContactPageContent() {
   const searchParams = useSearchParams()
+  const preset = searchParams.get('type')
+  const contactPreset = preset === 'bedrijf' || preset === 'creator' || preset === 'solliciteren' ? preset : null
   const [form, setForm] = useState<FormData>(emptyForm)
+  const [appliedPreset, setAppliedPreset] = useState<string | null>(null)
+  if (contactPreset && contactPreset !== appliedPreset) {
+    setAppliedPreset(contactPreset)
+    setForm((prev) => ({ ...prev, contactType: contactPreset }))
+  }
   const [gdprConsent, setGdprConsent] = useState(false)
   const [website, setWebsite] = useState('')
   const [turnstileToken, setTurnstileToken] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const formStartedRef = useRef(false)
-
-  useEffect(() => {
-    const type = searchParams.get('type')
-    if (type === 'bedrijf' || type === 'creator' || type === 'solliciteren') {
-      setForm((prev) => ({ ...prev, contactType: type }))
-    }
-  }, [searchParams])
 
   const markFormStarted = () => {
     if (formStartedRef.current) return
