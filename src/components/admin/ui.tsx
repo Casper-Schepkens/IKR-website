@@ -263,6 +263,12 @@ export const Icon = {
       <path d="M12 5v14M5 12h14" />
     </Svg>
   ),
+  pencil: (p: IconProps) => (
+    <Svg {...p}>
+      <path d="M4 20h4L19 9l-4-4L4 16z" />
+      <path d="M13.5 6.5l4 4" />
+    </Svg>
+  ),
   close: (p: IconProps) => (
     <Svg {...p}>
       <path d="M6 6l12 12M18 6L6 18" />
