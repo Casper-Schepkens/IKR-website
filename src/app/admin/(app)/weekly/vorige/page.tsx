@@ -1,7 +1,8 @@
+import { weeklyTimeRange } from '@/lib/admin/weekly/board'
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/admin/session'
 import { TEAM } from '@/lib/admin/weekly/types'
-import { fmtDate, fmtTime } from '@/lib/admin/format'
+import { fmtDate } from '@/lib/admin/format'
 import { Card, Empty, muted, PageHeader, Pill } from '@/components/admin/ui'
 import { cn } from '@/utilities/ui'
 
@@ -33,7 +34,7 @@ export default async function PastWeekliesPage() {
           <Card key={w.id} className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-lg font-bold">
-                {fmtDate(w.starts_at, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · {fmtTime(w.starts_at)}
+                {fmtDate(w.starts_at, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · {weeklyTimeRange(w)}
               </span>
               <Pill tone={w.mode === 'online' ? 'teal' : 'purple'}>{w.mode === 'online' ? 'Online' : 'Live'}</Pill>
               {w.recording_url ? (

@@ -1,3 +1,4 @@
+import { weeklyEnd, weeklyTimeRange } from '@/lib/admin/weekly/board'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireAdmin } from '@/lib/admin/session'
@@ -32,7 +33,7 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
         / <span className="font-semibold text-ikr-navy">Meeting</span>
       </nav>
       <PageHeader
-        eyebrow={`${fmtDate(w.starts_at, { weekday: 'long', day: 'numeric', month: 'long' })} · ${fmtTime(w.starts_at)}`}
+        eyebrow={`${fmtDate(w.starts_at, { weekday: 'long', day: 'numeric', month: 'long' })} · ${weeklyTimeRange(w)}`}
         title="Weekly"
       >
         <Pill tone={w.mode === 'online' ? 'teal' : 'purple'}>{w.mode === 'online' ? 'Online' : 'Live'}</Pill>
@@ -91,7 +92,7 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
               <PlanWeeklyForm
                 action={concludeWeeklyAction.bind(null, w.id)}
                 submitLabel="Afsluiten en inplannen"
-                defaults={{ date: isoDay(nextDefault), time: fmtTime(w.starts_at), mode: w.mode }}
+                defaults={{ date: isoDay(nextDefault), time: fmtTime(w.starts_at), endTime: fmtTime(weeklyEnd(w)), mode: w.mode }}
               />
             </div>
           </Card>

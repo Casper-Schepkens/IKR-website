@@ -11,11 +11,18 @@ export const OWNERS = TEAM.map((t) => t.key) as Owner[]
 export const CONTACT_EMAIL = 'contact@iknowright.be'
 
 export type WeeklyMode = 'live' | 'online'
+
+/** Online weeklies duren altijd zo lang (niet aanpasbaar). */
+export const ONLINE_MINUTES = 60
+/** Langste live weekly die we toelaten (tegen tikfouten zoals 10:00–01:00). */
+export const MAX_LIVE_MINUTES = 8 * 60
 export type WeeklyStatus = 'planned' | 'started' | 'concluded'
 
 export type Weekly = {
   id: string
   starts_at: string
+  /** Einde. Online: altijd 1 uur na de start; live: zelf gekozen. Leeg (oude weeklies) = 1 uur. */
+  ends_at?: string | null
   mode: WeeklyMode
   meet_url: string | null
   calendar_event_id: string | null

@@ -1,4 +1,17 @@
-import type { Owner, Todo, Weekly } from './types'
+import { fmtTime } from '../format'
+import { ONLINE_MINUTES, type Owner, type Todo, type Weekly } from './types'
+
+/** Einde van een weekly (oude weeklies zonder einduur: 1 uur na de start). */
+export function weeklyEnd(w: Pick<Weekly, 'starts_at' | 'ends_at'>) {
+  return w.ends_at ?? new Date(new Date(w.starts_at).getTime() + ONLINE_MINUTES * 60_000).toISOString()
+}
+
+/** "10:00–11:30" */
+export const weeklyTimeRange = (w: Pick<Weekly, 'starts_at' | 'ends_at'>) => `${fmtTime(w.starts_at)}–${fmtTime(weeklyEnd(w))}`
+
+/** Duur in minuten. */
+export const weeklyMinutes = (w: Pick<Weekly, 'starts_at' | 'ends_at'>) =>
+  Math.round((new Date(weeklyEnd(w)).getTime() - new Date(w.starts_at).getTime()) / 60_000)
 
 /** De eerstvolgende weekly die nog niet afgesloten is. */
 export function currentWeekly(weeklies: Weekly[]) {

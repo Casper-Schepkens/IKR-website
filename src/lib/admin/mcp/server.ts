@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { daysSince, leadContext, loadWaiting } from '../sales/waiting'
 import { createServiceSupabase } from '../supabase/server'
 import { SALES_EMAIL } from '../env'
-import { fmtDate, fmtTime, isoDay } from '../format'
+import { fmtDate, isoDay } from '../format'
 import type { AdminSession } from '../session'
 import { supabaseLeads } from '../sales/repo'
 import { supabaseWeekly } from '../weekly/repo'
@@ -26,7 +26,7 @@ import { loadInbox } from '../sales/inbox'
 import { aiEngine, closeChatJob, completeJob, dismissJob, instructionsFor, openJobs, runJob } from '../ai/jobs'
 import { styleInstructions, styleKeyFor } from '../ai/style-profile'
 import { HANDLERS } from '../ai/handlers'
-import { boardTodos, currentWeekly } from '../weekly/board'
+import { boardTodos, currentWeekly, weeklyTimeRange } from '../weekly/board'
 import { scheduleWeekly } from '../weekly/schedule'
 import { OWNERS, TEAM } from '../weekly/types'
 
@@ -531,7 +531,7 @@ export function buildMcpServer(session: AdminSession) {
     const { byOwner, long } = boardTodos(todos, ws)
     return {
       volgende_weekly: next
-        ? { id: next.id, wanneer: `${fmtDate(next.starts_at, { weekday: 'long', day: 'numeric', month: 'long' })} ${fmtTime(next.starts_at)}`, modus: next.mode, status: next.status, meet: next.meet_url }
+        ? { id: next.id, wanneer: `${fmtDate(next.starts_at, { weekday: 'long', day: 'numeric', month: 'long' })} ${weeklyTimeRange(next)}`, modus: next.mode, status: next.status, meet: next.meet_url }
         : null,
       todos: Object.fromEntries(TEAM.map((p) => [p.name, byOwner('weekly', p.key).map(todoView)])),
       lange_todos: long.map(todoView),
@@ -577,16 +577,16 @@ export function buildMcpServer(session: AdminSession) {
     await weekly.deleteTodo(todo_id)
     return 'Verwijderd.'
   })
-  tool('weekly_inplannen', 'De volgende weekly inplannen (enkel als er nog geen gepland is). Online = met Google Meet.', { datum: dateStr, uur: z.string().regex(/^\d{2}:\d{2}$/), modus: z.enum(['live', 'online']) }, false, async ({ datum, uur, modus }) => {
+  tool('weekly_inplannen', 'De volgende weekly inplannen (enkel als er nog geen gepland is). Online = met Google Meet en altijd 1 uur; live = met einduur.', { datum: dateStr, uur: z.string().regex(/^\d{2}:\d{2}$/), einduur: z.string().regex(/^\d{2}:\d{2}$/).optional().describe('verplicht bij live, genegeerd bij online'), modus: z.enum(['live', 'online']) }, false, async ({ datum, uur, einduur, modus }) => {
     if (currentWeekly(await weekly.listWeeklies())) throw new Error('Er staat al een weekly ingepland.')
-    const w = await scheduleWeekly(weekly, BY, { date: datum, time: uur, mode: modus })
+    const w = await scheduleWeekly(weekly, BY, { date: datum, time: uur, endTime: einduur ?? null, mode: modus })
     await weekly.assignPending(w.id)
     return { id: w.id, ingepland: `${datum} ${uur}`, modus }
   })
-  tool('weekly_afsluiten', 'Een weekly afsluiten en meteen de volgende inplannen.', { weekly_id: z.string(), datum: dateStr, uur: z.string().regex(/^\d{2}:\d{2}$/), modus: z.enum(['live', 'online']) }, false, async ({ weekly_id, datum, uur, modus }) => {
+  tool('weekly_afsluiten', 'Een weekly afsluiten en meteen de volgende inplannen (live: met einduur; online: altijd 1 uur).', { weekly_id: z.string(), datum: dateStr, uur: z.string().regex(/^\d{2}:\d{2}$/), einduur: z.string().regex(/^\d{2}:\d{2}$/).optional().describe('verplicht bij live, genegeerd bij online'), modus: z.enum(['live', 'online']) }, false, async ({ weekly_id, datum, uur, einduur, modus }) => {
     const w = await weekly.getWeekly(weekly_id)
     if (!w || w.status === 'concluded') throw new Error('Deze weekly bestaat niet of is al afgesloten.')
-    const next = await scheduleWeekly(weekly, BY, { date: datum, time: uur, mode: modus })
+    const next = await scheduleWeekly(weekly, BY, { date: datum, time: uur, endTime: einduur ?? null, mode: modus })
     await weekly.assignPending(next.id)
     await weekly.updateWeekly(weekly_id, { status: 'concluded', concluded_at: new Date().toISOString() })
     return { afgesloten: weekly_id, volgende: `${datum} ${uur}`, modus }

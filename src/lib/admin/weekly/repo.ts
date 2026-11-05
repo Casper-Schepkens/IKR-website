@@ -2,7 +2,7 @@ import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Owner, Todo, TodoNote, Weekly, WeeklyMode } from './types'
 
-export type NewWeekly = { starts_at: string; mode: WeeklyMode; created_by: string }
+export type NewWeekly = { starts_at: string; ends_at: string; mode: WeeklyMode; created_by: string }
 export type WeeklyPatch = Partial<
   Pick<Weekly, 'meet_url' | 'calendar_event_id' | 'calendar_error' | 'status' | 'started_at' | 'concluded_at' | 'recording_url'>
 >

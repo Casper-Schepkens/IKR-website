@@ -1,25 +1,45 @@
 import 'server-only'
 import { brusselsToIso } from '../format'
 import { createEvent, isGoogleConfigured, listConnections } from '../google'
-import { CONTACT_EMAIL, TEAM, type Weekly, type WeeklyMode } from './types'
+import { CONTACT_EMAIL, MAX_LIVE_MINUTES, ONLINE_MINUTES, TEAM, type Weekly, type WeeklyMode } from './types'
+import { weeklyMinutes } from './board'
 import type { WeeklyRepo } from './repo'
 
 /** Legt een weekly vast en zet ze (met Meet bij online) in de contact-agenda, met uitnodigingen. */
-export async function scheduleWeekly(repo: WeeklyRepo, by: string, input: { date: string | null; time: string | null; mode: string | null }) {
+export async function scheduleWeekly(
+  repo: WeeklyRepo,
+  by: string,
+  input: { date: string | null; time: string | null; endTime?: string | null; mode: string | null },
+) {
   const { date, time } = input
   const mode = input.mode as WeeklyMode | null
   if (!date || !time || (mode !== 'live' && mode !== 'online')) throw new Error('Kies een datum, een uur en live of online.')
-  const startsAt = brusselsToIso(date, time)
-  const weekly = await repo.createWeekly({ starts_at: startsAt, mode, created_by: by })
+  const { startsAt, endsAt } = weeklyTimes(date, time, mode, input.endTime ?? null)
+  const weekly = await repo.createWeekly({ starts_at: startsAt, ends_at: endsAt, mode, created_by: by })
   await syncWeeklyCalendar(repo, weekly)
   return weekly
+}
+
+/**
+ * Start en einde. Online: altijd ONLINE_MINUTES (het einduur wordt genegeerd).
+ * Live: een einduur is verplicht en moet na het startuur liggen (zelfde dag).
+ */
+export function weeklyTimes(date: string, time: string, mode: WeeklyMode, endTime: string | null) {
+  const startsAt = brusselsToIso(date, time)
+  if (mode === 'online') return { startsAt, endsAt: new Date(new Date(startsAt).getTime() + ONLINE_MINUTES * 60_000).toISOString() }
+  if (!endTime || !/^\d{2}:\d{2}$/.test(endTime)) throw new Error('Kies voor een live weekly ook een einduur.')
+  const endsAt = brusselsToIso(date, endTime)
+  const minutes = (new Date(endsAt).getTime() - new Date(startsAt).getTime()) / 60_000
+  if (minutes <= 0) throw new Error('Het einduur moet na het startuur liggen.')
+  if (minutes > MAX_LIVE_MINUTES) throw new Error('Een weekly van meer dan 8 uur? Kijk het einduur even na.')
+  return { startsAt, endsAt }
 }
 
 /**
  * Zet een weekly in de contact-agenda (met Meet bij online) als dat nog niet gebeurd is.
  * Bewaart een foutmelding bij de weekly als het niet lukt; een latere poging kan het alsnog doen.
  */
-export async function syncWeeklyCalendar(repo: WeeklyRepo, weekly: Pick<Weekly, 'id' | 'starts_at' | 'mode' | 'calendar_event_id'>) {
+export async function syncWeeklyCalendar(repo: WeeklyRepo, weekly: Pick<Weekly, 'id' | 'starts_at' | 'ends_at' | 'mode' | 'calendar_event_id'>) {
   if (weekly.calendar_event_id) return
   const { starts_at: startsAt, mode } = weekly
   try {
@@ -33,7 +53,7 @@ export async function syncWeeklyCalendar(repo: WeeklyRepo, weekly: Pick<Weekly, 
       calendarOwner: CONTACT_EMAIL,
       summary: `IKR weekly (${mode === 'online' ? 'online' : 'live'})`,
       startsAt,
-      minutes: 60,
+      minutes: weeklyMinutes(weekly),
       attendees,
       meet: mode === 'online',
     })
