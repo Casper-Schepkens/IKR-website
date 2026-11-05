@@ -20,7 +20,7 @@ export async function liveStamp(session: AdminSession): Promise<string> {
     edge(db, 'ai_jobs', 'finished_at'),
     edge(db, 'leads', 'updated_at'),
     edge(db, 'mail_drafts', 'updated_at'),
-    digest(db, 'weekly_todos', ['id', 'title', 'owner', 'kind', 'weekly_id', 'pushed_count', 'done_at']),
+    digest(db, 'weekly_todos', ['id', 'title', 'owner', 'kind', 'weekly_id', 'pushed_count', 'pushed_at', 'done_at']),
     digest(db, 'weekly_todo_notes', ['id', 'todo_id', 'body']),
     digest(db, 'weeklies', ['id', 'status', 'starts_at', 'mode', 'meet_url', 'concluded_at', 'recording_url']),
   ])

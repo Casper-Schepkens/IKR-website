@@ -21,6 +21,8 @@ export interface WeeklyRepo {
   addNote(todoId: string, body: string, author: string): Promise<void>
   /** Schuift een to-do door naar de volgende weekly (die nog ingepland wordt). */
   push(id: string): Promise<void>
+  /** Doorschuiven ongedaan maken (zolang de to-do nog niet aan een nieuwe weekly hangt). */
+  unpush(id: string): Promise<void>
   /** Koppelt alle open gewone to-do's zonder weekly aan deze weekly. */
   assignPending(weeklyId: string): Promise<void>
 }
@@ -75,14 +77,32 @@ export function supabaseWeekly(db: SupabaseClient): WeeklyRepo {
       check(await db.from('weekly_todo_notes').insert({ todo_id: todoId, body, author }))
     },
     async push(id) {
-      const t = check(await db.from('weekly_todos').select('pushed_count').eq('id', id).single())
-      check(await db.from('weekly_todos').update({ weekly_id: null, pushed_count: (t?.pushed_count ?? 0) + 1 }).eq('id', id))
+      const t = check(await db.from('weekly_todos').select('pushed_count, pushed_at, weekly_id').eq('id', id).single())
+      if (!t || t.pushed_at) return // al doorgeschoven: een tweede klik telt niet dubbel
+      check(
+        await db
+          .from('weekly_todos')
+          .update({ weekly_id: null, pushed_count: (t.pushed_count ?? 0) + 1, pushed_at: new Date().toISOString(), pushed_from: t.weekly_id })
+          .eq('id', id)
+          .is('pushed_at', null),
+      )
+    },
+    async unpush(id) {
+      const t = check(await db.from('weekly_todos').select('pushed_count, pushed_at, pushed_from').eq('id', id).single())
+      if (!t?.pushed_at) throw new Error('Deze to-do kan niet meer teruggezet worden (de volgende weekly is al ingepland).')
+      check(
+        await db
+          .from('weekly_todos')
+          .update({ weekly_id: t.pushed_from, pushed_count: Math.max(0, (t.pushed_count ?? 1) - 1), pushed_at: null, pushed_from: null })
+          .eq('id', id)
+          .not('pushed_at', 'is', null),
+      )
     },
     async assignPending(weeklyId) {
       check(
         await db
           .from('weekly_todos')
-          .update({ weekly_id: weeklyId })
+          .update({ weekly_id: weeklyId, pushed_at: null, pushed_from: null })
           .eq('kind', 'weekly')
           .is('weekly_id', null)
           .is('done_at', null),
@@ -150,10 +170,18 @@ export function memoryWeekly(): WeeklyRepo {
     },
     async push(id) {
       const t = todo(id)
-      Object.assign(t, { weekly_id: null, pushed_count: t.pushed_count + 1 })
+      if (t.pushed_at) return
+      Object.assign(t, { weekly_id: null, pushed_count: t.pushed_count + 1, pushed_at: now(), pushed_from: t.weekly_id })
+    },
+    async unpush(id) {
+      const t = todo(id)
+      if (!t.pushed_at) throw new Error('Deze to-do kan niet meer teruggezet worden (de volgende weekly is al ingepland).')
+      Object.assign(t, { weekly_id: t.pushed_from ?? null, pushed_count: Math.max(0, t.pushed_count - 1), pushed_at: null, pushed_from: null })
     },
     async assignPending(weeklyId) {
-      s.todos.filter((t) => t.kind === 'weekly' && !t.weekly_id && !t.done_at).forEach((t) => (t.weekly_id = weeklyId))
+      s.todos
+        .filter((t) => t.kind === 'weekly' && !t.weekly_id && !t.done_at)
+        .forEach((t) => Object.assign(t, { weekly_id: weeklyId, pushed_at: null, pushed_from: null }))
     },
   }
 }
