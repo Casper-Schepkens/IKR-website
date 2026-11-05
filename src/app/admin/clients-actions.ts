@@ -18,7 +18,10 @@ const str = (form: FormData, key: string) => {
   const v = form.get(key)
   return typeof v === 'string' ? v : null
 }
-const input = (form: FormData) => cleanClientInput({ name: str(form, 'name'), freelancer: str(form, 'freelancer'), contract_end: str(form, 'contract_end') })
+const input = (form: FormData) => {
+  const indefinite = str(form, 'contract_kind') === 'onbepaald'
+  return cleanClientInput({ name: str(form, 'name'), freelancer: str(form, 'freelancer'), contract_end: indefinite ? null : str(form, 'contract_end'), indefinite })
+}
 
 export async function createClientAction(form: FormData) {
   return attempt(async () => {
