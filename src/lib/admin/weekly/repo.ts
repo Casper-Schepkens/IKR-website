@@ -1,6 +1,7 @@
 import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Owner, Todo, TodoNote, Weekly, WeeklyMode } from './types'
+import { sortPins, type NewPin, type Pin } from './pins'
 
 export type NewWeekly = { starts_at: string; ends_at: string; mode: WeeklyMode; created_by: string }
 export type WeeklyPatch = Partial<
@@ -30,6 +31,13 @@ export interface WeeklyRepo {
   unpush(id: string): Promise<void>
   /** Koppelt alle open gewone to-do's zonder weekly aan deze weekly. */
   assignPending(weeklyId: string): Promise<void>
+  // ── Prikbord ──
+  listPins(): Promise<Pin[]>
+  createPin(input: NewPin): Promise<Pin>
+  updatePin(id: string, patch: Partial<Pick<Pin, 'kind' | 'title' | 'body' | 'url' | 'for_owner' | 'pinned'>>): Promise<void>
+  deletePin(id: string): Promise<void>
+  /** Prikbord leegmaken: alles weg behalve vastgepinde kaartjes. Geeft het aantal verwijderde terug. */
+  clearPins(): Promise<number>
 }
 
 export function supabaseWeekly(db: SupabaseClient): WeeklyRepo {
@@ -131,15 +139,34 @@ export function supabaseWeekly(db: SupabaseClient): WeeklyRepo {
           .is('done_at', null),
       )
     },
+    async listPins() {
+      return sortPins((check(await db.from('weekly_pins').select('*')) ?? []) as Pin[])
+    },
+    async createPin(input) {
+      const pin = check(await db.from('weekly_pins').insert(input).select('*').single())
+      if (!pin) throw new Error('Kaartje maken mislukt.')
+      return pin as Pin
+    },
+    async updatePin(id, patch) {
+      check(await db.from('weekly_pins').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', id))
+    },
+    async deletePin(id) {
+      check(await db.from('weekly_pins').delete().eq('id', id))
+    },
+    async clearPins() {
+      const rows = check(await db.from('weekly_pins').delete().eq('pinned', false).select('id')) ?? []
+      return rows.length
+    },
   }
 }
 
 /** Alleen lokaal zonder Supabase: in het geheugen, om de schermen te testen. */
-const g = globalThis as unknown as { __ikrWeekly?: { weeklies: Weekly[]; todos: Todo[] } }
+const g = globalThis as unknown as { __ikrWeekly?: { weeklies: Weekly[]; todos: Todo[]; pins?: Pin[] } }
 export function memoryWeekly(): WeeklyRepo {
   if (!g.__ikrWeekly) g.__ikrWeekly = { weeklies: [], todos: [] }
   const s = g.__ikrWeekly
   const now = () => new Date().toISOString()
+  const pins = () => (s.pins ??= [])
   const todo = (id: string) => {
     const t = s.todos.find((x) => x.id === id)
     if (!t) throw new Error('To-do niet gevonden')
@@ -213,6 +240,28 @@ export function memoryWeekly(): WeeklyRepo {
       s.todos
         .filter((t) => t.kind === 'weekly' && !t.weekly_id && !t.done_at)
         .forEach((t) => Object.assign(t, { weekly_id: weeklyId, pushed_at: null, pushed_from: null }))
+    },
+    async listPins() {
+      return sortPins(pins())
+    },
+    async createPin(input) {
+      const t = now()
+      const pin: Pin = { ...input, id: crypto.randomUUID(), pinned: false, created_at: t, updated_at: t }
+      pins().push(pin)
+      return pin
+    },
+    async updatePin(id, patch) {
+      const p = pins().find((x) => x.id === id)
+      if (!p) throw new Error('Kaartje niet gevonden.')
+      Object.assign(p, patch, { updated_at: now() })
+    },
+    async deletePin(id) {
+      s.pins = pins().filter((x) => x.id !== id)
+    },
+    async clearPins() {
+      const before = pins().length
+      s.pins = pins().filter((x) => x.pinned)
+      return before - s.pins.length
     },
   }
 }
