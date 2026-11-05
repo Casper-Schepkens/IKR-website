@@ -83,9 +83,8 @@ export async function setTodoDoneAction(id: string, done: boolean) {
 export async function addTodoNoteAction(id: string, form: FormData) {
   return attempt(async () => {
     const session = await requireAdmin()
-    const body = str(form, 'note')
-    if (!body) throw new Error('Schrijf eerst een notitie.')
-    await session.weekly.addNote(id, body, session.user.email)
+    // Verder werken in je eigen notitie bij deze to-do (leeg = je notitie weghalen).
+    await session.weekly.saveOwnNote(id, str(form, 'note') ?? '', session.user.email)
   })
 }
 

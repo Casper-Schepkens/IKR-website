@@ -19,6 +19,11 @@ export interface WeeklyRepo {
   deleteTodo(id: string): Promise<void>
   setDone(id: string, by: string | null): Promise<void>
   addNote(todoId: string, body: string, author: string): Promise<void>
+  /**
+   * Notitie-knop: past de eigen (laatste) notitie van `author` bij deze to-do aan, of maakt er een
+   * als die nog niet bestaat. Een lege tekst haalt de eigen notitie weg.
+   */
+  saveOwnNote(todoId: string, body: string, author: string): Promise<void>
   /** Schuift een to-do door naar de volgende weekly (die nog ingepland wordt). */
   push(id: string): Promise<void>
   /** Doorschuiven ongedaan maken (zolang de to-do nog niet aan een nieuwe weekly hangt). */
@@ -75,6 +80,24 @@ export function supabaseWeekly(db: SupabaseClient): WeeklyRepo {
     },
     async addNote(todoId, body, author) {
       check(await db.from('weekly_todo_notes').insert({ todo_id: todoId, body, author }))
+    },
+    async saveOwnNote(todoId, body, author) {
+      const own = check(
+        await db
+          .from('weekly_todo_notes')
+          .select('id')
+          .eq('todo_id', todoId)
+          .eq('author', author)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      )
+      if (!own) {
+        if (body) check(await db.from('weekly_todo_notes').insert({ todo_id: todoId, body, author }))
+        return
+      }
+      if (body) check(await db.from('weekly_todo_notes').update({ body }).eq('id', own.id))
+      else check(await db.from('weekly_todo_notes').delete().eq('id', own.id))
     },
     async push(id) {
       const t = check(await db.from('weekly_todos').select('pushed_count, pushed_at, weekly_id').eq('id', id).single())
@@ -167,6 +190,14 @@ export function memoryWeekly(): WeeklyRepo {
     },
     async addNote(todoId, body, author) {
       todo(todoId).notes.push({ id: crypto.randomUUID(), todo_id: todoId, body, author, created_at: now() })
+    },
+    async saveOwnNote(todoId, body, author) {
+      const t = todo(todoId)
+      const own = [...t.notes].reverse().find((n) => n.author === author)
+      if (!own) {
+        if (body) t.notes.push({ id: crypto.randomUUID(), todo_id: todoId, body, author, created_at: now() })
+      } else if (body) own.body = body
+      else t.notes = t.notes.filter((n) => n.id !== own.id)
     },
     async push(id) {
       const t = todo(id)

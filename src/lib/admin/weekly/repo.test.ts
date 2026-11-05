@@ -40,3 +40,22 @@ describe('doorschuiven', () => {
     expect(await repo.listTodos()).toEqual([])
   })
 })
+
+describe('eigen notitie', () => {
+  it('Notitie-knop werkt verder in je eigen notitie; die van een ander blijft apart', async () => {
+    await repo.saveOwnNote(id, 'Eerste stuk', 'casper@iknowright.be')
+    await repo.addNote(id, 'Notitie van Cedric', 'cedric@iknowright.be')
+    await repo.saveOwnNote(id, 'Eerste stuk\nen verder', 'casper@iknowright.be')
+    expect((await get()).notes.map((n) => [n.author, n.body])).toEqual([
+      ['casper@iknowright.be', 'Eerste stuk\nen verder'],
+      ['cedric@iknowright.be', 'Notitie van Cedric'],
+    ])
+  })
+  it('leeg bewaren haalt je eigen notitie weg; zonder notitie gebeurt er niets', async () => {
+    await repo.saveOwnNote(id, '', 'casper@iknowright.be')
+    expect((await get()).notes).toEqual([])
+    await repo.saveOwnNote(id, 'Tekst', 'casper@iknowright.be')
+    await repo.saveOwnNote(id, '', 'casper@iknowright.be')
+    expect((await get()).notes).toEqual([])
+  })
+})
