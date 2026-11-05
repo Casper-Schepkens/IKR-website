@@ -65,6 +65,9 @@ dashboard is ontworpen zonder onze processen te kennen. Nu functioneel maken, zo
   - opnemen via een Record-knop, tenzij bellen via de laptop gratis en makkelijk blijkt;
   - één leads-tabel in Supabase waar dashboard en Grokbot in lezen en schrijven.
 
+**Klanten (nieuw, 5 nov 2026):** Casper werkt dit verder uit. Prototype = lijst met freelancer en
+einde contract. Zijn wensen + brainstorm: [`docs/product/klanten.md`](../product/klanten.md).
+
 **Voor later (Casper):**
 - Financiën automatiseren.
 - De weekly automatiseren.

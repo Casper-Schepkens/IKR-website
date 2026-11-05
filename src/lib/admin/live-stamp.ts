@@ -15,7 +15,7 @@ export async function liveStamp(session: AdminSession): Promise<string> {
   if (session.mode === 'demo') return demoStamp(session)
   if (!isSupabaseConfigured()) return 'leeg'
   const db = process.env.SUPABASE_SERVICE_ROLE_KEY ? createServiceSupabase() : await createServerSupabase()
-  const [actions, jobs, leads, drafts, todos, notes, weeklies] = await Promise.all([
+  const [actions, jobs, leads, drafts, todos, notes, weeklies, clients] = await Promise.all([
     edge(db, 'bot_actions', 'created_at'),
     edge(db, 'ai_jobs', 'finished_at'),
     edge(db, 'leads', 'updated_at'),
@@ -23,16 +23,18 @@ export async function liveStamp(session: AdminSession): Promise<string> {
     digest(db, 'weekly_todos', ['id', 'title', 'owner', 'kind', 'weekly_id', 'pushed_count', 'pushed_at', 'done_at']),
     digest(db, 'weekly_todo_notes', ['id', 'todo_id', 'body']),
     digest(db, 'weeklies', ['id', 'status', 'starts_at', 'mode', 'meet_url', 'concluded_at', 'recording_url']),
+    digest(db, 'clients', ['id', 'name', 'freelancer', 'contract_end']),
   ])
-  return stampFromParts({ actions, jobs, leads, drafts, todos, notes, weeklies })
+  return stampFromParts({ actions, jobs, leads, drafts, todos, notes, weeklies, clients })
 }
 
 async function demoStamp(session: AdminSession) {
-  const [leads, drafts, todos, weeklies] = await Promise.all([
+  const [leads, drafts, todos, weeklies, clients] = await Promise.all([
     session.leads.list(),
     session.drafts.list(),
     session.weekly.listTodos(),
     session.weekly.listWeeklies(),
+    session.clients.list(),
   ])
   return stampFromParts({
     leads: `${leads.length}:${leads.map((l) => l.updated_at).sort().at(-1) ?? ''}`,
@@ -45,6 +47,7 @@ async function demoStamp(session: AdminSession) {
     todos: fnv(todos.map((t) => [t.id, t.title, t.owner, t.kind, t.weekly_id ?? '', t.pushed_count, t.done_at ?? ''].join('|')).sort().join('\n')),
     notes: fnv(todos.flatMap((t) => t.notes.map((n) => `${n.id}:${n.body}`)).sort().join('\n')),
     weeklies: fnv(weeklies.map((w) => [w.id, w.status, w.starts_at, w.mode, w.meet_url ?? '', w.concluded_at ?? ''].join('|')).sort().join('\n')),
+    clients: fnv(clients.map((c) => [c.id, c.name, c.freelancer ?? '', c.contract_end ?? ''].join('|')).sort().join('\n')),
   })
 }
 

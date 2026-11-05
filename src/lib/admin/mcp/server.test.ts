@@ -17,6 +17,7 @@ vi.mock('../gmail', () => gmail)
 import { buildMcpServer } from './server'
 import { memoryLeads } from '../sales/repo'
 import { memoryWeekly } from '../weekly/repo'
+import { memoryClients } from '../clients/repo'
 import { memoryDrafts, type MailDraft } from '../sales/drafts'
 import { memoryChat, type ChatMessage } from '../chat/repo'
 import type { AdminSession } from '../session'
@@ -50,6 +51,7 @@ beforeEach(async () => {
     mode: 'demo',
     leads: memoryLeads(),
     weekly: memoryWeekly(),
+    clients: memoryClients(),
     drafts: memoryDrafts(store),
     chat: memoryChat(chatStore),
   }
@@ -229,5 +231,23 @@ describe('wachten op antwoord via MCP', () => {
     expect(gmail.sendMail).not.toHaveBeenCalled()
     expect(gmail.sendReply).not.toHaveBeenCalled()
     expect(logs).toEqual([]) // leestool: geen bot_actions-rij
+  })
+})
+
+describe('klanten via MCP', () => {
+  it('aanmaken, lijst, bijwerken op naam, verwijderen', async () => {
+    ;(globalThis as { __ikrClients?: unknown }).__ikrClients = undefined
+    session.clients = memoryClients()
+    const [a, b] = InMemoryTransport.createLinkedPair()
+    await buildMcpServer(session).connect(a)
+    client = new Client({ name: 'test', version: '1.0.0' })
+    await client.connect(b)
+    expect((await call('klant_aanmaken', { naam: 'Tempus', freelancer: 'Jonas', contract_tot: '2027-10-31' })).isError).toBe(false)
+    await call('klant_bijwerken', { klant: 'tempus', freelancer: 'Sara' })
+    const list = (await call('klanten_lijst', {})).json as unknown as { naam: string; freelancer: string; contract_tot: string }[]
+    expect(list).toMatchObject([{ naam: 'Tempus', freelancer: 'Sara', contract_tot: '2027-10-31' }])
+    expect((await call('klant_aanmaken', { naam: 'tempus' })).isError).toBe(true) // dubbel
+    await call('klant_verwijderen', { klant: 'Tempus' })
+    expect((await call('klanten_lijst', {})).json).toEqual([])
   })
 })

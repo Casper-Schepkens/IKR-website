@@ -29,6 +29,7 @@ export function Sidebar({
           { href: '/admin/sales', label: 'Leads', icon: Icon.users, exact: true },
         ]
       : []),
+    { href: '/admin/klanten', label: 'Klanten', icon: Icon.board },
     { href: '/admin/weekly', label: 'Weekly', icon: Icon.calendar },
     { href: '/admin/instellingen', label: 'Instellingen', icon: Icon.settings },
   ]
