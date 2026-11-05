@@ -35,7 +35,7 @@ export default async function ClientsPage() {
               <tr className={cn('text-xs', muted)}>
                 <th scope="col" className="px-6 py-4 font-semibold">Klant</th>
                 <th scope="col" className="px-3 py-4 font-semibold">Freelancer</th>
-                <th scope="col" className="px-3 py-4 font-semibold">Contract tot</th>
+                <th scope="col" className="px-3 py-4 font-semibold">Contract</th>
                 <th scope="col" className="px-3 py-4 font-semibold">Nog</th>
                 <th scope="col" className="px-6 py-4"><span className="sr-only">Acties</span></th>
               </tr>

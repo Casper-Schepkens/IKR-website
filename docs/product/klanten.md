@@ -17,6 +17,9 @@
 - Pagina: lijst, wie het eerst afloopt bovenaan; "Nog" in dagen of maanden: rood < 30 dagen of
   verlopen, oranje < 60, groen daarna. Toevoegen, aanpassen, verwijderen (met bevestiging).
 - Grok Bot (MCP): `klanten_lijst`, `klant_aanmaken`, `klant_bijwerken`, `klant_verwijderen`.
+- Contract van **onbepaalde duur** (5 nov 2026): eigen vlag `contract_indefinite` (geen einddatum, telt nooit
+  als verlopen). Voorbeeld Tempus: onbepaalde duur vanaf 1/11/2026 met 2 maanden opzeg (start en opzeg
+  worden nog niet bijgehouden; kandidaat-velden voor de klantfiche).
 
 ## Context uit eerder werk
 - In v1 (PR #29, gewist op 2 nov) stonden contracten in Supabase, bijgewerkt uit de Drive:

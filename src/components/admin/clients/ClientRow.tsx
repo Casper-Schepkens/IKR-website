@@ -48,10 +48,19 @@ export function ClientRow({ client: c, days }: { client: Client; days: number | 
     <tr className="border-t border-[#E6DFD2] hover:bg-ikr-cream/60">
       <td className="px-6 py-3 font-bold text-ikr-navy">{c.name}</td>
       <td className="px-3 py-3">{c.freelancer ?? <span className={muted}>—</span>}</td>
-      <td className="px-3 py-3 whitespace-nowrap">{c.contract_end ? fmtDate(c.contract_end, { day: 'numeric', month: 'short', year: 'numeric' }) : <span className={muted}>—</span>}</td>
-      <td className="px-3 py-3 whitespace-nowrap">
-        <DaysPill days={days} />
-      </td>
+      {c.contract_indefinite ? (
+        // Onbepaalde duur: geen datum en geen "Nog x dagen"; nooit (bijna) verlopen.
+        <td colSpan={2} className="px-3 py-3 whitespace-nowrap">
+          <Pill tone="teal">Onbepaalde duur</Pill>
+        </td>
+      ) : (
+        <>
+          <td className="px-3 py-3 whitespace-nowrap">{c.contract_end ? fmtDate(c.contract_end, { day: 'numeric', month: 'short', year: 'numeric' }) : <span className={muted}>—</span>}</td>
+          <td className="px-3 py-3 whitespace-nowrap">
+            <DaysPill days={days} />
+          </td>
+        </>
+      )}
       <td className="px-6 py-3 text-right whitespace-nowrap">
         {pending && <Spinner />}
         {confirmDelete ? (

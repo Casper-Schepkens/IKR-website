@@ -271,3 +271,45 @@ describe('prikbord via MCP', () => {
     expect(r.isError).toBe(true)
   })
 })
+
+describe('klanten: onbepaalde duur via MCP', () => {
+  it('Tempus op onbepaalde duur en terug naar een datum; andere klanten ongewijzigd; gelogd', async () => {
+    ;(globalThis as { __ikrClients?: unknown }).__ikrClients = undefined
+    session.clients = memoryClients()
+    const [a, b] = InMemoryTransport.createLinkedPair()
+    await buildMcpServer(session).connect(a)
+    client = new Client({ name: 'test', version: '1.0.0' })
+    await client.connect(b)
+    await call('klant_aanmaken', { naam: 'Tempus', freelancer: 'Celia' })
+    await call('klant_aanmaken', { naam: 'Chez Albert', freelancer: 'Senna', contract_tot: '2026-11-30' })
+    logs.length = 0
+
+    await call('klant_bijwerken', { klant: 'tempus', contract_tot: 'onbepaald' })
+    let list = (await call('klanten_lijst', {})).json as unknown as { naam: string; contract_tot: string | null; contract_onbepaald: boolean; dagen_over: number | null; freelancer: string }[]
+    expect(list.find((c) => c.naam === 'Tempus')).toMatchObject({ contract_tot: null, contract_onbepaald: true, dagen_over: null, freelancer: 'Celia' })
+    expect(list.find((c) => c.naam === 'Chez Albert')).toMatchObject({ contract_tot: '2026-11-30', contract_onbepaald: false })
+    expect(typeof list.find((c) => c.naam === 'Chez Albert')!.dagen_over).toBe('number')
+
+    // Ander veld aanpassen laat onbepaalde duur staan.
+    await call('klant_bijwerken', { klant: 'Tempus', freelancer: 'Milan' })
+    list = (await call('klanten_lijst', {})).json as unknown as typeof list
+    expect(list.find((c) => c.naam === 'Tempus')).toMatchObject({ contract_onbepaald: true, freelancer: 'Milan' })
+
+    // Aparte parameter en terug naar een datum.
+    await call('klant_bijwerken', { klant: 'Tempus', contract_tot: '2027-10-31' })
+    list = (await call('klanten_lijst', {})).json as unknown as typeof list
+    expect(list.find((c) => c.naam === 'Tempus')).toMatchObject({ contract_tot: '2027-10-31', contract_onbepaald: false })
+    await call('klant_bijwerken', { klant: 'Tempus', onbepaald: true })
+    list = (await call('klanten_lijst', {})).json as unknown as typeof list
+    expect(list.find((c) => c.naam === 'Tempus')).toMatchObject({ contract_tot: null, contract_onbepaald: true })
+
+    expect((await call('klant_bijwerken', { klant: 'Tempus', contract_tot: '2027-01-01', onbepaald: true })).isError).toBe(true)
+    expect(logs.map((l) => [l.tool, l.ok])).toEqual([
+      ['klant_bijwerken', true],
+      ['klant_bijwerken', true],
+      ['klant_bijwerken', true],
+      ['klant_bijwerken', true],
+      ['klant_bijwerken', false],
+    ])
+  })
+})

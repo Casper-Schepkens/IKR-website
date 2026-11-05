@@ -24,7 +24,7 @@ export async function liveStamp(session: AdminSession): Promise<string> {
     digest(db, 'weekly_todo_notes', ['id', 'todo_id', 'body']),
     digest(db, 'weeklies', ['id', 'status', 'starts_at', 'mode', 'meet_url', 'concluded_at', 'recording_url']),
     digest(db, 'weekly_pins', ['id', 'kind', 'title', 'body', 'url', 'for_owner', 'pinned']),
-    digest(db, 'clients', ['id', 'name', 'freelancer', 'contract_end']),
+    digest(db, 'clients', ['id', 'name', 'freelancer', 'contract_end', 'contract_indefinite']),
   ])
   return stampFromParts({ actions, jobs, leads, drafts, todos, notes, weeklies, pins, clients })
 }
@@ -50,7 +50,7 @@ async function demoStamp(session: AdminSession) {
     notes: fnv(todos.flatMap((t) => t.notes.map((n) => `${n.id}:${n.body}`)).sort().join('\n')),
     weeklies: fnv(weeklies.map((w) => [w.id, w.status, w.starts_at, w.mode, w.meet_url ?? '', w.concluded_at ?? ''].join('|')).sort().join('\n')),
     pins: fnv(pins.map((p) => [p.id, p.title, p.body ?? '', p.url ?? '', p.for_owner ?? '', p.pinned].join('|')).sort().join('\n')),
-    clients: fnv(clients.map((c) => [c.id, c.name, c.freelancer ?? '', c.contract_end ?? ''].join('|')).sort().join('\n')),
+    clients: fnv(clients.map((c) => [c.id, c.name, c.freelancer ?? '', c.contract_end ?? '', c.contract_indefinite].join('|')).sort().join('\n')),
   })
 }
 

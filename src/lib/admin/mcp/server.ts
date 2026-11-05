@@ -588,7 +588,7 @@ export function buildMcpServer(session: AdminSession) {
     return 'Doorgeschoven.'
   })
   // ─── Klanten (productie, zichtbaar voor het hele team) ───────────────
-  const clientView = (c: Client) => ({ klant_id: c.id, naam: c.name, freelancer: c.freelancer, contract_tot: c.contract_end, dagen_over: daysLeft(c, isoDay(new Date())) })
+  const clientView = (c: Client) => ({ klant_id: c.id, naam: c.name, freelancer: c.freelancer, contract_tot: c.contract_end, contract_onbepaald: Boolean(c.contract_indefinite), dagen_over: daysLeft(c, isoDay(new Date())) })
   const resolveClient = async (ref: string) => {
     const all = await clients.list()
     const q = ref.trim().toLowerCase()
@@ -597,22 +597,37 @@ export function buildMcpServer(session: AdminSession) {
     if (partial.length === 1) return partial[0]
     throw new Error(partial.length ? `Meerdere klanten passen bij "${ref}": ${partial.map((c) => c.name).join(', ')}.` : `Geen klant gevonden voor "${ref}".`)
   }
-  tool('klanten_lijst', 'Alle klanten met freelancer en einde contract (wie het eerst afloopt bovenaan).', {}, true, async () => (await clients.list()).map(clientView))
+  const contractTot = z
+    .string()
+    .optional()
+    .describe('Einde contract: YYYY-MM-DD, leeg (niet gekend) of "onbepaald" (contract van onbepaalde duur, zonder einddatum)')
+  const onbepaald = z.boolean().optional().describe('true = contract van onbepaalde duur (wist de einddatum); false = niet onbepaald')
+  tool(
+    'klanten_lijst',
+    'Alle klanten met freelancer en contract: contract_tot (datum of null), contract_onbepaald (true = onbepaalde duur, dan dagen_over null en nooit verlopen) en dagen_over. Eerst aflopend bovenaan, dan onbepaalde duur, dan zonder einddatum.',
+    {},
+    true,
+    async () => (await clients.list()).map(clientView),
+  )
   tool(
     'klant_aanmaken',
-    'Nieuwe klant toevoegen.',
-    { naam: z.string(), freelancer: z.string().optional(), contract_tot: z.string().optional().describe('YYYY-MM-DD') },
+    'Nieuwe klant toevoegen. Contract: een einddatum (contract_tot), onbepaalde duur (contract_tot "onbepaald" of onbepaald: true), of leeg als het niet gekend is.',
+    { naam: z.string(), freelancer: z.string().optional(), contract_tot: contractTot, onbepaald },
     false,
-    async ({ naam, freelancer, contract_tot }) => clientView(await clients.create(cleanClientInput({ name: naam, freelancer, contract_end: contract_tot }), BY)),
+    async ({ naam, freelancer, contract_tot, onbepaald: ind }) =>
+      clientView(await clients.create(cleanClientInput({ name: naam, freelancer, contract_end: contract_tot, indefinite: ind }), BY)),
   )
   tool(
     'klant_bijwerken',
-    'Freelancer, einde contract of naam van een klant aanpassen. Een lege tekst maakt het veld leeg.',
-    { klant: z.string().describe('naam of id'), naam: z.string().optional(), freelancer: z.string().optional(), contract_tot: z.string().optional().describe('YYYY-MM-DD of leeg') },
+    'Freelancer, contract of naam van een klant aanpassen. Contract: contract_tot = YYYY-MM-DD (einddatum), "onbepaald" (onbepaalde duur) of leeg (niet gekend); of onbepaald: true/false. Een lege tekst maakt het veld leeg; niet meegegeven velden blijven.',
+    { klant: z.string().describe('naam of id'), naam: z.string().optional(), freelancer: z.string().optional(), contract_tot: contractTot, onbepaald },
     false,
-    async ({ klant, naam, freelancer, contract_tot }) => {
+    async ({ klant, naam, freelancer, contract_tot, onbepaald: ind }) => {
       const c = await resolveClient(klant)
-      const next = cleanClientInput({ name: naam ?? c.name, freelancer: freelancer ?? c.freelancer, contract_end: contract_tot ?? c.contract_end })
+      // Contract enkel aanpassen als het meegegeven is; een datum zet onbepaalde duur uit, onbepaald wist de datum.
+      const end = contract_tot !== undefined ? contract_tot : ind ? null : c.contract_end
+      const indefinite = ind !== undefined ? ind : contract_tot !== undefined ? false : c.contract_indefinite
+      const next = cleanClientInput({ name: naam ?? c.name, freelancer: freelancer ?? c.freelancer, contract_end: end, indefinite })
       await clients.update(c.id, next)
       return `${next.name} bijgewerkt.`
     },
