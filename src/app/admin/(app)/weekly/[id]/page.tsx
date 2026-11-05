@@ -5,6 +5,7 @@ import { ownerOf } from '@/lib/admin/weekly/types'
 import { fmtDate, fmtTime, isoDay } from '@/lib/admin/format'
 import { buttonClass, Card, muted, PageHeader, Pill, Title } from '@/components/admin/ui'
 import { TodoBoard } from '@/components/admin/weekly/TodoBoard'
+import { RetryCalendarButton } from '@/components/admin/weekly/RetryCalendarButton'
 import { NewTodoForm } from '@/components/admin/weekly/NewTodoForm'
 import { PlanWeeklyForm } from '@/components/admin/weekly/PlanWeeklyForm'
 import { concludeWeeklyAction, finishWeeklyRecordingAction, startWeeklyRecordingAction } from '../../../weekly-actions'
@@ -65,7 +66,10 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
                 Open Google Meet
               </a>
             ) : (
-              <span className="text-sm text-[#A3470F]">Geen Meet-link ({w.calendar_error ?? 'agenda niet gekoppeld'}).</span>
+              <>
+                <span className="text-sm text-[#A3470F]">Geen Meet-link ({w.calendar_error ?? 'agenda niet gekoppeld'}).</span>
+                <RetryCalendarButton weeklyId={w.id} online />
+              </>
             )}
             {w.meet_url && <FirefliesCheck weeklyId={w.id} />}
           </Card>

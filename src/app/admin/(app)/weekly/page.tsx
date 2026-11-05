@@ -6,6 +6,7 @@ import { fmtDate, fmtTime } from '@/lib/admin/format'
 import { buttonClass, Card, muted, PageHeader, Pill, Title } from '@/components/admin/ui'
 import { TodoBoard } from '@/components/admin/weekly/TodoBoard'
 import { NewTodoForm } from '@/components/admin/weekly/NewTodoForm'
+import { RetryCalendarButton } from '@/components/admin/weekly/RetryCalendarButton'
 import { PlanWeeklyForm } from '@/components/admin/weekly/PlanWeeklyForm'
 import { planWeeklyAction, startWeeklyAction } from '../../weekly-actions'
 import { cn } from '@/utilities/ui'
@@ -42,7 +43,12 @@ export default async function WeeklyPage() {
                 </a>
               )}
             </div>
-            {next.calendar_error && <span className="text-sm text-[#A3470F]">Agenda: {next.calendar_error}</span>}
+            {next.calendar_error && !next.calendar_event_id && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm text-[#A3470F]">Agenda: {next.calendar_error}</span>
+                <RetryCalendarButton weeklyId={next.id} online={next.mode === 'online'} />
+              </div>
+            )}
           </div>
           {next.status === 'started' ? (
             <Link href={`/admin/weekly/${next.id}`} className={buttonClass('navy')}>
