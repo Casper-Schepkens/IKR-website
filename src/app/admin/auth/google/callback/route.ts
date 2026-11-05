@@ -2,9 +2,11 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { requireAdmin } from '@/lib/admin/session'
 import { exchangeCode, saveConnection } from '@/lib/admin/google'
 import { CONTACT_EMAIL } from '@/lib/admin/weekly/types'
+import { retryOpenCalendars } from '@/lib/admin/weekly/schedule'
 
 export async function GET(req: NextRequest) {
-  const { user } = await requireAdmin()
+  const session = await requireAdmin()
+  const { user } = session
   const back = new URL('/admin/instellingen', req.nextUrl.origin)
   const fail = (msg: string) => {
     back.searchParams.set('fout', msg)
@@ -23,6 +25,8 @@ export async function GET(req: NextRequest) {
     const expected = target === 'contact' ? CONTACT_EMAIL : user.email.toLowerCase()
     if (email !== expected) return fail(`Je koppelde ${email}, maar het moet ${expected} zijn.`)
     await saveConnection(email, refreshToken, scopes, user.email)
+    // Contact-agenda net gekoppeld: weeklies die eerder zonder agenda-item/Meet bleven, alsnog aanmaken.
+    if (email === CONTACT_EMAIL) await retryOpenCalendars(session.weekly).catch((e) => console.error('[weekly] agenda opnieuw', e))
   } catch (e) {
     return fail(e instanceof Error ? e.message : 'Koppelen mislukt.')
   }

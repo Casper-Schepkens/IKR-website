@@ -1,7 +1,7 @@
 import 'server-only'
 import { brusselsToIso } from '../format'
 import { createEvent, isGoogleConfigured, listConnections } from '../google'
-import { CONTACT_EMAIL, TEAM, type WeeklyMode } from './types'
+import { CONTACT_EMAIL, TEAM, type Weekly, type WeeklyMode } from './types'
 import type { WeeklyRepo } from './repo'
 
 /** Legt een weekly vast en zet ze (met Meet bij online) in de contact-agenda, met uitnodigingen. */
@@ -11,7 +11,17 @@ export async function scheduleWeekly(repo: WeeklyRepo, by: string, input: { date
   if (!date || !time || (mode !== 'live' && mode !== 'online')) throw new Error('Kies een datum, een uur en live of online.')
   const startsAt = brusselsToIso(date, time)
   const weekly = await repo.createWeekly({ starts_at: startsAt, mode, created_by: by })
+  await syncWeeklyCalendar(repo, weekly)
+  return weekly
+}
 
+/**
+ * Zet een weekly in de contact-agenda (met Meet bij online) als dat nog niet gebeurd is.
+ * Bewaart een foutmelding bij de weekly als het niet lukt; een latere poging kan het alsnog doen.
+ */
+export async function syncWeeklyCalendar(repo: WeeklyRepo, weekly: Pick<Weekly, 'id' | 'starts_at' | 'mode' | 'calendar_event_id'>) {
+  if (weekly.calendar_event_id) return
+  const { starts_at: startsAt, mode } = weekly
   try {
     if (!isGoogleConfigured()) throw new Error('Google is nog niet ingesteld, dus er is geen agenda-item gemaakt.')
     const connected = new Set((await listConnections()).map((c) => c.email))
@@ -31,5 +41,11 @@ export async function scheduleWeekly(repo: WeeklyRepo, by: string, input: { date
   } catch (e) {
     await repo.updateWeekly(weekly.id, { calendar_error: e instanceof Error ? e.message : 'Agenda mislukt.' })
   }
-  return weekly
+}
+
+/** Alle niet-afgesloten weeklies zonder agenda-item opnieuw proberen (bv. net na het koppelen van contact@). */
+export async function retryOpenCalendars(repo: WeeklyRepo) {
+  const open = (await repo.listWeeklies()).filter((w) => w.status !== 'concluded' && !w.calendar_event_id)
+  for (const w of open) await syncWeeklyCalendar(repo, w)
+  return open.length
 }

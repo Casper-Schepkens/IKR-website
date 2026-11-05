@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/admin/session'
 import { isoDay } from '@/lib/admin/format'
 import { shareWithDomain, startDriveUpload } from '@/lib/admin/google'
-import { scheduleWeekly } from '@/lib/admin/weekly/schedule'
+import { scheduleWeekly, syncWeeklyCalendar } from '@/lib/admin/weekly/schedule'
 import { CONTACT_EMAIL, OWNERS, type Owner } from '@/lib/admin/weekly/types'
 import { currentWeekly } from '@/lib/admin/weekly/board'
 import type { ActionResult } from './actions'
@@ -42,6 +42,19 @@ export async function startWeeklyAction(id: string) {
   const w = await session.weekly.getWeekly(id)
   if (w && w.status === 'planned') await session.weekly.updateWeekly(id, { status: 'started', started_at: new Date().toISOString() })
   redirect(`/admin/weekly/${id}`)
+}
+
+/** Agenda-item (en Meet bij online) alsnog aanmaken, bv. als de contact-agenda pas later gekoppeld werd. */
+export async function retryWeeklyCalendarAction(id: string) {
+  return attempt(async () => {
+    const session = await requireAdmin()
+    const w = await session.weekly.getWeekly(id)
+    if (!w) throw new Error('Weekly niet gevonden.')
+    if (w.status === 'concluded') throw new Error('Deze weekly is al afgesloten.')
+    await syncWeeklyCalendar(session.weekly, w)
+    const after = await session.weekly.getWeekly(id)
+    if (after?.calendar_error && !after.calendar_event_id) throw new Error(after.calendar_error)
+  })
 }
 
 /** Sluit de weekly af en plant meteen de volgende in. */
