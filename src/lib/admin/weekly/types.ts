@@ -38,6 +38,10 @@ export type Todo = {
   /** Gewone to-do: de weekly waartegen ze af moet; null = de volgende die nog ingepland wordt. */
   weekly_id: string | null
   pushed_count: number
+  /** Gezet bij doorschuiven, leeg zodra de to-do aan de volgende weekly hangt: zolang gezet kan je annuleren. */
+  pushed_at?: string | null
+  /** De weekly waar de to-do vóór het doorschuiven bij hoorde (om te annuleren). */
+  pushed_from?: string | null
   done_at: string | null
   done_by: string | null
   created_by: string | null

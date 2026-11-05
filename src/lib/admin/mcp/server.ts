@@ -569,6 +569,10 @@ export function buildMcpServer(session: AdminSession) {
     await weekly.push(todo_id)
     return 'Doorgeschoven.'
   })
+  tool('todo_doorschuiven_annuleren', 'Doorschuiven ongedaan maken (bv. per ongeluk doorgeschoven), zolang de volgende weekly nog niet ingepland is.', { todo_id: z.string() }, false, async ({ todo_id }) => {
+    await weekly.unpush(todo_id)
+    return 'Doorschuiven geannuleerd.'
+  })
   tool('todo_verwijderen', 'To-do definitief verwijderen.', { todo_id: z.string() }, false, async ({ todo_id }) => {
     await weekly.deleteTodo(todo_id)
     return 'Verwijderd.'

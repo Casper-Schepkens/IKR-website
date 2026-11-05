@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { addTodoNoteAction, pushTodoAction, setTodoDoneAction } from '@/app/admin/weekly-actions'
+import { addTodoNoteAction, deleteTodoAction, pushTodoAction, setTodoDoneAction, unpushTodoAction } from '@/app/admin/weekly-actions'
 import { TEAM, type Todo } from '@/lib/admin/weekly/types'
 import { input, muted, Pill, Spinner } from '../ui'
 import { cn } from '@/utilities/ui'
@@ -14,6 +14,7 @@ const small =
 export function TodoCard({ todo, overdue, showOwner }: { todo: Todo; overdue: boolean; showOwner?: boolean }) {
   const [pending, start] = useTransition()
   const [noteOpen, setNoteOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const done = Boolean(todo.done_at)
@@ -81,15 +82,48 @@ export function TodoCard({ todo, overdue, showOwner }: { todo: Todo; overdue: bo
             <button type="button" disabled={pending} onClick={() => setNoteOpen((v) => !v)} className={cn(small, 'bg-ikr-cream text-ikr-navy')}>
               Notitie
             </button>
-            {todo.kind === 'weekly' && (
-              <button
-                type="button"
-                disabled={pending}
-                data-pending={pending}
-                onClick={() => run(() => pushTodoAction(todo.id))}
-                className={cn(small, 'bg-ikr-cream text-ikr-navy')}
-              >
-                Schuif door
+            {todo.kind === 'weekly' &&
+              (todo.pushed_at ? (
+                // Net doorgeschoven: een tweede klik annuleert in plaats van ×2 te tellen.
+                <button
+                  type="button"
+                  disabled={pending}
+                  data-pending={pending}
+                  onClick={() => run(() => unpushTodoAction(todo.id))}
+                  className={cn(small, 'bg-[#FFF0C2] text-[#6B5300]')}
+                >
+                  Doorschuiven annuleren
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={pending}
+                  data-pending={pending}
+                  onClick={() => run(() => pushTodoAction(todo.id))}
+                  className={cn(small, 'bg-ikr-cream text-ikr-navy')}
+                >
+                  Schuif door
+                </button>
+              ))}
+            {/* Niet af en geraakt ook niet af: weghalen, met bevestiging tegen een misklik. */}
+            {confirmDelete ? (
+              <>
+                <button
+                  type="button"
+                  disabled={pending}
+                  data-pending={pending}
+                  onClick={() => run(() => deleteTodoAction(todo.id), () => setConfirmDelete(false))}
+                  className={cn(small, 'bg-[#B42318] text-white')}
+                >
+                  Ja, verwijder
+                </button>
+                <button type="button" disabled={pending} onClick={() => setConfirmDelete(false)} className={cn(small, 'bg-ikr-cream text-ikr-navy')}>
+                  Annuleer
+                </button>
+              </>
+            ) : (
+              <button type="button" disabled={pending} onClick={() => setConfirmDelete(true)} className={cn(small, 'bg-[#F8D3D0] text-[#8E1B12]')}>
+                Verwijder
               </button>
             )}
           </>

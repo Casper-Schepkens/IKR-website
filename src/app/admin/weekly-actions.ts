@@ -96,6 +96,21 @@ export async function pushTodoAction(id: string) {
   })
 }
 
+export async function unpushTodoAction(id: string) {
+  return attempt(async () => {
+    const session = await requireAdmin()
+    await session.weekly.unpush(id)
+  })
+}
+
+/** Niet af en geraakt ook niet af: de to-do definitief weghalen. */
+export async function deleteTodoAction(id: string) {
+  return attempt(async () => {
+    const session = await requireAdmin()
+    await session.weekly.deleteTodo(id)
+  })
+}
+
 /** Start de upload van een opname van een live weekly naar de Drive van contact@. */
 export async function startWeeklyRecordingAction(id: string, mimeType: string, origin: string) {
   try {
