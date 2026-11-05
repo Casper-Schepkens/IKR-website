@@ -95,6 +95,17 @@ export async function pushTodoAction(id: string) {
   })
 }
 
+/** Titel van een to-do aanpassen (potlood naast de titel). */
+export async function renameTodoAction(id: string, title: string) {
+  return attempt(async () => {
+    const session = await requireAdmin()
+    const t = title.trim().replace(/\s+/g, ' ')
+    if (!t) throw new Error('De titel mag niet leeg zijn.')
+    if (t.length > 300) throw new Error('De titel is te lang.')
+    await session.weekly.updateTodo(id, { title: t })
+  })
+}
+
 export async function unpushTodoAction(id: string) {
   return attempt(async () => {
     const session = await requireAdmin()

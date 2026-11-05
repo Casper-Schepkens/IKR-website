@@ -2,9 +2,9 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { addTodoNoteAction, deleteTodoAction, pushTodoAction, setTodoDoneAction, unpushTodoAction } from '@/app/admin/weekly-actions'
+import { addTodoNoteAction, deleteTodoAction, pushTodoAction, renameTodoAction, setTodoDoneAction, unpushTodoAction } from '@/app/admin/weekly-actions'
 import { TEAM, type Todo } from '@/lib/admin/weekly/types'
-import { input, muted, Pill, Spinner } from '../ui'
+import { Icon, input, muted, Pill, Spinner } from '../ui'
 import { cn } from '@/utilities/ui'
 
 const nameOf = (email: string | null) => TEAM.find((t) => t.email === email)?.name ?? email?.split('@')[0] ?? ''
@@ -15,6 +15,12 @@ export function TodoCard({ todo, overdue, showOwner, me }: { todo: Todo; overdue
   const [pending, start] = useTransition()
   const [noteOpen, setNoteOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [editTitle, setEditTitle] = useState(false)
+  const saveTitle = (value: string) => {
+    const t = value.trim()
+    if (!t || t === todo.title) return setEditTitle(false)
+    run(() => renameTodoAction(todo.id, t), () => setEditTitle(false))
+  }
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const done = Boolean(todo.done_at)
@@ -34,8 +40,39 @@ export function TodoCard({ todo, overdue, showOwner, me }: { todo: Todo; overdue
 
   return (
     <div className={cn('flex flex-col gap-2 rounded-2xl bg-ikr-cream-light p-3.5', done && 'opacity-60')}>
-      <div className="flex items-start gap-2">
-        <span className={cn('flex-1 text-[15px] font-semibold', done && 'line-through')}>{todo.title}</span>
+      <div className="group flex items-start gap-1.5">
+        {editTitle ? (
+          <input
+            autoFocus
+            defaultValue={todo.title}
+            aria-label="Titel van de to-do"
+            disabled={pending}
+            onFocus={(e) => e.currentTarget.select()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                saveTitle(e.currentTarget.value)
+              } else if (e.key === 'Escape') setEditTitle(false)
+            }}
+            onBlur={(e) => saveTitle(e.currentTarget.value)}
+            className={cn(input, 'min-h-9 flex-1 py-1 text-[15px] font-semibold')}
+          />
+        ) : (
+          <>
+            <span className={cn('min-w-0 text-[15px] font-semibold', done && 'line-through')}>{todo.title}</span>
+            {/* Potlood: verschijnt bij hover (op touch altijd zichtbaar, lichter). */}
+            <button
+              type="button"
+              onClick={() => setEditTitle(true)}
+              aria-label={`Titel aanpassen: ${todo.title}`}
+              title="Titel aanpassen"
+              className="mt-0.5 shrink-0 rounded-full p-1 text-[#5E5670] opacity-0 transition-opacity group-hover:opacity-100 hover:bg-ikr-cream hover:text-ikr-navy focus-visible:opacity-100 [@media(hover:none)]:opacity-60"
+            >
+              <Icon.pencil size={14} />
+            </button>
+            <span className="flex-1" />
+          </>
+        )}
         {pending && <Spinner />}
       </div>
       {(showOwner || todo.pushed_count > 0 || overdue) && (
