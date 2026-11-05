@@ -40,3 +40,24 @@ describe('agenda en Meet alsnog aanmaken', () => {
     expect(await retryOpenCalendars(repo)).toBe(0)
   })
 })
+
+describe('start- en einduur', () => {
+  it('online duurt altijd 1 uur (einduur wordt genegeerd); live gebruikt het einduur', async () => {
+    const { weeklyTimes } = await import('./schedule')
+    expect(weeklyTimes('2026-11-12', '10:00', 'online', '15:00')).toEqual({ startsAt: '2026-11-12T09:00:00.000Z', endsAt: '2026-11-12T10:00:00.000Z' })
+    expect(weeklyTimes('2026-11-12', '10:00', 'live', '11:30')).toEqual({ startsAt: '2026-11-12T09:00:00.000Z', endsAt: '2026-11-12T10:30:00.000Z' })
+  })
+  it('live: einduur verplicht, na het startuur, niet absurd lang', async () => {
+    const { weeklyTimes } = await import('./schedule')
+    expect(() => weeklyTimes('2026-11-12', '10:00', 'live', null)).toThrow(/einduur/)
+    expect(() => weeklyTimes('2026-11-12', '10:00', 'live', '09:30')).toThrow(/na het startuur/)
+    expect(() => weeklyTimes('2026-11-12', '08:00', 'live', '18:30')).toThrow(/8 uur/)
+  })
+  it('de agenda krijgt de echte duur mee', async () => {
+    const repo = memoryWeekly()
+    google.listConnections.mockResolvedValue([{ email: 'contact@iknowright.be' }])
+    const w = await scheduleWeekly(repo, 'c', { date: '2026-11-12', time: '10:00', endTime: '12:15', mode: 'live' })
+    expect(google.createEvent).toHaveBeenCalledWith(expect.objectContaining({ minutes: 135, meet: false }))
+    expect((await repo.getWeekly(w.id))?.ends_at).toBe('2026-11-12T11:15:00.000Z')
+  })
+})

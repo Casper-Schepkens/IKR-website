@@ -7,7 +7,7 @@ let id: string
 beforeEach(async () => {
   g.__ikrWeekly = undefined
   repo = memoryWeekly()
-  const w = await repo.createWeekly({ starts_at: '2026-11-05T08:30:00Z', mode: 'live', created_by: 'casper@iknowright.be' })
+  const w = await repo.createWeekly({ starts_at: '2026-11-05T08:30:00Z', mode: 'live', ends_at: '2026-11-05T09:30:00Z', created_by: 'casper@iknowright.be' })
   await repo.createTodo({ owner: 'casper', title: 'Offerte', kind: 'weekly', weekly_id: w.id, created_by: 'casper@iknowright.be' }, null)
   id = (await repo.listTodos())[0].id
 })
@@ -28,7 +28,7 @@ describe('doorschuiven', () => {
   })
   it('na het inplannen van de volgende weekly: niet meer annuleren, wel opnieuw doorschuiven (×2)', async () => {
     await repo.push(id)
-    const next = await repo.createWeekly({ starts_at: '2026-11-12T08:30:00Z', mode: 'live', created_by: 'c' })
+    const next = await repo.createWeekly({ starts_at: '2026-11-12T08:30:00Z', ends_at: '2026-11-12T09:30:00Z', mode: 'live', created_by: 'c' })
     await repo.assignPending(next.id)
     expect(await get()).toMatchObject({ weekly_id: next.id, pushed_at: null, pushed_count: 1 })
     await expect(repo.unpush(id)).rejects.toThrow(/niet meer teruggezet/)

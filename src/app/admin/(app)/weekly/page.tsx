@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/admin/session'
-import { currentWeekly } from '@/lib/admin/weekly/board'
+import { currentWeekly, weeklyTimeRange } from '@/lib/admin/weekly/board'
 import { ownerOf } from '@/lib/admin/weekly/types'
-import { fmtDate, fmtTime } from '@/lib/admin/format'
+import { fmtDate } from '@/lib/admin/format'
 import { buttonClass, Card, muted, PageHeader, Pill, Title } from '@/components/admin/ui'
 import { TodoBoard } from '@/components/admin/weekly/TodoBoard'
 import { NewTodoForm } from '@/components/admin/weekly/NewTodoForm'
@@ -34,7 +34,7 @@ export default async function WeeklyPage() {
               {next.status === 'started' ? 'Weekly bezig' : 'Volgende weekly'}
             </span>
             <span className="text-xl font-bold">
-              {fmtDate(next.starts_at, { weekday: 'long', day: 'numeric', month: 'long' })} · {fmtTime(next.starts_at)}
+              {fmtDate(next.starts_at, { weekday: 'long', day: 'numeric', month: 'long' })} · {weeklyTimeRange(next)}
             </span>
             <div className="flex flex-wrap items-center gap-2">
               <Pill tone={next.mode === 'online' ? 'teal' : 'purple'}>{next.mode === 'online' ? 'Online' : 'Live'}</Pill>

@@ -31,7 +31,7 @@ export async function planWeeklyAction(form: FormData) {
   return attempt(async () => {
     const session = await requireAdmin()
     if (currentWeekly(await session.weekly.listWeeklies())) throw new Error('Er staat al een weekly ingepland.')
-    const weekly = await scheduleWeekly(session.weekly, session.user.email, { date: str(form, 'date'), time: str(form, 'time'), mode: str(form, 'mode') })
+    const weekly = await scheduleWeekly(session.weekly, session.user.email, { date: str(form, 'date'), time: str(form, 'time'), endTime: str(form, 'end_time'), mode: str(form, 'mode') })
     // To-do's die al klaarstonden, horen bij deze eerste weekly.
     await session.weekly.assignPending(weekly.id)
   })
@@ -63,7 +63,7 @@ export async function concludeWeeklyAction(id: string, form: FormData) {
     const session = await requireAdmin()
     const w = await session.weekly.getWeekly(id)
     if (!w || w.status === 'concluded') throw new Error('Deze weekly is al afgesloten.')
-    const next = await scheduleWeekly(session.weekly, session.user.email, { date: str(form, 'date'), time: str(form, 'time'), mode: str(form, 'mode') })
+    const next = await scheduleWeekly(session.weekly, session.user.email, { date: str(form, 'date'), time: str(form, 'time'), endTime: str(form, 'end_time'), mode: str(form, 'mode') })
     await session.weekly.assignPending(next.id)
     await session.weekly.updateWeekly(id, { status: 'concluded', concluded_at: new Date().toISOString() })
   })
