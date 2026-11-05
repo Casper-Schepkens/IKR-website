@@ -20,3 +20,16 @@ export function boardTodos(todos: Todo[], weeklies: Weekly[]) {
   const byOwner = (kind: Todo['kind'], owner: Owner) => visible.filter((t) => t.kind === kind && t.owner === owner)
   return { byOwner, long: visible.filter((t) => t.kind === 'long') }
 }
+
+/**
+ * Splitst gewone to-do's van één persoon in "deze week" (tegen de eerstvolgende weekly, plus wat bij
+ * een afgesloten weekly niet af raakte) en "volgende week" (doorgeschoven of tijdens de meeting
+ * aangemaakt: nog zonder weekly). Zonder ingeplande weekly is er maar één groep.
+ */
+export function splitByWeek(list: Todo[], weeklies: Weekly[]) {
+  const current = currentWeekly(weeklies)
+  if (!current) return { current: null, thisWeek: list, nextWeek: [] as Todo[] }
+  const thisWeek = list.filter((t) => t.weekly_id !== null)
+  const nextWeek = list.filter((t) => t.weekly_id === null)
+  return { current, thisWeek, nextWeek }
+}
