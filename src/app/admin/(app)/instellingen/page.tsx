@@ -7,6 +7,7 @@ import { cn } from '@/utilities/ui'
 import { canSeeSales } from '@/lib/admin/env'
 import { AiCosts } from './AiCosts'
 import { StyleProfiles } from './StyleProfiles'
+import { MyConnections } from '@/components/admin/team/MyConnections'
 
 export const metadata = { title: 'Instellingen' }
 
@@ -30,7 +31,11 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <PageHeader eyebrow={`Ingelogd als ${user.email}`} title="Instellingen" />
-      {ok && <p className="m-0 rounded-2xl bg-[#DDF2DF] p-4 text-sm text-[#1E5B27]">Gekoppeld.</p>}
+      {ok && (
+        <p className="m-0 rounded-2xl bg-[#DDF2DF] p-4 text-sm text-[#1E5B27]">
+          {ok === 'agenda' ? 'Agenda gekoppeld. Kies hieronder welke agenda’s Grok Bot mag lezen.' : ok === 'mail' ? 'Mail gekoppeld (alleen lezen).' : 'Gekoppeld.'}
+        </p>
+      )}
       {fout && (
         <p role="alert" className="m-0 rounded-2xl bg-[#FCE3D2] p-4 text-sm text-[#6E2E09]">
           {fout}
@@ -71,6 +76,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           )
         })}
       </Card>
+      <MyConnections email={user.email} />
       {canSeeSales(user.email) && process.env.SUPABASE_SERVICE_ROLE_KEY && <StyleProfiles />}
       {canSeeSales(user.email) && process.env.SUPABASE_SERVICE_ROLE_KEY && <AiCosts />}
     </>

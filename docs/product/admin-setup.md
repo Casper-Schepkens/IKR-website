@@ -135,3 +135,27 @@ Volgens de sales-workflow in Lucid:
 - MCP: `ai_chat_geschiedenis(user_id, limit)`, `ai_chat_antwoorden(user_id, tekst, job_id?)`,
   `mail_concepten_lijst(lead_id?)`. Antwoorden kan ook als resultaat van de taak (`{ antwoord }`).
 - Grok Bot verstuurt niets; sales-gegevens enkel voor casper@ (instructie aan de bot, geen harde blokkering).
+
+## Mijn koppelingen (mail + agenda per teamlid, alleen lezen)
+Elk teamlid koppelt in **Instellingen → Mijn koppelingen** zelf:
+- **Mail** (eigen mailbox, `gmail.readonly`): geen verzendrecht.
+- **Agenda** (mag een ander IKR-account zijn; `calendar.calendarlist.readonly` +
+  `calendar.events.readonly`), daarna kiest het teamlid één of meer agenda's.
+- Ontkoppelen trekt het token ook in bij Google. Een verlopen/ingetrokken koppeling toont "Opnieuw koppelen".
+
+Tokens staan **versleuteld** in `team_google` (AES-256-GCM). Enkel de server leest die tabel.
+
+**Eenmalig instellen**
+1. Vercel → Environment Variables: `IKR_TOKEN_KEY` = uitkomst van `openssl rand -base64 32`
+   (Production + Preview, **Sensitive**). Zonder die sleutel kan niemand koppelen. Verlies of wijzig
+   je de sleutel, dan moet iedereen opnieuw koppelen.
+2. Google Cloud (bestaande OAuth-app, type **Intern**, dus geen verificatie):
+   - APIs & Services → Library: **Gmail API** en **Google Calendar API** aan (staan normaal al aan).
+   - OAuth-toestemmingsscherm → Scopes: `gmail.readonly`, `calendar.calendarlist.readonly`,
+     `calendar.events.readonly` toevoegen (bij een interne app optioneel, maar duidelijker).
+   - Redirect-URI: geen nieuwe nodig (zelfde `/admin/auth/google/callback`).
+   - Een intern app laat enkel @iknowright.be-accounts toe (dus geen gmail.com-agenda).
+3. Cursor: de ikr-dashboard-connector vernieuwen (nieuwe `teamlid_*`-tools).
+
+**Grok Bot (MCP), enkel lezen, elke oproep in `bot_actions`:** `teamlid_koppelingen`,
+`teamlid_mail_zoeken`, `teamlid_mail_lezen`, `teamlid_bijlage_ophalen`, `teamlid_agenda_events`.

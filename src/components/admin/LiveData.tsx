@@ -63,7 +63,12 @@ export function LiveData({ stamp: rendered }: { stamp: string | null }) {
     let wasUp = false
     const channel = supabase?.channel(`admin-live-${pathname}`)
     if (supabase && channel) {
-      for (const table of LIVE_TABLES) channel.on('postgres_changes', { event: '*', schema: 'public', table }, refresh)
+      for (const table of LIVE_TABLES)
+        channel.on('postgres_changes', { event: '*', schema: 'public', table }, (payload) => {
+          // Grok Bot die enkel iets leest (bv. de mail van een teamlid) verandert niets op het scherm.
+          if (table === 'bot_actions' && (payload.new as { args?: { alleen_lezen?: boolean } })?.args?.alleen_lezen) return
+          refresh()
+        })
       channel.subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           realtimeUp = true

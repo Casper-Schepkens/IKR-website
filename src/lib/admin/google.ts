@@ -15,6 +15,12 @@ export const SCOPES = {
   gmailSend: 'https://www.googleapis.com/auth/gmail.send',
 }
 
+/** Koppelingen per teamlid (Instellingen → Mijn koppelingen): enkel lezen, zo weinig mogelijk. */
+export const TEAM_SCOPES = {
+  mail: ['https://www.googleapis.com/auth/gmail.readonly'],
+  agenda: ['https://www.googleapis.com/auth/calendar.calendarlist.readonly', 'https://www.googleapis.com/auth/calendar.events.readonly'],
+} as const
+
 export function hasScopes(c: { scopes: string } | undefined, needed: string[]) {
   return Boolean(c && needed.every((s) => c.scopes.split(' ').includes(s)))
 }
@@ -23,18 +29,27 @@ export function isGoogleConfigured() {
   return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)
 }
 
-export function authUrl(opts: { redirectUri: string; state: string; scopes: string[]; loginHint: string }) {
+export function authUrl(opts: {
+  redirectUri: string
+  state: string
+  scopes: readonly string[]
+  loginHint?: string
+  /** false = token met enkel deze scopes (niet samengevoegd met eerder gegeven rechten). */
+  includeGranted?: boolean
+  /** Laat een ander Google-account kiezen (bv. een andere agenda). */
+  chooseAccount?: boolean
+}) {
   const p = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID!,
     redirect_uri: opts.redirectUri,
     response_type: 'code',
     scope: ['openid', 'email', ...opts.scopes].join(' '),
     access_type: 'offline',
-    prompt: 'consent',
-    include_granted_scopes: 'true',
-    login_hint: opts.loginHint,
+    prompt: opts.chooseAccount ? 'consent select_account' : 'consent',
+    include_granted_scopes: opts.includeGranted === false ? 'false' : 'true',
     state: opts.state,
   })
+  if (opts.loginHint) p.set('login_hint', opts.loginHint)
   return `https://accounts.google.com/o/oauth2/v2/auth?${p}`
 }
 
@@ -56,6 +71,27 @@ async function token(body: Record<string, string>): Promise<TokenResponse> {
   return json
 }
 
+/** Vraagt een access token met een refresh token (gooit bij een ingetrokken/verlopen koppeling). */
+export async function refreshAccessToken(refreshToken: string) {
+  const t = await token({ refresh_token: refreshToken, grant_type: 'refresh_token' })
+  return { accessToken: t.access_token, expiresIn: (t as { expires_in?: number }).expires_in ?? 3600 }
+}
+
+/** Trekt een token in bij Google (bij ontkoppelen). Gooit niet: een al ingetrokken token is ook goed. */
+export async function revokeToken(tokenValue: string) {
+  try {
+    const res = await fetch('https://oauth2.googleapis.com/revoke', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ token: tokenValue }),
+      cache: 'no-store',
+    })
+    return res.ok || res.status === 400 // 400 = al ongeldig
+  } catch {
+    return false
+  }
+}
+
 /** Wisselt de code om en geeft het Google-adres + refresh token terug. */
 export async function exchangeCode(code: string, redirectUri: string) {
   const t = await token({ code, redirect_uri: redirectUri, grant_type: 'authorization_code' })
@@ -64,7 +100,7 @@ export async function exchangeCode(code: string, redirectUri: string) {
   const payload = JSON.parse(Buffer.from((t.id_token ?? '').split('.')[1] ?? '', 'base64url').toString() || '{}')
   const email = typeof payload.email === 'string' ? payload.email.toLowerCase() : null
   if (!email || payload.email_verified === false) throw new Error('Kon het Google-adres niet bepalen.')
-  return { email, refreshToken: t.refresh_token, scopes: t.scope }
+  return { email, refreshToken: t.refresh_token, scopes: t.scope, accessToken: t.access_token }
 }
 
 export type Connection = { email: string; scopes: string; connected_at: string }
