@@ -10,6 +10,7 @@ import { CONTACT_EMAIL, OWNERS, type Owner } from '@/lib/admin/weekly/types'
 import { currentWeekly } from '@/lib/admin/weekly/board'
 import type { ActionResult } from './actions'
 import { addBotToMeeting, isBotInMeeting, isFirefliesConfigured } from '@/lib/admin/fireflies'
+import { inferKind, safeUrl } from '@/lib/admin/weekly/pins'
 
 async function attempt(fn: () => Promise<void>): Promise<ActionResult> {
   try {
@@ -92,6 +93,52 @@ export async function pushTodoAction(id: string) {
   return attempt(async () => {
     const session = await requireAdmin()
     await session.weekly.push(id)
+  })
+}
+
+// ─── Prikbord ──────────────────────────────────────────────
+
+/** Kaartje op het prikbord (iedereen mag; meestal zet Grok Bot ze klaar). */
+export async function createPinAction(form: FormData) {
+  return attempt(async () => {
+    const session = await requireAdmin()
+    const title = str(form, 'title')
+    if (!title) throw new Error('Geef het kaartje een titel.')
+    const rawUrl = str(form, 'url')
+    const url = safeUrl(rawUrl)
+    if (rawUrl && !url) throw new Error('Die link klopt niet (enkel http/https).')
+    const forOwner = str(form, 'for') as Owner | null
+    await session.weekly.createPin({
+      kind: inferKind(str(form, 'kind'), url),
+      title: title.slice(0, 200),
+      body: str(form, 'body')?.slice(0, 4000) ?? null,
+      url,
+      for_owner: forOwner && OWNERS.includes(forOwner) ? forOwner : null,
+      created_by: session.user.email,
+      created_via: 'dashboard',
+    })
+  })
+}
+
+export async function setPinPinnedAction(id: string, pinned: boolean) {
+  return attempt(async () => {
+    const session = await requireAdmin()
+    await session.weekly.updatePin(id, { pinned })
+  })
+}
+
+export async function deletePinAction(id: string) {
+  return attempt(async () => {
+    const session = await requireAdmin()
+    await session.weekly.deletePin(id)
+  })
+}
+
+/** Tijdens de weekly: prikbord leegmaken (vastgepinde kaartjes blijven). */
+export async function clearPinsAction() {
+  return attempt(async () => {
+    const session = await requireAdmin()
+    await session.weekly.clearPins()
   })
 }
 
