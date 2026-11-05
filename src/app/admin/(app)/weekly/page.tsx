@@ -71,7 +71,7 @@ export default async function WeeklyPage() {
         <NewTodoForm defaultOwner={ownerOf(user.email)} />
       </Card>
 
-      <TodoBoard todos={todos} weeklies={weeklies} />
+      <TodoBoard todos={todos} weeklies={weeklies} me={user.email} />
     </>
   )
 }

@@ -11,13 +11,15 @@ const nameOf = (email: string | null) => TEAM.find((t) => t.email === email)?.na
 const small =
   'ikr-btn inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-xs font-semibold disabled:opacity-60'
 
-export function TodoCard({ todo, overdue, showOwner }: { todo: Todo; overdue: boolean; showOwner?: boolean }) {
+export function TodoCard({ todo, overdue, showOwner, me }: { todo: Todo; overdue: boolean; showOwner?: boolean; me: string }) {
   const [pending, start] = useTransition()
   const [noteOpen, setNoteOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const done = Boolean(todo.done_at)
+  // Eigen notitie: de Notitie-knop opent die om verder te werken (in plaats van telkens een nieuwe).
+  const own = [...todo.notes].reverse().find((n) => n.author === me) ?? null
 
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>, after?: () => void) =>
     start(async () => {
@@ -43,10 +45,11 @@ export function TodoCard({ todo, overdue, showOwner }: { todo: Todo; overdue: bo
           {overdue && !done && <Pill tone="orange">Niet af vorige weekly</Pill>}
         </div>
       )}
-      {todo.notes.length > 0 && (
+      {/* Tijdens het bewerken staat je eigen notitie in het tekstvak, niet dubbel erboven. */}
+      {todo.notes.some((n) => !(noteOpen && n.id === own?.id)) && (
         <ul className="m-0 flex list-none flex-col gap-1 p-0">
-          {todo.notes.map((n) => (
-            <li key={n.id} className="text-sm leading-snug">
+          {todo.notes.filter((n) => !(noteOpen && n.id === own?.id)).map((n) => (
+            <li key={n.id} className="text-sm leading-snug whitespace-pre-line">
               {n.body} <span className={cn('text-xs', muted)}>· {nameOf(n.author)}</span>
             </li>
           ))}
@@ -54,14 +57,23 @@ export function TodoCard({ todo, overdue, showOwner }: { todo: Todo; overdue: bo
       )}
       {noteOpen && (
         <form
-          className="flex gap-2"
+          className="flex items-end gap-2"
           onSubmit={(e) => {
             e.preventDefault()
             const data = new FormData(e.currentTarget)
             run(() => addTodoNoteAction(todo.id, data), () => setNoteOpen(false))
           }}
         >
-          <input name="note" autoFocus aria-label="Notitie" placeholder="Notitie…" className={cn(input, 'min-h-9 flex-1 text-sm')} />
+          <textarea
+            name="note"
+            autoFocus
+            rows={Math.min(8, Math.max(3, (own?.body.split('\n').length ?? 1) + 2))}
+            defaultValue={own?.body ?? ''}
+            aria-label="Notitie"
+            placeholder="Notitie…"
+            onFocus={(e) => e.currentTarget.setSelectionRange(e.currentTarget.value.length, e.currentTarget.value.length)}
+            className={cn(input, 'min-h-9 flex-1 resize-y py-2 text-sm')}
+          />
           <button type="submit" disabled={pending} data-pending={pending} className={cn(small, 'bg-ikr-navy text-ikr-cream-light')}>
             Bewaar
           </button>
@@ -80,7 +92,7 @@ export function TodoCard({ todo, overdue, showOwner }: { todo: Todo; overdue: bo
         {!done && (
           <>
             <button type="button" disabled={pending} onClick={() => setNoteOpen((v) => !v)} className={cn(small, 'bg-ikr-cream text-ikr-navy')}>
-              Notitie
+              {own ? 'Notitie aanpassen' : 'Notitie'}
             </button>
             {todo.kind === 'weekly' &&
               (todo.pushed_at ? (

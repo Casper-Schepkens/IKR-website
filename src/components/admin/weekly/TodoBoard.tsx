@@ -5,7 +5,7 @@ import { TodoCard } from './TodoCard'
 import { cn } from '@/utilities/ui'
 
 /** To-do's per persoon en de lange to-do's. */
-export function TodoBoard({ todos, weeklies }: { todos: Todo[]; weeklies: Weekly[] }) {
+export function TodoBoard({ todos, weeklies, me }: { todos: Todo[]; weeklies: Weekly[]; me: string }) {
   const { byOwner, long } = boardTodos(todos, weeklies)
   const concluded = new Set(weeklies.filter((w) => w.status === 'concluded').map((w) => w.id))
   const overdue = (t: Todo) => Boolean(t.weekly_id && concluded.has(t.weekly_id))
@@ -17,7 +17,7 @@ export function TodoBoard({ todos, weeklies }: { todos: Todo[]; weeklies: Weekly
           return (
             <Card key={p.key} className="flex flex-col gap-3 p-4">
               <Title className="m-0 text-2xl">{p.name}</Title>
-              {list.length ? list.map((t) => <TodoCard key={t.id} todo={t} overdue={overdue(t)} />) : <Empty>Geen to-do&apos;s.</Empty>}
+              {list.length ? list.map((t) => <TodoCard key={t.id} todo={t} overdue={overdue(t)} me={me} />) : <Empty>Geen to-do&apos;s.</Empty>}
             </Card>
           )
         })}
@@ -30,7 +30,7 @@ export function TodoBoard({ todos, weeklies }: { todos: Todo[]; weeklies: Weekly
         {long.length ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
             {long.map((t) => (
-              <TodoCard key={t.id} todo={t} overdue={false} showOwner />
+              <TodoCard key={t.id} todo={t} overdue={false} me={me} showOwner />
             ))}
           </div>
         ) : (
