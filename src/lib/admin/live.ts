@@ -44,13 +44,14 @@ export function shouldRefreshForChat(prev: ChatSnap, next: ChatSnap) {
 }
 
 /** Tabellen waarvan een wijziging de open pagina laat verversen (in de supabase_realtime-publicatie). */
-export const LIVE_TABLES = ['bot_actions', 'ai_jobs', 'leads', 'mail_drafts', 'weeklies', 'weekly_todos', 'weekly_todo_notes', 'weekly_pins'] as const
+export const LIVE_TABLES = ['bot_actions', 'ai_jobs', 'leads', 'mail_drafts', 'weeklies', 'weekly_todos', 'weekly_todo_notes', 'weekly_pins', 'clients'] as const
 
 /** Pagina's waarvan de AI de getoonde data kan wijzigen. */
 export function isLivePath(pathname: string) {
   return (
     pathname === '/admin/sales' ||
     pathname.startsWith('/admin/sales/') ||
+    pathname === '/admin/klanten' ||
     pathname === '/admin/weekly' ||
     pathname.startsWith('/admin/weekly/')
   )

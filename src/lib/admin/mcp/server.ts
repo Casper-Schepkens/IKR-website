@@ -10,6 +10,8 @@ import { fmtDate, fmtTime, isoDay } from '../format'
 import type { AdminSession } from '../session'
 import { supabaseLeads } from '../sales/repo'
 import { supabaseWeekly } from '../weekly/repo'
+import { supabaseClients } from '../clients/repo'
+import { cleanClientInput, daysLeft, type Client } from '../clients/types'
 import { supabaseDrafts, type MailDraft } from '../sales/drafts'
 import { supabaseChat } from '../chat/repo'
 import {
@@ -153,13 +155,14 @@ export function botSession(): AdminSession {
     mode: 'supabase',
     leads: supabaseLeads(db),
     weekly: supabaseWeekly(db),
+    clients: supabaseClients(db),
     drafts: supabaseDrafts(db),
     chat: supabaseChat(db),
   }
 }
 
 export function buildMcpServer(session: AdminSession) {
-  const { leads, weekly, drafts, chat } = session
+  const { leads, weekly, drafts, chat, clients } = session
   const server = new McpServer({ name: 'ikr-dashboard', version: '1.0.0' }, { instructions: INSTRUCTIONS })
 
   /** Registreert een tool; elke oproep wordt gelogd in bot_actions. */
@@ -570,6 +573,41 @@ export function buildMcpServer(session: AdminSession) {
   tool('todo_doorschuiven', 'To-do doorschuiven naar de volgende weekly.', { todo_id: z.string() }, false, async ({ todo_id }) => {
     await weekly.push(todo_id)
     return 'Doorgeschoven.'
+  })
+  // ─── Klanten (productie, zichtbaar voor het hele team) ───────────────
+  const clientView = (c: Client) => ({ klant_id: c.id, naam: c.name, freelancer: c.freelancer, contract_tot: c.contract_end, dagen_over: daysLeft(c, isoDay(new Date())) })
+  const resolveClient = async (ref: string) => {
+    const all = await clients.list()
+    const q = ref.trim().toLowerCase()
+    const hit = all.find((c) => c.id === ref.trim()) ?? all.find((c) => c.name.toLowerCase() === q)
+    const partial = hit ? [hit] : all.filter((c) => c.name.toLowerCase().includes(q))
+    if (partial.length === 1) return partial[0]
+    throw new Error(partial.length ? `Meerdere klanten passen bij "${ref}": ${partial.map((c) => c.name).join(', ')}.` : `Geen klant gevonden voor "${ref}".`)
+  }
+  tool('klanten_lijst', 'Alle klanten met freelancer en einde contract (wie het eerst afloopt bovenaan).', {}, true, async () => (await clients.list()).map(clientView))
+  tool(
+    'klant_aanmaken',
+    'Nieuwe klant toevoegen.',
+    { naam: z.string(), freelancer: z.string().optional(), contract_tot: z.string().optional().describe('YYYY-MM-DD') },
+    false,
+    async ({ naam, freelancer, contract_tot }) => clientView(await clients.create(cleanClientInput({ name: naam, freelancer, contract_end: contract_tot }), BY)),
+  )
+  tool(
+    'klant_bijwerken',
+    'Freelancer, einde contract of naam van een klant aanpassen. Een lege tekst maakt het veld leeg.',
+    { klant: z.string().describe('naam of id'), naam: z.string().optional(), freelancer: z.string().optional(), contract_tot: z.string().optional().describe('YYYY-MM-DD of leeg') },
+    false,
+    async ({ klant, naam, freelancer, contract_tot }) => {
+      const c = await resolveClient(klant)
+      const next = cleanClientInput({ name: naam ?? c.name, freelancer: freelancer ?? c.freelancer, contract_end: contract_tot ?? c.contract_end })
+      await clients.update(c.id, next)
+      return `${next.name} bijgewerkt.`
+    },
+  )
+  tool('klant_verwijderen', 'Klant uit de lijst halen.', { klant: z.string() }, false, async ({ klant }) => {
+    const c = await resolveClient(klant)
+    await clients.remove(c.id)
+    return `${c.name} verwijderd.`
   })
   // ─── Prikbord ───────────────────────────────────────────
   const pinView = (p: Pin) => ({ pin_id: p.id, soort: p.kind, titel: p.title, tekst: p.body, link: p.url, voor: p.for_owner, vastgepind: p.pinned, door: p.created_via === 'grokbot' ? 'Grok Bot' : p.created_by, op: p.created_at })
