@@ -251,3 +251,23 @@ describe('klanten via MCP', () => {
     expect((await call('klanten_lijst', {})).json).toEqual([])
   })
 })
+
+describe('prikbord via MCP', () => {
+  it('Grok Bot zet een kaartje klaar (document herkend, @voor), lijst en verwijderen; verstuurt niets', async () => {
+    const r = await call('prikbord_toevoegen', { titel: 'Content-kalender november', link: 'https://docs.google.com/spreadsheets/d/abc', voor: 'cedric' })
+    expect(r.isError).toBe(false)
+    expect(r.json).toMatchObject({ soort: 'document', voor: 'cedric', door: 'Grok Bot', vastgepind: false })
+    const list = (await call('prikbord_lijst', {})).json as unknown as { pin_id: string }[]
+    expect(list).toHaveLength(1)
+    await call('prikbord_bijwerken', { pin_id: list[0].pin_id, vastgepind: true })
+    expect(((await call('prikbord_lijst', {})).json as unknown as { vastgepind: boolean }[])[0].vastgepind).toBe(true)
+    await call('prikbord_verwijderen', { pin_id: list[0].pin_id })
+    expect((await call('prikbord_lijst', {})).json).toEqual([])
+    expect(logs.map((l) => l.tool)).toEqual(['prikbord_toevoegen', 'prikbord_bijwerken', 'prikbord_verwijderen'])
+    expect(gmail.sendMail).not.toHaveBeenCalled()
+  })
+  it('weigert een onveilige link', async () => {
+    const r = await call('prikbord_toevoegen', { titel: 'x', link: 'javascript:alert(1)' })
+    expect(r.isError).toBe(true)
+  })
+})

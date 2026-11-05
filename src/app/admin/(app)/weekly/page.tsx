@@ -6,6 +6,7 @@ import { fmtDate, fmtTime } from '@/lib/admin/format'
 import { buttonClass, Card, muted, PageHeader, Pill, Title } from '@/components/admin/ui'
 import { TodoBoard } from '@/components/admin/weekly/TodoBoard'
 import { NewTodoForm } from '@/components/admin/weekly/NewTodoForm'
+import { Prikbord } from '@/components/admin/weekly/Prikbord'
 import { PlanWeeklyForm } from '@/components/admin/weekly/PlanWeeklyForm'
 import { planWeeklyAction, startWeeklyAction } from '../../weekly-actions'
 import { cn } from '@/utilities/ui'
@@ -14,7 +15,7 @@ export const metadata = { title: 'Weekly' }
 
 export default async function WeeklyPage() {
   const { weekly, user } = await requireAdmin()
-  const [weeklies, todos] = await Promise.all([weekly.listWeeklies(), weekly.listTodos()])
+  const [weeklies, todos, pins] = await Promise.all([weekly.listWeeklies(), weekly.listTodos(), weekly.listPins().catch(() => [])])
   const next = currentWeekly(weeklies)
 
   return (
@@ -65,6 +66,8 @@ export default async function WeeklyPage() {
           <PlanWeeklyForm action={planWeeklyAction} submitLabel="Inplannen" />
         </Card>
       )}
+
+      <Prikbord pins={pins} me={ownerOf(user.email)} />
 
       <Card className="flex flex-col gap-3">
         <Title className="m-0 text-2xl">Nieuwe to-do</Title>
