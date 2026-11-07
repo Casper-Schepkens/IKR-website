@@ -18,6 +18,7 @@ import { buildMcpServer } from './server'
 import { memoryLeads } from '../sales/repo'
 import { memoryWeekly } from '../weekly/repo'
 import { memoryClients } from '../clients/repo'
+import { memoryCalls } from '../calls/repo'
 import { memoryDrafts, type MailDraft } from '../sales/drafts'
 import { memoryChat, type ChatMessage } from '../chat/repo'
 import type { AdminSession } from '../session'
@@ -52,6 +53,7 @@ beforeEach(async () => {
     leads: memoryLeads(),
     weekly: memoryWeekly(),
     clients: memoryClients(),
+    calls: memoryCalls(),
     drafts: memoryDrafts(store),
     chat: memoryChat(chatStore),
   }
@@ -311,5 +313,30 @@ describe('klanten: onbepaalde duur via MCP', () => {
       ['klant_bijwerken', true],
       ['klant_bijwerken', false],
     ])
+  })
+})
+
+describe('calls via MCP', () => {
+  it('registreren (zonder agenda), lijst, no-show met concept, cijfers; alles gelogd, niets verstuurd', async () => {
+    ;(globalThis as { __ikrCalls?: unknown }).__ikrCalls = undefined
+    session.calls = memoryCalls()
+    const [a, b] = InMemoryTransport.createLinkedPair()
+    await buildMcpServer(session).connect(a)
+    client = new Client({ name: 'test', version: '1.0.0' })
+    await client.connect(b)
+    logs.length = 0
+    const r = await call('call_registreren', { lead: 'jan@peeters.be', soort: 'sales', datum: '2026-11-10', uur: '14:00', meet_link: 'https://meet.google.com/abc-defg-hij' })
+    expect(r.json).toMatchObject({ soort: 'sales', status: 'gepland', bron: 'grokbot', lead_uitgenodigd: false, lead: { naam: 'Jan Peeters' } })
+    const list = (await call('calls_lijst', {})).json as unknown as { call_id: string }[]
+    expect(list).toHaveLength(1)
+    const done = await call('call_afronden', { call_id: list[0].call_id, resultaat: 'no_show' })
+    expect(done.json).toMatchObject({ status: 'no_show' })
+    expect((done.json as { concept_id: string }).concept_id).toBeTruthy()
+    expect(store.find((d) => d.subject === 'Nieuw moment voor onze call?')?.status).toBe('concept')
+    const cijfers = (await call('calls_cijfers', { van: '2026-11-01', tot: '2026-11-30' })).json
+    expect(cijfers).toMatchObject({ sales: { no_show: 1, no_show_pct: 100 } })
+    expect(logs.map((l) => l.tool)).toEqual(['call_registreren', 'call_afronden'])
+    expect(gmail.sendMail).not.toHaveBeenCalled()
+    expect(gmail.sendReply).not.toHaveBeenCalled()
   })
 })

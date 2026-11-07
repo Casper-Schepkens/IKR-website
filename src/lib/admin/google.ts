@@ -10,6 +10,8 @@ import { createServiceSupabase } from './supabase/server'
 export const SCOPES = {
   calendar: 'https://www.googleapis.com/auth/calendar.events',
   drive: 'https://www.googleapis.com/auth/drive.file',
+  // contact@ (de IKR-Drive): volledige toegang, om bv. transcripts in bestaande mappen te zetten.
+  driveFull: 'https://www.googleapis.com/auth/drive',
   // Sales-inbox (enkel Casper): mails lezen en antwoorden versturen. Geen verwijderen.
   gmailRead: 'https://www.googleapis.com/auth/gmail.readonly',
   gmailSend: 'https://www.googleapis.com/auth/gmail.send',
@@ -173,6 +175,49 @@ export async function createEvent(opts: {
   const json = (await res.json()) as { id?: string; hangoutLink?: string; error?: { message?: string } }
   if (!res.ok || !json.id) throw new Error(`Agenda-item maken mislukt: ${json.error?.message ?? res.status}`)
   return { eventId: json.id, meetUrl: json.hangoutLink ?? null }
+}
+
+/** Verwijdert een agenda-item; `notify` = deelnemers een annulering sturen. */
+export async function deleteEvent(calendarOwner: string, eventId: string, notify: boolean) {
+  const at = await accessToken(calendarOwner)
+  const res = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(eventId)}?sendUpdates=${notify ? 'all' : 'none'}`,
+    { method: 'DELETE', headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' },
+  )
+  if (!res.ok && res.status !== 404 && res.status !== 410) throw new Error(`Agenda-item verwijderen mislukt (${res.status}).`)
+}
+
+export type CalendarEvent = {
+  id: string
+  summary: string
+  start: string
+  end: string
+  meetUrl: string | null
+  attendees: string[]
+  status: string
+}
+
+/** Afspraken (los, niet herhalend) in de agenda van `calendarOwner` tussen twee tijdstippen. Enkel lezen. */
+export async function listEvents(calendarOwner: string, timeMin: Date, timeMax: Date): Promise<CalendarEvent[]> {
+  const at = await accessToken(calendarOwner)
+  const p = new URLSearchParams({ singleEvents: 'true', orderBy: 'startTime', maxResults: '250', timeMin: timeMin.toISOString(), timeMax: timeMax.toISOString() })
+  const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?${p}`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' })
+  const json = (await res.json()) as {
+    items?: { id: string; summary?: string; status?: string; hangoutLink?: string; start?: { dateTime?: string; date?: string }; end?: { dateTime?: string; date?: string }; attendees?: { email?: string }[] }[]
+    error?: { message?: string }
+  }
+  if (!res.ok) throw new Error(`Agenda lezen mislukt: ${json.error?.message ?? res.status}`)
+  return (json.items ?? [])
+    .filter((e) => e.start?.dateTime && e.end?.dateTime) // geen hele-dag-items
+    .map((e) => ({
+      id: e.id,
+      summary: e.summary ?? '',
+      start: new Date(e.start!.dateTime!).toISOString(),
+      end: new Date(e.end!.dateTime!).toISOString(),
+      meetUrl: e.hangoutLink ?? null,
+      attendees: (e.attendees ?? []).map((a) => (a.email ?? '').toLowerCase()).filter(Boolean),
+      status: e.status ?? 'confirmed',
+    }))
 }
 
 /** Zoekt (of maakt) een map in de Drive van `owner`. Met drive.file ziet het dashboard enkel zijn eigen mappen. */

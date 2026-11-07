@@ -61,6 +61,7 @@ import { memoryWeekly } from '../weekly/repo'
 import { memoryDrafts } from '../sales/drafts'
 import { memoryChat } from '../chat/repo'
 import { memoryClients } from '../clients/repo'
+import { memoryCalls } from '../calls/repo'
 import { TEAM_SCOPES } from '../google'
 import type { AdminSession } from '../session'
 
@@ -97,6 +98,7 @@ beforeEach(async () => {
     leads: memoryLeads(),
     weekly: memoryWeekly(),
     clients: memoryClients(),
+    calls: memoryCalls(),
     drafts: memoryDrafts([]),
     chat: memoryChat([]),
   } as unknown as AdminSession

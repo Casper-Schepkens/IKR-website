@@ -26,6 +26,14 @@ export const INBOX_REPLY = z.object({
     .nullable()
     .describe('Altijd invullen (2–4 zinnen) voor Casper: wie is de lead, wat weten we al (notities), wat is er tot nu toe gezegd en waarom dit antwoord'),
   phone: z.string().nullable().describe('Telefoonnummer van de lead als dat in de mails staat, anders null'),
+  call: z
+    .object({
+      datum: z.string().describe('YYYY-MM-DD'),
+      uur: z.string().describe('HH:MM (24u, Belgische tijd)'),
+      soort: z.enum(['setter', 'sales']).nullable().describe('setter = kort telefoontje, sales = de echte sales call (Google Meet); null als onduidelijk'),
+    })
+    .nullable()
+    .describe('Als er een concreet moment voor een call afgesproken of voorgesteld wordt (door de lead of in jouw antwoord) en dat bevestigd mag worden: dat moment. Anders null.'),
 })
 export type InboxReply = z.infer<typeof INBOX_REPLY>
 
@@ -66,6 +74,7 @@ export const HANDLERS = {
 - referral (doorverwezen naar een collega): bedank en vraag of ze Casper in contact willen brengen, of mail de genoemde persoon aan als het adres er staat.
 - out_of_office, not_interested, unsubscribe: geen antwoord (draft = null).
 - other: kort en vriendelijk antwoord als dat zinvol is, anders null.
+Vult de lead een concreet moment in voor een call (bv. "past dinsdag 14u?") of bevestig je er een, vul dan "call" in (datum, uur, soort) en bevestig het moment in je antwoord; het dashboard zet de Meet-link er zelf bij. Reken relatieve dagen om vanaf de datum van de laatste mail. Geen concreet moment = call null.
 Vul altijd "context" in, ook bij een eerste reactie: wie de lead is, wat we al weten uit de notities, wat er gezegd is en waarom je dit antwoord voorstelt.`,
     prompt: (input) => {
       const lead = input.lead as { name: string; company: string | null; notes: string | null; next_action: string | null }

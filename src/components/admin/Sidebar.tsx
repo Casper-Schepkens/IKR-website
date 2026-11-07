@@ -26,6 +26,7 @@ export function Sidebar({
       ? [
           { href: '/admin/sales/cold-mails', label: 'Cold mails', icon: Icon.chart },
           { href: '/admin/sales/inbox', label: 'Inbox', icon: Icon.mail },
+          { href: '/admin/sales/calls', label: 'Calls', icon: Icon.phone },
           { href: '/admin/sales', label: 'Leads', icon: Icon.users, exact: true },
         ]
       : []),

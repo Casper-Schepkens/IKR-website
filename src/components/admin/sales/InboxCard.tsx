@@ -15,6 +15,7 @@ import { cn } from '@/utilities/ui'
 import { useFollowServer } from '../follow-server'
 import { ContextBox } from './ContextBox'
 import { RewriteBox } from './RewriteBox'
+import { ScheduleSend, type CallSuggestion } from './ScheduleSend'
 
 const KIND: Record<
   string,
@@ -44,7 +45,7 @@ export type InboxCardProps = {
     id: string
     status: string
     error: string | null
-    output: { kind?: string; draft?: string | null; context?: string | null } | null
+    output: { kind?: string; draft?: string | null; context?: string | null; call?: CallSuggestion | null } | null
   } | null
 }
 
@@ -193,6 +194,19 @@ export function InboxCard(props: InboxCardProps) {
               >
                 {pending && <Spinner />} Verstuur
               </button>
+              {/* Datum afgesproken? Meteen inplannen (contact-agenda) en de Meet-link in de mail. */}
+              {out?.call && (
+                <ScheduleSend
+                  threadId={p.threadId}
+                  leadId={p.leadId}
+                  jobId={job?.id ?? null}
+                  body={body}
+                  setBody={setBody}
+                  suggestion={out.call}
+                  onSent={() => setSent(true)}
+                  disabled={pending || !body.trim()}
+                />
+              )}
               <RewriteBox
                 target="inbox"
                 targetId={job!.id}

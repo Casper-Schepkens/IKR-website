@@ -68,6 +68,8 @@ dashboard is ontworpen zonder onze processen te kennen. Nu functioneel maken, zo
 **Klanten (nieuw, 5 nov 2026):** Casper werkt dit verder uit. Prototype = lijst met freelancer en
 einde contract. Zijn wensen + brainstorm: [`docs/product/klanten.md`](../product/klanten.md).
 
+**Calls (7 nov 2026):** plan in delen, wensen van Casper: [`docs/product/calls.md`](../product/calls.md).
+
 **Voor later (Casper):**
 - Financiën automatiseren.
 - De weekly automatiseren.
