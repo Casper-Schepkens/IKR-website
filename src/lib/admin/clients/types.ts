@@ -16,12 +16,15 @@ export type Client = {
   boosting_budget?: number | null
   /** Naam op de bank als die afwijkt (bv. Oh!Ma betaalt als "V.S.A. Foods"). */
   bank_name?: string | null
+  /** Link naar het contract in de Drive en de laatste "leid af uit het contract"-taak. */
+  contract_url?: string | null
+  contract_job_id?: string | null
   created_by: string | null
   created_at: string
   updated_at: string
 }
 export type ClientInput = Pick<Client, 'name' | 'freelancer' | 'contract_end' | 'contract_indefinite'> &
-  Partial<Pick<Client, 'contract_start' | 'monthly_fee' | 'freelancer_cost' | 'boosting_budget' | 'bank_name'>>
+  Partial<Pick<Client, 'contract_start' | 'monthly_fee' | 'freelancer_cost' | 'boosting_budget' | 'bank_name' | 'contract_url' | 'contract_job_id'>>
 
 /** Hoeveel dagen het contract nog loopt (negatief = verlopen), of null zonder einddatum of bij onbepaalde duur. */
 export const daysLeft = (c: Pick<Client, 'contract_end'> & { contract_indefinite?: boolean }, today: string) =>

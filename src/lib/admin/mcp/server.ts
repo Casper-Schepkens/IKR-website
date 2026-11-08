@@ -19,6 +19,7 @@ import { CALL_KIND_LABELS, CALL_STATUSES, callStats, type Call } from '../calls/
 import { addBotToMeeting, getTranscript, isBotInMeeting } from '../fireflies'
 import { linkTranscript, serviceDeps } from '../calls/transcripts'
 import { cleanClientInput, daysLeft, type Client } from '../clients/types'
+import { applyContractProposal, deriveContract, loadProposal } from '../clients/contract'
 import { supabaseDrafts, type MailDraft } from '../sales/drafts'
 import { supabaseChat } from '../chat/repo'
 import {
@@ -39,7 +40,7 @@ import { HANDLERS } from '../ai/handlers'
 import { boardTodos, currentWeekly, weeklyTimeRange } from '../weekly/board'
 import { scheduleWeekly } from '../weekly/schedule'
 import { OWNERS, TEAM } from '../weekly/types'
-import { ALL_CATEGORIES, CATEGORY_LABELS, isInCategory, isOutCategory, overview, periodKeyFor, periodOf, type PeriodKind } from '../finance/core'
+import { ALL_CATEGORIES, CATEGORY_LABELS, isInCategory, isOutCategory, overview, paymentChecks, periodKeyFor, periodOf, type PeriodKind } from '../finance/core'
 import { loadClients, loadTxs, reclassify, setTxCategory, syncFinance, syncState } from '../finance/store'
 
 const BY = 'grokbot'
@@ -60,7 +61,7 @@ Werkwijze:
 - Calls (setter = telefoon, sales = Google Meet): calls_lijst toont ze met lead en context. Een call registreren (call_registreren) maakt GEEN agenda-item en nodigt niemand uit; inplannen met uitnodiging doet Casper zelf in het dashboard. Cijfers via calls_cijfers. Na een call komt het Fireflies-transcript vanzelf binnen (webhook): het dashboard zet het in de Drive en geeft jou een taak call_verwerken (lead bijwerken, bedankmail persoonlijker, analyse). Kon een transcript niet gekoppeld worden: transcripts_ongekoppeld, vraag Casper bij welke call het hoort en gebruik transcript_koppelen.
 - Opvolgen: wachten_op_antwoord_lijst geeft de leads waar wij als laatste mailden zonder antwoord (langst wachtend eerst). Een opvolgmail zet je klaar als concept.
 - Het dashboard kan jou AI-taken geven (bv. antwoorden op sales-mails): haal ze op met ai_taken_open en zet het resultaat terug met ai_taak_klaarzetten.
-- Financiën (financien_*): cijfers uit de bank in Odoo, voor het hele team. Odoo wordt nooit aangepast; indelen gebeurt enkel in het dashboard. Verzin geen bedragen: gebruik financien_overzicht. Staat er veel ‘nog in te delen’, zeg dat de cijfers dan onvolledig zijn.
+- Financiën (financien_*): cijfers uit de bank in Odoo, voor het hele team. Odoo wordt nooit aangepast; indelen gebeurt enkel in het dashboard. Verzin geen bedragen: gebruik financien_overzicht. Of klanten betaald hebben: financien_betalingen. Contractbedragen van een klant uit de Drive halen: klant_contract_afleiden (geeft een voorstel; overnemen doet het team). Staat er veel ‘nog in te delen’, zeg dat de cijfers dan onvolledig zijn.
 - Schrijf in vlot Nederlands zoals in Vlaanderen. Verzin geen feiten of cijfers.`
 
 const text = (value: unknown) => ({
@@ -690,6 +691,28 @@ export function buildMcpServer(session: AdminSession) {
       return `${next.name} bijgewerkt.`
     },
   )
+  tool(
+    'klant_contract_afleiden',
+    'Zoekt de contracten van een klant in de IKR-Drive (contract, addendum, offerte, freelancecontract) en zet een AI-taak contract_afleiden klaar die maandbedrag, boosting, freelancerkost en looptijd eruit haalt. Het resultaat is een voorstel dat het team op de Klanten-pagina overneemt (of jij met klant_contract_overnemen, enkel als iemand daarom vraagt).',
+    { klant: z.string().describe('naam of id') },
+    false,
+    async ({ klant }) => {
+      const c = await resolveClient(klant)
+      const job = await deriveContract(clients, c.id, BY)
+      const docs = ((job.input as { docs?: { naam: string }[] }).docs ?? []).map((d) => d.naam)
+      return { taak_id: job.id, documenten: docs, uitleg: docs.length ? 'De AI-taak staat klaar (ai_taken_open bij de Grokbot-engine).' : 'Geen contracten gevonden in de Drive.' }
+    },
+  )
+  tool('klant_contract_voorstel', 'Het voorstel uit "leid af uit het contract" voor een klant: status, gevonden bedragen, wat zou veranderen en de gebruikte documenten.', { klant: z.string() }, true, async ({ klant }) => {
+    const c = await resolveClient(klant)
+    return (await loadProposal(c)) ?? `${c.name}: geen voorstel.`
+  })
+  tool('klant_contract_overnemen', 'Neemt het voorstel uit het contract over in de klant (enkel gevonden velden). Enkel als iemand van het team daarom vraagt.', { klant: z.string() }, false, async ({ klant }) => {
+    const c = await resolveClient(klant)
+    const next = await applyContractProposal(clients, c.id)
+    relinkFinance()
+    return `${c.name} bijgewerkt: ${JSON.stringify(next)}`
+  })
   tool('klant_verwijderen', 'Klant uit de lijst halen.', { klant: z.string() }, false, async ({ klant }) => {
     const c = await resolveClient(klant)
     await clients.remove(c.id)
@@ -757,6 +780,20 @@ export function buildMcpServer(session: AdminSession) {
       const clientId = categorie === 'klant' && klant ? (await resolveClient(klant)).id : null
       await setTxCategory(odoo_id, categorie, clientId, { makeRule: Boolean(regel), by: BY })
       return `Ingedeeld als ${CATEGORY_LABELS[categorie]}${regel ? ' (en voortaan altijd zo)' : ''}.`
+    },
+  )
+  tool(
+    'financien_betalingen',
+    'Betalingscheck per klant: kwam het contractbedrag (incl. btw) elke maand binnen? Per maand betaald / deels / open (nog niet vervallen) / achterstallig (21 dagen na het einde van de maand), het achterstallige bedrag, te veel betaald en betalingen met een afwijkend bedrag. Enkel klanten met maandbedrag en contractstart.',
+    { klant: z.string().optional().describe('naam of id; leeg = alle klanten') },
+    true,
+    async ({ klant }) => {
+      await syncFinance().catch(() => undefined)
+      const [txs, cl] = await Promise.all([loadTxs(), loadClients()])
+      const checks = paymentChecks(txs, cl, isoDay(new Date()))
+      if (!klant) return { klanten: checks, zonder_check: cl.filter((c) => !c.monthly_fee || !c.contract_start).map((c) => c.name) }
+      const c = await resolveClient(klant)
+      return checks.find((x) => x.client_id === c.id) ?? `${c.name}: geen maandbedrag of contractstart ingevuld.`
     },
   )
   tool('financien_bijwerken', 'Haalt nu de nieuwste banktransacties en het saldo uit Odoo (enkel lezen).', {}, false, async () => syncFinance({ force: true }))

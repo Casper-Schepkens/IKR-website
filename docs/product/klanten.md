@@ -65,3 +65,16 @@
 2. Is een freelancer altijd één persoon per klant, of meerdere (filmen vs. editen)?
 3. Mogen Cedric en Milan bedragen zien?
 4. Moeten we de klanten uit de Drive-contracten importeren?
+
+## Bedragen en contract (klik op een klant)
+De lijst toont enkel klant, freelancer, contract en hoe lang nog. Klik je op een klant, dan zie je:
+- klant betaalt per maand (excl. btw), freelancer per maand, boosting per maand en wat er overblijft;
+- contractstart, einde, naam op de bank en de link naar het contract;
+- de knoppen **Leid af uit het contract**, Aanpassen en Verwijder.
+
+**Leid af uit het contract** (ook bij een nieuwe klant, standaard aangevinkt):
+1. Het dashboard zoekt in de IKR-Drive (contact@) naar bestanden met "contract", "overeenkomst", "addendum", "offerte" of "freelance" in de naam, die de klant noemen. PDF's en Word-bestanden worden gelezen via een tijdelijke Google Docs-kopie, die meteen weer verwijderd wordt.
+2. Een AI-taak (`contract_afleiden`) haalt er maandbedrag, boosting, freelancerkost en looptijd uit.
+3. Het resultaat is een **voorstel**: je ziet wat er zou veranderen en welke documenten gelezen zijn. Pas met **Overnemen** verandert de klant, en dan wordt ook de contractlink bewaard.
+
+MCP: `klant_contract_afleiden`, `klant_contract_voorstel`, `klant_contract_overnemen` (dat laatste enkel op vraag van het team).
