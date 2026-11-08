@@ -400,3 +400,46 @@ export async function removeFilePermission(owner: string, fileId: string, permis
   })
   if (!res.ok && res.status !== 404) throw new Error(`Delen intrekken mislukt (${res.status}).`)
 }
+
+// ─── Drive lezen (IKR-Drive, bv. contracten) ────────────────────────────────
+export type DriveDoc = { id: string; name: string; mimeType: string; modifiedTime: string; webViewLink: string }
+
+/** Zoekt bestanden in de Drive van `owner` (ook gedeelde drives), nieuwste eerst. `q` = Drive-zoekopdracht. */
+export async function driveSearch(owner: string, q: string, limit = 10): Promise<DriveDoc[]> {
+  const at = await accessToken(owner)
+  const r = await driveGet<{ files?: DriveDoc[] }>(
+    at,
+    `files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,modifiedTime,webViewLink)&orderBy=modifiedTime desc&includeItemsFromAllDrives=true&corpora=allDrives&pageSize=${limit}`,
+  )
+  return r.files ?? []
+}
+
+const DOC = 'application/vnd.google-apps.document'
+const CONVERTIBLE = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword']
+
+/**
+ * Tekst van een Drive-bestand. Google Docs: export als tekst. PDF en Word: tijdelijke Google Docs-kopie
+ * (Google leest de tekst, ook gescand), exporteren en de kopie meteen weer verwijderen.
+ */
+export async function driveText(owner: string, file: Pick<DriveDoc, 'id' | 'mimeType'>, maxChars = 15_000): Promise<string | null> {
+  const at = await accessToken(owner)
+  const exportText = async (id: string) => {
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${id}/export?mimeType=text/plain`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' })
+    if (!res.ok) throw new Error(`Drive export: ${res.status}`)
+    return (await res.text()).slice(0, maxChars)
+  }
+  if (file.mimeType === DOC) return exportText(file.id)
+  if (!CONVERTIBLE.includes(file.mimeType)) return null
+  const copy = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}/copy?fields=id&supportsAllDrives=true`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mimeType: DOC, name: `tmp-ikr-dashboard-${file.id}` }),
+    cache: 'no-store',
+  }).then((r) => r.json() as Promise<{ id?: string; error?: { message?: string } }>)
+  if (!copy.id) throw new Error(`Drive omzetten: ${copy.error?.message ?? 'mislukt'}`)
+  try {
+    return await exportText(copy.id)
+  } finally {
+    await fetch(`https://www.googleapis.com/drive/v3/files/${copy.id}?supportsAllDrives=true`, { method: 'DELETE', headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' }).catch(() => undefined)
+  }
+}
