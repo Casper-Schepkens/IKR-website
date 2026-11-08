@@ -20,6 +20,13 @@
   - ontvangen = volgens de bank;
   - contract, freelancer en boosting = volgens het contract (Klanten-pagina), maal het aantal actieve contractmaanden in de periode.
 
+## Betalingen klanten
+Per klant met een maandbedrag en een contractstart controleert het dashboard elke maand of het contractbedrag binnenkwam (maandbedrag × 1,21).
+- De betalingen worden op volgorde over de contractmaanden verdeeld, dus een late of dubbele betaling vult eerst de oudste open maand.
+- Een maand is **achterstallig** als hij 21 dagen na het einde van de maand (de betalingstermijn uit de contracten) niet helemaal betaald is.
+- Een betaling die geen 1-, 2- of 3-voud van het maandbedrag is, komt bij **afwijkend bedrag**.
+- MCP: `financien_betalingen`.
+
 ## Contract per klant (Klanten)
 De velden zijn: contractstart, maandbedrag (excl. btw), freelancer per maand, boosting per maand en de naam op de bank als die afwijkt (bv. Oh!Ma betaalt als "V.S.A. Foods").
 
@@ -29,6 +36,7 @@ De velden zijn: contractstart, maandbedrag (excl. btw), freelancer per maand, bo
 | `financien_overzicht` | cijfers per periode |
 | `financien_transacties` | lijst met filters |
 | `financien_indelen` | één transactie indelen, optioneel als regel |
+| `financien_betalingen` | betalingscheck per klant |
 | `financien_bijwerken` | nu syncen |
 
 `klant_aanmaken`/`klant_bijwerken` kennen `maandbedrag`, `freelancer_kost`, `boosting`, `contract_start` en `bank_naam`.

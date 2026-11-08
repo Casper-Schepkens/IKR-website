@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { classify, monthlySeries, monthsIn, overview, periodKeyFor, periodOf, shiftPeriod, type ClientLite, type Tx } from './core'
+import { classify, monthlySeries, monthsIn, overview, paymentChecks, periodKeyFor, periodOf, shiftPeriod, type ClientLite, type Tx } from './core'
 
 const client = (o: Partial<ClientLite> & { id: string; name: string }): ClientLite => ({
   bank_name: null,
@@ -93,5 +93,37 @@ describe('overview', () => {
   })
   it('maandreeks voor de grafiek (zonder btw)', () => {
     expect(monthlySeries(txs, ['2026-09'])).toEqual([{ maand: '2026-09', omzet: 1150, kosten: 620, over: 530 }])
+  })
+})
+
+describe('betalingscheck', () => {
+  const lila = client({ id: 'l', name: 'Lilalou', monthly_fee: 1200, contract_start: '2026-08-01', contract_end: '2026-11-30' })
+  const pay = (id: number, date: string, amount: number, client_id: string | null = 'l') => tx({ odoo_id: id, date, amount, counterparty: 'Lilalou Biscuits', category: 'klant', client_id })
+  it('elke maand betaald, oktober nog binnen de termijn', () => {
+    const [c] = paymentChecks([pay(1, '2026-08-27', 1452), pay(2, '2026-09-24', 1452)], [lila], '2026-11-08')
+    expect(c.maanden.map((m) => [m.maand, m.status])).toEqual([
+      ['2026-08', 'betaald'],
+      ['2026-09', 'betaald'],
+      ['2026-10', 'open'],
+      ['2026-11', 'open'],
+    ])
+    expect(c).toMatchObject({ status: 'wacht', achterstallig: 0, afwijkend: [] })
+  })
+  it('achterstallig na 21 dagen na het einde van de maand', () => {
+    const [c] = paymentChecks([pay(1, '2026-08-27', 1452)], [lila], '2026-11-08')
+    expect(c.maanden[1]).toMatchObject({ maand: '2026-09', status: 'achterstallig', vervalt: '2026-10-21' })
+    expect(c).toMatchObject({ status: 'achterstallig', achterstallig: 1452 })
+  })
+  it('een late dubbele betaling vult de oudste maand; afwijkend bedrag wordt gemeld', () => {
+    const [c] = paymentChecks([pay(1, '2026-10-02', 2904), pay(2, '2026-10-30', 1000, null)], [lila], '2026-12-25')
+    expect(c.maanden.map((m) => m.status)).toEqual(['betaald', 'betaald', 'achterstallig', 'achterstallig'])
+    expect(c.maanden[2].ontvangen).toBe(1000)
+    expect(c.afwijkend).toEqual([{ datum: '2026-10-30', bedrag: 1000 }])
+    expect(c.achterstallig).toBe(452 + 1452)
+  })
+  it('geen check zonder maandbedrag of start, en niet na het contract', () => {
+    expect(paymentChecks([], [client({ id: 'x', name: 'X' })], '2026-11-08')).toEqual([])
+    const [c] = paymentChecks([], [lila], '2027-03-01')
+    expect(c.maanden.at(-1)?.maand).toBe('2026-11')
   })
 })

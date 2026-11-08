@@ -39,7 +39,7 @@ import { HANDLERS } from '../ai/handlers'
 import { boardTodos, currentWeekly, weeklyTimeRange } from '../weekly/board'
 import { scheduleWeekly } from '../weekly/schedule'
 import { OWNERS, TEAM } from '../weekly/types'
-import { ALL_CATEGORIES, CATEGORY_LABELS, isInCategory, isOutCategory, overview, periodKeyFor, periodOf, type PeriodKind } from '../finance/core'
+import { ALL_CATEGORIES, CATEGORY_LABELS, isInCategory, isOutCategory, overview, paymentChecks, periodKeyFor, periodOf, type PeriodKind } from '../finance/core'
 import { loadClients, loadTxs, reclassify, setTxCategory, syncFinance, syncState } from '../finance/store'
 
 const BY = 'grokbot'
@@ -60,7 +60,7 @@ Werkwijze:
 - Calls (setter = telefoon, sales = Google Meet): calls_lijst toont ze met lead en context. Een call registreren (call_registreren) maakt GEEN agenda-item en nodigt niemand uit; inplannen met uitnodiging doet Casper zelf in het dashboard. Cijfers via calls_cijfers. Na een call komt het Fireflies-transcript vanzelf binnen (webhook): het dashboard zet het in de Drive en geeft jou een taak call_verwerken (lead bijwerken, bedankmail persoonlijker, analyse). Kon een transcript niet gekoppeld worden: transcripts_ongekoppeld, vraag Casper bij welke call het hoort en gebruik transcript_koppelen.
 - Opvolgen: wachten_op_antwoord_lijst geeft de leads waar wij als laatste mailden zonder antwoord (langst wachtend eerst). Een opvolgmail zet je klaar als concept.
 - Het dashboard kan jou AI-taken geven (bv. antwoorden op sales-mails): haal ze op met ai_taken_open en zet het resultaat terug met ai_taak_klaarzetten.
-- Financiën (financien_*): cijfers uit de bank in Odoo, voor het hele team. Odoo wordt nooit aangepast; indelen gebeurt enkel in het dashboard. Verzin geen bedragen: gebruik financien_overzicht. Staat er veel ‘nog in te delen’, zeg dat de cijfers dan onvolledig zijn.
+- Financiën (financien_*): cijfers uit de bank in Odoo, voor het hele team. Odoo wordt nooit aangepast; indelen gebeurt enkel in het dashboard. Verzin geen bedragen: gebruik financien_overzicht. Of klanten betaald hebben: financien_betalingen. Staat er veel ‘nog in te delen’, zeg dat de cijfers dan onvolledig zijn.
 - Schrijf in vlot Nederlands zoals in Vlaanderen. Verzin geen feiten of cijfers.`
 
 const text = (value: unknown) => ({
@@ -757,6 +757,20 @@ export function buildMcpServer(session: AdminSession) {
       const clientId = categorie === 'klant' && klant ? (await resolveClient(klant)).id : null
       await setTxCategory(odoo_id, categorie, clientId, { makeRule: Boolean(regel), by: BY })
       return `Ingedeeld als ${CATEGORY_LABELS[categorie]}${regel ? ' (en voortaan altijd zo)' : ''}.`
+    },
+  )
+  tool(
+    'financien_betalingen',
+    'Betalingscheck per klant: kwam het contractbedrag (incl. btw) elke maand binnen? Per maand betaald / deels / open (nog niet vervallen) / achterstallig (21 dagen na het einde van de maand), het achterstallige bedrag, te veel betaald en betalingen met een afwijkend bedrag. Enkel klanten met maandbedrag en contractstart.',
+    { klant: z.string().optional().describe('naam of id; leeg = alle klanten') },
+    true,
+    async ({ klant }) => {
+      await syncFinance().catch(() => undefined)
+      const [txs, cl] = await Promise.all([loadTxs(), loadClients()])
+      const checks = paymentChecks(txs, cl, isoDay(new Date()))
+      if (!klant) return { klanten: checks, zonder_check: cl.filter((c) => !c.monthly_fee || !c.contract_start).map((c) => c.name) }
+      const c = await resolveClient(klant)
+      return checks.find((x) => x.client_id === c.id) ?? `${c.name}: geen maandbedrag of contractstart ingevuld.`
     },
   )
   tool('financien_bijwerken', 'Haalt nu de nieuwste banktransacties en het saldo uit Odoo (enkel lezen).', {}, false, async () => syncFinance({ force: true }))

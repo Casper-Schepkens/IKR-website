@@ -279,3 +279,71 @@ export function monthlySeries(txs: Tx[], months: string[]) {
     return { maand: m, omzet, kosten, over: r2(omzet - kosten) }
   })
 }
+
+// ─── Betalingscheck per klant ─────────────────────────────
+export type PaymentStatus = 'betaald' | 'deels' | 'open' | 'achterstallig'
+export type PaymentMonth = { maand: string; verwacht: number; ontvangen: number; status: PaymentStatus; vervalt: string }
+export type PaymentCheck = {
+  client_id: string
+  naam: string
+  maandbedrag_incl_btw: number
+  maanden: PaymentMonth[]
+  verwacht_vervallen: number
+  ontvangen: number
+  achterstallig: number
+  tegoed: number
+  afwijkend: { datum: string; bedrag: number }[]
+  status: 'in_orde' | 'achterstallig' | 'wacht'
+}
+
+/** Betalingstermijn uit de contracten: 21 dagen na de factuur (die valt ten laatste op het einde van de maand). */
+export const PAYMENT_TERM_DAYS = 21
+const addDays = (day: string, n: number) => new Date(Date.parse(`${day}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10)
+
+/**
+ * Kwam elke maand het contractbedrag (incl. btw) binnen? Betalingen van een klant vanaf de contractstart worden
+ * op volgorde over de contractmaanden verdeeld (een late of dubbele betaling vult dus de oudste open maand).
+ * Een maand is achterstallig als hij 21 dagen na het einde van die maand nog niet (helemaal) betaald is.
+ * Betalingen die geen veelvoud van het maandbedrag zijn, komen bij "afwijkend".
+ */
+export function paymentChecks(txs: Tx[], clients: ClientLite[], today: string): PaymentCheck[] {
+  const thisMonth = today.slice(0, 7)
+  const out: PaymentCheck[] = []
+  for (const c of clients) {
+    if (!c.monthly_fee || !c.contract_start) continue
+    const start = c.contract_start.slice(0, 7)
+    const end = !c.contract_indefinite && c.contract_end ? c.contract_end.slice(0, 7) : null
+    const last = end && end < thisMonth ? end : thisMonth
+    if (start > last) continue
+    const months = monthsIn({ kind: 'maand', key: '', label: '', from: `${start}-01`, to: `${last}-28` })
+    const due = r2(c.monthly_fee * (1 + VAT_RATE))
+    const pays = txs
+      .filter((t) => t.category === 'klant' && t.amount > 0 && t.date >= c.contract_start! && (t.client_id ?? matchClient(t, clients)) === c.id)
+      .sort((a, b) => a.date.localeCompare(b.date))
+    let pool = r2(pays.reduce((a, t) => a + t.amount, 0))
+    const maanden = months.map((m): PaymentMonth => {
+      const [y, mo] = m.split('-').map(Number)
+      const vervalt = addDays(`${m}-${pad(lastDay(y, mo))}`, PAYMENT_TERM_DAYS)
+      const got = r2(Math.min(pool, due))
+      pool = r2(pool - got)
+      const status: PaymentStatus = got >= due - 0.5 ? 'betaald' : today > vervalt ? 'achterstallig' : got > 0 ? 'deels' : 'open'
+      return { maand: m, verwacht: due, ontvangen: got, status, vervalt }
+    })
+    const vervallen = maanden.filter((m) => today > m.vervalt)
+    const achterstallig = r2(vervallen.reduce((a, m) => a + (m.verwacht - m.ontvangen), 0))
+    const afwijkend = pays.filter((t) => ![1, 2, 3].some((k) => Math.abs(t.amount - k * due) < 1)).map((t) => ({ datum: t.date, bedrag: t.amount }))
+    out.push({
+      client_id: c.id,
+      naam: c.name,
+      maandbedrag_incl_btw: due,
+      maanden,
+      verwacht_vervallen: r2(vervallen.reduce((a, m) => a + m.verwacht, 0)),
+      ontvangen: r2(pays.reduce((a, t) => a + t.amount, 0)),
+      achterstallig,
+      tegoed: pool,
+      afwijkend,
+      status: achterstallig > 0.5 ? 'achterstallig' : maanden.some((m) => m.status !== 'betaald') ? 'wacht' : 'in_orde',
+    })
+  }
+  return out.sort((a, b) => b.achterstallig - a.achterstallig || a.naam.localeCompare(b.naam))
+}
