@@ -92,7 +92,45 @@ export function CallCard({ call: c, lead, overdue }: { call: Call; lead: CallLea
             Opname ↗
           </a>
         )}
+        {c.transcript_url && (
+          <a href={c.transcript_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#0B7F93]">
+            Transcript ↗
+          </a>
+        )}
+        {c.thank_you_draft_id && (
+          <Link href="/admin/sales/inbox?tab=concepten" className="font-semibold text-[#0B7F93]">
+            Bedankmail
+          </Link>
+        )}
       </div>
+      {!open && !c.transcript_url && c.status === 'afgerond' && (
+        <p className={cn('m-0 text-xs', muted)}>Wacht op het Fireflies-transcript (meestal enkele minuten na de call).</p>
+      )}
+      {c.note && <p className={cn('m-0 text-xs', muted)}>{c.note}</p>}
+      {c.analysis && (
+        <details className="rounded-2xl bg-ikr-cream p-3 text-sm">
+          <summary className="cursor-pointer font-semibold">
+            Feedback van Grok Bot{c.analysis.score ? ` · ${c.analysis.score}/10` : ''}
+          </summary>
+          <p className="m-0 mt-2">{c.analysis.samenvatting}</p>
+          {[
+            ['Goed', c.analysis.goed],
+            ['Beter', c.analysis.beter],
+            ['Tips', c.analysis.tips],
+          ].map(([label, items]) =>
+            (items as string[]).length ? (
+              <div key={label as string} className="mt-2">
+                <strong>{label as string}</strong>
+                <ul className="m-0 mt-1 pl-5">
+                  {(items as string[]).map((x, i) => (
+                    <li key={i}>{x}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null,
+          )}
+        </details>
+      )}
 
       {open && (
         <div className="flex flex-col gap-3 border-t border-[#E6DFD2] pt-3">
@@ -149,7 +187,16 @@ export function CallCard({ call: c, lead, overdue }: { call: Call; lead: CallLea
           )}
 
           <div className="flex flex-wrap items-center gap-2">
-            <button type="button" disabled={pending} onClick={() => run(() => finishCallAction(c.id, 'afgerond'))} className={cn(small, 'bg-[#DDF2DF] text-[#1E5B27]')}>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() =>
+                run<{ draftId: string | null }>(() => finishCallAction(c.id, 'afgerond'), (d) =>
+                  setInfo(d?.draftId ? 'Bedankmail met de ppt staat klaar in Inbox → Concepten.' : 'Call afgerond.'),
+                )
+              }
+              className={cn(small, 'bg-[#DDF2DF] text-[#1E5B27]')}
+            >
               Call afgerond
             </button>
             <button

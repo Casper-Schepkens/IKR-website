@@ -6,7 +6,8 @@ import type { LeadsRepo } from '../sales/repo'
 import { OPEN_STAGES, type Lead } from '../sales/types'
 import { CONTACT_EMAIL, TEAM } from '../weekly/types'
 import type { CallsRepo } from './repo'
-import { CALL_KIND_LABELS, CALL_MINUTES, forwardStage, STAGE_AFTER, type Call, type CallKind } from './types'
+import { CALL_KIND_LABELS, CALL_MINUTES, forwardStage, STAGE_AFTER, thankYouMail, type Call, type CallKind } from './types'
+import { isoDay } from '../format'
 
 /**
  * Calls inplannen, afronden en detecteren. Agenda = de contact-agenda (zoals Casper nu werkt), met een
@@ -101,6 +102,27 @@ export async function finishCall(
   const lead = await deps.leads.get(call.lead_id)
   let draftId: string | null = null
   if (lead && outcome === 'afgerond') await advanceStage(deps.leads, lead, STAGE_AFTER.afgerond[call.kind])
+  // Sales call: meteen een bedankmail met de ppt als concept (wordt persoonlijker zodra het transcript er is).
+  if (lead && outcome === 'afgerond' && call.kind === 'sales' && lead.email && !call.thank_you_draft_id) {
+    const sameDay = isoDay(new Date(call.starts_at)) === isoDay(new Date())
+    const m = thankYouMail(lead.name.split(' ')[0], sameDay ? 'vandaag' : fmtDate(call.starts_at, { weekday: 'long' }))
+    const d = await deps.drafts.create({
+      lead_id: lead.id,
+      from_email: 'casper@iknowright.be',
+      to_email: lead.email,
+      cc: [],
+      subject: m.subject,
+      body: m.body,
+      is_html: false,
+      thread_id: null,
+      in_reply_to: null,
+      context: `Bedankmail na de sales call van ${fmtDate(call.starts_at, { weekday: 'long', day: 'numeric', month: 'long' })}, met de beloofde ppt. Zodra het Fireflies-transcript binnen is, maakt Grok Bot hem persoonlijker (zolang je hem niet aanpaste).`,
+      created_by: by,
+      original_body: m.body,
+    })
+    await deps.calls.update(id, { thank_you_draft_id: d.id })
+    draftId = d.id
+  }
   if (lead && outcome === 'no_show' && lead.email && !(await deps.drafts.list({ leadId: lead.id, status: 'concept' })).some((d) => d.context?.startsWith('No-show'))) {
     const first = lead.name.split(' ')[0]
     const when = fmtDate(call.starts_at, { weekday: 'long', day: 'numeric', month: 'long' })

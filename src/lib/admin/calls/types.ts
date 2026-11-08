@@ -12,6 +12,9 @@ export const CALL_STATUSES = ['gepland', 'afgerond', 'no_show', 'geannuleerd'] a
 export type CallStatus = (typeof CALL_STATUSES)[number]
 export const CALL_STATUS_LABELS: Record<CallStatus, string> = { gepland: 'Gepland', afgerond: 'Afgerond', no_show: 'Kwam niet opdagen', geannuleerd: 'Geannuleerd' }
 
+/** Analyse van een call door Grok Bot (generiek tot er een script is). */
+export type CallAnalysis = { samenvatting: string; goed: string[]; beter: string[]; score: number | null; tips: string[] }
+
 /** De sales-ppt (Google Slides, "iedereen met de link kan bekijken"). */
 export const SALES_PPT_URL = 'https://docs.google.com/presentation/d/1iQxatKi2QdE2FopGM4fx9z2erTqKRqSg/edit?usp=sharing'
 
@@ -31,6 +34,13 @@ export type Call = {
   fireflies_added_at: string | null
   finished_at: string | null
   note: string | null
+  thank_you_draft_id?: string | null
+  fireflies_id?: string | null
+  transcript_url?: string | null
+  transcript_received_at?: string | null
+  analysis?: CallAnalysis | null
+  recording_file_id?: string | null
+  recording_public_permission?: string | null
   created_by: string | null
   /** agenda = gevonden in de contact-agenda (zelf ingepland). */
   created_via: 'dashboard' | 'inbox' | 'grokbot' | 'agenda'
@@ -39,7 +49,7 @@ export type Call = {
 }
 export type NewCall = Pick<Call, 'lead_id' | 'kind' | 'starts_at' | 'ends_at' | 'meet_url' | 'created_by' | 'created_via'> & Partial<Pick<Call, 'note' | 'calendar_event_id' | 'invited'>>
 export type CallPatch = Partial<
-  Pick<Call, 'starts_at' | 'ends_at' | 'kind' | 'status' | 'meet_url' | 'calendar_event_id' | 'calendar_error' | 'invited' | 'recording_url' | 'started_at' | 'fireflies_added_at' | 'finished_at' | 'note'>
+  Pick<Call, 'thank_you_draft_id' | 'fireflies_id' | 'transcript_url' | 'transcript_received_at' | 'analysis' | 'recording_file_id' | 'recording_public_permission' | 'starts_at' | 'ends_at' | 'kind' | 'status' | 'meet_url' | 'calendar_event_id' | 'calendar_error' | 'invited' | 'recording_url' | 'started_at' | 'fireflies_added_at' | 'finished_at' | 'note'>
 >
 
 /** Fase van de lead na inplannen / afronden (enkel vooruit; zie forwardStage). */
@@ -100,4 +110,12 @@ export function insertMeetLink(body: string, meetUrl: string, when: string) {
   const m = body.match(/\n\s*\n((?:groetjes|groeten|vriendelijke groet|met vriendelijke groet|mvg|tot dan|tot snel|tot binnenkort|beste groeten|warme groet)[^\n]*(?:\n[^\n]*)?)\s*$/i)
   if (m && m.index !== undefined) return `${body.slice(0, m.index).trimEnd()}\n\n${line}\n\n${m[1].trim()}`
   return `${body.trimEnd()}\n\n${line}`
+}
+
+/** Bedankmail na een sales call (meteen als concept; wordt persoonlijker zodra het transcript er is). */
+export function thankYouMail(firstName: string, weekday: string) {
+  return {
+    subject: 'Bedankt voor de call',
+    body: `Hoi ${firstName},\n\nBedankt voor de fijne call ${weekday}! Zoals beloofd vind je hier de presentatie: ${SALES_PPT_URL}\n\nLaat gerust weten als je nog vragen hebt.\n\nGroetjes,\nCasper`,
+  }
 }

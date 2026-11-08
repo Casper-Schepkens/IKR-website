@@ -22,9 +22,14 @@ Alles rond setter- en sales calls op één plek (nu verspreid):
 1. **Klaar (PR):** calls-tabel, Calls-pagina, inplannen (inbox + pagina), detectie uit de contact-agenda,
    Call starten + Fireflies-check/toevoegen, Record (setter), afgerond / no-show (+ concept) / annuleren,
    cijfers (`calls_cijfers`), MCP-tools voor elke actie, contact@ volledige Drive-scope.
-2. Bedankmail-concept na "Call afgerond" (sales), persoonlijk gemaakt zodra het transcript er is.
-3. Fireflies-webhook → Drive (Sales / Sales calls / Fireflies) → lead bijwerken; setter-opname naar Fireflies.
-4. Analyse door Grok Bot (feedback per call).
+2. **Klaar:** bedankmail-concept na "Call afgerond" (sales), persoonlijk gemaakt zodra het transcript er is
+   (enkel als Casper er nog niet aan zat).
+3. **Klaar:** Fireflies-webhook `/api/fireflies/webhook` (HMAC, `FIREFLIES_WEBHOOK_SECRET`) → koppelen aan de call
+   (client-referentie, Meet, deelnemer + tijd, titel + tijd; anders "ongekoppeld" voor Grok Bot) → Google Doc in
+   Sales / Sales calls / Fireflies → call afronden als dat vergeten werd → AI-taak `call_verwerken`.
+   Setter-opname: tijdelijk publiek voor Fireflies (`uploadAudio`), ingetrokken bij het transcript of na 24 uur.
+4. **Klaar:** analyse in dezelfde taak (samenvatting, goed, beter, score, tips), op de Calls-pagina onder
+   "Feedback van Grok Bot".
 5. Later: script per soort call, boekingspagina.
 
 ## Regels

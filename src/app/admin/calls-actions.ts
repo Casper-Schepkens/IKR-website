@@ -2,8 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireSales } from '@/lib/admin/session'
-import { addBotToMeeting, isBotInMeeting, isFirefliesConfigured } from '@/lib/admin/fireflies'
-import { shareWithDomain, startDriveUpload } from '@/lib/admin/google'
+import { addBotToMeeting, isBotInMeeting, isFirefliesConfigured, uploadAudio } from '@/lib/admin/fireflies'
+import { makeFilePublic, removeFilePermission, shareWithDomain, startDriveUpload } from '@/lib/admin/google'
 import { fmtDate, fmtTime, isoDay } from '@/lib/admin/format'
 import { cancelCall, finishCall, scheduleCall, syncCallsFromCalendar } from '@/lib/admin/calls/service'
 import { CALL_KIND_LABELS, insertMeetLink, type CallKind } from '@/lib/admin/calls/types'
@@ -150,6 +150,24 @@ export async function finishCallRecordingAction(id: string, fileId: string) {
     const { calls } = await requireSales()
     if (!/^[\w-]{10,}$/.test(fileId)) throw new Error('Ongeldig bestand.')
     const url = await shareWithDomain(CONTACT_EMAIL, fileId, 'iknowright.be')
-    await calls.update(id, { recording_url: url })
+    await calls.update(id, { recording_url: url, recording_file_id: fileId })
+    // Naar Fireflies: tijdelijk "iedereen met de link" zodat Fireflies de opname kan ophalen; de link wordt
+    // ingetrokken zodra het transcript binnen is (en anders na 24 uur door de dagelijkse cron).
+    if (!isFirefliesConfigured()) return { fireflies: 'niet ingesteld' }
+    let perm: string | null = null
+    try {
+      const c = (await calls.get(id))!
+      perm = await makeFilePublic(CONTACT_EMAIL, fileId)
+      await calls.update(id, { recording_public_permission: perm })
+      await uploadAudio(`https://drive.google.com/uc?export=download&id=${encodeURIComponent(fileId)}`, `IKR ${CALL_KIND_LABELS[c.kind].toLowerCase()} ${isoDay(new Date(c.starts_at))}`, id)
+      return { fireflies: 'verstuurd' }
+    } catch (e) {
+      if (perm) {
+        await removeFilePermission(CONTACT_EMAIL, fileId, perm).catch(() => undefined)
+        await calls.update(id, { recording_public_permission: null })
+      }
+      await calls.update(id, { note: `Opname niet naar Fireflies: ${e instanceof Error ? e.message : String(e)}` })
+      return { fireflies: 'mislukt' }
+    }
   })
 }

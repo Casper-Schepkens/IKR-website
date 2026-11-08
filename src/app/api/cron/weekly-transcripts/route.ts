@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createServiceSupabase } from '@/lib/admin/supabase/server'
 import { supabaseWeekly } from '@/lib/admin/weekly/repo'
 import { findTranscript, isFirefliesConfigured } from '@/lib/admin/fireflies'
-import { shareWithDomain, uploadDoc } from '@/lib/admin/google'
+import { removeFilePermission, shareWithDomain, uploadDoc } from '@/lib/admin/google'
 import { CONTACT_EMAIL } from '@/lib/admin/weekly/types'
 import { isoDay } from '@/lib/admin/format'
 
@@ -16,7 +16,10 @@ export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET
   if (!secret || request.headers.get('authorization') !== `Bearer ${secret}`)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!isFirefliesConfigured()) return NextResponse.json({ skipped: 'FIREFLIES_API_KEY ontbreekt' })
+  // Veiligheidsnet calls: een setter-opname die voor Fireflies tijdelijk via een link deelbaar was, na 24 uur
+  // altijd weer afsluiten (normaal gebeurt dat al zodra het transcript binnen is).
+  const revoked = await revokeOldRecordingLinks().catch((e: unknown) => `fout: ${e instanceof Error ? e.message : String(e)}`)
+  if (!isFirefliesConfigured()) return NextResponse.json({ skipped: 'FIREFLIES_API_KEY ontbreekt', revoked })
 
   const repo = supabaseWeekly(createServiceSupabase())
   const since = Date.now() - 14 * 86_400_000
@@ -49,4 +52,20 @@ export async function GET(request: Request) {
     }
   }
   return NextResponse.json({ checked: todo.length, results })
+}
+
+async function revokeOldRecordingLinks() {
+  const db = createServiceSupabase()
+  const { data } = await db
+    .from('calls')
+    .select('id, recording_file_id, recording_public_permission, updated_at')
+    .not('recording_public_permission', 'is', null)
+    .lt('updated_at', new Date(Date.now() - 86_400_000).toISOString())
+  let n = 0
+  for (const c of data ?? []) {
+    await removeFilePermission(CONTACT_EMAIL, c.recording_file_id, c.recording_public_permission).catch(() => undefined)
+    await db.from('calls').update({ recording_public_permission: null }).eq('id', c.id)
+    n++
+  }
+  return n
 }
