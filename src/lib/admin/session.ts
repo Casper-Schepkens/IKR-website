@@ -7,6 +7,7 @@ import { createServerSupabase } from './supabase/server'
 import { memoryLeads, supabaseLeads, type LeadsRepo } from './sales/repo'
 import { memoryWeekly, supabaseWeekly, type WeeklyRepo } from './weekly/repo'
 import { memoryClients, supabaseClients, type ClientsRepo } from './clients/repo'
+import { memoryCalls, supabaseCalls, type CallsRepo } from './calls/repo'
 import { demoDrafts, supabaseDrafts, type DraftsRepo } from './sales/drafts'
 import { demoChat, supabaseChat, type ChatRepo } from './chat/repo'
 import { createServiceSupabase } from './supabase/server'
@@ -22,6 +23,8 @@ export type AdminSession = {
   weekly: WeeklyRepo
   /** Klanten (productie): zichtbaar voor het hele team. */
   clients: ClientsRepo
+  /** Calls (sales; RLS: enkel Casper). */
+  calls: CallsRepo
   drafts: DraftsRepo
   /** Chat met Grok Bot; altijd gefilterd op de eigen user.id. */
   chat: ChatRepo
@@ -52,6 +55,7 @@ export const requireAdmin = cache(async (): Promise<AdminSession> => {
       leads: memoryLeads(),
       weekly: memoryWeekly(),
       clients: memoryClients(),
+      calls: memoryCalls(),
       drafts: demoDrafts(),
       chat: demoChat(),
     }
@@ -69,6 +73,7 @@ export const requireAdmin = cache(async (): Promise<AdminSession> => {
     leads: supabaseLeads(supabase),
     weekly: supabaseWeekly(supabase),
     clients: supabaseClients(supabase),
+    calls: supabaseCalls(supabase),
     drafts: supabaseDrafts(supabase),
     // Server-side met de service role, maar altijd gefilterd op user.id (plus RLS voor directe toegang).
     chat: process.env.SUPABASE_SERVICE_ROLE_KEY ? supabaseChat(createServiceSupabase()) : supabaseChat(supabase),

@@ -15,7 +15,7 @@ export async function liveStamp(session: AdminSession): Promise<string> {
   if (session.mode === 'demo') return demoStamp(session)
   if (!isSupabaseConfigured()) return 'leeg'
   const db = process.env.SUPABASE_SERVICE_ROLE_KEY ? createServiceSupabase() : await createServerSupabase()
-  const [actions, jobs, leads, drafts, todos, notes, weeklies, pins, clients] = await Promise.all([
+  const [actions, jobs, leads, drafts, todos, notes, weeklies, pins, clients, calls] = await Promise.all([
     edge(db, 'bot_actions', 'created_at'),
     edge(db, 'ai_jobs', 'finished_at'),
     edge(db, 'leads', 'updated_at'),
@@ -25,8 +25,9 @@ export async function liveStamp(session: AdminSession): Promise<string> {
     digest(db, 'weeklies', ['id', 'status', 'starts_at', 'mode', 'meet_url', 'concluded_at', 'recording_url']),
     digest(db, 'weekly_pins', ['id', 'kind', 'title', 'body', 'url', 'for_owner', 'pinned']),
     digest(db, 'clients', ['id', 'name', 'freelancer', 'contract_end', 'contract_indefinite']),
+    digest(db, 'calls', ['id', 'status', 'starts_at', 'ends_at', 'kind', 'meet_url', 'recording_url', 'fireflies_added_at']),
   ])
-  return stampFromParts({ actions, jobs, leads, drafts, todos, notes, weeklies, pins, clients })
+  return stampFromParts({ actions, jobs, leads, drafts, todos, notes, weeklies, pins, clients, calls })
 }
 
 async function demoStamp(session: AdminSession) {

@@ -17,37 +17,53 @@ const COLUMNS = 'next_action, follow_up_on, stage, phone, company'
  * Elke wijziging (en elk overgeslagen voorstel) komt in bot_actions.
  */
 export async function applyAfterSend(input: AfterSendInput, output: AfterSendOutput, engine = 'ai') {
+  return applyLeadProposals({
+    leadId: input.lead.id,
+    snapshot: input.lead,
+    day: input.sent.day,
+    ref: input.ref,
+    tool: 'na_verzending',
+    engine,
+    meta: { mail: { onderwerp: input.sent.subject, op: input.sent.at } },
+    output,
+  })
+}
+
+/**
+ * Voorstellen van de AI op een lead toepassen (na een mail of na een call). Elk veld apart en enkel als
+ * het nog de waarde van de momentopname heeft; elke wijziging en elk overgeslagen voorstel in bot_actions.
+ */
+export async function applyLeadProposals(o: {
+  leadId: string
+  snapshot: LeadFields
+  day: string
+  ref: string
+  tool: 'na_verzending' | 'call_verwerken'
+  engine: string
+  meta: Record<string, unknown>
+  output: AfterSendOutput
+}) {
   const db = createServiceSupabase()
-  const { data: current, error } = await db.from('leads').select(COLUMNS).eq('id', input.lead.id).maybeSingle()
+  const { data: current, error } = await db.from('leads').select(COLUMNS).eq('id', o.leadId).maybeSingle()
   if (error) throw new Error(error.message)
   if (!current) return [] // lead intussen verwijderd
-  const plan = planAfterSend(input.lead, current as LeadFields, output, input.sent.day)
+  const plan = planAfterSend(o.snapshot, current as LeadFields, o.output, o.day)
   for (const c of plan) {
     if (c.status === 'toepassen') {
-      const q = db.from('leads').update({ [c.column]: c.to }).eq('id', input.lead.id)
-      const before = input.lead[c.column]
+      const q = db.from('leads').update({ [c.column]: c.to }).eq('id', o.leadId)
+      const before = o.snapshot[c.column]
       const { data, error: upErr } = await (before === null ? q.is(c.column, null) : q.eq(c.column, before)).select('id')
       if (upErr || !data?.length) {
         c.status = 'overgeslagen'
-        c.waarom = upErr ? `Opslaan mislukt: ${upErr.message}` : 'Je had dit veld na het versturen zelf al aangepast.'
+        c.waarom = upErr ? `Opslaan mislukt: ${upErr.message}` : 'Je had dit veld intussen zelf al aangepast.'
       }
     }
     await db.from('bot_actions').insert({
-      bot: engine,
-      tool: 'na_verzending',
+      bot: o.engine,
+      tool: o.tool,
       ok: c.status === 'toepassen',
       error: c.status === 'overgeslagen' ? c.waarom ?? null : null,
-      args: {
-        lead_id: input.lead.id,
-        ref: input.ref,
-        veld: c.field,
-        kolom: c.column,
-        van: c.from,
-        naar: c.to,
-        reden: c.reden,
-        status: c.status,
-        mail: { onderwerp: input.sent.subject, op: input.sent.at },
-      },
+      args: { lead_id: o.leadId, ref: o.ref, veld: c.field, kolom: c.column, van: c.from, naar: c.to, reden: c.reden, status: c.status, ...o.meta },
     })
   }
   return plan
@@ -58,7 +74,7 @@ export type AfterSendLogEntry = {
   created_at: string
   ok: boolean
   error: string | null
-  args: { veld: string; kolom: string; van: string | null; naar: string; reden: string; status: string; mail?: { onderwerp: string; op: string } }
+  args: { veld: string; kolom: string; van: string | null; naar: string; reden: string; status: string; mail?: { onderwerp: string; op: string }; call?: { soort: string; op: string } }
 }
 
 /** Wat de AI na verstuurde mails aan deze lead aanpaste (nieuwste eerst). */
@@ -67,7 +83,7 @@ export async function afterSendLog(leadId: string, limit = 10): Promise<AfterSen
   const { data } = await createServiceSupabase()
     .from('bot_actions')
     .select('id, created_at, ok, error, args')
-    .eq('tool', 'na_verzending')
+    .in('tool', ['na_verzending', 'call_verwerken'])
     .eq('args->>lead_id', leadId)
     .order('created_at', { ascending: false })
     .limit(limit)

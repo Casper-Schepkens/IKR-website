@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
       // Casper: enkel Gmail (sales-inbox); zijn agenda is persoonlijk en krijgt uitnodigingen.
       // Cedric en Milan: hun agenda.
       scopes: forContact
-        ? [SCOPES.calendar, SCOPES.drive, SCOPES.gmailRead]
+        ? [SCOPES.calendar, SCOPES.drive, SCOPES.driveFull, SCOPES.gmailRead]
         : canSeeSales(user.email)
           ? [SCOPES.gmailRead, SCOPES.gmailSend]
           : [SCOPES.calendar],

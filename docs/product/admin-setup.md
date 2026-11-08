@@ -159,3 +159,11 @@ Tokens staan **versleuteld** in `team_google` (AES-256-GCM). Enkel de server lee
 
 **Grok Bot (MCP), enkel lezen, elke oproep in `bot_actions`:** `teamlid_koppelingen`,
 `teamlid_mail_zoeken`, `teamlid_mail_lezen`, `teamlid_bijlage_ophalen`, `teamlid_agenda_events`.
+
+## Calls: Fireflies-webhook
+1. Fireflies → Settings → Developer settings → Webhook:
+   URL `https://iknowright.be/api/fireflies/webhook`, en een geheime sleutel (Secret) die je zelf kiest, bv. met
+   `openssl rand -hex 32`.
+2. Vercel: `FIREFLIES_WEBHOOK_SECRET` = diezelfde sleutel (Production, Sensitive). Zonder die sleutel weigert de
+   route elke melding (503); een foute handtekening geeft 401.
+3. contact@ opnieuw koppelen (Instellingen) voor volledige Drive-rechten (transcripts in Sales / Sales calls / Fireflies).

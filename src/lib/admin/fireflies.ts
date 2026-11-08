@@ -67,14 +67,63 @@ export async function findTranscript(meetUrl: string, from: Date, to: Date) {
   )
   const t = data.transcripts.find((x) => meetCode(x.meeting_link) === code)
   if (!t?.sentences?.length) return null
-  // Opeenvolgende zinnen van dezelfde spreker samenvoegen.
+  return { title: t.title, url: t.transcript_url, text: transcriptText(t.sentences) }
+}
+
+/** Opeenvolgende zinnen van dezelfde spreker samenvoegen tot leesbare tekst. */
+export function transcriptText(sentences: { speaker_name: string | null; text: string }[]) {
   const blocks: { speaker: string; text: string[] }[] = []
-  for (const s of t.sentences) {
+  for (const s of sentences) {
     const speaker = s.speaker_name ?? 'Onbekend'
     const last = blocks[blocks.length - 1]
     if (last?.speaker === speaker) last.text.push(s.text)
     else blocks.push({ speaker, text: [s.text] })
   }
-  const body = blocks.map((b) => `${b.speaker}: ${b.text.join(' ')}`).join('\n\n')
-  return { title: t.title, url: t.transcript_url, text: body }
+  return blocks.map((b) => `${b.speaker}: ${b.text.join(' ')}`).join('\n\n')
+}
+
+export type FirefliesTranscript = {
+  id: string
+  title: string
+  /** ISO */
+  date: string | null
+  duration: number | null
+  meetingLink: string | null
+  participants: string[]
+  firefliesUrl: string | null
+  text: string
+}
+
+/** Eén transcript (na de webhook "Transcription completed"). */
+export async function getTranscript(id: string): Promise<FirefliesTranscript> {
+  const data = await gql<{
+    transcript: (Transcript & { duration: number | null; participants: string[] | null }) | null
+  }>(
+    `query Transcript($id: String!) {
+      transcript(id: $id) { id title date duration meeting_link transcript_url participants sentences { speaker_name text } }
+    }`,
+    { id },
+  )
+  const t = data.transcript
+  if (!t) throw new Error('Fireflies: transcript niet gevonden.')
+  const ms = typeof t.date === 'number' ? t.date : t.date ? Date.parse(String(t.date)) : NaN
+  return {
+    id: t.id,
+    title: t.title ?? '',
+    date: Number.isFinite(ms) ? new Date(ms).toISOString() : null,
+    duration: t.duration ?? null,
+    meetingLink: t.meeting_link,
+    participants: (t.participants ?? []).map((p) => p.toLowerCase()),
+    firefliesUrl: t.transcript_url,
+    text: t.sentences?.length ? transcriptText(t.sentences) : '',
+  }
+}
+
+/** Opname (publieke URL) laten transcriberen; client_reference_id komt terug in de webhook. */
+export async function uploadAudio(url: string, title: string, clientReferenceId: string) {
+  const data = await gql<{ uploadAudio: { success: boolean; message?: string | null } }>(
+    'mutation Upload($input: AudioUploadInput) { uploadAudio(input: $input) { success title message } }',
+    { input: { url, title, client_reference_id: clientReferenceId, custom_language: 'nl' } },
+  )
+  if (!data.uploadAudio.success) throw new Error(`Fireflies weigerde de opname${data.uploadAudio.message ? `: ${data.uploadAudio.message}` : ''}.`)
 }

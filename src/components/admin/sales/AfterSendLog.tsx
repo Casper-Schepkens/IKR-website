@@ -11,7 +11,7 @@ export async function AfterSendLog({ leadId }: { leadId: string }) {
   return (
     <Card className="flex flex-col gap-2 p-5">
       <h2 className="m-0 flex items-center gap-1.5 text-sm font-bold">
-        <Icon.sparkle size={14} /> Na je mail aangepast door de AI
+        <Icon.sparkle size={14} /> Aangepast door de AI (na je mails en calls)
       </h2>
       <ul className="m-0 flex list-none flex-col gap-1.5 p-0 text-sm">
         {entries.map((e) => {
@@ -23,7 +23,7 @@ export async function AfterSendLog({ leadId }: { leadId: string }) {
             <li key={e.id} className={cn('leading-snug', skipped && muted)}>
               <span className={cn('text-xs', muted)}>
                 {fmtDate(e.created_at)} {fmtTime(e.created_at)}
-                {a.mail?.onderwerp ? ` · na "${a.mail.onderwerp}"` : ''}
+                {a.mail?.onderwerp ? ` · na "${a.mail.onderwerp}"` : a.call ? ` · na de ${a.call.soort} call van ${fmtDate(a.call.op)}` : ''}
               </span>
               <br />
               <strong>{label}</strong>: {displayValue(col, a.van)} → {displayValue(col, a.naar)}

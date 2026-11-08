@@ -10,6 +10,8 @@ import { createServiceSupabase } from './supabase/server'
 export const SCOPES = {
   calendar: 'https://www.googleapis.com/auth/calendar.events',
   drive: 'https://www.googleapis.com/auth/drive.file',
+  // contact@ (de IKR-Drive): volledige toegang, om bv. transcripts in bestaande mappen te zetten.
+  driveFull: 'https://www.googleapis.com/auth/drive',
   // Sales-inbox (enkel Casper): mails lezen en antwoorden versturen. Geen verwijderen.
   gmailRead: 'https://www.googleapis.com/auth/gmail.readonly',
   gmailSend: 'https://www.googleapis.com/auth/gmail.send',
@@ -175,6 +177,49 @@ export async function createEvent(opts: {
   return { eventId: json.id, meetUrl: json.hangoutLink ?? null }
 }
 
+/** Verwijdert een agenda-item; `notify` = deelnemers een annulering sturen. */
+export async function deleteEvent(calendarOwner: string, eventId: string, notify: boolean) {
+  const at = await accessToken(calendarOwner)
+  const res = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(eventId)}?sendUpdates=${notify ? 'all' : 'none'}`,
+    { method: 'DELETE', headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' },
+  )
+  if (!res.ok && res.status !== 404 && res.status !== 410) throw new Error(`Agenda-item verwijderen mislukt (${res.status}).`)
+}
+
+export type CalendarEvent = {
+  id: string
+  summary: string
+  start: string
+  end: string
+  meetUrl: string | null
+  attendees: string[]
+  status: string
+}
+
+/** Afspraken (los, niet herhalend) in de agenda van `calendarOwner` tussen twee tijdstippen. Enkel lezen. */
+export async function listEvents(calendarOwner: string, timeMin: Date, timeMax: Date): Promise<CalendarEvent[]> {
+  const at = await accessToken(calendarOwner)
+  const p = new URLSearchParams({ singleEvents: 'true', orderBy: 'startTime', maxResults: '250', timeMin: timeMin.toISOString(), timeMax: timeMax.toISOString() })
+  const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?${p}`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' })
+  const json = (await res.json()) as {
+    items?: { id: string; summary?: string; status?: string; hangoutLink?: string; start?: { dateTime?: string; date?: string }; end?: { dateTime?: string; date?: string }; attendees?: { email?: string }[] }[]
+    error?: { message?: string }
+  }
+  if (!res.ok) throw new Error(`Agenda lezen mislukt: ${json.error?.message ?? res.status}`)
+  return (json.items ?? [])
+    .filter((e) => e.start?.dateTime && e.end?.dateTime) // geen hele-dag-items
+    .map((e) => ({
+      id: e.id,
+      summary: e.summary ?? '',
+      start: new Date(e.start!.dateTime!).toISOString(),
+      end: new Date(e.end!.dateTime!).toISOString(),
+      meetUrl: e.hangoutLink ?? null,
+      attendees: (e.attendees ?? []).map((a) => (a.email ?? '').toLowerCase()).filter(Boolean),
+      status: e.status ?? 'confirmed',
+    }))
+}
+
 /** Zoekt (of maakt) een map in de Drive van `owner`. Met drive.file ziet het dashboard enkel zijn eigen mappen. */
 async function driveFolder(at: string, name: string) {
   const q = `name = '${name.replace(/'/g, "\\'")}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`
@@ -249,4 +294,109 @@ export async function uploadDoc(opts: { owner: string; folder: string; name: str
   const json = (await res.json()) as { id?: string; error?: { message?: string } }
   if (!json.id) throw new Error(`Transcript opslaan in de Drive mislukt: ${json.error?.message ?? res.status}`)
   return json.id
+}
+
+// ─── IKR-Drive (contact@, volledige Drive-rechten) ───────────────────────────
+type DriveFile = { id: string; name: string; parents?: string[] }
+
+async function driveGet<T>(at: string, path: string): Promise<T> {
+  const sep = path.includes('?') ? '&' : '?'
+  const res = await fetch(`https://www.googleapis.com/drive/v3/${path}${sep}supportsAllDrives=true`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' })
+  const json = (await res.json()) as T & { error?: { message?: string } }
+  if (!res.ok) throw new Error(`Drive: ${json.error?.message ?? res.status}`)
+  return json
+}
+
+async function folderNamed(at: string, name: string, parent?: string): Promise<DriveFile[]> {
+  const q = [`name = '${name.replace(/'/g, "\\'")}'`, "mimeType = 'application/vnd.google-apps.folder'", 'trashed = false', parent ? `'${parent}' in parents` : '']
+    .filter(Boolean)
+    .join(' and ')
+  const r = await driveGet<{ files?: DriveFile[] }>(at, `files?q=${encodeURIComponent(q)}&fields=files(id,name,parents)&includeItemsFromAllDrives=true&corpora=allDrives&pageSize=50`)
+  return r.files ?? []
+}
+
+/**
+ * Zoekt een mappenpad (bv. Sales / Sales calls / Fireflies) in de Drive van `owner`, ook in gedeelde
+ * drives; ontbrekende mappen worden aangemaakt (onder het diepste gevonden deel, anders in Mijn Drive).
+ */
+export async function ensureDrivePath(owner: string, path: string[]): Promise<string> {
+  const at = await accessToken(owner)
+  // 1. Bestaat de laatste map al met de juiste ouders?
+  for (const leaf of await folderNamed(at, path[path.length - 1])) {
+    let ok = true
+    let cur: DriveFile = leaf
+    for (let i = path.length - 2; i >= 0 && ok; i--) {
+      const parentId = cur.parents?.[0]
+      if (!parentId) {
+        ok = false
+        break
+      }
+      const p = await driveGet<DriveFile>(at, `files/${encodeURIComponent(parentId)}?fields=id,name,parents`).catch(() => null)
+      if (!p || p.name !== path[i]) ok = false
+      else cur = p
+    }
+    if (ok) return leaf.id
+  }
+  // 2. Anders stap voor stap zoeken en aanmaken.
+  let parent: string | undefined
+  for (const name of path) {
+    const found = (await folderNamed(at, name, parent))[0]
+    if (found) {
+      parent = found.id
+      continue
+    }
+    const res = await fetch('https://www.googleapis.com/drive/v3/files?fields=id&supportsAllDrives=true', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder', ...(parent ? { parents: [parent] } : {}) }),
+      cache: 'no-store',
+    })
+    const json = (await res.json()) as { id?: string; error?: { message?: string } }
+    if (!json.id) throw new Error(`Map "${name}" maken mislukt: ${json.error?.message ?? res.status}`)
+    parent = json.id
+  }
+  return parent!
+}
+
+/** Tekst als Google Doc in een map (ook in een gedeelde drive); geeft de link terug. */
+export async function createDocInFolder(owner: string, folderId: string, name: string, text: string) {
+  const at = await accessToken(owner)
+  const boundary = `ikr${crypto.randomUUID()}`
+  const meta = JSON.stringify({ name, parents: [folderId], mimeType: 'application/vnd.google-apps.document' })
+  const body =
+    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n` +
+    `--${boundary}\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n${text}\r\n--${boundary}--`
+  const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true&fields=id,webViewLink', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${at}`, 'Content-Type': `multipart/related; boundary=${boundary}` },
+    body,
+    cache: 'no-store',
+  })
+  const json = (await res.json()) as { id?: string; webViewLink?: string; error?: { message?: string } }
+  if (!json.id) throw new Error(`Transcript in de Drive zetten mislukt: ${json.error?.message ?? res.status}`)
+  return json.webViewLink ?? `https://docs.google.com/document/d/${json.id}/edit`
+}
+
+/** Tijdelijk "iedereen met de link kan bekijken" (bv. zodat Fireflies een opname kan ophalen). Geeft het permissie-id. */
+export async function makeFilePublic(owner: string, fileId: string) {
+  const at = await accessToken(owner)
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}/permissions?supportsAllDrives=true&fields=id`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'anyone', role: 'reader' }),
+    cache: 'no-store',
+  })
+  const json = (await res.json()) as { id?: string; error?: { message?: string } }
+  if (!json.id) throw new Error(`Opname delen mislukt: ${json.error?.message ?? res.status}`)
+  return json.id
+}
+
+export async function removeFilePermission(owner: string, fileId: string, permissionId: string) {
+  const at = await accessToken(owner)
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}/permissions/${encodeURIComponent(permissionId)}?supportsAllDrives=true`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${at}` },
+    cache: 'no-store',
+  })
+  if (!res.ok && res.status !== 404) throw new Error(`Delen intrekken mislukt (${res.status}).`)
 }
