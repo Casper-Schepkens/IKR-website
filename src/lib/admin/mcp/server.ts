@@ -39,8 +39,11 @@ import { HANDLERS } from '../ai/handlers'
 import { boardTodos, currentWeekly, weeklyTimeRange } from '../weekly/board'
 import { scheduleWeekly } from '../weekly/schedule'
 import { OWNERS, TEAM } from '../weekly/types'
+import { ALL_CATEGORIES, CATEGORY_LABELS, isInCategory, isOutCategory, overview, periodKeyFor, periodOf, type PeriodKind } from '../finance/core'
+import { loadClients, loadTxs, reclassify, setTxCategory, syncFinance, syncState } from '../finance/store'
 
 const BY = 'grokbot'
+const PERIOD_KEY: Record<PeriodKind, RegExp> = { maand: /^\d{4}-(0[1-9]|1[0-2])$/, kwartaal: /^\d{4}-Q[1-4]$/, jaar: /^\d{4}$/ }
 
 const INSTRUCTIONS = `Dit is het IKR-dashboard (iknowright.be/admin) van IKnowRight, een Vlaams TikTok-bureau voor food brands.
 Je bent Grokbot en werkt voor Casper (sales). Je kan alles lezen en aanpassen wat in het dashboard staat:
@@ -57,6 +60,7 @@ Werkwijze:
 - Calls (setter = telefoon, sales = Google Meet): calls_lijst toont ze met lead en context. Een call registreren (call_registreren) maakt GEEN agenda-item en nodigt niemand uit; inplannen met uitnodiging doet Casper zelf in het dashboard. Cijfers via calls_cijfers. Na een call komt het Fireflies-transcript vanzelf binnen (webhook): het dashboard zet het in de Drive en geeft jou een taak call_verwerken (lead bijwerken, bedankmail persoonlijker, analyse). Kon een transcript niet gekoppeld worden: transcripts_ongekoppeld, vraag Casper bij welke call het hoort en gebruik transcript_koppelen.
 - Opvolgen: wachten_op_antwoord_lijst geeft de leads waar wij als laatste mailden zonder antwoord (langst wachtend eerst). Een opvolgmail zet je klaar als concept.
 - Het dashboard kan jou AI-taken geven (bv. antwoorden op sales-mails): haal ze op met ai_taken_open en zet het resultaat terug met ai_taak_klaarzetten.
+- Financiën (financien_*): cijfers uit de bank in Odoo, voor het hele team. Odoo wordt nooit aangepast; indelen gebeurt enkel in het dashboard. Verzin geen bedragen: gebruik financien_overzicht. Staat er veel ‘nog in te delen’, zeg dat de cijfers dan onvolledig zijn.
 - Schrijf in vlot Nederlands zoals in Vlaanderen. Verzin geen feiten of cijfers.`
 
 const text = (value: unknown) => ({
@@ -64,6 +68,16 @@ const text = (value: unknown) => ({
 })
 /** Sleutel waarmee een handler eigen MCP-inhoud teruggeeft (bv. een bijlage als embedded resource). */
 const MCP_CONTENT = '__mcp_content'
+
+/** Banktransacties opnieuw aan klanten koppelen na een klantwijziging; nooit blokkerend. */
+function relinkFinance() {
+  const run = () => reclassify().catch(() => undefined)
+  try {
+    after(run)
+  } catch {
+    void run() // buiten een request (tests)
+  }
+}
 
 const fail = (message: string) => ({ content: [{ type: 'text' as const, text: message }], isError: true })
 
@@ -595,7 +609,19 @@ export function buildMcpServer(session: AdminSession) {
     return 'Doorgeschoven.'
   })
   // ─── Klanten (productie, zichtbaar voor het hele team) ───────────────
-  const clientView = (c: Client) => ({ klant_id: c.id, naam: c.name, freelancer: c.freelancer, contract_tot: c.contract_end, contract_onbepaald: Boolean(c.contract_indefinite), dagen_over: daysLeft(c, isoDay(new Date())) })
+  const clientView = (c: Client) => ({
+    klant_id: c.id,
+    naam: c.name,
+    freelancer: c.freelancer,
+    contract_start: c.contract_start ?? null,
+    contract_tot: c.contract_end,
+    contract_onbepaald: Boolean(c.contract_indefinite),
+    dagen_over: daysLeft(c, isoDay(new Date())),
+    maandbedrag: c.monthly_fee ?? null,
+    freelancer_kost: c.freelancer_cost ?? null,
+    boosting: c.boosting_budget ?? null,
+    bank_naam: c.bank_name ?? null,
+  })
   const resolveClient = async (ref: string) => {
     const all = await clients.list()
     const q = ref.trim().toLowerCase()
@@ -608,6 +634,13 @@ export function buildMcpServer(session: AdminSession) {
     .string()
     .optional()
     .describe('Einde contract: YYYY-MM-DD, leeg (niet gekend) of "onbepaald" (contract van onbepaalde duur, zonder einddatum)')
+  const contractMoney = {
+    contract_start: z.string().optional().describe('Start contract YYYY-MM-DD (leeg = niet gekend)'),
+    maandbedrag: z.union([z.number(), z.string()]).nullable().optional().describe('Wat de klant per maand betaalt, excl. btw, volgens het contract (incl. het boostingbudget als dat mee gefactureerd wordt)'),
+    freelancer_kost: z.union([z.number(), z.string()]).nullable().optional().describe('Wat we de freelancer per maand voor deze klant betalen'),
+    boosting: z.union([z.number(), z.string()]).nullable().optional().describe('Boostingbudget per maand'),
+    bank_naam: z.string().optional().describe('Naam waaronder de klant op de bank verschijnt, als die afwijkt'),
+  }
   const onbepaald = z.boolean().optional().describe('true = contract van onbepaalde duur (wist de einddatum); false = niet onbepaald')
   tool(
     'klanten_lijst',
@@ -619,23 +652,41 @@ export function buildMcpServer(session: AdminSession) {
   tool(
     'klant_aanmaken',
     'Nieuwe klant toevoegen. Contract: een einddatum (contract_tot), onbepaalde duur (contract_tot "onbepaald" of onbepaald: true), of leeg als het niet gekend is.',
-    { naam: z.string(), freelancer: z.string().optional(), contract_tot: contractTot, onbepaald },
+    { naam: z.string(), freelancer: z.string().optional(), contract_tot: contractTot, onbepaald, ...contractMoney },
     false,
-    async ({ naam, freelancer, contract_tot, onbepaald: ind }) =>
-      clientView(await clients.create(cleanClientInput({ name: naam, freelancer, contract_end: contract_tot, indefinite: ind }), BY)),
+    async ({ naam, freelancer, contract_tot, onbepaald: ind, contract_start, maandbedrag, freelancer_kost, boosting, bank_naam }) => {
+      relinkFinance()
+      return clientView(
+        await clients.create(
+          cleanClientInput({ name: naam, freelancer, contract_end: contract_tot, indefinite: ind, contract_start, monthly_fee: maandbedrag, freelancer_cost: freelancer_kost, boosting_budget: boosting, bank_name: bank_naam }),
+          BY,
+        ),
+      )
+    },
   )
   tool(
     'klant_bijwerken',
     'Freelancer, contract of naam van een klant aanpassen. Contract: contract_tot = YYYY-MM-DD (einddatum), "onbepaald" (onbepaalde duur) of leeg (niet gekend); of onbepaald: true/false. Een lege tekst maakt het veld leeg; niet meegegeven velden blijven.',
-    { klant: z.string().describe('naam of id'), naam: z.string().optional(), freelancer: z.string().optional(), contract_tot: contractTot, onbepaald },
+    { klant: z.string().describe('naam of id'), naam: z.string().optional(), freelancer: z.string().optional(), contract_tot: contractTot, onbepaald, ...contractMoney },
     false,
-    async ({ klant, naam, freelancer, contract_tot, onbepaald: ind }) => {
+    async ({ klant, naam, freelancer, contract_tot, onbepaald: ind, contract_start, maandbedrag, freelancer_kost, boosting, bank_naam }) => {
       const c = await resolveClient(klant)
       // Contract enkel aanpassen als het meegegeven is; een datum zet onbepaalde duur uit, onbepaald wist de datum.
       const end = contract_tot !== undefined ? contract_tot : ind ? null : c.contract_end
       const indefinite = ind !== undefined ? ind : contract_tot !== undefined ? false : c.contract_indefinite
-      const next = cleanClientInput({ name: naam ?? c.name, freelancer: freelancer ?? c.freelancer, contract_end: end, indefinite })
+      const next = cleanClientInput({
+        name: naam ?? c.name,
+        freelancer: freelancer ?? c.freelancer,
+        contract_end: end,
+        indefinite,
+        ...(contract_start !== undefined ? { contract_start } : {}),
+        ...(maandbedrag !== undefined ? { monthly_fee: maandbedrag } : {}),
+        ...(freelancer_kost !== undefined ? { freelancer_cost: freelancer_kost } : {}),
+        ...(boosting !== undefined ? { boosting_budget: boosting } : {}),
+        ...(bank_naam !== undefined ? { bank_name: bank_naam } : {}),
+      })
       await clients.update(c.id, next)
+      relinkFinance()
       return `${next.name} bijgewerkt.`
     },
   )
@@ -644,6 +695,71 @@ export function buildMcpServer(session: AdminSession) {
     await clients.remove(c.id)
     return `${c.name} verwijderd.`
   })
+  // ─── Financiën (Odoo, enkel lezen) ──────────────────────
+  const finPeriod = (periode: PeriodKind | undefined, sleutel: string | undefined) => {
+    const kind = periode ?? 'maand'
+    const key = sleutel?.trim() || periodKeyFor(kind, isoDay(new Date()))
+    if (!PERIOD_KEY[kind].test(key)) throw new Error(`Sleutel voor ${kind}: bv. ${kind === 'maand' ? '2026-10' : kind === 'kwartaal' ? '2026-Q4' : '2026'}.`)
+    return periodOf(kind, key)
+  }
+  const periodeArgs = {
+    periode: z.enum(['maand', 'kwartaal', 'jaar']).optional().describe('standaard maand'),
+    sleutel: z.string().optional().describe('2026-10 (maand), 2026-Q4 (kwartaal) of 2026 (jaar); leeg = de huidige'),
+  }
+  tool(
+    'financien_overzicht',
+    'Cijfers van IKR over een maand, kwartaal of jaar (kasbasis, uit de bank in Odoo): omzet excl. btw, freelancers, boosting, andere kosten per categorie (met grootste tegenpartijen), wat overblijft, btw apart, banksaldo, per klant (ontvangen vs contract) en hoeveel nog in te delen is. Bedragen in euro.',
+    periodeArgs,
+    true,
+    async ({ periode, sleutel }) => {
+      const p = finPeriod(periode, sleutel)
+      await syncFinance().catch(() => undefined)
+      const [txs, cl, st] = await Promise.all([loadTxs(), loadClients(), syncState()])
+      return { ...overview(txs, cl, p), banksaldo: st.bank_balance, bijgewerkt: st.synced_at, fout_bij_bijwerken: st.error }
+    },
+  )
+  tool(
+    'financien_transacties',
+    `Banktransacties uit Odoo met hun indeling. Filter op periode, categorie (${ALL_CATEGORIES.join(', ')}) of tekst. "onbekend" = nog in te delen. Max 200, nieuwste eerst.`,
+    { ...periodeArgs, categorie: z.string().optional(), zoek: z.string().optional().describe('tekst in tegenpartij of omschrijving') },
+    true,
+    async ({ periode, sleutel, categorie, zoek }) => {
+      const p = periode || sleutel ? finPeriod(periode, sleutel) : null
+      const [txs, cl] = await Promise.all([loadTxs(), loadClients()])
+      const names = new Map(cl.map((c) => [c.id, c.name]))
+      const q = zoek?.trim().toLowerCase()
+      return txs
+        .filter((t) => (!p || (t.date >= p.from && t.date <= p.to)) && (!categorie || t.category === categorie) && (!q || `${t.counterparty} ${t.description}`.toLowerCase().includes(q)))
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 200)
+        .map((t) => ({
+          odoo_id: t.odoo_id,
+          datum: t.date,
+          bedrag: t.amount,
+          tegenpartij: t.counterparty,
+          omschrijving: t.description,
+          categorie: t.category,
+          categorie_label: CATEGORY_LABELS[t.category] ?? t.category,
+          klant: t.client_id ? (names.get(t.client_id) ?? null) : null,
+          handmatig: t.manual,
+        }))
+    },
+  )
+  tool(
+    'financien_indelen',
+    'Eén banktransactie in een categorie zetten (enkel in het dashboard; Odoo blijft ongewijzigd). Inkomsten: klant (met klant), vennoot_in, terug, overig_in. Uitgaven: freelancer, boosting, marketing, tools, boekhouder, vennoten (onkosten van Casper/Cedric/Milan), vervoer, onkosten, materiaal, overheid, overig_uit, btw. regel: true = dezelfde tegenpartij voortaan altijd zo indelen.',
+    { odoo_id: z.number().int(), categorie: z.string(), klant: z.string().optional().describe('naam of id, enkel bij categorie klant'), regel: z.boolean().optional() },
+    false,
+    async ({ odoo_id, categorie, klant, regel }) => {
+      const tx = (await loadTxs()).find((t) => t.odoo_id === odoo_id)
+      if (!tx) throw new Error('Transactie niet gevonden.')
+      if (!(tx.amount >= 0 ? isInCategory(categorie) : isOutCategory(categorie))) throw new Error(`"${categorie}" past niet bij een ${tx.amount >= 0 ? 'inkomst' : 'uitgave'}.`)
+      const clientId = categorie === 'klant' && klant ? (await resolveClient(klant)).id : null
+      await setTxCategory(odoo_id, categorie, clientId, { makeRule: Boolean(regel), by: BY })
+      return `Ingedeeld als ${CATEGORY_LABELS[categorie]}${regel ? ' (en voortaan altijd zo)' : ''}.`
+    },
+  )
+  tool('financien_bijwerken', 'Haalt nu de nieuwste banktransacties en het saldo uit Odoo (enkel lezen).', {}, false, async () => syncFinance({ force: true }))
   // ─── Prikbord ───────────────────────────────────────────
   const pinView = (p: Pin) => ({ pin_id: p.id, soort: p.kind, titel: p.title, tekst: p.body, link: p.url, voor: p.for_owner, vastgepind: p.pinned, door: p.created_via === 'grokbot' ? 'Grok Bot' : p.created_by, op: p.created_at })
   tool('prikbord_lijst', 'Alle kaartjes op het prikbord van de weekly (vastgepind eerst).', {}, true, async () => sortPins(await weekly.listPins()).map(pinView))

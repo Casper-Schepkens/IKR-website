@@ -40,3 +40,18 @@ describe('onbepaalde duur', () => {
     expect(() => cleanClientInput({ name: 'X', contract_end: '2027-01-31', indefinite: true })).toThrow(/niet allebei/)
   })
 })
+
+describe('cleanClientInput: contractbedragen', () => {
+  it('leest Belgische bedragen en laat lege velden leeg', () => {
+    const c = cleanClientInput({ name: 'Oh!Ma', contract_end: '2027-02-28', contract_start: '2026-09-01', monthly_fee: '1.150,50', freelancer_cost: '', boosting_budget: 150, bank_name: ' V.S.A. Foods ' })
+    expect(c).toMatchObject({ contract_start: '2026-09-01', monthly_fee: 1150.5, freelancer_cost: null, boosting_budget: 150, bank_name: 'V.S.A. Foods' })
+  })
+  it('niet meegegeven velden blijven weg (bestaande waarden niet overschrijven)', () => {
+    expect(cleanClientInput({ name: 'X' })).not.toHaveProperty('monthly_fee')
+    expect(cleanClientInput({ name: 'X', monthly_fee: 1150.125 }).monthly_fee).toBe(1150.13)
+  })
+  it('weigert onzin', () => {
+    expect(() => cleanClientInput({ name: 'X', monthly_fee: 'veel' })).toThrow(/Maandbedrag/)
+    expect(() => cleanClientInput({ name: 'X', contract_start: '1/9/2026' })).toThrow(/Start contract/)
+  })
+})

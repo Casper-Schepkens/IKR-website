@@ -1,6 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
+import { reclassify } from '@/lib/admin/finance/store'
 import { requireAdmin } from '@/lib/admin/session'
 import { cleanClientInput } from '@/lib/admin/clients/types'
 import type { ActionResult } from './actions'
@@ -9,6 +11,9 @@ async function attempt(fn: () => Promise<void>): Promise<ActionResult> {
   try {
     await fn()
     revalidatePath('/admin/klanten')
+    revalidatePath('/admin/financien')
+    // Nieuwe klant of banknaam: banktransacties opnieuw aan klanten koppelen (zonder Odoo).
+    after(() => reclassify().catch(() => undefined))
     return { ok: true }
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Er ging iets mis.' }
@@ -20,7 +25,17 @@ const str = (form: FormData, key: string) => {
 }
 const input = (form: FormData) => {
   const indefinite = str(form, 'contract_kind') === 'onbepaald'
-  return cleanClientInput({ name: str(form, 'name'), freelancer: str(form, 'freelancer'), contract_end: indefinite ? null : str(form, 'contract_end'), indefinite })
+  return cleanClientInput({
+    name: str(form, 'name'),
+    freelancer: str(form, 'freelancer'),
+    contract_end: indefinite ? null : str(form, 'contract_end'),
+    indefinite,
+    contract_start: str(form, 'contract_start'),
+    monthly_fee: str(form, 'monthly_fee'),
+    freelancer_cost: str(form, 'freelancer_cost'),
+    boosting_budget: str(form, 'boosting_budget'),
+    bank_name: str(form, 'bank_name'),
+  })
 }
 
 export async function createClientAction(form: FormData) {

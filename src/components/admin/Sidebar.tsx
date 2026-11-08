@@ -31,6 +31,7 @@ export function Sidebar({
         ]
       : []),
     { href: '/admin/klanten', label: 'Klanten', icon: Icon.board },
+    { href: '/admin/financien', label: 'Financiën', icon: Icon.euro },
     { href: '/admin/weekly', label: 'Weekly', icon: Icon.calendar },
     { href: '/admin/instellingen', label: 'Instellingen', icon: Icon.settings },
   ]
