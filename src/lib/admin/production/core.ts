@@ -58,6 +58,10 @@ export type Production = {
   active: boolean
   note: string | null
 }
+/** Id van de volgende draaidag die nog niet bestaat (verschijnt vanzelf; wordt aangemaakt zodra je iets invult). */
+export const NEXT_CYCLE_ID = 'volgende'
+export const isNextCycle = (c: Pick<Cycle, 'id'> | null | undefined) => c?.id === NEXT_CYCLE_ID
+
 export type Cycle = { id: string; client_id: string; no: number; shoot_on: string | null; shoot_time: string | null; calendar_event_id?: string | null }
 /** Enkel wat afwijkt van de berekening: afgevinkt, eigen deadline, link of notitie. */
 export type StepState = { client_id: string; cycle_id: string | null; step: string; done_at: string | null; done_by: string | null; due_on: string | null; link: string | null; note: string | null }
@@ -74,6 +78,7 @@ export type Step = StepDef & {
   overdue: boolean
 }
 
+const lcFirst = (t: string) => t.charAt(0).toLowerCase() + t.slice(1)
 const addDays = (day: string, n: number) => new Date(Date.parse(`${day}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10)
 
 function anchorDate(a: Anchor, p: Production, c: Cycle | null) {
@@ -83,10 +88,15 @@ function anchorDate(a: Anchor, p: Production, c: Cycle | null) {
   return c?.shoot_on ?? null
 }
 
-function build(def: StepDef, p: Production, c: Cycle | null, states: StepState[], today: string): Step {
+function build(def: StepDef, p: Production, c: Cycle | null, states: StepState[], today: string, prevShoot: (c: Cycle) => string | null = () => null): Step {
   const st = states.find((s) => s.step === def.key && (s.cycle_id ?? null) === (c?.id ?? null))
   const base = def.due ? anchorDate(def.due.from, p, c) : null
   let due = st?.due_on ?? (base ? addDays(base, def.due!.days) : null)
+  // Draaidag plannen: de eerste in de feedbackweek (strategiemeeting + 7), een volgende tegen 21 dagen na de vorige draaidag.
+  if (def.key === 'draaidag_plannen' && !st?.due_on && c) {
+    const prev = prevShoot(c)
+    due = c.no === 1 ? (p.strategy_on ? addDays(p.strategy_on, 7) : null) : prev ? addDays(prev, 21) : null
+  }
   // Strategiemeeting: de ingevulde datum is de deadline; vanzelf af als die voorbij is en er een datum staat.
   if (def.key === 'strategiemeeting' && p.strategy_on && !st?.due_on) due = p.strategy_on
   const autoDone = def.doneWhenSet ? Boolean(anchorDate(def.doneWhenSet, p, c)) : false
@@ -124,7 +134,11 @@ export function clientProduction(c: { id: string; name: string }, p: Production,
   const mine = states.filter((s) => s.client_id === c.id)
   const cs = cycles.filter((x) => x.client_id === c.id).sort((a, b) => a.no - b.no)
   const onboarding = ONBOARDING.map((d) => build(d, p, null, mine, today))
-  const cycleSteps = cs.map((cy) => ({ cycle: cy, steps: CYCLE.map((d) => build(d, p, cy, mine, today)) }))
+  const prevShoot = (cy: Cycle) => cs.filter((x) => x.no < cy.no && x.shoot_on).at(-1)?.shoot_on ?? null
+  // Geen open draaidag meer (of nog geen enkele)? Dan staat de volgende al klaar om te plannen.
+  const allDone = cs.every((cy) => CYCLE.every((d) => build(d, p, cy, mine, today).done))
+  const withNext = allDone ? [...cs, { id: NEXT_CYCLE_ID, client_id: c.id, no: (cs.at(-1)?.no ?? 0) + 1, shoot_on: null, shoot_time: null }] : cs
+  const cycleSteps = withNext.map((cy) => ({ cycle: cy, steps: CYCLE.map((d) => build(d, p, cy, mine, today, prevShoot)) }))
   const open = [...onboarding, ...cycleSteps.flatMap((x) => x.steps)].filter((s) => !s.done)
   const next = open[0] ?? null
   const current = cycleSteps.find((x) => x.steps.some((s) => !s.done)) ?? cycleSteps.at(-1)
@@ -134,8 +148,8 @@ export function clientProduction(c: { id: string; name: string }, p: Production,
       ? `Draaidag ${cs.at(-1)!.no} afgerond`
       : 'Onboarding afgerond'
     : next.cycle
-      ? `Draaidag ${next.cycle.no}: ${next.title.toLowerCase()}`
-      : `Opstart: ${next.title.toLowerCase()}`
+      ? `Draaidag ${next.cycle.no}: ${lcFirst(next.title)}`
+      : `Opstart: ${lcFirst(next.title)}`
   return { client_id: c.id, name: c.name, production: p, cycles: cs, onboarding, cycleSteps, open, next, phase, progress: scope.length ? scope.filter((s) => s.done).length / scope.length : 0 }
 }
 
@@ -167,8 +181,9 @@ export function upcoming(cp: ClientProduction): Step[] {
     const sameSlot = (s: Step) =>
       s === first || (s.due_on ? s.due_on === first.due_on : !first.due_on && s.due?.from === first.due?.from && s.due?.days === first.due?.days)
     out.push(...open.filter(sameSlot))
-    // Onboarding moet af voor de cyclus echt loopt; cycli lopen wel parallel aan elkaar.
-    if (b === cp.onboarding) break
+    // Onboarding moet af voor de cyclus echt loopt (behalve in de feedbackweek: dan plant Cédric al de
+    // eerste draaidag); cycli lopen wel parallel aan elkaar.
+    if (b === cp.onboarding && open.some((s) => s.key !== 'feedback')) break
   }
   return out
 }
