@@ -6,6 +6,9 @@ export type ChatObject = { type: string; id: string }
 /** Voor later: een actie die de frontend uitvoert (bv. een pagina openen). Nu nog niet gebruikt. */
 export type ChatAction = { actie: string; [key: string]: unknown }
 
+/** Bestand bij een chatbericht (in de Drive van contact@). */
+export type ChatAttachment = { file_id: string; name: string; mime: string; url: string; size: number | null }
+
 export type ChatMessage = {
   id: string
   user_id: string
@@ -15,11 +18,12 @@ export type ChatMessage = {
   object_type: string | null
   object_id: string | null
   actions: ChatAction[] | null
+  attachments?: ChatAttachment[] | null
   created_at: string
 }
 
 export type NewChatMessage = Pick<ChatMessage, 'user_id' | 'role' | 'text'> &
-  Partial<Pick<ChatMessage, 'page' | 'object_type' | 'object_id' | 'actions'>>
+  Partial<Pick<ChatMessage, 'page' | 'object_type' | 'object_id' | 'actions' | 'attachments'>>
 
 export interface ChatRepo {
   /** Laatste `limit` berichten van één gebruiker, oudste eerst. */
