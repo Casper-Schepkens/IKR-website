@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useRef, useState, useTransition } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { applyContractAction, deleteClientAction, deriveContractAction, dismissContractAction, updateClientAction } from '@/app/admin/clients-actions'
 import { contractTone, type Client } from '@/lib/admin/clients/types'
 import type { ContractProposal } from '@/lib/admin/clients/contract'
@@ -31,12 +31,20 @@ function DaysPill({ days }: { days: number | null }) {
  * (bedragen, contract) met aanpassen, verwijderen en "Leid af uit het contract".
  */
 export function ClientRow({ client: c, days, proposal }: { client: Client; days: number | null; proposal: ContractProposal | null }) {
-  const [open, setOpen] = useState(false)
+  // "Ga naar klant X" (?klant=id): openklappen en ernaartoe scrollen.
+  const focus = useSearchParams().get('klant') === c.id
+  const rowRef = useRef<HTMLTableRowElement>(null)
+  // Zelf open- of dichtgeklikt gaat voor; anders open als er naartoe gesprongen werd.
+  const [toggled, setOpen] = useState<boolean | null>(null)
+  const open = toggled ?? focus
+  useEffect(() => {
+    if (focus) rowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [focus])
   const busy = proposal?.status === 'pending' || proposal?.status === 'running'
   const detailId = `klant-${c.id}`
   return (
     <>
-      <tr className={cn('border-t border-[#E6DFD2] hover:bg-ikr-cream/60', open && 'bg-ikr-cream/50')}>
+      <tr ref={rowRef} className={cn('scroll-mt-24 border-t border-[#E6DFD2] hover:bg-ikr-cream/60', open && 'bg-ikr-cream/50')}>
         <td className="px-6 py-3">
           <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls={detailId} className="flex items-center gap-2 text-left font-bold text-ikr-navy">
             <span aria-hidden className={cn('inline-block text-xs transition-transform', open && 'rotate-90')}>

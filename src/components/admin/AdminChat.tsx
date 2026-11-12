@@ -1,6 +1,8 @@
 'use client'
 
 import { startTransition, useCallback, useEffect, useRef, useState, useTransition } from 'react'
+import { bestTarget, isNavCommand } from '@/lib/admin/nav/targets'
+import { loadNavTargets, openGoto } from './CommandPalette'
 import { usePathname, useRouter } from 'next/navigation'
 import { getChatAction, sendChatAction } from '@/app/admin/chat-actions'
 import type { ChatMessage } from '@/lib/admin/chat/repo'
@@ -107,6 +109,14 @@ export function AdminChat({ initial }: { initial: State }) {
     setAnchor(null)
     start(async () => {
       setError(null)
+      // "Ga naar …" / "zet de pagina van … open": meteen navigeren, zonder Grok Bot.
+      if (isNavCommand(t)) {
+        const target = bestTarget(await loadNavTargets().catch(() => []), t)
+        setText('')
+        if (target) router.push(target.href)
+        else openGoto(t)
+        return
+      }
       const res = await sendChatAction(t, pathname)
       if (!res.ok) return setError(res.error)
       setText('')

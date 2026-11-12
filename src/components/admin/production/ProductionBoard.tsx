@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useRef, useState, useTransition } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { addShootDayAction, removeShootDayAction, setAnchorAction, setProductionActiveAction, setStartPointAction, startProductionAction } from '@/app/admin/production-actions'
 import { CYCLE, ONBOARDING, WHO_LABEL, type Anchor, type ClientProduction } from '@/lib/admin/production/core'
 import { buttonClass, Card, Empty, input, muted, Pill, Spinner, Title } from '../ui'
@@ -49,10 +49,18 @@ export function ProductionBoard({ list, notStarted, today, temp }: { list: Clien
 }
 
 function ClientRow({ cp, today }: { cp: ClientProduction; today: string }) {
-  const [open, setOpen] = useState(false)
+  // "Ga naar productie van X" (?klant=id): openklappen en ernaartoe scrollen.
+  const focus = useSearchParams().get('klant') === cp.client_id
+  const ref = useRef<HTMLLIElement>(null)
+  // Zelf open- of dichtgeklikt gaat voor; anders open als er naartoe gesprongen werd.
+  const [toggled, setOpen] = useState<boolean | null>(null)
+  const open = toggled ?? focus
+  useEffect(() => {
+    if (focus) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [focus])
   const n = cp.next
   return (
-    <li className={cn('border-t border-[#E6DFD2]', !cp.production.active && 'opacity-60')}>
+    <li ref={ref} className={cn('scroll-mt-24 border-t border-[#E6DFD2]', !cp.production.active && 'opacity-60')}>
       <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="grid w-full grid-cols-1 items-center gap-2 px-6 py-3 text-left hover:bg-ikr-cream/60 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_auto]">
         <span className="flex min-w-0 items-center gap-2">
           <span aria-hidden className={cn('inline-block text-xs transition-transform', open && 'rotate-90')}>
