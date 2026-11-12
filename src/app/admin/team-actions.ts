@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/admin/session'
 import { removeTeamConnection, setSelectedCalendars, type TeamKind } from '@/lib/admin/team/connections'
 import { listCalendars } from '@/lib/admin/team/google-read'
 import { moveUpcomingInvites, setInviteAddress } from '@/lib/admin/team/invites'
+import { saveNavPrefs } from '@/lib/admin/team/nav-prefs'
 import { ownerOf } from '@/lib/admin/weekly/types'
 import type { ActionResult } from './actions'
 
@@ -60,5 +61,16 @@ export async function saveInviteAddressAction(form: FormData) {
     return { ok: true as const, data: { after, moved } }
   } catch (e) {
     return { ok: false as const, error: e instanceof Error ? e.message : 'Er ging iets mis.' }
+  }
+}
+
+/** Zijbalk: eigen volgorde en vastgepinde items (enkel voor jezelf). */
+export async function saveNavPrefsAction(order: string[], pinned: string[]) {
+  try {
+    const { user } = await requireAdmin()
+    await saveNavPrefs(user.email, { order, pinned })
+    return { ok: true as const }
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : 'Bewaren mislukt.' }
   }
 }
