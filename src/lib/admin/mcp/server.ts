@@ -45,6 +45,7 @@ import { HANDLERS } from '../ai/handlers'
 import { boardTodos, currentWeekly, weeklyTimeRange } from '../weekly/board'
 import { scheduleWeekly } from '../weekly/schedule'
 import { OWNERS, TEAM } from '../weekly/types'
+import { notificationsFor } from '../notifications/service'
 import { workspaceRepo } from '../workspace/repo'
 import { BOT as WS_BOT, memberEmail, memberName as wsMemberName } from '../workspace/service'
 import { CARD_KINDS, type CardWithMessages } from '../workspace/types'
@@ -1048,6 +1049,16 @@ export function buildMcpServer(session: AdminSession) {
         ...(actie_uitgevoerd ? { action_status: 'uitgevoerd' as const, bot_busy_since: null } : {}),
       })
       return 'Bijgewerkt.'
+    },
+  )
+  tool(
+    'meldingen_overzicht',
+    'Wat er per teamlid openstaat (dezelfde tellers als de bolletjes in de zijbalk): werkplek (nieuwe kaarten of wachtend op "Doe maar"), SOP-voorstellen, to-do’s te laat, productiestappen te laat; voor Casper ook inbox-concepten, calls af te ronden/transcripts te koppelen, leads op te volgen, aflopende contracten en achterstallige betalingen. Enkel lezen.',
+    { teamlid: owner.optional() },
+    true,
+    async ({ teamlid }) => {
+      const people = teamlid ? TEAM.filter((t) => t.key === teamlid) : TEAM
+      return Object.fromEntries(await Promise.all(people.map(async (t) => [t.name, await notificationsFor(t.email)] as const)))
     },
   )
   // ─── Prikbord ───────────────────────────────────────────

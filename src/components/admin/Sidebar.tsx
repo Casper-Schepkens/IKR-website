@@ -8,6 +8,8 @@ import { Icon } from './ui'
 import { signOutAction } from '@/app/admin/actions'
 import { saveNavPrefsAction } from '@/app/admin/team-actions'
 import { arrangeNav, type NavPrefs } from '@/lib/admin/team/nav-core'
+import { badge, NOTIFY_PAGES } from '@/lib/admin/notifications/core'
+import { useNotifications } from './useNotifications'
 
 type NavItem = { href: string; label: string; icon: (typeof Icon)[keyof typeof Icon]; exact?: boolean }
 
@@ -31,6 +33,11 @@ export function Sidebar({
   const [editing, setEditing] = useState(false)
   const [dragging, setDragging] = useState<string | null>(null)
   const [, start] = useTransition()
+  const counts = useNotifications()
+  const countFor = (href: string) => {
+    const key = (Object.keys(NOTIFY_PAGES) as (keyof typeof NOTIFY_PAGES)[]).find((k) => NOTIFY_PAGES[k] === href)
+    return key ? counts[key] : undefined
+  }
   const nav: NavItem[] = [
     // Grok Bot (werkplek) bovenaan, voor iedereen.
     { href: '/admin/werkplek', label: 'Grok Bot', icon: Icon.sparkle },
@@ -105,6 +112,14 @@ export function Sidebar({
         >
           <I />
           <span className="truncate">{item.label}</span>
+          {badge(countFor(item.href)) && (
+            <span
+              aria-label={`${countFor(item.href)} wacht${countFor(item.href) === 1 ? '' : 'en'} op je`}
+              className={cn('ml-auto inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] leading-5 font-bold', active ? 'bg-ikr-navy text-ikr-cream-light' : 'bg-[#EB6834] text-white')}
+            >
+              {badge(countFor(item.href))}
+            </span>
+          )}
         </Link>
         {editing && (
           <span className="flex shrink-0 items-center text-ikr-cream">
