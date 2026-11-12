@@ -5,7 +5,7 @@ import { sortPins, type NewPin, type Pin } from './pins'
 
 export type NewWeekly = { starts_at: string; ends_at: string; mode: WeeklyMode; created_by: string }
 export type WeeklyPatch = Partial<
-  Pick<Weekly, 'meet_url' | 'calendar_event_id' | 'calendar_error' | 'status' | 'started_at' | 'concluded_at' | 'recording_url'>
+  Pick<Weekly, 'meet_url' | 'calendar_event_id' | 'calendar_error' | 'status' | 'started_at' | 'concluded_at' | 'recording_url' | 'recording_file_id' | 'recording_public_permission'>
 >
 export type NewTodo = { owner: Owner; title: string; kind: 'weekly' | 'long'; weekly_id: string | null; created_by: string }
 

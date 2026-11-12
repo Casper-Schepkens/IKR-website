@@ -8,6 +8,7 @@ import { buttonClass, Card, muted, PageHeader, Pill, Title } from '@/components/
 import { TodoBoard } from '@/components/admin/weekly/TodoBoard'
 import { RetryCalendarButton } from '@/components/admin/weekly/RetryCalendarButton'
 import { Prikbord } from '@/components/admin/weekly/Prikbord'
+import { UploadRecording } from '@/components/admin/weekly/UploadRecording'
 import { SopProposals } from '@/components/admin/sops/SopProposals'
 import { NewTodoForm } from '@/components/admin/weekly/NewTodoForm'
 import { PlanWeeklyForm } from '@/components/admin/weekly/PlanWeeklyForm'
@@ -42,10 +43,11 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
       </PageHeader>
 
       {w.status === 'concluded' ? (
-        <Card>
+        <Card className="flex flex-col gap-3">
           <p className={cn('m-0', muted)}>
             Deze weekly is afgesloten. <Link href="/admin/weekly">Naar de volgende</Link>.
           </p>
+          <UploadRecording weeklyId={w.id} atFireflies={Boolean(w.recording_public_permission)} />
         </Card>
       ) : w.mode === 'live' ? (
         <Card className="flex flex-wrap items-center gap-4">
@@ -60,6 +62,8 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
               Open opname
             </a>
           )}
+          <span className={cn('text-sm', muted)}>of</span>
+          <UploadRecording weeklyId={w.id} atFireflies={Boolean(w.recording_public_permission)} />
         </Card>
       ) : (
         (

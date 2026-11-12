@@ -79,7 +79,8 @@ export async function handleFirefliesEvent(meetingId: string, clientRef: string 
   const call = matchCall(t, calls, leads, clientRef)
   if (!call) {
     // Weeklies: het transcript zelf gaat via de dagelijkse cron naar de Drive; hier enkel SOP-voorstellen.
-    if (/weekly/i.test(t.title)) {
+    if (clientRef?.startsWith('weekly:') || /weekly/i.test(t.title)) {
+      if (clientRef?.startsWith('weekly:')) await revokeWeeklyRecordingLink(clientRef.slice('weekly:'.length)).catch(() => undefined)
       const job = await queueWeeklySops({ id: t.id, title: t.title, date: t.date, text: t.text, url: t.firefliesUrl }).catch((e) => {
         console.error('[sops] weekly', e)
         return null
@@ -157,4 +158,13 @@ export async function processTranscript(callId: string, t: FirefliesTranscript, 
   const job = await enqueue('call_verwerken', input.ref, input as unknown as Record<string, unknown>, 'fireflies')
   if (aiEngine() === 'grokbot') await notifyGrok([job.id])
   else if (aiEngine() === 'api') await runJob(job.id)
+}
+
+/** Opname van een weekly: de tijdelijke publieke link intrekken zodra Fireflies het transcript heeft. */
+async function revokeWeeklyRecordingLink(weeklyId: string) {
+  const db = createServiceSupabase()
+  const { data: w } = await db.from('weeklies').select('recording_file_id, recording_public_permission').eq('id', weeklyId).maybeSingle()
+  if (!w?.recording_file_id || !w.recording_public_permission) return
+  await removeFilePermission(CONTACT_EMAIL, w.recording_file_id, w.recording_public_permission).catch(() => undefined)
+  await db.from('weeklies').update({ recording_public_permission: null }).eq('id', weeklyId)
 }
