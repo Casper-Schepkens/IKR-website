@@ -11,6 +11,17 @@
 - **Voorgestelde actie:** de knoppen **Doe maar** en **Nee**. Bij "Doe maar" voert Grok Bot de actie uit. Hij zet altijd enkel dingen klaar (concepten, to-do's, SOP-voorstellen …) en **verstuurt nooit iets**.
 - **Opdracht** (bovenaan): wordt een kaart "Opdracht" en Grok Bot gaat ermee aan de slag.
 
+## Na elke weekly
+1. De weekly wordt afgesloten in het dashboard.
+2. Fireflies verwerkt de opname (een paar minuten) en stuurt een webhook naar `/api/fireflies/webhook`. Een dagelijkse cron om 6u dient als vangnet.
+3. Het dashboard herkent de weekly aan de titel en maakt de AI-taak `weekly_sops` (weekly verwerken). Met `IKR_AI_ENGINE=grokbot` wordt Cursor geport.
+4. Grok Bot verwerkt het transcript:
+   - **Per persoon** (Casper, Cédric, Milan) een kaart **"Verwerking weekly dd/mm"**: wat voor jou afgesproken is, 0-3 tips en, als het echt nuttig is, een actie met **Doe maar**.
+   - **"@grokbot nieuwe SOP …"** wordt een SOP-voorstel.
+   - **Elke andere "@grokbot …"** wordt een **Opdracht** bij wie het vroeg. Grok Bot gaat er meteen mee aan de slag en zet het resultaat in het draadje.
+
+Dit werkt enkel voor online weeklies, met Fireflies in de Meet. Live weeklies worden opgenomen in de Drive, maar (nog) niet door Fireflies uitgeschreven.
+
 ## Proactief (geplande automation in Cursor)
 Maak in Cursor een **geplande automation**, 2 à 3 keer per dag (bv. 8u, 13u en 17u), met de connector ikr-dashboard en deze prompt:
 

@@ -18,7 +18,9 @@ Zeg tijdens de weekly letterlijk **"@grokbot nieuwe SOP"**, gevolgd door de afsp
 3. Die verschijnen als **SOP-voorstel** op de weekly-pagina en op de SOP-pagina.
 4. Vinkje = afgesproken, kruisje = weg.
 
-Zonder "SOP" in het transcript draait er geen AI-taak.
+Andere "@grokbot …"-vragen worden een opdracht op de werkplek van wie het vroeg (zie `werkplek.md`).
+
+Zonder "SOP" of "grokbot" in het transcript draait er geen AI-taak.
 
 ## Grokbot (MCP)
 | Tool | Doet |
