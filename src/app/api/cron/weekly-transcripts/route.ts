@@ -65,6 +65,13 @@ async function revokeOldRecordingLinks() {
     .not('recording_public_permission', 'is', null)
     .lt('updated_at', new Date(Date.now() - 86_400_000).toISOString())
   let n = 0
+  // Weeklies: zelfde vangnet voor opnames die naar Fireflies gingen.
+  const { data: ws } = await db.from('weeklies').select('id, recording_file_id, recording_public_permission').not('recording_public_permission', 'is', null).lt('starts_at', new Date(Date.now() - 86_400_000).toISOString())
+  for (const w of ws ?? []) {
+    await removeFilePermission(CONTACT_EMAIL, w.recording_file_id, w.recording_public_permission).catch(() => undefined)
+    await db.from('weeklies').update({ recording_public_permission: null }).eq('id', w.id)
+    n++
+  }
   for (const c of data ?? []) {
     await removeFilePermission(CONTACT_EMAIL, c.recording_file_id, c.recording_public_permission).catch(() => undefined)
     await db.from('calls').update({ recording_public_permission: null }).eq('id', c.id)

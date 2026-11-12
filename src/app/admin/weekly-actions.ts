@@ -4,12 +4,12 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/admin/session'
 import { isoDay } from '@/lib/admin/format'
-import { shareWithDomain, startDriveUpload } from '@/lib/admin/google'
+import { makeFilePublic, removeFilePermission, shareWithDomain, startDriveUpload } from '@/lib/admin/google'
 import { scheduleWeekly, syncWeeklyCalendar } from '@/lib/admin/weekly/schedule'
 import { CONTACT_EMAIL, OWNERS, type Owner } from '@/lib/admin/weekly/types'
 import { currentWeekly } from '@/lib/admin/weekly/board'
 import type { ActionResult } from './actions'
-import { addBotToMeeting, isBotInMeeting, isFirefliesConfigured } from '@/lib/admin/fireflies'
+import { addBotToMeeting, isBotInMeeting, isFirefliesConfigured, uploadAudio } from '@/lib/admin/fireflies'
 import { inferKind, safeUrl } from '@/lib/admin/weekly/pins'
 
 async function attempt(fn: () => Promise<void>): Promise<ActionResult> {
@@ -204,13 +204,15 @@ export async function deleteTodoAction(id: string) {
 }
 
 /** Start de upload van een opname van een live weekly naar de Drive van contact@. */
-export async function startWeeklyRecordingAction(id: string, mimeType: string, origin: string) {
+export async function startWeeklyRecordingAction(id: string, mimeType: string, origin: string, fileName?: string) {
   try {
     const session = await requireAdmin()
     const w = await session.weekly.getWeekly(id)
     if (!w) throw new Error('Weekly niet gevonden.')
-    if (!/^audio\/[a-z0-9.+-]+(;.*)?$/i.test(mimeType)) throw new Error('Onbekend opnameformaat.')
-    const ext = mimeType.includes('mp4') ? 'm4a' : mimeType.includes('ogg') ? 'ogg' : 'webm'
+    // Opnemen in het dashboard (audio) of een opname uploaden (audio of video).
+    if (!/^(audio|video)\/[a-z0-9.+-]+(;.*)?$/i.test(mimeType)) throw new Error('Kies een audio- of videobestand.')
+    const fromName = fileName?.match(/\.([a-z0-9]{2,5})$/i)?.[1]?.toLowerCase()
+    const ext = fromName ?? (mimeType.includes('mp4') ? 'm4a' : mimeType.includes('ogg') ? 'ogg' : 'webm')
     const name = `Weekly ${isoDay(new Date(w.starts_at))}.${ext}`
     const url = await startDriveUpload({ owner: CONTACT_EMAIL, folder: 'IKR Dashboard – Weeklies', name, mimeType, origin })
     return { ok: true as const, data: url }
@@ -225,7 +227,23 @@ export async function finishWeeklyRecordingAction(id: string, fileId: string) {
     const session = await requireAdmin()
     if (!/^[\w-]{10,}$/.test(fileId)) throw new Error('Ongeldig bestand.')
     const url = await shareWithDomain(CONTACT_EMAIL, fileId, 'iknowright.be')
-    await session.weekly.updateWeekly(id, { recording_url: url })
+    await session.weekly.updateWeekly(id, { recording_url: url, recording_file_id: fileId })
+    // Naar Fireflies: tijdelijk "iedereen met de link", zodat Fireflies de opname kan ophalen. Zodra het
+    // transcript binnen is (webhook) wordt de link ingetrokken en verwerkt Grok Bot de weekly.
+    if (!isFirefliesConfigured()) throw new Error('Opname staat in de Drive, maar Fireflies is niet ingesteld (FIREFLIES_API_KEY).')
+    const w = (await session.weekly.getWeekly(id))!
+    let perm: string | null = null
+    try {
+      perm = await makeFilePublic(CONTACT_EMAIL, fileId)
+      await session.weekly.updateWeekly(id, { recording_public_permission: perm })
+      await uploadAudio(`https://drive.google.com/uc?export=download&id=${encodeURIComponent(fileId)}`, `IKR weekly ${isoDay(new Date(w.starts_at))}`, `weekly:${id}`)
+    } catch (e) {
+      if (perm) {
+        await removeFilePermission(CONTACT_EMAIL, fileId, perm).catch(() => undefined)
+        await session.weekly.updateWeekly(id, { recording_public_permission: null })
+      }
+      throw new Error(`Opname staat in de Drive, maar niet naar Fireflies: ${e instanceof Error ? e.message : String(e)}`)
+    }
   })
 }
 

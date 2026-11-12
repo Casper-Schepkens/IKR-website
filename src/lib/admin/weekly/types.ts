@@ -31,6 +31,9 @@ export type Weekly = {
   started_at: string | null
   concluded_at: string | null
   recording_url: string | null
+  /** Opname in de Drive en de tijdelijke publieke link voor Fireflies (wordt weer ingetrokken). */
+  recording_file_id?: string | null
+  recording_public_permission?: string | null
   created_by: string | null
   created_at: string
 }
