@@ -177,3 +177,52 @@ async function revokeWeeklyRecordingLink(weeklyId: string) {
   await removeFilePermission(CONTACT_EMAIL, w.recording_file_id, w.recording_public_permission).catch(() => undefined)
   await db.from('weeklies').update({ recording_public_permission: null }).eq('id', weeklyId)
 }
+
+/**
+ * Vangnet (dagelijkse cron): voorbije sales- en settercalls met een Meet-link maar zonder transcript.
+ * Fireflies wordt per call bevraagd op de Meet in een tijdvenster; gevonden = verwerken zoals via de
+ * webhook (één keer). Niet gevonden = een rij "ongekoppeld" zodat het zichtbaar wordt (transcripts_ongekoppeld).
+ */
+export async function catchUpCallTranscripts(deps: Deps = serviceDeps(), now = Date.now()) {
+  const { findTranscript } = await import('../fireflies')
+  const todo = (await deps.calls.list()).filter(
+    (c) =>
+      c.meet_url &&
+      !c.fireflies_id &&
+      !c.transcript_url &&
+      (c.status === 'gepland' || c.status === 'afgerond') &&
+      Date.parse(c.ends_at) < now - 30 * 60_000 &&
+      Date.parse(c.starts_at) > now - 14 * 86_400_000,
+  )
+  const results: { call: string; result: string }[] = []
+  for (const c of todo) {
+    try {
+      const start = Date.parse(c.starts_at)
+      const t = await findTranscript(c.meet_url!, new Date(start - 3_600_000), new Date(Date.parse(c.ends_at) + 6 * 3_600_000))
+      if (t) {
+        const r = await handleFirefliesEvent(t.id, c.id, deps)
+        // Een eerdere "geen transcript"-melding voor deze call is nu achterhaald.
+        await createServiceSupabase().from('call_transcripts').delete().eq('fireflies_id', `geen-transcript:${c.id}`)
+        results.push({ call: c.id, result: r.status })
+        continue
+      }
+      // Geen transcript: zichtbaar maken (één keer per call; een latere vondst overschrijft dit niet).
+      const key = `geen-transcript:${c.id}`
+      const { data: seen } = await createServiceSupabase().from('call_transcripts').select('fireflies_id').eq('fireflies_id', key).maybeSingle()
+      if (!seen)
+        await upsertTranscript({
+          fireflies_id: key,
+          call_id: c.id,
+          title: `Geen Fireflies-transcript gevonden: ${c.kind} call ${c.starts_at.slice(0, 10)}`,
+          meeting_link: c.meet_url,
+          started_at: c.starts_at,
+          status: 'ongekoppeld',
+          error: 'Fireflies vond geen transcript voor deze Meet. Zat Fireflies in de call, of staat het transcript op een ander account?',
+        })
+      results.push({ call: c.id, result: 'geen transcript' })
+    } catch (e) {
+      results.push({ call: c.id, result: e instanceof Error ? e.message : 'mislukt' })
+    }
+  }
+  return results
+}

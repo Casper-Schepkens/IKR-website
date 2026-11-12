@@ -6,6 +6,7 @@ import { removeFilePermission, shareWithDomain, uploadDoc } from '@/lib/admin/go
 import { CONTACT_EMAIL } from '@/lib/admin/weekly/types'
 import { isoDay } from '@/lib/admin/format'
 import { queueWeeklySops } from '@/lib/admin/sops/weekly'
+import { catchUpCallTranscripts } from '@/lib/admin/calls/transcripts'
 
 export const maxDuration = 60
 
@@ -21,6 +22,8 @@ export async function GET(request: Request) {
   // altijd weer afsluiten (normaal gebeurt dat al zodra het transcript binnen is).
   const revoked = await revokeOldRecordingLinks().catch((e: unknown) => `fout: ${e instanceof Error ? e.message : String(e)}`)
   if (!isFirefliesConfigured()) return NextResponse.json({ skipped: 'FIREFLIES_API_KEY ontbreekt', revoked })
+  // Vangnet calls: voorbije sales- en settercalls met Meet maar zonder transcript (webhook gemist).
+  const calls = await catchUpCallTranscripts().catch((e: unknown) => [{ call: '-', result: `fout: ${e instanceof Error ? e.message : String(e)}` }])
 
   const repo = supabaseWeekly(createServiceSupabase())
   const since = Date.now() - 14 * 86_400_000
@@ -54,7 +57,7 @@ export async function GET(request: Request) {
       results.push({ weekly: w.id, result: e instanceof Error ? e.message : 'mislukt' })
     }
   }
-  return NextResponse.json({ checked: todo.length, results })
+  return NextResponse.json({ checked: todo.length, results, calls })
 }
 
 async function revokeOldRecordingLinks() {

@@ -8,8 +8,10 @@ function q(table: string) {
   tables[table] ??= []
   const conds: ((r: Row) => boolean)[] = []
   let patch: Row | null = null
+  let remove = false
   const api = {
     select: () => api,
+    delete: () => ((remove = true), api),
     update: (p: Row) => ((patch = p), api),
     insert: async (row: Row) => {
       // Zoals de echte tabel: fireflies_id is de primaire sleutel van call_transcripts.
@@ -32,6 +34,7 @@ function q(table: string) {
     then: (res: (v: { data: Row[]; error: null }) => void) => {
       const hits = tables[table].filter((r) => conds.every((f) => f(r)))
       if (patch) hits.forEach((r) => Object.assign(r, patch))
+      if (remove) tables[table] = tables[table].filter((r) => !hits.includes(r))
       res({ data: hits, error: null })
     },
   }
@@ -49,8 +52,10 @@ const google = vi.hoisted(() => ({
   removeFilePermission: vi.fn(async () => undefined),
 }))
 vi.mock('../google', () => google)
-const ff = vi.hoisted(() => ({ getTranscript: vi.fn() }))
-vi.mock('../fireflies', async (orig) => ({ ...(await orig<typeof import('../fireflies')>()), getTranscript: ff.getTranscript }))
+const ff = vi.hoisted(() => ({ getTranscript: vi.fn(), findTranscript: vi.fn() }))
+vi.mock('../fireflies', async (orig) => ({ ...(await orig<typeof import('../fireflies')>()), getTranscript: ff.getTranscript, findTranscript: ff.findTranscript }))
+const weeklyJob = vi.hoisted(() => ({ queueWeeklySops: vi.fn(async () => 'JW') }))
+vi.mock('../sops/weekly', () => weeklyJob)
 const jobs = vi.hoisted(() => ({ enqueue: vi.fn(async () => ({ id: 'J1' })), runJob: vi.fn(), aiEngine: () => 'grokbot', isAiConfigured: () => true }))
 vi.mock('../ai/jobs', () => jobs)
 const notify = vi.hoisted(() => ({ notifyGrok: vi.fn() }))
@@ -61,7 +66,7 @@ import { memoryCalls } from './repo'
 import { memoryLeads } from '../sales/repo'
 import { memoryDrafts, type MailDraft } from '../sales/drafts'
 import { finishCall, scheduleCall } from './service'
-import { handleFirefliesEvent, matchCall } from './transcripts'
+import { catchUpCallTranscripts, handleFirefliesEvent, matchCall } from './transcripts'
 import { parseFirefliesWebhook, verifyFirefliesSignature } from './webhook'
 import { CALL_VERWERKEN, HANDLERS } from '../ai/handlers'
 import { SALES_PPT_URL, type Call } from './types'
@@ -142,12 +147,12 @@ describe('deel 3: Fireflies-webhook', () => {
     expect(jobs.enqueue).toHaveBeenCalledTimes(1)
   })
 
-  it('niet te koppelen → bewaard als ongekoppeld; weeklies genegeerd', async () => {
+  it('niet te koppelen → bewaard als ongekoppeld; weeklies naar de weekly-verwerking', async () => {
     ff.getTranscript.mockResolvedValue(transcript({ id: 'FF9', meetingLink: null, participants: [], title: 'Onbekend gesprek' }))
     expect(await handleFirefliesEvent('FF9', null, deps)).toEqual({ status: 'ongekoppeld' })
     expect(tables.call_transcripts.find((r) => r.fireflies_id === 'FF9')?.status).toBe('ongekoppeld')
     ff.getTranscript.mockResolvedValue(transcript({ id: 'FF8', meetingLink: null, participants: [], title: 'IKR weekly 2026-11-05' }))
-    expect(await handleFirefliesEvent('FF8', null, deps)).toEqual({ status: 'genegeerd' })
+    expect(await handleFirefliesEvent('FF8', null, deps)).toEqual({ status: 'weekly_verwerkt' })
   })
 
   it('setter-opname: tijdelijke publieke link wordt ingetrokken zodra het transcript binnen is', async () => {
@@ -218,5 +223,54 @@ describe('Fireflies-webhook V1 en V2', () => {
   it('client-referentie: call-id of weekly:<id>', () => {
     expect(parseFirefliesWebhook(JSON.stringify({ meeting_id: 'X', event: 'meeting.transcribed', client_reference_id: `weekly:${id}` }))).toMatchObject({ clientRef: `weekly:${id}` })
     expect(parseFirefliesWebhook(JSON.stringify({ meeting_id: 'X', event: 'meeting.transcribed', client_reference_id: 'iets anders' }))).toMatchObject({ clientRef: null })
+  })
+})
+
+describe('V1- en V2-payloads tot en met de verwerking', () => {
+  const payloads = (meetingId: string, ref: string | null) => ({
+    v1: JSON.stringify({ meetingId, eventType: 'Transcription completed', clientReferenceId: ref }),
+    v2: JSON.stringify({ meeting_id: meetingId, event: 'meeting.transcribed', client_reference_id: ref }),
+  })
+  for (const version of ['v1', 'v2'] as const) {
+    it(`${version}: sales call wordt gekoppeld en verwerkt`, async () => {
+      const c = await scheduleCall(deps, { leadId: lead.id, kind: 'sales', date: '2026-11-10', time: '14:00', via: 'dashboard', by: 'c' })
+      const id = `S-${version}`
+      ff.getTranscript.mockResolvedValue(transcript({ id }))
+      const ev = parseFirefliesWebhook(payloads(id, c.id)[version])
+      expect(ev).toMatchObject({ action: 'process', meetingId: id, clientRef: c.id })
+      if (ev.action !== 'process') throw new Error('verwacht verwerken')
+      expect(await handleFirefliesEvent(ev.meetingId, ev.clientRef, deps)).toEqual({ status: 'gekoppeld', callId: c.id })
+      expect((await deps.calls.get(c.id))!.fireflies_id).toBe(id)
+      // Tweede event (bv. meeting.summarized) verwerkt niets meer.
+      expect(await handleFirefliesEvent(id, c.id, deps)).toEqual({ status: 'gekoppeld' })
+    })
+    it(`${version}: weekly gaat naar de weekly-verwerking`, async () => {
+      const id = `W-${version}`
+      ff.getTranscript.mockResolvedValue(transcript({ id, meetingLink: null, participants: [], title: 'IKR weekly 2026-11-12' }))
+      const ev = parseFirefliesWebhook(payloads(id, `weekly:9bee4b17-2778-4c9e-bca1-2f548c0864cd`)[version])
+      if (ev.action !== 'process') throw new Error('verwacht verwerken')
+      expect(await handleFirefliesEvent(ev.meetingId, ev.clientRef, deps)).toEqual({ status: 'weekly_verwerkt' })
+      expect(weeklyJob.queueWeeklySops).toHaveBeenCalledWith(expect.objectContaining({ id }))
+      expect(tables.call_transcripts.find((r) => r.fireflies_id === id)?.status).toBe('verwerkt')
+    })
+  }
+})
+
+describe('vangnet: calls zonder transcript (cron)', () => {
+  it('gevonden in Fireflies → verwerkt; niet gevonden → rij "ongekoppeld" (één keer)', async () => {
+    const now = Date.parse('2026-11-11T08:00:00.000Z')
+    const found = await scheduleCall(deps, { leadId: lead.id, kind: 'sales', date: '2026-11-10', time: '14:00', via: 'dashboard', by: 'c' })
+    const missing = await scheduleCall(deps, { leadId: lead.id, kind: 'sales', date: '2026-11-10', time: '16:00', via: 'dashboard', by: 'c' })
+    await deps.calls.update(found.id, { meet_url: 'https://meet.google.com/aaa-bbbb-ccc' })
+    await deps.calls.update(missing.id, { meet_url: 'https://meet.google.com/ddd-eeee-fff' })
+    ff.findTranscript.mockImplementation(async (url: string) => (url.includes('aaa') ? { id: 'FFC', title: 'x', url: null, text: 'tekst' } : null))
+    ff.getTranscript.mockResolvedValue(transcript({ id: 'FFC', meetingLink: 'https://meet.google.com/aaa-bbbb-ccc' }))
+    const r = await catchUpCallTranscripts(deps, now)
+    expect(r).toEqual(expect.arrayContaining([{ call: found.id, result: 'gekoppeld' }, { call: missing.id, result: 'geen transcript' }]))
+    expect((await deps.calls.get(found.id))!.fireflies_id).toBe('FFC')
+    expect(tables.call_transcripts.find((x) => x.fireflies_id === `geen-transcript:${missing.id}`)).toMatchObject({ status: 'ongekoppeld', call_id: missing.id })
+    // Tweede ronde: geen dubbele rij, en de verwerkte call komt niet meer aan bod.
+    await catchUpCallTranscripts(deps, now)
+    expect(tables.call_transcripts.filter((x) => x.fireflies_id === `geen-transcript:${missing.id}`)).toHaveLength(1)
   })
 })
