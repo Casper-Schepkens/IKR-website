@@ -4,7 +4,7 @@ import { createServiceSupabase } from '../supabase/server'
 import { aiEngine, enqueue, isAiConfigured, runJob } from '../ai/jobs'
 import { notifyGrok } from '../ai/notify'
 import type { AdminSession } from '../session'
-import type { ChatMessage, ChatObject } from './repo'
+import type { ChatAttachment, ChatMessage, ChatObject } from './repo'
 
 /** Hoe lang "Grok Bot denkt na…" blijft staan zonder antwoord. */
 const THINKING_MAX_MS = 15 * 60_000
@@ -19,8 +19,9 @@ export function objectFromPage(page: string | null | undefined): ChatObject | nu
  * Bewaart het bericht en maakt een AI-taak 'chat' (met het bericht, de pagina en de laatste 20
  * berichten van deze gebruiker). Daarna wordt Grok Bot gepingd (of loopt de API).
  */
-export async function sendChatMessage(session: AdminSession, opts: { text: string; page: string | null; object?: ChatObject | null }) {
-  const text = opts.text.trim()
+export async function sendChatMessage(session: AdminSession, opts: { text: string; page: string | null; object?: ChatObject | null; attachments?: ChatAttachment[] }) {
+  const attachments = opts.attachments ?? []
+  const text = opts.text.trim() || (attachments.length ? `📎 ${attachments.map((a) => a.name).join(', ')}` : '')
   if (!text) throw new Error('Typ eerst een bericht.')
   if (text.length > 4000) throw new Error('Bericht is te lang (max 4000 tekens).')
   const object = opts.object ?? objectFromPage(opts.page)
@@ -31,6 +32,7 @@ export async function sendChatMessage(session: AdminSession, opts: { text: strin
     page: opts.page,
     object_type: object?.type ?? null,
     object_id: object?.id ?? null,
+    attachments: attachments.length ? attachments : null,
   })
 
   if (session.mode === 'demo') {
@@ -50,7 +52,9 @@ export async function sendChatMessage(session: AdminSession, opts: { text: strin
       page: opts.page,
       object,
       message: text,
-      history: history.map((m) => ({ role: m.role, text: m.text, created_at: m.created_at, object_type: m.object_type, object_id: m.object_id })),
+      // Bijlagen: Grok Bot analyseert ze altijd (drive_bestand_lezen) en doet wat gevraagd wordt.
+      attachments,
+      history: history.map((m) => ({ role: m.role, text: m.text, created_at: m.created_at, object_type: m.object_type, object_id: m.object_id, bijlagen: m.attachments?.map((a) => `${a.name} (${a.file_id})`) ?? undefined })),
     },
     session.user.email,
   )

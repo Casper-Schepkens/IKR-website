@@ -4,8 +4,8 @@ import { startTransition, useCallback, useEffect, useRef, useState, useTransitio
 import { bestTarget, isNavCommand } from '@/lib/admin/nav/targets'
 import { loadNavTargets, openGoto } from './CommandPalette'
 import { usePathname, useRouter } from 'next/navigation'
-import { getChatAction, sendChatAction } from '@/app/admin/chat-actions'
-import type { ChatMessage } from '@/lib/admin/chat/repo'
+import { finishChatUploadAction, getChatAction, sendChatAction, startChatUploadAction } from '@/app/admin/chat-actions'
+import type { ChatAttachment, ChatMessage } from '@/lib/admin/chat/repo'
 import { chatContentKey, chatSnap, isNearBottom, refreshSoon, shouldRefreshForChat } from '@/lib/admin/live'
 import { Icon, muted, Spinner } from './ui'
 import { cn } from '@/utilities/ui'
@@ -25,6 +25,30 @@ export function AdminChat({ initial }: { initial: State }) {
   const [state, setState] = useState<State>(initial)
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
+  // Bijlagen: meteen naar de Drive van contact@ (geen limiet van de server); bij versturen mee met het bericht.
+  const [files, setFiles] = useState<ChatAttachment[]>([])
+  const [uploading, setUploading] = useState(0)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const addFiles = async (list: FileList | null) => {
+    for (const file of Array.from(list ?? []).slice(0, 5)) {
+      setUploading((n) => n + 1)
+      try {
+        const mime = file.type || 'application/octet-stream'
+        const s = await startChatUploadAction(file.name, mime, window.location.origin)
+        if (!s.ok) throw new Error(s.error)
+        const res = await fetch(s.data, { method: 'PUT', headers: { 'Content-Type': mime }, body: file })
+        if (!res.ok) throw new Error(`Uploaden naar de Drive mislukt (${res.status}).`)
+        const { id } = (await res.json()) as { id: string }
+        const f = await finishChatUploadAction(id)
+        if (!f.ok) throw new Error(f.error)
+        setFiles((cur) => [...cur, { file_id: id, name: file.name, mime, url: f.data, size: file.size }].slice(0, 5))
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Uploaden mislukt.')
+      } finally {
+        setUploading((n) => n - 1)
+      }
+    }
+  }
   const [error, setError] = useState<string | null>(null)
   const [seenId, setSeenId] = useState<string | null>(initial.messages.at(-1)?.id ?? null)
   const [pending, start] = useTransition()
@@ -105,21 +129,22 @@ export function AdminChat({ initial }: { initial: State }) {
 
   const send = () => {
     const t = text.trim()
-    if (!t || pending) return
+    if ((!t && !files.length) || pending || uploading) return
     setAnchor(null)
     start(async () => {
       setError(null)
       // "Ga naar …" / "zet de pagina van … open": meteen navigeren, zonder Grok Bot.
-      if (isNavCommand(t)) {
+      if (!files.length && isNavCommand(t)) {
         const target = bestTarget(await loadNavTargets().catch(() => []), t)
         setText('')
         if (target) router.push(target.href)
         else openGoto(t)
         return
       }
-      const res = await sendChatAction(t, pathname)
+      const res = await sendChatAction(t, pathname, files)
       if (!res.ok) return setError(res.error)
       setText('')
+      setFiles([])
       setState(res.data)
     })
   }
@@ -136,6 +161,25 @@ export function AdminChat({ initial }: { initial: State }) {
         send()
       }}
     >
+      <input
+        ref={big ? undefined : fileRef}
+        id={big ? 'chat-panel-file' : 'chat-bar-file'}
+        type="file"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          void addFiles(e.currentTarget.files)
+          e.currentTarget.value = ''
+        }}
+      />
+      <label
+        htmlFor={big ? 'chat-panel-file' : 'chat-bar-file'}
+        title="Bestand toevoegen (komt in de IKR-Drive)"
+        aria-label="Bestand toevoegen"
+        className="ikr-btn flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-ikr-cream-light text-ikr-navy hover:bg-white"
+      >
+        {uploading ? <Spinner /> : <span aria-hidden="true">📎</span>}
+      </label>
       <label className="sr-only" htmlFor={big ? 'chat-panel-input' : 'chat-bar-input'}>
         Bericht aan Grok Bot
       </label>
@@ -158,7 +202,7 @@ export function AdminChat({ initial }: { initial: State }) {
       />
       <button
         type="submit"
-        disabled={pending || !text.trim()}
+        disabled={pending || uploading > 0 || (!text.trim() && !files.length)}
         data-pending={pending}
         aria-label="Versturen"
         className="ikr-btn flex size-11 shrink-0 items-center justify-center rounded-full bg-ikr-navy text-ikr-cream-light disabled:opacity-60"
@@ -187,6 +231,18 @@ export function AdminChat({ initial }: { initial: State }) {
             {unseenReply && <span className="absolute top-1.5 right-1.5 size-2.5 rounded-full bg-ikr-cyan" aria-label="Nieuw antwoord" />}
           </button>
         </div>
+        {files.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 px-1" aria-label="Bijlagen">
+            {files.map((f) => (
+              <span key={f.file_id} className="inline-flex items-center gap-1 rounded-full bg-ikr-cream-light px-2.5 py-1 text-xs font-semibold">
+                📎 {f.name}
+                <button type="button" onClick={() => setFiles((cur) => cur.filter((x) => x.file_id !== f.file_id))} aria-label={`Bijlage ${f.name} weghalen`} className="ml-0.5 opacity-60 hover:opacity-100">
+                  ✕
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
         {(busy || unseenReply || error) && !open && (
           <div className="flex min-w-0 items-center gap-2 px-1 text-xs">
             {busy ? (
@@ -241,6 +297,15 @@ export function AdminChat({ initial }: { initial: State }) {
                       )}
                     >
                       {m.text}
+                      {m.attachments?.length ? (
+                        <span className="mt-1 flex flex-col gap-0.5">
+                          {m.attachments.map((f) => (
+                            <a key={f.file_id} href={f.url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold underline">
+                              📎 {f.name}
+                            </a>
+                          ))}
+                        </span>
+                      ) : null}
                     </div>
                     <span className={cn('px-1 text-[11px]', muted)}>
                       {time(m.created_at)}

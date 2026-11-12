@@ -431,7 +431,10 @@ export async function driveSearch(owner: string, q: string, limit = 10): Promise
 }
 
 const DOC = 'application/vnd.google-apps.document'
+const SLIDES = 'application/vnd.google-apps.presentation'
 const CONVERTIBLE = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword']
+/** PowerPoint wordt een tijdelijke Google Slides-kopie (daarvan kan Google de tekst geven). */
+const TO_SLIDES = ['application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.ms-powerpoint']
 
 /**
  * Tekst van een Drive-bestand. Google Docs: export als tekst. PDF en Word: tijdelijke Google Docs-kopie
@@ -444,12 +447,21 @@ export async function driveText(owner: string, file: Pick<DriveDoc, 'id' | 'mime
     if (!res.ok) throw new Error(`Drive export: ${res.status}`)
     return (await res.text()).slice(0, maxChars)
   }
-  if (file.mimeType === DOC) return exportText(file.id)
-  if (!CONVERTIBLE.includes(file.mimeType)) return null
+  if (file.mimeType === DOC || file.mimeType === SLIDES || file.mimeType === 'application/vnd.google-apps.spreadsheet') {
+    if (file.mimeType !== 'application/vnd.google-apps.spreadsheet') return exportText(file.id)
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}/export?mimeType=text/csv`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' })
+    return res.ok ? (await res.text()).slice(0, maxChars) : null
+  }
+  if (file.mimeType.startsWith('text/') || file.mimeType === 'application/json') {
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&supportsAllDrives=true`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' })
+    return res.ok ? (await res.text()).slice(0, maxChars) : null
+  }
+  const target = TO_SLIDES.includes(file.mimeType) ? SLIDES : CONVERTIBLE.includes(file.mimeType) ? DOC : null
+  if (!target) return null
   const copy = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}/copy?fields=id&supportsAllDrives=true`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ mimeType: DOC, name: `tmp-ikr-dashboard-${file.id}` }),
+    body: JSON.stringify({ mimeType: target, name: `tmp-ikr-dashboard-${file.id}` }),
     cache: 'no-store',
   }).then((r) => r.json() as Promise<{ id?: string; error?: { message?: string } }>)
   if (!copy.id) throw new Error(`Drive omzetten: ${copy.error?.message ?? 'mislukt'}`)
@@ -515,4 +527,24 @@ export async function listCalendarItems(calendarOwner: string, timeMin: Date, ti
     pageToken = json.nextPageToken
   } while (pageToken && out.length < 1000)
   return out
+}
+
+export type DriveFileInfo = { id: string; name: string; mimeType: string; webViewLink: string; parents?: string[]; size?: string }
+
+/** Gegevens van één bestand of map in de Drive van `owner`. */
+export async function driveFileInfo(owner: string, fileId: string): Promise<DriveFileInfo> {
+  const at = await accessToken(owner)
+  return driveGet<DriveFileInfo>(at, `files/${encodeURIComponent(fileId)}?fields=id,name,mimeType,webViewLink,parents,size`)
+}
+
+/** Verplaatst een bestand naar een andere map (Drive van `owner`). Geeft de link terug. */
+export async function moveDriveFile(owner: string, fileId: string, folderId: string) {
+  const at = await accessToken(owner)
+  const info = await driveGet<DriveFileInfo>(at, `files/${encodeURIComponent(fileId)}?fields=id,parents,webViewLink`)
+  const p = new URLSearchParams({ addParents: folderId, supportsAllDrives: 'true', fields: 'id,webViewLink' })
+  if (info.parents?.length) p.set('removeParents', info.parents.join(','))
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?${p}`, { method: 'PATCH', headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' }, body: '{}', cache: 'no-store' })
+  const json = (await res.json()) as { webViewLink?: string; error?: { message?: string } }
+  if (!res.ok) throw new Error(`Verplaatsen in de Drive mislukt: ${json.error?.message ?? res.status}`)
+  return json.webViewLink ?? info.webViewLink
 }
