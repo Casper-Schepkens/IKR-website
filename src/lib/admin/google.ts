@@ -467,3 +467,18 @@ export async function swapAttendee(calendarOwner: string, eventId: string, from:
   if (!patch.ok) throw new Error(`Genodigde aanpassen mislukt (${patch.status}).`)
   return true
 }
+
+/** Hele-dag-item (bv. een draaidag) in de agenda van `calendarOwner`, met uitnodigingen. */
+export async function createAllDayEvent(opts: { calendarOwner: string; summary: string; date: string; attendees: string[]; description?: string }) {
+  const at = await accessToken(opts.calendarOwner)
+  const next = new Date(Date.parse(`${opts.date}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10)
+  const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=all', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ summary: opts.summary, description: opts.description, start: { date: opts.date }, end: { date: next }, attendees: opts.attendees.map((email) => ({ email })), transparency: 'transparent' }),
+    cache: 'no-store',
+  })
+  const json = (await res.json()) as { id?: string; error?: { message?: string } }
+  if (!res.ok || !json.id) throw new Error(`Agenda-item maken mislukt: ${json.error?.message ?? res.status}`)
+  return json.id
+}

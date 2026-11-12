@@ -6,6 +6,7 @@ import { memoryLeads } from '../sales/repo'
 import { memoryWeekly } from '../weekly/repo'
 import { memoryClients } from '../clients/repo'
 import { memorySops } from '../sops/repo'
+import { memoryProduction } from '../production/repo'
 import { memoryCalls } from '../calls/repo'
 import { demoDrafts } from '../sales/drafts'
 import { demoChat } from '../chat/repo'
@@ -32,7 +33,7 @@ export async function handleMcp(req: Request, pathKey?: string) {
   }
 
   const session = demo
-    ? { user: { id: 'grokbot', email: SALES_EMAIL, name: 'Grokbot' }, mode: 'demo' as const, leads: memoryLeads(), weekly: memoryWeekly(), clients: memoryClients(), sops: memorySops(), calls: memoryCalls(), drafts: demoDrafts(), chat: demoChat() }
+    ? { user: { id: 'grokbot', email: SALES_EMAIL, name: 'Grokbot' }, mode: 'demo' as const, leads: memoryLeads(), weekly: memoryWeekly(), clients: memoryClients(), sops: memorySops(), production: memoryProduction(), calls: memoryCalls(), drafts: demoDrafts(), chat: demoChat() }
     : botSession()
   const server = buildMcpServer(session)
   const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true })

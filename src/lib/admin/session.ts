@@ -9,6 +9,7 @@ import { memoryWeekly, supabaseWeekly, type WeeklyRepo } from './weekly/repo'
 import { memoryClients, supabaseClients, type ClientsRepo } from './clients/repo'
 import { memoryCalls, supabaseCalls, type CallsRepo } from './calls/repo'
 import { memorySops, supabaseSops, type SopsRepo } from './sops/repo'
+import { memoryProduction, supabaseProduction, type ProductionRepo } from './production/repo'
 import { demoDrafts, supabaseDrafts, type DraftsRepo } from './sales/drafts'
 import { demoChat, supabaseChat, type ChatRepo } from './chat/repo'
 import { createServiceSupabase } from './supabase/server'
@@ -26,6 +27,8 @@ export type AdminSession = {
   clients: ClientsRepo
   /** SOP's: afspraken en best practices (hele team). */
   sops: SopsRepo
+  /** Productieproces per klant (hele team). */
+  production: ProductionRepo
   /** Calls (sales; RLS: enkel Casper). */
   calls: CallsRepo
   drafts: DraftsRepo
@@ -59,6 +62,7 @@ export const requireAdmin = cache(async (): Promise<AdminSession> => {
       weekly: memoryWeekly(),
       clients: memoryClients(),
       sops: memorySops(),
+      production: memoryProduction(),
       calls: memoryCalls(),
       drafts: demoDrafts(),
       chat: demoChat(),
@@ -78,6 +82,7 @@ export const requireAdmin = cache(async (): Promise<AdminSession> => {
     weekly: supabaseWeekly(supabase),
     clients: supabaseClients(supabase),
     sops: supabaseSops(supabase),
+    production: supabaseProduction(supabase),
     calls: supabaseCalls(supabase),
     drafts: supabaseDrafts(supabase),
     // Server-side met de service role, maar altijd gefilterd op user.id (plus RLS voor directe toegang).
