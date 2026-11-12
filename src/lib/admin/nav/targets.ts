@@ -3,6 +3,7 @@
 export type NavTarget = { label: string; sub: string; href: string; kind: 'pagina' | 'klant' | 'productie' | 'lead' | 'weekly' | 'sop'; keywords?: string }
 
 export const PAGES: (NavTarget & { sales?: boolean })[] = [
+  { label: 'Grok Bot', sub: 'Pagina', href: '/admin/werkplek', kind: 'pagina', keywords: 'werkplek bot opdracht' },
   { label: 'Cold mails', sub: 'Pagina', href: '/admin/sales/cold-mails', kind: 'pagina', keywords: 'apollo sequences', sales: true },
   { label: 'Inbox', sub: 'Pagina', href: '/admin/sales/inbox', kind: 'pagina', keywords: 'mails antwoorden concepten', sales: true },
   { label: 'Calls', sub: 'Pagina', href: '/admin/sales/calls', kind: 'pagina', keywords: 'sales setter call', sales: true },
