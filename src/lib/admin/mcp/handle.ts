@@ -23,6 +23,8 @@ function same(a: string, b: string) {
  * of als laatste stuk van de URL (/api/mcp/<sleutel>) voor apps die geen headers kunnen instellen.
  */
 export async function handleMcp(req: Request, pathKey?: string) {
+  // Stateless: geen aparte SSE-stroom. Zonder dit houdt een client (bv. Cursor) een GET open tot de time-out (2 min).
+  if (req.method === 'GET') return new Response(null, { status: 405, headers: { Allow: 'POST, DELETE' } })
   const demo = !isSupabaseConfigured() && isDemoMode()
   const expected = process.env.GROKBOT_API_KEY
   if (!demo) {
