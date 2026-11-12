@@ -9,12 +9,15 @@ import {
   finishCallAction,
   finishCallRecordingAction,
   firefliesCheckAction,
+  setCallContextAction,
+  setCallSalesPptAction,
   startCallAction,
   startCallRecordingAction,
 } from '@/app/admin/calls-actions'
-import { CALL_KIND_LABELS, CALL_STATUS_LABELS, SALES_PPT_URL, type Call } from '@/lib/admin/calls/types'
+import { CALL_KIND_LABELS, CALL_STATUS_LABELS, salesPptUrl, type Call } from '@/lib/admin/calls/types'
 import { fmtDate, fmtTime } from '@/lib/admin/format'
 import { RecordButton } from '../RecordButton'
+import { Markdown } from '../Markdown'
 import { buttonClass, Card, muted, Pill, Spinner } from '../ui'
 import { cn } from '@/utilities/ui'
 
@@ -68,6 +71,8 @@ export function CallCard({ call: c, lead, overdue }: { call: Call; lead: CallLea
         </div>
       </div>
 
+      <BotContext call={c} />
+
       {lead?.context && <p className={cn('m-0 text-sm', muted)}>{lead.context}</p>}
       {c.calendar_error && <p className="m-0 text-sm text-[#A3470F]">Agenda: {c.calendar_error}</p>}
 
@@ -82,11 +87,7 @@ export function CallCard({ call: c, lead, overdue }: { call: Call; lead: CallLea
             Google Meet ↗
           </a>
         )}
-        {sales && (
-          <a href={SALES_PPT_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#0B7F93]">
-            Sales-ppt ↗
-          </a>
-        )}
+        {sales && <SalesPpt call={c} />}
         {c.recording_url && (
           <a href={c.recording_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#0B7F93]">
             Opname ↗
@@ -249,5 +250,131 @@ export function CallCard({ call: c, lead, overdue }: { call: Call; lead: CallLea
         </p>
       )}
     </Card>
+  )
+}
+
+/** Sales-ppt: standaard of een eigen link voor deze call (potlood om aan te passen; leeg = standaard). */
+function SalesPpt({ call: c }: { call: Call }) {
+  const [editing, setEditing] = useState(false)
+  const [pending, start] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+  const save = (value: string) =>
+    start(async () => {
+      setError(null)
+      const res = await setCallSalesPptAction(c.id, value)
+      if (!res.ok) return setError(res.error)
+      setEditing(false)
+      router.refresh()
+    })
+  if (editing)
+    return (
+      <form
+        className="flex flex-wrap items-center gap-1.5"
+        onSubmit={(e) => {
+          e.preventDefault()
+          save(String(new FormData(e.currentTarget).get('url') ?? ''))
+        }}
+      >
+        <input name="url" type="url" autoFocus defaultValue={c.sales_ppt_url ?? ''} placeholder="https://… (leeg = standaard-ppt)" aria-label="Sales-ppt voor deze call" className="min-h-8 w-64 rounded-lg border-0 bg-ikr-cream px-2.5 text-xs" />
+        <button type="submit" disabled={pending} className={cn(small, 'bg-ikr-navy text-ikr-cream-light')}>
+          Bewaar
+        </button>
+        <button type="button" onClick={() => setEditing(false)} className={cn(small, 'bg-ikr-cream text-ikr-navy')}>
+          Annuleer
+        </button>
+        {pending && <Spinner />}
+        {error && (
+          <span role="alert" className="text-xs text-[#A3470F]">
+            {error}
+          </span>
+        )}
+      </form>
+    )
+  return (
+    <span className="inline-flex items-center gap-1">
+      <a href={salesPptUrl(c)} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#0B7F93]">
+        Sales-ppt ↗
+      </a>
+      {c.sales_ppt_url && <span className={cn('text-xs', muted)}>(eigen)</span>}
+      <button type="button" onClick={() => setEditing(true)} aria-label="Sales-ppt aanpassen" title="Sales-ppt voor deze call aanpassen" className="rounded-full p-1 text-xs text-[#5E5670] hover:bg-ikr-cream">
+        ✎
+      </button>
+    </span>
+  )
+}
+
+const who = (by: string | null | undefined) => (!by ? '' : by === 'grokbot' ? 'Grok Bot' : by.split('@')[0].replace(/^./, (x) => x.toUpperCase()))
+
+/** "Context van Grok Bot": markdown die de bot klaarzet (apart van Caspers notitie), inklapbaar en aanpasbaar. */
+function BotContext({ call: c }: { call: Call }) {
+  const has = Boolean(c.bot_context?.trim())
+  const [open, setOpen] = useState(true)
+  const [editing, setEditing] = useState(false)
+  const [pending, start] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+  const save = (text: string) =>
+    start(async () => {
+      setError(null)
+      const res = await setCallContextAction(c.id, text)
+      if (!res.ok) return setError(res.error)
+      setEditing(false)
+      router.refresh()
+    })
+  return (
+    <section aria-label="Context van Grok Bot" className="flex flex-col gap-2 rounded-2xl border-l-4 border-[#7B6BB0] bg-[#F3F0FA] px-4 py-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="flex items-center gap-1.5 text-left text-sm font-bold">
+          <span aria-hidden className={cn('inline-block text-xs transition-transform', open && 'rotate-90')}>
+            ▸
+          </span>
+          Context van Grok Bot
+        </button>
+        {!has && !editing && <span className={cn('text-xs', muted)}>nog leeg</span>}
+        {!editing && (
+          <button type="button" onClick={() => (setEditing(true), setOpen(true))} className="ml-auto rounded-full px-2 py-0.5 text-xs text-[#5E5670] hover:bg-white" aria-label="Context van Grok Bot aanpassen">
+            ✎ Aanpassen
+          </button>
+        )}
+      </div>
+      {open &&
+        (editing ? (
+          <form
+            className="flex flex-col gap-2"
+            onSubmit={(e) => {
+              e.preventDefault()
+              save(String(new FormData(e.currentTarget).get('text') ?? ''))
+            }}
+          >
+            <textarea name="text" rows={8} autoFocus defaultValue={c.bot_context ?? ''} aria-label="Context van Grok Bot (markdown)" placeholder={'# Kopje\n- opsomming\n[link](https://…)'} className="w-full resize-y rounded-xl border-0 bg-white px-3 py-2 font-mono text-[13px]" />
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="submit" disabled={pending} className={cn(small, 'bg-ikr-navy text-ikr-cream-light')}>
+                Bewaar
+              </button>
+              <button type="button" onClick={() => setEditing(false)} className={cn(small, 'bg-white text-ikr-navy')}>
+                Annuleer
+              </button>
+              <span className={cn('text-xs', muted)}>Markdown: # kopje, - opsomming, **vet**, [tekst](https://…)</span>
+              {pending && <Spinner />}
+              {error && (
+                <span role="alert" className="text-xs text-[#A3470F]">
+                  {error}
+                </span>
+              )}
+            </div>
+          </form>
+        ) : has ? (
+          <Markdown text={c.bot_context!} />
+        ) : (
+          <p className={cn('m-0 text-xs', muted)}>Grok Bot zet hier achtergrond over de lead en de call klaar.</p>
+        ))}
+      {open && has && c.bot_context_updated_at && !editing && (
+        <p className={cn('m-0 text-[11px]', muted)}>
+          Laatst bijgewerkt {fmtDate(c.bot_context_updated_at, { day: 'numeric', month: 'short' })} om {fmtTime(c.bot_context_updated_at)}
+          {c.bot_context_updated_by ? ` door ${who(c.bot_context_updated_by)}` : ''}
+        </p>
+      )}
+    </section>
   )
 }

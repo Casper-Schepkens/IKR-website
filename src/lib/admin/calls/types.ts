@@ -16,7 +16,17 @@ export const CALL_STATUS_LABELS: Record<CallStatus, string> = { gepland: 'Geplan
 export type CallAnalysis = { samenvatting: string; goed: string[]; beter: string[]; score: number | null; tips: string[] }
 
 /** De sales-ppt (Google Slides, "iedereen met de link kan bekijken"). */
+/** Standaard sales-ppt; per call te vervangen (call.sales_ppt_url). */
 export const SALES_PPT_URL = 'https://docs.google.com/presentation/d/1iQxatKi2QdE2FopGM4fx9z2erTqKRqSg/edit?usp=sharing'
+/** De sales-ppt van een call: eigen link of de standaard. */
+export const salesPptUrl = (c: Pick<Call, 'sales_ppt_url'>) => c.sales_ppt_url || SALES_PPT_URL
+/** Eigen sales-ppt: enkel https; leeg = terug naar de standaard (null). */
+export function cleanPptUrl(v: string | null | undefined): string | null {
+  const t = v?.trim() || ''
+  if (!t) return null
+  if (!/^https:\/\/[^\s]+$/i.test(t)) throw new Error('De ppt-link moet met https:// beginnen.')
+  return t.slice(0, 2000)
+}
 
 export type Call = {
   id: string
@@ -41,6 +51,12 @@ export type Call = {
   analysis?: CallAnalysis | null
   recording_file_id?: string | null
   recording_public_permission?: string | null
+  /** Eigen sales-ppt voor deze call; leeg = SALES_PPT_URL (standaard). */
+  sales_ppt_url?: string | null
+  /** "Context van Grok Bot" (markdown), apart van Caspers notitie; wie en wanneer laatst bijgewerkt. */
+  bot_context?: string | null
+  bot_context_updated_at?: string | null
+  bot_context_updated_by?: string | null
   created_by: string | null
   /** agenda = gevonden in de contact-agenda (zelf ingepland). */
   created_via: 'dashboard' | 'inbox' | 'grokbot' | 'agenda'
@@ -49,7 +65,7 @@ export type Call = {
 }
 export type NewCall = Pick<Call, 'lead_id' | 'kind' | 'starts_at' | 'ends_at' | 'meet_url' | 'created_by' | 'created_via'> & Partial<Pick<Call, 'note' | 'calendar_event_id' | 'invited'>>
 export type CallPatch = Partial<
-  Pick<Call, 'thank_you_draft_id' | 'fireflies_id' | 'transcript_url' | 'transcript_received_at' | 'analysis' | 'recording_file_id' | 'recording_public_permission' | 'starts_at' | 'ends_at' | 'kind' | 'status' | 'meet_url' | 'calendar_event_id' | 'calendar_error' | 'invited' | 'recording_url' | 'started_at' | 'fireflies_added_at' | 'finished_at' | 'note'>
+  Pick<Call, 'thank_you_draft_id' | 'fireflies_id' | 'transcript_url' | 'transcript_received_at' | 'analysis' | 'recording_file_id' | 'recording_public_permission' | 'sales_ppt_url' | 'bot_context' | 'bot_context_updated_at' | 'bot_context_updated_by' | 'starts_at' | 'ends_at' | 'kind' | 'status' | 'meet_url' | 'calendar_event_id' | 'calendar_error' | 'invited' | 'recording_url' | 'started_at' | 'fireflies_added_at' | 'finished_at' | 'note'>
 >
 
 /** Fase van de lead na inplannen / afronden (enkel vooruit; zie forwardStage). */
@@ -113,9 +129,17 @@ export function insertMeetLink(body: string, meetUrl: string, when: string) {
 }
 
 /** Bedankmail na een sales call (meteen als concept; wordt persoonlijker zodra het transcript er is). */
-export function thankYouMail(firstName: string, weekday: string) {
+export function thankYouMail(firstName: string, weekday: string, pptUrl: string = SALES_PPT_URL) {
   return {
     subject: 'Bedankt voor de call',
-    body: `Hoi ${firstName},\n\nBedankt voor de fijne call ${weekday}! Zoals beloofd vind je hier de presentatie: ${SALES_PPT_URL}\n\nLaat gerust weten als je nog vragen hebt.\n\nGroetjes,\nCasper`,
+    body: `Hoi ${firstName},\n\nBedankt voor de fijne call ${weekday}! Zoals beloofd vind je hier de presentatie: ${pptUrl}\n\nLaat gerust weten als je nog vragen hebt.\n\nGroetjes,\nCasper`,
   }
+}
+
+/** Context van Grok Bot: vervangen of onderaan toevoegen (met een lege regel ertussen). Max. 20.000 tekens. */
+export function nextBotContext(current: string | null | undefined, text: string, mode: 'vervangen' | 'toevoegen') {
+  const t = text.trim()
+  const next = mode === 'toevoegen' && current?.trim() ? `${current.trimEnd()}\n\n${t}` : t
+  if (next.length > 20000) throw new Error('De context is te lang (max. 20.000 tekens).')
+  return next || null
 }

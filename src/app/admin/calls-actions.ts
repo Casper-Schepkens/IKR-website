@@ -6,7 +6,7 @@ import { addBotToMeeting, isBotInMeeting, isFirefliesConfigured, uploadAudio } f
 import { makeFilePublic, removeFilePermission, shareWithDomain, startDriveUpload } from '@/lib/admin/google'
 import { fmtDate, fmtTime, isoDay } from '@/lib/admin/format'
 import { cancelCall, finishCall, scheduleCall, syncCallsFromCalendar } from '@/lib/admin/calls/service'
-import { CALL_KIND_LABELS, insertMeetLink, type CallKind } from '@/lib/admin/calls/types'
+import { CALL_KIND_LABELS, cleanPptUrl, insertMeetLink, nextBotContext, type CallKind } from '@/lib/admin/calls/types'
 import { CONTACT_EMAIL } from '@/lib/admin/weekly/types'
 import { sendInboxReplyAction, type ActionResult } from './actions'
 
@@ -109,6 +109,24 @@ export async function finishCallAction(id: string, outcome: 'afgerond' | 'no_sho
     if (outcome !== 'afgerond' && outcome !== 'no_show') throw new Error('Onbekende uitkomst.')
     const r = await finishCall({ calls, leads, drafts }, id, outcome, null, user.email)
     return { draftId: r.draftId }
+  })
+}
+
+/** "Context van Grok Bot" zelf aanpassen (Casper). */
+export async function setCallContextAction(id: string, text: string) {
+  return attempt(async () => {
+    const { calls, user } = await requireSales()
+    if (!(await calls.get(id))) throw new Error('Call niet gevonden.')
+    await calls.update(id, { bot_context: nextBotContext(null, text, 'vervangen'), bot_context_updated_at: new Date().toISOString(), bot_context_updated_by: user.email })
+  })
+}
+
+/** Eigen sales-ppt voor deze call (https), of leeg = terug naar de standaard. */
+export async function setCallSalesPptAction(id: string, url: string) {
+  return attempt(async () => {
+    const { calls } = await requireSales()
+    if (!(await calls.get(id))) throw new Error('Call niet gevonden.')
+    await calls.update(id, { sales_ppt_url: cleanPptUrl(url) })
   })
 }
 

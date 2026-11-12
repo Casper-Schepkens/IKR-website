@@ -6,6 +6,7 @@ import { decideCardActionAction, deleteCardAction, giveOrderAction, markCardRead
 import { CARD_KINDS, isBusy, type CardStatus, type CardWithMessages } from '@/lib/admin/workspace/types'
 import { buttonClass, Card, Empty, input, muted, Pill, Spinner, Title } from '../ui'
 import { cn } from '@/utilities/ui'
+import { refreshNotifications } from '../useNotifications'
 
 const KIND_TONE = { bespreken: 'teal', brainstorm: 'purple', vraag: 'yellow', update: 'light', opdracht: 'cyan' } as const
 const STATUS_LABEL: Record<CardStatus, string> = { open: 'Open', besproken: 'Besproken', archief: 'Archief' }
@@ -23,6 +24,7 @@ function useRun() {
       if (!res.ok) setError(res.error ?? 'Er ging iets mis.')
       else after?.()
       router.refresh()
+      refreshNotifications()
     })
   return { pending, error, run }
 }
@@ -116,7 +118,7 @@ function CardDetail({ card: c, names, me }: { card: CardWithMessages; names: Rec
   const ref = useRef<HTMLFormElement>(null)
   const unread = c.unread && c.owner_email === me
   useEffect(() => {
-    if (unread) void markCardReadAction(c.id)
+    if (unread) void markCardReadAction(c.id).then(refreshNotifications)
   }, [unread, c.id])
   const name = (a: string) => (a === 'grokbot' ? 'Grok Bot' : (names[a] ?? a.split('@')[0]))
   return (
