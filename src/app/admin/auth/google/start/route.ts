@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { randomBytes } from 'node:crypto'
 import { requireAdmin } from '@/lib/admin/session'
 import { authUrl, isGoogleConfigured, SCOPES, TEAM_SCOPES } from '@/lib/admin/google'
-import { isTokenKeyConfigured } from '@/lib/admin/crypto'
+import { tokenKeyProblem } from '@/lib/admin/crypto'
 import { CONTACT_EMAIL } from '@/lib/admin/weekly/types'
 import { canSeeSales } from '@/lib/admin/env'
 
@@ -24,8 +24,9 @@ export async function GET(req: NextRequest) {
 
   // Mijn koppelingen: eigen mailbox (alleen lezen) of agenda('s) (alleen lezen), elk apart en met minimale rechten.
   if (voor === 'team-mail' || voor === 'team-agenda') {
-    if (!isTokenKeyConfigured()) {
-      back.searchParams.set('fout', 'IKR_TOKEN_KEY ontbreekt in Vercel: koppelen kan pas als die sleutel er staat.')
+    const keyProblem = tokenKeyProblem()
+    if (keyProblem) {
+      back.searchParams.set('fout', keyProblem)
       return NextResponse.redirect(back)
     }
     const mail = voor === 'team-mail'
