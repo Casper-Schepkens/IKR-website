@@ -119,14 +119,18 @@ export async function pushTodoAction(id: string) {
 export async function createPinAction(form: FormData) {
   return attempt(async () => {
     const session = await requireAdmin()
-    const title = str(form, 'title')
+    // Geüpload bestand (de browser zette het al in de Drive van contact@): delen met het team en linken.
+    const fileId = str(form, 'file_id')
+    const fileName = str(form, 'file_name')
+    if (fileId && !/^[\w-]{10,}$/.test(fileId)) throw new Error('Ongeldig bestand.')
+    const title = str(form, 'title') || fileName
     if (!title) throw new Error('Geef het kaartje een titel.')
-    const rawUrl = str(form, 'url')
+    const rawUrl = fileId ? await shareWithDomain(CONTACT_EMAIL, fileId, 'iknowright.be') : str(form, 'url')
     const url = safeUrl(rawUrl)
     if (rawUrl && !url) throw new Error('Die link klopt niet (enkel http/https).')
     const forOwner = str(form, 'for') as Owner | null
     await session.weekly.createPin({
-      kind: inferKind(str(form, 'kind'), url),
+      kind: fileId ? 'document' : inferKind(str(form, 'kind'), url),
       title: title.slice(0, 200),
       body: str(form, 'body')?.slice(0, 4000) ?? null,
       url,
@@ -135,6 +139,20 @@ export async function createPinAction(form: FormData) {
       created_via: 'dashboard',
     })
   })
+}
+
+/** Bestand op het prikbord: upload-URL naar de Drive van contact@ (map "IKR Dashboard – Prikbord"). */
+export async function startPinUploadAction(name: string, mimeType: string, origin: string) {
+  try {
+    await requireAdmin()
+    const clean = name.replace(/[\\/:*?"<>|]+/g, ' ').trim().slice(0, 180)
+    if (!clean) throw new Error('Bestand zonder naam.')
+    const mime = /^[\w.+-]+\/[\w.+-]+$/.test(mimeType) ? mimeType : 'application/octet-stream'
+    const url = await startDriveUpload({ owner: CONTACT_EMAIL, folder: 'IKR Dashboard – Prikbord', name: clean, mimeType: mime, origin })
+    return { ok: true as const, data: url }
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : 'Upload starten mislukt.' }
+  }
 }
 
 export async function setPinPinnedAction(id: string, pinned: boolean) {
