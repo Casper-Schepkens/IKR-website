@@ -87,3 +87,30 @@ describe('volgende stappen per persoon', () => {
     expect(cp.next).toMatchObject({ key: 'ideeen_uitwerken', cycle: { no: 2 }, due_on: '2027-01-06' })
   })
 })
+
+describe('volgende draaidag plannen', () => {
+  it('na de opstart: "Draaidag 1 plannen" (Cédric), tegen strategiemeeting + 7', async () => {
+    await setStartPoint(repo, albert, 'feedback', null, 'x')
+    await setAnchor(repo, albert, 'strategie', '2026-11-05')
+    await updateStep(repo, albert, 'feedback', { done: true }, { by: 'x' })
+    let cp = await getClientProduction(repo, albert)
+    expect(cp.next).toMatchObject({ key: 'draaidag_plannen', who: 'cedric', due_on: '2026-11-12', cycle: { no: 1, id: 'volgende' } })
+    expect(cp.phase).toBe('Draaidag 1: draaidag plannen')
+    expect(cp.cycles).toHaveLength(0)
+    // In de feedbackweek staat het al bij Cédric.
+    await updateStep(repo, albert, 'feedback', { done: false }, { by: 'x' })
+    const { list } = await loadProduction(repo, [albert])
+    expect(myNextSteps(list, 'cedric').map((x) => x.step.key)).toEqual(['feedback', 'draaidag_plannen'])
+    // Plannen maakt de draaidag aan.
+    await setAnchor(repo, albert, 'draaidag', '2026-11-26', { cycleNo: 1 })
+    cp = await getClientProduction(repo, albert)
+    expect(cp.cycles.map((c) => [c.no, c.shoot_on])).toEqual([[1, '2026-11-26']])
+  })
+  it('na een volledige draaidag: de volgende plannen tegen vorige draaidag + 21', async () => {
+    await setStartPoint(repo, tempus, 'online', 1, 'x')
+    await setAnchor(repo, tempus, 'draaidag', '2026-11-03', { cycleNo: 1 })
+    await updateStep(repo, tempus, 'online', { done: true }, { by: 'x' })
+    const cp = await getClientProduction(repo, tempus)
+    expect(cp.next).toMatchObject({ key: 'draaidag_plannen', cycle: { no: 2 }, due_on: '2026-11-24' })
+  })
+})
