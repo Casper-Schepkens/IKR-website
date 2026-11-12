@@ -67,7 +67,7 @@ export async function findTranscript(meetUrl: string, from: Date, to: Date) {
   )
   const t = data.transcripts.find((x) => meetCode(x.meeting_link) === code)
   if (!t?.sentences?.length) return null
-  return { title: t.title, url: t.transcript_url, text: transcriptText(t.sentences) }
+  return { id: t.id, title: t.title, url: t.transcript_url, text: transcriptText(t.sentences) }
 }
 
 /** Opeenvolgende zinnen van dezelfde spreker samenvoegen tot leesbare tekst. */

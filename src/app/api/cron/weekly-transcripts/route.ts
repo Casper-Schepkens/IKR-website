@@ -5,6 +5,7 @@ import { findTranscript, isFirefliesConfigured } from '@/lib/admin/fireflies'
 import { removeFilePermission, shareWithDomain, uploadDoc } from '@/lib/admin/google'
 import { CONTACT_EMAIL } from '@/lib/admin/weekly/types'
 import { isoDay } from '@/lib/admin/format'
+import { queueWeeklySops } from '@/lib/admin/sops/weekly'
 
 export const maxDuration = 60
 
@@ -46,6 +47,8 @@ export async function GET(request: Request) {
       const fileId = await uploadDoc({ owner: CONTACT_EMAIL, folder: 'IKR Dashboard – Weeklies', name: `Weekly ${day} – transcript`, text })
       const url = await shareWithDomain(CONTACT_EMAIL, fileId, 'iknowright.be')
       await repo.updateWeekly(w.id, { recording_url: url })
+      // Vangnet (als de webhook het transcript miste): SOP-voorstellen. Dubbel kan niet (één taak per transcript).
+      await queueWeeklySops({ id: t.id, title: t.title ?? `Weekly ${day}`, date: w.starts_at, text: t.text, url: t.url }, { background: true }).catch((e) => console.error('[sops] weekly', e))
       results.push({ weekly: w.id, result: 'transcript opgeslagen' })
     } catch (e) {
       results.push({ weekly: w.id, result: e instanceof Error ? e.message : 'mislukt' })

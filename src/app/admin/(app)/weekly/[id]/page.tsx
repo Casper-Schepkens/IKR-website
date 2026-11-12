@@ -8,6 +8,7 @@ import { buttonClass, Card, muted, PageHeader, Pill, Title } from '@/components/
 import { TodoBoard } from '@/components/admin/weekly/TodoBoard'
 import { RetryCalendarButton } from '@/components/admin/weekly/RetryCalendarButton'
 import { Prikbord } from '@/components/admin/weekly/Prikbord'
+import { SopProposals } from '@/components/admin/sops/SopProposals'
 import { NewTodoForm } from '@/components/admin/weekly/NewTodoForm'
 import { PlanWeeklyForm } from '@/components/admin/weekly/PlanWeeklyForm'
 import { concludeWeeklyAction, finishWeeklyRecordingAction, startWeeklyRecordingAction } from '../../../weekly-actions'
@@ -19,8 +20,8 @@ export const metadata = { title: 'Weekly' }
 
 export default async function MeetingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { weekly, user } = await requireAdmin()
-  const [w, weeklies, todos, pins] = await Promise.all([weekly.getWeekly(id), weekly.listWeeklies(), weekly.listTodos(), weekly.listPins().catch(() => [])])
+  const { weekly, user, sops } = await requireAdmin()
+  const [w, weeklies, todos, pins, allSops] = await Promise.all([weekly.getWeekly(id), weekly.listWeeklies(), weekly.listTodos(), weekly.listPins().catch(() => []), sops.list().catch(() => [])])
   if (!w) notFound()
 
   const nextDefault = new Date(new Date(w.starts_at).getTime() + 7 * 86_400_000)
@@ -83,7 +84,8 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
       {w.status !== 'concluded' && (
         <>
           {/* Tijdens de meeting: overlopen en leegmaken. */}
-          <Prikbord pins={pins} me={ownerOf(user.email)} />
+          <SopProposals proposals={allSops.filter((s) => s.status === 'voorstel')} compact />
+      <Prikbord pins={pins} me={ownerOf(user.email)} />
           <Card className="flex flex-col gap-3">
             <Title className="m-0 text-2xl">To-do voor de volgende keer</Title>
             <NewTodoForm defaultOwner={ownerOf(user.email)} />

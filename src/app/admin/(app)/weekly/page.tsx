@@ -8,6 +8,7 @@ import { TodoBoard } from '@/components/admin/weekly/TodoBoard'
 import { NewTodoForm } from '@/components/admin/weekly/NewTodoForm'
 import { RetryCalendarButton } from '@/components/admin/weekly/RetryCalendarButton'
 import { Prikbord } from '@/components/admin/weekly/Prikbord'
+import { SopProposals } from '@/components/admin/sops/SopProposals'
 import { PlanWeeklyForm } from '@/components/admin/weekly/PlanWeeklyForm'
 import { planWeeklyAction, startWeeklyAction } from '../../weekly-actions'
 import { cn } from '@/utilities/ui'
@@ -15,8 +16,8 @@ import { cn } from '@/utilities/ui'
 export const metadata = { title: 'Weekly' }
 
 export default async function WeeklyPage() {
-  const { weekly, user } = await requireAdmin()
-  const [weeklies, todos, pins] = await Promise.all([weekly.listWeeklies(), weekly.listTodos(), weekly.listPins().catch(() => [])])
+  const { weekly, user, sops } = await requireAdmin()
+  const [weeklies, todos, pins, allSops] = await Promise.all([weekly.listWeeklies(), weekly.listTodos(), weekly.listPins().catch(() => []), sops.list().catch(() => [])])
   const next = currentWeekly(weeklies)
 
   return (
@@ -73,6 +74,7 @@ export default async function WeeklyPage() {
         </Card>
       )}
 
+      <SopProposals proposals={allSops.filter((s) => s.status === 'voorstel')} compact />
       <Prikbord pins={pins} me={ownerOf(user.email)} />
 
       <Card className="flex flex-col gap-3">

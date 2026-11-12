@@ -11,6 +11,7 @@ import { supabaseLeads, type LeadsRepo } from '../sales/repo'
 import { supabaseDrafts, type DraftsRepo } from '../sales/drafts'
 import type { Lead } from '../sales/types'
 import { CONTACT_EMAIL } from '../weekly/types'
+import { queueWeeklySops } from '../sops/weekly'
 import { finishCall } from './service'
 import { CALL_KIND_LABELS, type Call } from './types'
 
@@ -77,8 +78,14 @@ export async function handleFirefliesEvent(meetingId: string, clientRef: string 
   const [calls, leads] = await Promise.all([deps.calls.list(), deps.leads.list()])
   const call = matchCall(t, calls, leads, clientRef)
   if (!call) {
-    // Weeklies hebben hun eigen verwerking (dagelijkse cron); die laten we hier vallen.
-    if (/weekly/i.test(t.title)) return { status: 'genegeerd' }
+    // Weeklies: het transcript zelf gaat via de dagelijkse cron naar de Drive; hier enkel SOP-voorstellen.
+    if (/weekly/i.test(t.title)) {
+      const job = await queueWeeklySops({ id: t.id, title: t.title, date: t.date, text: t.text, url: t.firefliesUrl }).catch((e) => {
+        console.error('[sops] weekly', e)
+        return null
+      })
+      return { status: job ? 'weekly_sops' : 'genegeerd' }
+    }
     await upsertTranscript({ fireflies_id: t.id, title: t.title, meeting_link: t.meetingLink, started_at: t.date, attendees: t.participants, status: 'ongekoppeld' })
     return { status: 'ongekoppeld' }
   }
