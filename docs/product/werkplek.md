@@ -11,6 +11,14 @@
 - **Voorgestelde actie:** de knoppen **Doe maar** en **Nee**. Bij "Doe maar" voert Grok Bot de actie uit. Hij zet altijd enkel dingen klaar (concepten, to-do's, SOP-voorstellen …) en **verstuurt nooit iets**.
 - **Opdracht** (bovenaan): wordt een kaart "Opdracht" en Grok Bot gaat ermee aan de slag.
 
+## Uit de weekly
+Zeg tijdens de weekly **"@grokbot …"** met een opdracht, bv. "@grokbot, werk dat idee voor een nieuwe reeks voor Oh!Ma eens uit".
+- Na de weekly leest Grok Bot het Fireflies-transcript.
+- Elke opdracht wordt een kaart **Opdracht** op de werkplek van wie het vroeg, met het citaat erbij.
+- Grok Bot gaat er meteen mee aan de slag en zet het resultaat in het draadje.
+
+"@grokbot nieuwe SOP …" blijft een SOP-voorstel (zie `sops.md`).
+
 ## Proactief (geplande automation in Cursor)
 Maak in Cursor een **geplande automation**, 2 à 3 keer per dag (bv. 8u, 13u en 17u), met de connector ikr-dashboard en deze prompt:
 
