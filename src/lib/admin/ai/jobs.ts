@@ -132,16 +132,6 @@ export async function getJob(id: string): Promise<AiJob | null> {
   return (data as AiJob | null) ?? null
 }
 
-export async function listJobs(sinceIso: string): Promise<AiJob[]> {
-  const { data, error } = await db()
-    .from('ai_jobs')
-    .select('id, type, status, model, input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, cost_usd, created_at, finished_at')
-    .gte('created_at', sinceIso)
-    .order('created_at', { ascending: false })
-  if (error) throw new Error(error.message)
-  return (data ?? []) as AiJob[]
-}
-
 /** Vaste IKR-context + (voor mailtaken) het schrijfstijlprofiel + de instructies van de taak. */
 export async function instructionsFor(job: Pick<AiJob, 'type' | 'input'>) {
   const h = HANDLERS[job.type] as { instructions: string; style?: (i: Record<string, unknown>) => 'casper' }

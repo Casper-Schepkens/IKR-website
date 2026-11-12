@@ -5,7 +5,6 @@ import { fmtDate } from '@/lib/admin/format'
 import { buttonClass, Card, muted, PageHeader, Pill, Title } from '@/components/admin/ui'
 import { cn } from '@/utilities/ui'
 import { canSeeSales } from '@/lib/admin/env'
-import { AiCosts } from './AiCosts'
 import { StyleProfiles } from './StyleProfiles'
 import { MyConnections } from '@/components/admin/team/MyConnections'
 
@@ -78,7 +77,6 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       </Card>
       <MyConnections email={user.email} />
       {canSeeSales(user.email) && process.env.SUPABASE_SERVICE_ROLE_KEY && <StyleProfiles />}
-      {canSeeSales(user.email) && process.env.SUPABASE_SERVICE_ROLE_KEY && <AiCosts />}
     </>
   )
 }
