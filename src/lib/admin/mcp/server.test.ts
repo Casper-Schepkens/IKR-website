@@ -331,15 +331,21 @@ describe('calls via MCP', () => {
     logs.length = 0
     const r = await call('call_registreren', { lead: 'jan@peeters.be', soort: 'sales', datum: '2026-11-10', uur: '14:00', meet_link: 'https://meet.google.com/abc-defg-hij' })
     expect(r.json).toMatchObject({ soort: 'sales', status: 'gepland', bron: 'grokbot', lead_uitgenodigd: false, lead: { naam: 'Jan Peeters' } })
-    const list = (await call('calls_lijst', {})).json as unknown as { call_id: string }[]
+    const list = (await call('calls_lijst', {})).json as unknown as { call_id: string; sales_ppt_url: string; sales_ppt_eigen: boolean }[]
     expect(list).toHaveLength(1)
+    expect(list[0]).toMatchObject({ sales_ppt_eigen: false })
+    expect((await call('call_sales_ppt_zetten', { call: list[0].call_id, url: 'https://docs.google.com/presentation/d/eigen' })).isError).toBe(false)
+    expect(((await call('calls_lijst', {})).json as unknown as typeof list)[0]).toMatchObject({ sales_ppt_url: 'https://docs.google.com/presentation/d/eigen', sales_ppt_eigen: true })
+    expect((await call('call_sales_ppt_zetten', { call: list[0].call_id, url: 'http://onveilig' })).isError).toBe(true)
+    await call('call_sales_ppt_zetten', { call: list[0].call_id, url: '' })
+    expect(((await call('calls_lijst', {})).json as unknown as typeof list)[0]).toMatchObject({ sales_ppt_eigen: false })
     const done = await call('call_afronden', { call_id: list[0].call_id, resultaat: 'no_show' })
     expect(done.json).toMatchObject({ status: 'no_show' })
     expect((done.json as { concept_id: string }).concept_id).toBeTruthy()
     expect(store.find((d) => d.subject === 'Nieuw moment voor onze call?')?.status).toBe('concept')
     const cijfers = (await call('calls_cijfers', { van: '2026-11-01', tot: '2026-11-30' })).json
     expect(cijfers).toMatchObject({ sales: { no_show: 1, no_show_pct: 100 } })
-    expect(logs.map((l) => l.tool)).toEqual(['call_registreren', 'call_afronden'])
+    expect(logs.map((l) => l.tool)).toEqual(['call_registreren', 'call_sales_ppt_zetten', 'call_sales_ppt_zetten', 'call_sales_ppt_zetten', 'call_afronden'])
     expect(gmail.sendMail).not.toHaveBeenCalled()
     expect(gmail.sendReply).not.toHaveBeenCalled()
   })
