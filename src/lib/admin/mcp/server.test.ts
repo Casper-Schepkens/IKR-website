@@ -18,6 +18,7 @@ import { buildMcpServer } from './server'
 import { memoryLeads } from '../sales/repo'
 import { memoryWeekly } from '../weekly/repo'
 import { memoryClients } from '../clients/repo'
+import { memorySops } from '../sops/repo'
 import { memoryCalls } from '../calls/repo'
 import { memoryDrafts, type MailDraft } from '../sales/drafts'
 import { memoryChat, type ChatMessage } from '../chat/repo'
@@ -53,6 +54,7 @@ beforeEach(async () => {
     leads: memoryLeads(),
     weekly: memoryWeekly(),
     clients: memoryClients(),
+    sops: memorySops(),
     calls: memoryCalls(),
     drafts: memoryDrafts(store),
     chat: memoryChat(chatStore),
@@ -338,5 +340,26 @@ describe('calls via MCP', () => {
     expect(logs.map((l) => l.tool)).toEqual(['call_registreren', 'call_afronden'])
     expect(gmail.sendMail).not.toHaveBeenCalled()
     expect(gmail.sendReply).not.toHaveBeenCalled()
+  })
+})
+
+describe("SOP's via MCP", () => {
+  it('aanmaken als voorstel, zoeken, goedkeuren en verouderd zetten', async () => {
+    ;(globalThis as { __ikrSops?: unknown }).__ikrSops = undefined
+    session.sops = memorySops()
+    const [a, b] = InMemoryTransport.createLinkedPair()
+    await buildMcpServer(session).connect(a)
+    client = new Client({ name: 'test', version: '1.0.0' })
+    await client.connect(b)
+    const made = await call('sop_aanmaken', { titel: 'Feedbackrondes', tekst: 'Max. 1 revisieronde inbegrepen.', categorie: 'creatief', bron: 'Weekly 19/11' })
+    expect(made.json).toMatchObject({ status: 'voorstel', categorie: 'creatief' })
+    expect((await call('sops_zoeken', { zoek: 'revisie' })).json).toEqual([])
+    expect((await call('sops_zoeken', { zoek: 'revisie', status: 'voorstel' })).json).toHaveLength(1)
+    const id = (made.json as { sop_id: string }).sop_id
+    await call('sop_voorstel_beslissen', { sop_id: id, goedkeuren: true })
+    expect((await call('sops_zoeken', { zoek: 'revisieronde' })).json).toMatchObject([{ titel: 'Feedbackrondes', status: 'afgesproken' }])
+    expect((await call('sop_bijwerken', { sop_id: id, status: 'verouderd' })).isError).toBe(false)
+    expect((await call('sops_zoeken', {})).json).toEqual([])
+    expect((await call('sop_aanmaken', { titel: 'x', tekst: 'y', categorie: 'onzin' })).isError).toBe(true)
   })
 })

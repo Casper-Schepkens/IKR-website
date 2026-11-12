@@ -13,6 +13,8 @@ import type { AdminSession } from '../session'
 import { supabaseLeads } from '../sales/repo'
 import { supabaseWeekly } from '../weekly/repo'
 import { supabaseClients } from '../clients/repo'
+import { supabaseSops } from '../sops/repo'
+import { CATEGORY_KEYS, cleanSopInput, SOP_CATEGORIES, searchSops, type Sop } from '../sops/types'
 import { supabaseCalls } from '../calls/repo'
 import { cancelCall, finishCall, registerCall, syncCallsFromCalendar } from '../calls/service'
 import { CALL_KIND_LABELS, CALL_STATUSES, callStats, type Call } from '../calls/types'
@@ -62,6 +64,7 @@ Werkwijze:
 - Opvolgen: wachten_op_antwoord_lijst geeft de leads waar wij als laatste mailden zonder antwoord (langst wachtend eerst). Een opvolgmail zet je klaar als concept.
 - Het dashboard kan jou AI-taken geven (bv. antwoorden op sales-mails): haal ze op met ai_taken_open en zet het resultaat terug met ai_taak_klaarzetten.
 - Financiën (financien_*): cijfers uit de bank in Odoo, voor het hele team. Odoo wordt nooit aangepast; indelen gebeurt enkel in het dashboard. Verzin geen bedragen: gebruik financien_overzicht. Of klanten betaald hebben: financien_betalingen. Contractbedragen van een klant uit de Drive halen: klant_contract_afleiden (geeft een voorstel; overnemen doet het team). Staat er veel ‘nog in te delen’, zeg dat de cijfers dan onvolledig zijn.
+- SOP's (sops_*, sop_*): de afspraken en best practices van het team. Vraagt iemand hoe iets bij IKR gaat (revisies, draaidagen, freelancers, prijzen …): zoek eerst met sops_zoeken en verwijs naar de SOP. Zegt iemand \"@grokbot nieuwe SOP\" (of vraagt om iets vast te leggen): sop_aanmaken als voorstel; het team keurt het goed met een vinkje.
 - Schrijf in vlot Nederlands zoals in Vlaanderen. Verzin geen feiten of cijfers.`
 
 const text = (value: unknown) => ({
@@ -183,6 +186,7 @@ export function botSession(): AdminSession {
     leads: supabaseLeads(db),
     weekly: supabaseWeekly(db),
     clients: supabaseClients(db),
+    sops: supabaseSops(db),
     calls: supabaseCalls(db),
     drafts: supabaseDrafts(db),
     chat: supabaseChat(db),
@@ -190,7 +194,7 @@ export function botSession(): AdminSession {
 }
 
 export function buildMcpServer(session: AdminSession) {
-  const { leads, weekly, drafts, chat, clients, calls } = session
+  const { leads, weekly, drafts, chat, clients, calls, sops } = session
   const server = new McpServer({ name: 'ikr-dashboard', version: '1.0.0' }, { instructions: INSTRUCTIONS })
 
   /**
@@ -797,6 +801,53 @@ export function buildMcpServer(session: AdminSession) {
     },
   )
   tool('financien_bijwerken', 'Haalt nu de nieuwste banktransacties en het saldo uit Odoo (enkel lezen).', {}, false, async () => syncFinance({ force: true }))
+  // ─── SOP's ──────────────────────────────────────────────
+  const sopView = (x: Sop) => ({ sop_id: x.id, titel: x.title, tekst: x.body, categorie: x.category, categorie_label: SOP_CATEGORIES[x.category], status: x.status, bron: x.source, bron_link: x.source_url, citaat: x.quote, sinds: x.created_at.slice(0, 10) })
+  const categorie = z.enum(CATEGORY_KEYS as [string, ...string[]])
+  const findSop = async (id: string) => {
+    const x = (await sops.list()).find((y) => y.id === id.trim())
+    if (!x) throw new Error('SOP niet gevonden.')
+    return x
+  }
+  tool(
+    'sops_zoeken',
+    `SOP's van IKR (afspraken en best practices) doorzoeken. Zonder zoekwoorden: alle SOP's van die categorie/status. Standaard enkel geldende (afgesproken). Categorieën: ${CATEGORY_KEYS.map((k) => `${k} (${SOP_CATEGORIES[k as keyof typeof SOP_CATEGORIES]})`).join(', ')}.`,
+    { zoek: z.string().optional().describe('woorden, bv. "revisie feedback"'), categorie: categorie.optional(), status: z.enum(['afgesproken', 'voorstel', 'verouderd', 'alle']).optional() },
+    true,
+    async ({ zoek, categorie: cat, status }) => searchSops(await sops.list(), zoek ?? '', { category: cat, status: (status as never) ?? 'afgesproken' }).map(sopView),
+  )
+  tool(
+    'sop_aanmaken',
+    'Nieuwe SOP. Standaard als voorstel (het team keurt goed met een vinkje of wijst af met een kruisje). Zegt iemand letterlijk dat het al afgesproken is, mag status "afgesproken".',
+    { titel: z.string(), tekst: z.string().describe('De afspraak zelf, kort en concreet'), categorie, status: z.enum(['voorstel', 'afgesproken']).optional(), bron: z.string().optional().describe('bv. "Weekly 19/11" of "chat met Casper"'), citaat: z.string().optional() },
+    false,
+    async ({ titel, tekst, categorie: cat, status = 'voorstel', bron, citaat }) =>
+      sopView(await sops.create(cleanSopInput({ title: titel, body: tekst, category: cat, status, source: bron ?? null, quote: citaat ?? null }), BY, 'grokbot')),
+  )
+  tool(
+    'sop_bijwerken',
+    'Titel, tekst, categorie of status (afgesproken / voorstel / verouderd) van een SOP aanpassen. Niet meegegeven velden blijven.',
+    { sop_id: z.string(), titel: z.string().optional(), tekst: z.string().optional(), categorie: categorie.optional(), status: z.enum(['afgesproken', 'voorstel', 'verouderd']).optional() },
+    false,
+    async ({ sop_id, titel, tekst, categorie: cat, status }) => {
+      const x = await findSop(sop_id)
+      const next = cleanSopInput({ title: titel ?? x.title, body: tekst ?? x.body, category: cat ?? x.category, status: status ?? x.status })
+      await sops.update(x.id, next)
+      return `"${next.title}" bijgewerkt.`
+    },
+  )
+  tool('sop_voorstel_beslissen', 'Een SOP-voorstel goedkeuren (wordt afgesproken) of afwijzen (wordt verwijderd). Enkel als iemand van het team dat vraagt.', { sop_id: z.string(), goedkeuren: z.boolean() }, false, async ({ sop_id, goedkeuren }) => {
+    const x = await findSop(sop_id)
+    if (x.status !== 'voorstel') throw new Error('Dit is geen voorstel.')
+    if (goedkeuren) await sops.update(x.id, { status: 'afgesproken' })
+    else await sops.remove(x.id)
+    return goedkeuren ? `"${x.title}" is nu afgesproken.` : `Voorstel "${x.title}" verwijderd.`
+  })
+  tool('sop_verwijderen', 'SOP verwijderen. Liever op "verouderd" zetten als het een oude afspraak is.', { sop_id: z.string() }, false, async ({ sop_id }) => {
+    const x = await findSop(sop_id)
+    await sops.remove(x.id)
+    return `"${x.title}" verwijderd.`
+  })
   // ─── Prikbord ───────────────────────────────────────────
   const pinView = (p: Pin) => ({ pin_id: p.id, soort: p.kind, titel: p.title, tekst: p.body, link: p.url, voor: p.for_owner, vastgepind: p.pinned, door: p.created_via === 'grokbot' ? 'Grok Bot' : p.created_by, op: p.created_at })
   tool('prikbord_lijst', 'Alle kaartjes op het prikbord van de weekly (vastgepind eerst).', {}, true, async () => sortPins(await weekly.listPins()).map(pinView))
