@@ -2,9 +2,9 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { disconnectTeamAction, refreshCalendarsAction, saveCalendarsAction } from '@/app/admin/team-actions'
+import { disconnectTeamAction, refreshCalendarsAction, saveCalendarsAction, saveInviteAddressAction } from '@/app/admin/team-actions'
 import type { CalendarInfo } from '@/lib/admin/team/connections'
-import { buttonClass, muted, Spinner } from '../ui'
+import { buttonClass, input, muted, Spinner } from '../ui'
 import { cn } from '@/utilities/ui'
 
 /** Ontkoppelen (trekt het token ook in bij Google), met bevestiging. */
@@ -88,6 +88,47 @@ export function CalendarPicker({ calendars, selected }: { calendars: CalendarInf
         </button>
         {msg && (
           <span role={msg.ok ? 'status' : 'alert'} className={cn('text-xs', msg.ok ? 'text-[#1E5B27]' : 'text-[#A3470F]')}>
+            {msg.text}
+          </span>
+        )}
+      </div>
+    </form>
+  )
+}
+
+/** Uitnodigingen voor weeklies (en calls) naar dit adres: zo komen ze vanzelf in je (persoonlijke) agenda. */
+export function InviteAddress({ current, isDefault, fallback }: { current: string; isDefault: boolean; fallback: string }) {
+  const [pending, start] = useTransition()
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const router = useRouter()
+  return (
+    <form
+      className="flex flex-col gap-2"
+      onSubmit={(e) => {
+        e.preventDefault()
+        const data = new FormData(e.currentTarget)
+        start(async () => {
+          const res = await saveInviteAddressAction(data)
+          setMsg(
+            res.ok
+              ? { ok: true, text: `Bewaard: uitnodigingen gaan naar ${res.data.after}.${res.data.moved ? ` ${res.data.moved} komend${res.data.moved > 1 ? 'e' : ''} item${res.data.moved > 1 ? 's' : ''} aangepast.` : ''}` }
+              : { ok: false, text: res.error },
+          )
+          router.refresh()
+        })
+      }}
+    >
+      <label className={cn('flex flex-col gap-1.5 text-[13px] font-semibold', muted)}>
+        Uitnodigingen sturen naar
+        <input name="invite_email" type="email" defaultValue={isDefault ? '' : current} placeholder={fallback} className={input} />
+      </label>
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="submit" disabled={pending} data-pending={pending} className={buttonClass('navy', true)}>
+          Bewaar
+        </button>
+        {pending && <Spinner />}
+        {msg && (
+          <span role={msg.ok ? 'status' : 'alert'} className={cn('text-xs', msg.ok ? muted : 'text-[#A3470F]')}>
             {msg.text}
           </span>
         )}

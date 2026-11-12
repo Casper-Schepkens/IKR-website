@@ -4,7 +4,9 @@ import { isGoogleConfigured } from '@/lib/admin/google'
 import { fmtDate } from '@/lib/admin/format'
 import { buttonClass, Card, muted, Pill, Title } from '../ui'
 import { cn } from '@/utilities/ui'
-import { CalendarPicker, DisconnectButton } from './MyConnectionsClient'
+import { CalendarPicker, DisconnectButton, InviteAddress } from './MyConnectionsClient'
+import { defaultInvite, inviteAddress } from '@/lib/admin/team/invites'
+import { ownerOf } from '@/lib/admin/weekly/types'
 
 /**
  * Instellingen → Mijn koppelingen. Elk teamlid ziet en beheert enkel zijn eigen koppelingen:
@@ -17,6 +19,8 @@ export async function MyConnections({ email }: { email: string }) {
   const mail = withStatus.find((c) => c.kind === 'mail')
   const agenda = withStatus.find((c) => c.kind === 'agenda')
   const blocked = !isGoogleConfigured() ? 'Google is nog niet ingesteld.' : tokenKeyProblem()
+  const owner = ownerOf(email)
+  const invite = owner ? await inviteAddress(owner).catch(() => defaultInvite(owner)) : null
 
   return (
     <div id="koppelingen" className="scroll-mt-24">
@@ -49,6 +53,19 @@ export async function MyConnections({ email }: { email: string }) {
         >
           {agenda && agenda.status === 'ok' && <CalendarPicker calendars={agenda.calendars} selected={agenda.selected_calendars} />}
         </Block>
+        {owner && invite && (
+          <section aria-label="Weeklies en calls in mijn agenda" className="flex flex-col gap-3 rounded-2xl bg-ikr-cream p-4">
+            <h3 className="m-0 text-base font-bold">Weeklies en calls in mijn agenda</h3>
+            <p className={cn('m-0 text-sm', muted)}>
+              Het dashboard zet weeklies{owner === 'casper' ? ' en calls' : ''} in de contact-agenda en stuurt een uitnodiging naar dit adres. Zo komen
+              ze vanzelf in je agenda, ook een persoonlijke (Gmail). Daarvoor hoef je niets te koppelen.
+            </p>
+            <p className="m-0 text-sm">
+              Nu: <strong>{invite}</strong>
+            </p>
+            <InviteAddress current={invite} isDefault={invite === defaultInvite(owner)} fallback={defaultInvite(owner)} />
+          </section>
+        )}
       </div>
     </Card>
     </div>

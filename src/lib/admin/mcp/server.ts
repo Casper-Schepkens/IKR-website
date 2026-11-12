@@ -42,6 +42,7 @@ import { HANDLERS } from '../ai/handlers'
 import { boardTodos, currentWeekly, weeklyTimeRange } from '../weekly/board'
 import { scheduleWeekly } from '../weekly/schedule'
 import { OWNERS, TEAM } from '../weekly/types'
+import { inviteAddresses, moveUpcomingInvites, setInviteAddress } from '../team/invites'
 import { ALL_CATEGORIES, CATEGORY_LABELS, isInCategory, isOutCategory, overview, paymentChecks, periodKeyFor, periodOf, type PeriodKind } from '../finance/core'
 import { loadClients, loadTxs, reclassify, setTxCategory, syncFinance, syncState } from '../finance/store'
 
@@ -859,6 +860,18 @@ export function buildMcpServer(session: AdminSession) {
     await sops.remove(x.id)
     return `"${x.title}" verwijderd.`
   })
+  tool(
+    'agenda_uitnodigingsadres',
+    'Naar welk adres uitnodigingen voor weeklies (en voor Casper ook calls) gaan, per teamlid. Zonder email: toont de huidige adressen. Met email: zet het adres (leeg = standaard) en past komende items aan. Enkel als dat teamlid erom vraagt.',
+    { teamlid: owner.optional(), email: z.string().optional() },
+    false,
+    async ({ teamlid, email }) => {
+      if (!teamlid || email === undefined) return Object.fromEntries(Object.entries(await inviteAddresses()).map(([k, v]) => [TEAM.find((t) => t.key === k)!.name, v]))
+      const { before, after } = await setInviteAddress(teamlid as never, email)
+      const moved = await moveUpcomingInvites(teamlid as never, before, after)
+      return `Uitnodigingen voor ${TEAM.find((t) => t.key === teamlid)!.name} gaan nu naar ${after}${moved ? ` (${moved} komende items aangepast)` : ''}.`
+    },
+  )
   // ─── Prikbord ───────────────────────────────────────────
   const pinView = (p: Pin) => ({ pin_id: p.id, soort: p.kind, titel: p.title, tekst: p.body, link: p.url, voor: p.for_owner, vastgepind: p.pinned, door: p.created_via === 'grokbot' ? 'Grok Bot' : p.created_by, op: p.created_at })
   tool('prikbord_lijst', 'Alle kaartjes op het prikbord van de weekly (vastgepind eerst).', {}, true, async () => sortPins(await weekly.listPins()).map(pinView))

@@ -1,4 +1,5 @@
 import 'server-only'
+import { inviteAddresses } from '../team/invites'
 import { brusselsToIso } from '../format'
 import { createEvent, isGoogleConfigured, listConnections } from '../google'
 import { CONTACT_EMAIL, MAX_LIVE_MINUTES, ONLINE_MINUTES, TEAM, type Weekly, type WeeklyMode } from './types'
@@ -46,9 +47,10 @@ export async function syncWeeklyCalendar(repo: WeeklyRepo, weekly: Pick<Weekly, 
     if (!isGoogleConfigured()) throw new Error('Google is nog niet ingesteld, dus er is geen agenda-item gemaakt.')
     const connected = new Set((await listConnections()).map((c) => c.email))
     if (!connected.has(CONTACT_EMAIL)) throw new Error('De contact-agenda is nog niet gekoppeld (Instellingen).')
-    // Casper krijgt altijd een uitnodiging (in zijn persoonlijke agenda); Cedric en Milan zodra ze
-    // hun agenda gekoppeld hebben.
-    const attendees = TEAM.filter((t) => t.key === 'casper' || connected.has(t.email)).map((t) => t.calendar)
+    // Iedereen krijgt een uitnodiging op zijn eigen uitnodigingsadres (Instellingen → Mijn koppelingen),
+    // zodat de weekly vanzelf in zijn (persoonlijke) agenda komt.
+    const invites = await inviteAddresses()
+    const attendees = [...new Set(TEAM.map((t) => invites[t.key]))]
     const ev = await createEvent({
       calendarOwner: CONTACT_EMAIL,
       summary: `IKR weekly (${mode === 'online' ? 'online' : 'live'})`,

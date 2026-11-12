@@ -443,3 +443,27 @@ export async function driveText(owner: string, file: Pick<DriveDoc, 'id' | 'mime
     await fetch(`https://www.googleapis.com/drive/v3/files/${copy.id}?supportsAllDrives=true`, { method: 'DELETE', headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' }).catch(() => undefined)
   }
 }
+
+/**
+ * Vervangt een genodigde in een bestaand agenda-item (bv. nieuw uitnodigingsadres van een teamlid).
+ * Het nieuwe adres krijgt een uitnodiging, het oude een annulering. Bestaat het item niet meer: niets doen.
+ */
+export async function swapAttendee(calendarOwner: string, eventId: string, from: string, to: string) {
+  const at = await accessToken(calendarOwner)
+  const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(eventId)}`
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' })
+  if (res.status === 404 || res.status === 410) return false
+  const ev = (await res.json()) as { attendees?: { email: string }[]; status?: string; error?: { message?: string } }
+  if (!res.ok) throw new Error(`Agenda-item lezen mislukt: ${ev.error?.message ?? res.status}`)
+  if (ev.status === 'cancelled') return false
+  const lower = (s: string) => s.toLowerCase()
+  const kept = (ev.attendees ?? []).filter((a) => lower(a.email) !== lower(from) && lower(a.email) !== lower(to))
+  const patch = await fetch(`${url}?sendUpdates=all`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ attendees: [...kept, { email: to }] }),
+    cache: 'no-store',
+  })
+  if (!patch.ok) throw new Error(`Genodigde aanpassen mislukt (${patch.status}).`)
+  return true
+}
