@@ -6,6 +6,7 @@ import { decideSopAction } from '@/app/admin/sops-actions'
 import { SOP_CATEGORIES, type Sop } from '@/lib/admin/sops/types'
 import { Card, muted, Pill, Spinner, Title } from '../ui'
 import { cn } from '@/utilities/ui'
+import { refreshNotifications } from '../useNotifications'
 
 /** SOP-voorstellen (bv. door Grokbot uit de weekly): vinkje = afgesproken, kruisje = weg. */
 export function SopProposals({ proposals, compact = false }: { proposals: Sop[]; compact?: boolean }) {
@@ -34,6 +35,7 @@ function Proposal({ sop: p }: { sop: Sop }) {
       const res = await decideSopAction(p.id, approve)
       if (!res.ok) setError(res.error)
       router.refresh()
+      refreshNotifications()
     })
   return (
     <li className="flex items-start gap-3 rounded-2xl bg-ikr-cream-light p-3.5">
