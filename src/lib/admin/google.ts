@@ -482,3 +482,21 @@ export async function createAllDayEvent(opts: { calendarOwner: string; summary: 
   if (!res.ok || !json.id) throw new Error(`Agenda-item maken mislukt: ${json.error?.message ?? res.status}`)
   return json.id
 }
+
+export type CalendarItem = { id: string; summary: string; status: string; start: { dateTime?: string; date?: string }; end: { dateTime?: string; date?: string }; hangoutLink?: string }
+
+/** Alle items (ook hele dagen) in de agenda van `calendarOwner` tussen twee tijdstippen. Enkel lezen. */
+export async function listCalendarItems(calendarOwner: string, timeMin: Date, timeMax: Date): Promise<CalendarItem[]> {
+  const at = await accessToken(calendarOwner)
+  const out: CalendarItem[] = []
+  let pageToken: string | undefined
+  do {
+    const p = new URLSearchParams({ singleEvents: 'true', orderBy: 'startTime', maxResults: '250', timeMin: timeMin.toISOString(), timeMax: timeMax.toISOString(), ...(pageToken ? { pageToken } : {}) })
+    const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?${p}`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' })
+    const json = (await res.json()) as { items?: (CalendarItem & { summary?: string; status?: string })[]; nextPageToken?: string; error?: { message?: string } }
+    if (!res.ok) throw new Error(`Agenda lezen mislukt: ${json.error?.message ?? res.status}`)
+    out.push(...(json.items ?? []).map((e) => ({ ...e, summary: e.summary ?? '(zonder titel)', status: e.status ?? 'confirmed' })))
+    pageToken = json.nextPageToken
+  } while (pageToken && out.length < 1000)
+  return out
+}
