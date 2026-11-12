@@ -5,11 +5,17 @@ import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto'
  * Versleuteling van gevoelige tokens (AES-256-GCM). Sleutel: IKR_TOKEN_KEY = 32 willekeurige bytes,
  * base64 (genereer met `openssl rand -base64 32`; zet als Sensitive in Vercel). Formaat: v1.<iv>.<tag>.<data>.
  */
+/** 32 bytes als hex (64 tekens, `openssl rand -hex 32`) of als base64 (`openssl rand -base64 32`). */
+export function parseTokenKey(raw: string): Buffer {
+  const v = raw.trim()
+  return /^[0-9a-f]{64}$/i.test(v) ? Buffer.from(v, 'hex') : Buffer.from(v, 'base64')
+}
+
 function key() {
   const raw = process.env.IKR_TOKEN_KEY
   if (!raw) throw new Error('IKR_TOKEN_KEY ontbreekt in Vercel: koppelen kan pas als die sleutel er staat.')
-  const k = Buffer.from(raw, 'base64')
-  if (k.length !== 32) throw new Error('IKR_TOKEN_KEY moet 32 bytes zijn (base64), bv. via `openssl rand -base64 32`.')
+  const k = parseTokenKey(raw)
+  if (k.length !== 32) throw new Error('IKR_TOKEN_KEY moet 32 bytes zijn: `openssl rand -base64 32` of `openssl rand -hex 32`.')
   return k
 }
 
@@ -19,10 +25,9 @@ export const isTokenKeyConfigured = () => tokenKeyProblem() === null
 export function tokenKeyProblem(): string | null {
   const raw = process.env.IKR_TOKEN_KEY
   if (!raw) return 'IKR_TOKEN_KEY ontbreekt in deze deploy. Staat hij al in Vercel? Dan opnieuw deployen (variabelen gelden pas vanaf de volgende deploy) en nakijken of hij voor Production aangevinkt is.'
-  const trimmed = raw.trim()
-  const len = Buffer.from(trimmed, 'base64').length
-  if (trimmed !== raw) return 'IKR_TOKEN_KEY heeft spaties of een enter aan het begin of einde: plak hem opnieuw zonder.'
-  if (len !== 32) return `IKR_TOKEN_KEY is ${len} bytes in plaats van 32. Maak een nieuwe met \`openssl rand -base64 32\` en plak de volledige uitkomst.`
+  if (raw.trim() !== raw) return 'IKR_TOKEN_KEY heeft spaties of een enter aan het begin of einde: plak hem opnieuw zonder.'
+  const len = parseTokenKey(raw).length
+  if (len !== 32) return `IKR_TOKEN_KEY is ${len} bytes in plaats van 32. Maak een nieuwe met \`openssl rand -base64 32\` (of \`openssl rand -hex 32\`) en plak de volledige uitkomst.`
   return null
 }
 
