@@ -20,7 +20,7 @@ import { addShootDay, getClientProduction, loadProduction, removeShootDay, setAn
 import { CATEGORY_KEYS, cleanSopInput, SOP_CATEGORIES, searchSops, type Sop } from '../sops/types'
 import { supabaseCalls } from '../calls/repo'
 import { cancelCall, finishCall, registerCall, syncCallsFromCalendar } from '../calls/service'
-import { CALL_KIND_LABELS, CALL_STATUSES, callStats, type Call } from '../calls/types'
+import { CALL_KIND_LABELS, CALL_STATUSES, callStats, cleanPptUrl, salesPptUrl, type Call } from '../calls/types'
 import { addBotToMeeting, getTranscript, isBotInMeeting } from '../fireflies'
 import { linkTranscript, serviceDeps } from '../calls/transcripts'
 import { cleanClientInput, daysLeft, type Client } from '../clients/types'
@@ -1204,6 +1204,8 @@ export function buildMcpServer(session: AdminSession) {
       transcript: c.transcript_url ?? null,
       bedankmail_concept_id: c.thank_you_draft_id ?? null,
       analyse: c.analysis ?? null,
+      sales_ppt_url: c.kind === 'sales' ? salesPptUrl(c) : null,
+      sales_ppt_eigen: Boolean(c.sales_ppt_url),
     }
   }
   const callDeps = { calls, leads }
@@ -1221,6 +1223,18 @@ export function buildMcpServer(session: AdminSession) {
       await syncCallsFromCalendar(callDeps).catch(() => undefined)
       const list = (await calls.list(lead_id ? { leadId: uuid(lead_id, 'lead_id') } : {})).filter((c) => c.status === status && (!soort || c.kind === soort))
       return Promise.all(list.slice(0, 50).map(callView))
+    },
+  )
+  tool(
+    'call_sales_ppt_zetten',
+    'De sales-ppt van één call aanpassen (komt op de callkaart en in de bedankmail). url = https-link, of leeg om terug te gaan naar de standaard-ppt.',
+    { call: z.string().describe('call_id'), url: z.string().describe('https-link of leeg') },
+    false,
+    async ({ call, url }) => {
+      const c = await getCall(call)
+      const next = cleanPptUrl(url)
+      await calls.update(c.id, { sales_ppt_url: next })
+      return next ? `Sales-ppt van deze call: ${next}` : 'Terug naar de standaard-ppt.'
     },
   )
   tool(

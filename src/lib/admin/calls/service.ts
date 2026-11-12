@@ -7,7 +7,7 @@ import type { LeadsRepo } from '../sales/repo'
 import { OPEN_STAGES, type Lead } from '../sales/types'
 import { CONTACT_EMAIL } from '../weekly/types'
 import type { CallsRepo } from './repo'
-import { CALL_KIND_LABELS, CALL_MINUTES, forwardStage, STAGE_AFTER, thankYouMail, type Call, type CallKind } from './types'
+import { CALL_KIND_LABELS, CALL_MINUTES, forwardStage, STAGE_AFTER, thankYouMail, type Call, type CallKind, salesPptUrl } from './types'
 import { isoDay } from '../format'
 
 /**
@@ -105,7 +105,7 @@ export async function finishCall(
   // Sales call: meteen een bedankmail met de ppt als concept (wordt persoonlijker zodra het transcript er is).
   if (lead && outcome === 'afgerond' && call.kind === 'sales' && lead.email && !call.thank_you_draft_id) {
     const sameDay = isoDay(new Date(call.starts_at)) === isoDay(new Date())
-    const m = thankYouMail(lead.name.split(' ')[0], sameDay ? 'vandaag' : fmtDate(call.starts_at, { weekday: 'long' }))
+    const m = thankYouMail(lead.name.split(' ')[0], sameDay ? 'vandaag' : fmtDate(call.starts_at, { weekday: 'long' }), salesPptUrl(call))
     const d = await deps.drafts.create({
       lead_id: lead.id,
       from_email: 'casper@iknowright.be',
