@@ -9,6 +9,7 @@ import {
   finishCallAction,
   finishCallRecordingAction,
   firefliesCheckAction,
+  setCallContextAction,
   setCallSalesPptAction,
   startCallAction,
   startCallRecordingAction,
@@ -16,6 +17,7 @@ import {
 import { CALL_KIND_LABELS, CALL_STATUS_LABELS, salesPptUrl, type Call } from '@/lib/admin/calls/types'
 import { fmtDate, fmtTime } from '@/lib/admin/format'
 import { RecordButton } from '../RecordButton'
+import { Markdown } from '../Markdown'
 import { buttonClass, Card, muted, Pill, Spinner } from '../ui'
 import { cn } from '@/utilities/ui'
 
@@ -68,6 +70,8 @@ export function CallCard({ call: c, lead, overdue }: { call: Call; lead: CallLea
           {c.created_via === 'agenda' && <Pill tone="light">uit de contact-agenda</Pill>}
         </div>
       </div>
+
+      <BotContext call={c} />
 
       {lead?.context && <p className={cn('m-0 text-sm', muted)}>{lead.context}</p>}
       {c.calendar_error && <p className="m-0 text-sm text-[#A3470F]">Agenda: {c.calendar_error}</p>}
@@ -297,5 +301,80 @@ function SalesPpt({ call: c }: { call: Call }) {
         ✎
       </button>
     </span>
+  )
+}
+
+const who = (by: string | null | undefined) => (!by ? '' : by === 'grokbot' ? 'Grok Bot' : by.split('@')[0].replace(/^./, (x) => x.toUpperCase()))
+
+/** "Context van Grok Bot": markdown die de bot klaarzet (apart van Caspers notitie), inklapbaar en aanpasbaar. */
+function BotContext({ call: c }: { call: Call }) {
+  const has = Boolean(c.bot_context?.trim())
+  const [open, setOpen] = useState(true)
+  const [editing, setEditing] = useState(false)
+  const [pending, start] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+  const save = (text: string) =>
+    start(async () => {
+      setError(null)
+      const res = await setCallContextAction(c.id, text)
+      if (!res.ok) return setError(res.error)
+      setEditing(false)
+      router.refresh()
+    })
+  return (
+    <section aria-label="Context van Grok Bot" className="flex flex-col gap-2 rounded-2xl border-l-4 border-[#7B6BB0] bg-[#F3F0FA] px-4 py-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="flex items-center gap-1.5 text-left text-sm font-bold">
+          <span aria-hidden className={cn('inline-block text-xs transition-transform', open && 'rotate-90')}>
+            ▸
+          </span>
+          Context van Grok Bot
+        </button>
+        {!has && !editing && <span className={cn('text-xs', muted)}>nog leeg</span>}
+        {!editing && (
+          <button type="button" onClick={() => (setEditing(true), setOpen(true))} className="ml-auto rounded-full px-2 py-0.5 text-xs text-[#5E5670] hover:bg-white" aria-label="Context van Grok Bot aanpassen">
+            ✎ Aanpassen
+          </button>
+        )}
+      </div>
+      {open &&
+        (editing ? (
+          <form
+            className="flex flex-col gap-2"
+            onSubmit={(e) => {
+              e.preventDefault()
+              save(String(new FormData(e.currentTarget).get('text') ?? ''))
+            }}
+          >
+            <textarea name="text" rows={8} autoFocus defaultValue={c.bot_context ?? ''} aria-label="Context van Grok Bot (markdown)" placeholder={'# Kopje\n- opsomming\n[link](https://…)'} className="w-full resize-y rounded-xl border-0 bg-white px-3 py-2 font-mono text-[13px]" />
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="submit" disabled={pending} className={cn(small, 'bg-ikr-navy text-ikr-cream-light')}>
+                Bewaar
+              </button>
+              <button type="button" onClick={() => setEditing(false)} className={cn(small, 'bg-white text-ikr-navy')}>
+                Annuleer
+              </button>
+              <span className={cn('text-xs', muted)}>Markdown: # kopje, - opsomming, **vet**, [tekst](https://…)</span>
+              {pending && <Spinner />}
+              {error && (
+                <span role="alert" className="text-xs text-[#A3470F]">
+                  {error}
+                </span>
+              )}
+            </div>
+          </form>
+        ) : has ? (
+          <Markdown text={c.bot_context!} />
+        ) : (
+          <p className={cn('m-0 text-xs', muted)}>Grok Bot zet hier achtergrond over de lead en de call klaar.</p>
+        ))}
+      {open && has && c.bot_context_updated_at && !editing && (
+        <p className={cn('m-0 text-[11px]', muted)}>
+          Laatst bijgewerkt {fmtDate(c.bot_context_updated_at, { day: 'numeric', month: 'short' })} om {fmtTime(c.bot_context_updated_at)}
+          {c.bot_context_updated_by ? ` door ${who(c.bot_context_updated_by)}` : ''}
+        </p>
+      )}
+    </section>
   )
 }

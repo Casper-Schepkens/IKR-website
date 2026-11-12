@@ -333,7 +333,12 @@ describe('calls via MCP', () => {
     expect(r.json).toMatchObject({ soort: 'sales', status: 'gepland', bron: 'grokbot', lead_uitgenodigd: false, lead: { naam: 'Jan Peeters' } })
     const list = (await call('calls_lijst', {})).json as unknown as { call_id: string; sales_ppt_url: string; sales_ppt_eigen: boolean }[]
     expect(list).toHaveLength(1)
-    expect(list[0]).toMatchObject({ sales_ppt_eigen: false })
+    expect(list[0]).toMatchObject({ sales_ppt_eigen: false, heeft_context: false })
+    const id0 = list[0].call_id
+    await call('call_context_bijwerken', { call_id: id0, tekst: '# Jan\n- wil 4 video’s', modus: 'vervangen' })
+    await call('call_context_bijwerken', { call_id: id0, tekst: '[Offerte](https://docs.google.com/x)', modus: 'toevoegen' })
+    expect((await call('call_context_lezen', { call_id: id0 })).json).toMatchObject({ tekst: '# Jan\n- wil 4 video’s\n\n[Offerte](https://docs.google.com/x)', door: 'grokbot' })
+    expect(((await call('calls_lijst', {})).json as unknown as { heeft_context: boolean; notitie: string | null }[])[0]).toMatchObject({ heeft_context: true, notitie: null })
     expect((await call('call_sales_ppt_zetten', { call: list[0].call_id, url: 'https://docs.google.com/presentation/d/eigen' })).isError).toBe(false)
     expect(((await call('calls_lijst', {})).json as unknown as typeof list)[0]).toMatchObject({ sales_ppt_url: 'https://docs.google.com/presentation/d/eigen', sales_ppt_eigen: true })
     expect((await call('call_sales_ppt_zetten', { call: list[0].call_id, url: 'http://onveilig' })).isError).toBe(true)
@@ -345,7 +350,7 @@ describe('calls via MCP', () => {
     expect(store.find((d) => d.subject === 'Nieuw moment voor onze call?')?.status).toBe('concept')
     const cijfers = (await call('calls_cijfers', { van: '2026-11-01', tot: '2026-11-30' })).json
     expect(cijfers).toMatchObject({ sales: { no_show: 1, no_show_pct: 100 } })
-    expect(logs.map((l) => l.tool)).toEqual(['call_registreren', 'call_sales_ppt_zetten', 'call_sales_ppt_zetten', 'call_sales_ppt_zetten', 'call_afronden'])
+    expect(logs.map((l) => l.tool)).toEqual(['call_registreren', 'call_context_bijwerken', 'call_context_bijwerken', 'call_sales_ppt_zetten', 'call_sales_ppt_zetten', 'call_sales_ppt_zetten', 'call_afronden'])
     expect(gmail.sendMail).not.toHaveBeenCalled()
     expect(gmail.sendReply).not.toHaveBeenCalled()
   })
