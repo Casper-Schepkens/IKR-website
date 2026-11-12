@@ -13,13 +13,17 @@ function key() {
   return k
 }
 
-export const isTokenKeyConfigured = () => {
-  try {
-    key()
-    return true
-  } catch {
-    return false
-  }
+export const isTokenKeyConfigured = () => tokenKeyProblem() === null
+
+/** Wat er mis is met IKR_TOKEN_KEY (null = in orde), zonder de waarde zelf te tonen. */
+export function tokenKeyProblem(): string | null {
+  const raw = process.env.IKR_TOKEN_KEY
+  if (!raw) return 'IKR_TOKEN_KEY ontbreekt in deze deploy. Staat hij al in Vercel? Dan opnieuw deployen (variabelen gelden pas vanaf de volgende deploy) en nakijken of hij voor Production aangevinkt is.'
+  const trimmed = raw.trim()
+  const len = Buffer.from(trimmed, 'base64').length
+  if (trimmed !== raw) return 'IKR_TOKEN_KEY heeft spaties of een enter aan het begin of einde: plak hem opnieuw zonder.'
+  if (len !== 32) return `IKR_TOKEN_KEY is ${len} bytes in plaats van 32. Maak een nieuwe met \`openssl rand -base64 32\` en plak de volledige uitkomst.`
+  return null
 }
 
 export function encryptSecret(plain: string): string {

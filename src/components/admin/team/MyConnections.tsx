@@ -1,5 +1,5 @@
 import { checkConnection, listOwnConnections, type TeamConnection } from '@/lib/admin/team/connections'
-import { isTokenKeyConfigured } from '@/lib/admin/crypto'
+import { tokenKeyProblem } from '@/lib/admin/crypto'
 import { isGoogleConfigured } from '@/lib/admin/google'
 import { fmtDate } from '@/lib/admin/format'
 import { buttonClass, Card, muted, Pill, Title } from '../ui'
@@ -16,7 +16,7 @@ export async function MyConnections({ email }: { email: string }) {
   const withStatus = await Promise.all(own.map(async (c) => ({ ...c, status: c.status === 'ok' ? await checkConnection(email, c.kind) : c.status })))
   const mail = withStatus.find((c) => c.kind === 'mail')
   const agenda = withStatus.find((c) => c.kind === 'agenda')
-  const blocked = !isGoogleConfigured() ? 'Google is nog niet ingesteld.' : !isTokenKeyConfigured() ? 'IKR_TOKEN_KEY ontbreekt in Vercel (nodig om tokens versleuteld te bewaren).' : null
+  const blocked = !isGoogleConfigured() ? 'Google is nog niet ingesteld.' : tokenKeyProblem()
 
   return (
     <div id="koppelingen" className="scroll-mt-24">
