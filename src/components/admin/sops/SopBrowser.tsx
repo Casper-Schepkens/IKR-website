@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { deleteSopAction, setSopStatusAction, updateSopAction } from '@/app/admin/sops-actions'
 import { CATEGORY_KEYS, searchSops, SOP_CATEGORIES, type Sop, type SopCategory } from '@/lib/admin/sops/types'
 import { FormAction } from '../FormAction'
@@ -11,7 +11,8 @@ import { cn } from '@/utilities/ui'
 
 /** Zoeken en bladeren per categorie. Verouderde SOP's enkel op vraag. */
 export function SopBrowser({ sops }: { sops: Sop[] }) {
-  const [q, setQ] = useState('')
+  const initial = useSearchParams().get('q') ?? ''
+  const [q, setQ] = useState(initial)
   const [cat, setCat] = useState<SopCategory | null>(null)
   const [old, setOld] = useState(false)
   const current = sops.filter((s) => s.status !== 'voorstel')

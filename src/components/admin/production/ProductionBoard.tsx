@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useRef, useState, useTransition } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   addShootDayAction,
   removeShootDayAction,
@@ -78,10 +78,18 @@ export function ProductionBoard({
 }
 
 function ClientRow({ cp, today }: { cp: ClientProduction; today: string }) {
-  const [open, setOpen] = useState(false)
+  // "Ga naar productie van X" (?klant=id): openklappen en ernaartoe scrollen.
+  const focus = useSearchParams().get('klant') === cp.client_id
+  const ref = useRef<HTMLLIElement>(null)
+  // Zelf open- of dichtgeklikt gaat voor; anders open als er naartoe gesprongen werd.
+  const [toggled, setOpen] = useState<boolean | null>(null)
+  const open = toggled ?? focus
+  useEffect(() => {
+    if (focus) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [focus])
   const n = cp.next
   return (
-    <li className={cn('border-t border-[#E6DFD2]', !cp.production.active && 'opacity-60')}>
+    <li ref={ref} className={cn('scroll-mt-24 border-t border-[#E6DFD2]', !cp.production.active && 'opacity-60')}>
       <button
         type="button"
         onClick={() => setOpen(!open)}

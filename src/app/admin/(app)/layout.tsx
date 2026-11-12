@@ -3,6 +3,7 @@ import { canSeeSales } from '@/lib/admin/env'
 import { Sidebar } from '@/components/admin/Sidebar'
 import { AdminChat } from '@/components/admin/AdminChat'
 import { LiveData } from '@/components/admin/LiveData'
+import { CommandPalette } from '@/components/admin/CommandPalette'
 import { chatState } from '@/lib/admin/chat/service'
 import { liveStamp } from '@/lib/admin/live-stamp'
 
@@ -23,6 +24,7 @@ export default async function AdminAppLayout({ children }: { children: React.Rea
       <main className="flex min-w-0 flex-1 flex-col gap-7 px-4 pt-6 pb-14 sm:px-9">
         <AdminChat initial={chat} />
         <LiveData stamp={stamp} />
+        <CommandPalette />
         {children}
       </main>
     </div>
