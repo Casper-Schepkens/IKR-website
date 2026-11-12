@@ -4,6 +4,8 @@ import { isDemoMode } from '@/lib/admin/env'
 import { STAGES, type Stage } from '@/lib/admin/sales/types'
 import { Card, muted, PageHeader, Pill, Stat } from '@/components/admin/ui'
 import { cn } from '@/utilities/ui'
+import { parseSelection, selectSequences } from '@/lib/admin/sales/sequence-filter'
+import { SequenceFilter } from '@/components/admin/sales/SequenceFilter'
 
 export const metadata = { title: 'Cold mails' }
 
@@ -12,8 +14,9 @@ const LOW_ADDRESSES = 20
 
 const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)}%` : '—')
 
-export default async function ColdMailsPage() {
+export default async function ColdMailsPage({ searchParams }: { searchParams: Promise<{ alle?: string; seq?: string }> }) {
   const { leads } = await requireSales()
+  const selection = parseSelection(await searchParams)
 
   if (!isApolloConfigured() && !isDemoMode()) {
     return (
@@ -50,8 +53,10 @@ export default async function ColdMailsPage() {
   const reached = (s: Stage) =>
     fromColdMail.filter((l) => l.stage !== 'lost' && STAGES.indexOf(l.stage) >= STAGES.indexOf(s)).length
 
-  const delivered = stats.sequences.reduce((a, s) => a + s.delivered, 0)
-  const replied = stats.sequences.reduce((a, s) => a + s.replied, 0)
+  // Stats en totalen enkel over de getoonde sequences (standaard de actieve).
+  const { shown } = selectSequences(stats.sequences, selection)
+  const delivered = shown.reduce((a, s) => a + s.delivered, 0)
+  const replied = shown.reduce((a, s) => a + s.replied, 0)
   const low = stats.newAddresses < LOW_ADDRESSES
 
   const funnel = [
@@ -88,19 +93,21 @@ export default async function ColdMailsPage() {
         )}
       </Card>
 
+      <SequenceFilter sequences={stats.sequences.map((x) => ({ id: x.id, name: x.name, active: x.active }))} inactive={selection.inactive} ids={selection.ids} />
+
       <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3">
         {funnel.map((f, i) => (
           <Stat
             key={f.label}
             label={f.label}
             value={f.value}
-            note={i === 0 ? 'alle sequences' : `${pct(f.value, funnel[i - 1].value)} van vorige stap`}
+            note={i === 0 ? `${shown.length} sequence${shown.length === 1 ? '' : 's'}` : `${pct(f.value, funnel[i - 1].value)} van vorige stap`}
             noteTone="muted"
           />
         ))}
       </div>
       <p className={cn('-mt-4 m-0 text-xs', muted)}>
-        Leads en calls tellen leads met bron &quot;Cold mail&quot;; leads die lost zijn tellen enkel mee bij Leads.
+        Verstuurd en reacties: enkel de gekozen sequences. Leads en calls tellen alle leads met bron &quot;Cold mail&quot; (Apollo koppelt die niet aan een sequence); leads die lost zijn tellen enkel mee bij Leads.
       </p>
 
       <Card className="relative overflow-x-auto p-0">
@@ -115,7 +122,14 @@ export default async function ColdMailsPage() {
             </tr>
           </thead>
           <tbody>
-            {stats.sequences.map((s) => (
+            {!shown.length && (
+              <tr>
+                <td colSpan={5} className={cn('px-6 py-4', muted)}>
+                  Geen sequences gekozen.
+                </td>
+              </tr>
+            )}
+            {shown.map((s) => (
               <tr key={s.id} className="border-t border-[#E6DFD2]">
                 <td className="px-6 py-3">
                   <a href={s.url} target="_blank" rel="noreferrer" className="font-bold text-ikr-navy no-underline hover:text-[#0B7F93]">
