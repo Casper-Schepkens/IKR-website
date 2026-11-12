@@ -57,6 +57,17 @@ export function authUrl(opts: {
 
 type TokenResponse = { access_token: string; refresh_token?: string; scope: string; id_token?: string; error?: string }
 
+/** Duidelijke melding bij een geweigerde Google-koppeling, met wat je moet doen. */
+export function googleTokenError(code: string, kind: 'refresh' | 'code') {
+  if (code === 'invalid_grant')
+    return kind === 'refresh'
+      ? 'Google weigerde de koppeling (invalid_grant): de koppeling is verlopen of ingetrokken (bv. nieuw wachtwoord of toegang ingetrokken). Koppel dat account opnieuw in Instellingen.'
+      : 'Google weigerde de koppeling (invalid_grant): de inlogcode was al gebruikt of verlopen. Probeer opnieuw te koppelen.'
+  if (code === 'invalid_client' || code === 'unauthorized_client')
+    return `Google weigerde de koppeling (${code}): GOOGLE_CLIENT_ID of GOOGLE_CLIENT_SECRET in Vercel klopt niet (meer). Zet ze terug zoals in Google Cloud en deploy opnieuw.`
+  return `Google weigerde de koppeling (${code}).`
+}
+
 async function token(body: Record<string, string>): Promise<TokenResponse> {
   const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
@@ -69,7 +80,7 @@ async function token(body: Record<string, string>): Promise<TokenResponse> {
     cache: 'no-store',
   })
   const json = (await res.json()) as TokenResponse
-  if (!res.ok) throw new Error(`Google weigerde de koppeling (${json.error ?? res.status}).`)
+  if (!res.ok) throw new Error(googleTokenError(String(json.error ?? res.status), body.refresh_token ? 'refresh' : 'code'))
   return json
 }
 
@@ -138,7 +149,12 @@ export async function accessToken(email: string) {
     .eq('email', email)
     .maybeSingle()
   if (!data) throw new Error(`${email} is nog niet gekoppeld (Instellingen).`)
-  return (await token({ refresh_token: data.refresh_token, grant_type: 'refresh_token' })).access_token
+  try {
+    return (await token({ refresh_token: data.refresh_token, grant_type: 'refresh_token' })).access_token
+  } catch (e) {
+    // Zeg welk account: bv. "contact@iknowright.be: … Koppel dat account opnieuw in Instellingen."
+    throw new Error(`${email}: ${e instanceof Error ? e.message : String(e)}`)
+  }
 }
 
 /**
