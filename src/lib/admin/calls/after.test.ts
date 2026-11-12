@@ -11,7 +11,12 @@ function q(table: string) {
   const api = {
     select: () => api,
     update: (p: Row) => ((patch = p), api),
-    insert: async (row: Row) => (tables[table].push({ ...row }), { error: null }),
+    insert: async (row: Row) => {
+      // Zoals de echte tabel: fireflies_id is de primaire sleutel van call_transcripts.
+      if (table === 'call_transcripts' && tables[table].some((r) => r.fireflies_id === row.fireflies_id)) return { error: { message: 'duplicate key' } }
+      tables[table].push({ ...row })
+      return { error: null }
+    },
     upsert: async (row: Row) => {
       const ex = tables[table].find((r) => r.fireflies_id === row.fireflies_id)
       if (ex) Object.assign(ex, row)
@@ -92,6 +97,10 @@ describe('deel 2: bedankmail', () => {
 })
 
 describe('deel 3: Fireflies-webhook', () => {
+  it('twee events voor dezelfde meeting (transcribed + summarized): de tweede slaat over zolang de eerste bezig is', async () => {
+    tables.call_transcripts = [{ fireflies_id: 'FFX', status: 'ontvangen', received_at: new Date().toISOString(), updated_at: new Date().toISOString() }]
+    expect(await handleFirefliesEvent('FFX', null, deps)).toEqual({ status: 'al_bezig' })
+  })
   it('handtekening (HMAC-SHA256) en payload', () => {
     const body = JSON.stringify({ meetingId: 'FF1', eventType: 'Transcription completed', clientReferenceId: null })
     const sig = createHmac('sha256', 'geheim').update(body).digest('hex')
@@ -100,8 +109,8 @@ describe('deel 3: Fireflies-webhook', () => {
     expect(verifyFirefliesSignature(body, sig, 'ander')).toBe(false)
     expect(verifyFirefliesSignature(body + ' ', sig, 'geheim')).toBe(false)
     expect(verifyFirefliesSignature(body, null, 'geheim')).toBe(false)
-    expect(parseFirefliesWebhook(body)).toEqual({ meetingId: 'FF1', clientRef: null })
-    expect(parseFirefliesWebhook(JSON.stringify({ meetingId: 'FF1', eventType: 'Meeting started' }))).toBeNull()
+    expect(parseFirefliesWebhook(body)).toMatchObject({ action: 'process', meetingId: 'FF1', clientRef: null })
+    expect(parseFirefliesWebhook(JSON.stringify({ meetingId: 'FF1', eventType: 'Meeting started' }))).toMatchObject({ action: 'ignore' })
   })
 
   it('koppelen: client-referentie, Meet, deelnemer + tijd, titel + tijd; anders niets', () => {
@@ -193,5 +202,21 @@ describe('deel 4: call_verwerken (afterDone)', () => {
       output as never,
     )
     expect(tables.mail_drafts[0].body).toBe('Mijn eigen versie')
+  })
+})
+
+describe('Fireflies-webhook V1 en V2', () => {
+  const id = '9bee4b17-2778-4c9e-bca1-2f548c0864cd'
+  it('V2: meeting.transcribed en meeting.summarized verwerken; test en bot_joined enkel 200', () => {
+    expect(parseFirefliesWebhook(JSON.stringify({ meeting_id: 'FF2', event: 'meeting.transcribed', client_reference_id: id }))).toEqual({ action: 'process', meetingId: 'FF2', clientRef: id, event: 'meeting.transcribed' })
+    expect(parseFirefliesWebhook(JSON.stringify({ meeting_id: 'FF2', event: 'meeting.summarized' }))).toMatchObject({ action: 'process', meetingId: 'FF2' })
+    expect(parseFirefliesWebhook(JSON.stringify({ event: 'test' }))).toMatchObject({ action: 'ignore', reason: expect.stringMatching(/test/) })
+    expect(parseFirefliesWebhook(JSON.stringify({ meeting_id: 'FF2', event: 'meeting.bot_joined' }))).toMatchObject({ action: 'ignore' })
+    expect(parseFirefliesWebhook(JSON.stringify({ event: 'meeting.transcribed' }))).toMatchObject({ action: 'ignore', reason: 'geen meeting_id' })
+    expect(parseFirefliesWebhook('{niet json')).toMatchObject({ action: 'ignore', reason: 'geen geldige JSON' })
+  })
+  it('client-referentie: call-id of weekly:<id>', () => {
+    expect(parseFirefliesWebhook(JSON.stringify({ meeting_id: 'X', event: 'meeting.transcribed', client_reference_id: `weekly:${id}` }))).toMatchObject({ clientRef: `weekly:${id}` })
+    expect(parseFirefliesWebhook(JSON.stringify({ meeting_id: 'X', event: 'meeting.transcribed', client_reference_id: 'iets anders' }))).toMatchObject({ clientRef: null })
   })
 })
