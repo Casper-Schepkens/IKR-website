@@ -14,6 +14,9 @@ import { supabaseLeads } from '../sales/repo'
 import { supabaseWeekly } from '../weekly/repo'
 import { supabaseClients } from '../clients/repo'
 import { supabaseSops } from '../sops/repo'
+import { supabaseProduction } from '../production/repo'
+import { ANCHOR_LABEL, CYCLE, ONBOARDING, WHO_LABEL, myNextSteps, upcoming, type ClientProduction, type Step } from '../production/core'
+import { addShootDay, getClientProduction, loadProduction, removeShootDay, setAnchor, setStartPoint, startProduction, updateStep } from '../production/service'
 import { CATEGORY_KEYS, cleanSopInput, SOP_CATEGORIES, searchSops, type Sop } from '../sops/types'
 import { supabaseCalls } from '../calls/repo'
 import { cancelCall, finishCall, registerCall, syncCallsFromCalendar } from '../calls/service'
@@ -66,6 +69,7 @@ Werkwijze:
 - Het dashboard kan jou AI-taken geven (bv. antwoorden op sales-mails): haal ze op met ai_taken_open en zet het resultaat terug met ai_taak_klaarzetten.
 - Financiën (financien_*): cijfers uit de bank in Odoo, voor het hele team. Odoo wordt nooit aangepast; indelen gebeurt enkel in het dashboard. Verzin geen bedragen: gebruik financien_overzicht. Of klanten betaald hebben: financien_betalingen. Contractbedragen van een klant uit de Drive halen: klant_contract_afleiden (geeft een voorstel; overnemen doet het team). Staat er veel ‘nog in te delen’, zeg dat de cijfers dan onvolledig zijn.
 - SOP's (sops_*, sop_*): de afspraken en best practices van het team. Vraagt iemand hoe iets bij IKR gaat (revisies, draaidagen, freelancers, prijzen …): zoek eerst met sops_zoeken en verwijs naar de SOP. Zegt iemand \"@grokbot nieuwe SOP\" (of vraagt om iets vast te leggen): sop_aanmaken als voorstel; het team keurt het goed met een vinkje.
+- Productie (productie_*): het contentproces per klant (opstart, dan per draaidag: ideeën, briefing, greenlight, draaidag, montage, revisie, online). Cédric = strategie, Milan = creatief, freelancer = draaien en monteren, Casper = contract. Zegt iemand \"we zitten nu bij X\": productie_startpunt. Een datum (kick-off, strategiemeeting, draaidag) gaat via productie_datum; de deadlines volgen vanzelf.
 - Schrijf in vlot Nederlands zoals in Vlaanderen. Verzin geen feiten of cijfers.`
 
 const text = (value: unknown) => ({
@@ -188,6 +192,7 @@ export function botSession(): AdminSession {
     weekly: supabaseWeekly(db),
     clients: supabaseClients(db),
     sops: supabaseSops(db),
+    production: supabaseProduction(db),
     calls: supabaseCalls(db),
     drafts: supabaseDrafts(db),
     chat: supabaseChat(db),
@@ -195,7 +200,7 @@ export function botSession(): AdminSession {
 }
 
 export function buildMcpServer(session: AdminSession) {
-  const { leads, weekly, drafts, chat, clients, calls, sops } = session
+  const { leads, weekly, drafts, chat, clients, calls, sops, production } = session
   const server = new McpServer({ name: 'ikr-dashboard', version: '1.0.0' }, { instructions: INSTRUCTIONS })
 
   /**
@@ -813,6 +818,88 @@ export function buildMcpServer(session: AdminSession) {
     },
   )
   tool('financien_bijwerken', 'Haalt nu de nieuwste banktransacties en het saldo uit Odoo (enkel lezen).', {}, false, async () => syncFinance({ force: true }))
+  // ─── Productie ──────────────────────────────────────────
+  const STEP_KEYS = [...ONBOARDING, ...CYCLE].map((x) => x.key) as [string, ...string[]]
+  const stepList = `Opstart: ${ONBOARDING.map((x) => `${x.key} (${x.title}, ${WHO_LABEL[x.who]})`).join('; ')}. Per draaidag: ${CYCLE.map((x) => `${x.key} (${x.title}, ${WHO_LABEL[x.who]})`).join('; ')}.`
+  const stepView = (x: Step) => ({ stap: x.key, titel: x.title, wie: WHO_LABEL[x.who], draaidag: x.cycle?.no ?? null, deadline: x.due_on, af: x.done, te_laat: x.overdue, link: x.link, notitie: x.note })
+  const prodView = (cp: ClientProduction) => ({
+    klant: cp.name,
+    fase: cp.phase,
+    actief: cp.production.active,
+    data: { getekend: cp.production.signed_on, kickoff: cp.production.kickoff_on, strategiemeeting: cp.production.strategy_on },
+    draaidagen: cp.cycles.map((c) => ({ nr: c.no, datum: c.shoot_on, uur: c.shoot_time })),
+    nu_aan_de_beurt: upcoming(cp).map(stepView),
+  })
+  const clientRef = async (klant: string) => {
+    const c = await resolveClient(klant)
+    return { id: c.id, name: c.name }
+  }
+  const allProduction = async () => loadProduction(production, (await clients.list()).map((c) => ({ id: c.id, name: c.name })))
+  tool('productie_overzicht', 'Productie van alle klanten: fase, data, draaidagen en wat nu aan de beurt is (met wie en deadline). Ook klanten waarvoor de productie nog niet gestart is.', {}, true, async () => {
+    const { list, notStarted } = await allProduction()
+    return { klanten: list.map(prodView), nog_niet_gestart: notStarted.map((c) => c.name) }
+  })
+  tool('productie_klant', `Alle stappen van één klant (opstart en elke draaidag) met deadline, af, link en notitie. Stappen: ${stepList}`, { klant: z.string() }, true, async ({ klant }) => {
+    const cp = await getClientProduction(production, await clientRef(klant))
+    return { ...prodView(cp), opstart: cp.onboarding.map(stepView), per_draaidag: cp.cycleSteps.map((x) => ({ draaidag: x.cycle.no, datum: x.cycle.shoot_on, stappen: x.steps.map(stepView) })) }
+  })
+  tool('productie_volgende_stappen', 'Wat een teamlid nu moet doen over alle klanten (eigen stappen; Milan volgt de freelancer op, Cédric de klant), op deadline.', { teamlid: owner }, true, async ({ teamlid }) => {
+    const { list } = await allProduction()
+    return myNextSteps(list, teamlid as never).map(({ client, step }) => ({ klant: client.name, ...stepView(step) }))
+  })
+  tool('productie_starten', 'Productie starten voor een klant (na het getekende contract). Optioneel de datum van ondertekening.', { klant: z.string(), getekend: z.string().optional().describe('YYYY-MM-DD') }, false, async ({ klant, getekend }) => {
+    const c = await clientRef(klant)
+    await startProduction(production, c.id, getekend)
+    return `Productie gestart voor ${c.name}.`
+  })
+  tool(
+    'productie_startpunt',
+    `"We zitten nu hier": voor klanten die niet van nul beginnen. Alles vóór deze stap wordt afgevinkt, deze stap en wat erna komt staat open. Bij een draaidagstap: welke draaidag (nr, standaard 1). ${stepList}`,
+    { klant: z.string(), stap: z.enum(STEP_KEYS), draaidag: z.number().int().min(1).optional() },
+    false,
+    async ({ klant, stap, draaidag }) => {
+      const c = await clientRef(klant)
+      await setStartPoint(production, c, stap, draaidag ?? null, BY)
+      return prodView(await getClientProduction(production, c))
+    },
+  )
+  tool(
+    'productie_datum',
+    `Een datum zetten (leeg = wissen): getekend (${ANCHOR_LABEL.getekend}), kickoff, strategie (${ANCHOR_LABEL.strategie}) of draaidag (met nr en optioneel uur). Deadlines worden daaruit berekend. Een draaidag komt ook in de contact-agenda.`,
+    { klant: z.string(), soort: z.enum(['getekend', 'kickoff', 'strategie', 'draaidag']), datum: z.string().describe('YYYY-MM-DD of leeg'), draaidag: z.number().int().min(1).optional().describe('nr van de draaidag; leeg = de eerstvolgende zonder datum'), uur: z.string().optional().describe('UU:MM') },
+    false,
+    async ({ klant, soort, datum, draaidag, uur }) => {
+      const c = await clientRef(klant)
+      await setAnchor(production, c, soort as never, datum || null, { cycleNo: draaidag ?? null, time: uur ?? null })
+      return prodView(await getClientProduction(production, c))
+    },
+  )
+  tool('productie_draaidag_toevoegen', 'Nieuwe draaidag (volgende cyclus) voor een klant, optioneel met datum en uur.', { klant: z.string(), datum: z.string().optional(), uur: z.string().optional() }, false, async ({ klant, datum, uur }) => {
+    const c = await clientRef(klant)
+    const cy = await addShootDay(production, c, datum ?? null, uur ?? null)
+    return `Draaidag ${cy.no} toegevoegd voor ${c.name}${datum ? ` op ${datum}` : ''}.`
+  })
+  tool('productie_draaidag_verwijderen', 'Een draaidag (en zijn stappen) verwijderen.', { klant: z.string(), draaidag: z.number().int().min(1) }, false, async ({ klant, draaidag }) => {
+    const c = await clientRef(klant)
+    await removeShootDay(production, c, draaidag)
+    return `Draaidag ${draaidag} van ${c.name} verwijderd.`
+  })
+  tool(
+    'productie_stap',
+    `Eén stap aanpassen: af (true/false), eigen deadline (YYYY-MM-DD, leeg = berekend), link (https) of notitie. Bij een draaidagstap: welke draaidag (standaard de huidige). ${stepList}`,
+    { klant: z.string(), stap: z.enum(STEP_KEYS), draaidag: z.number().int().min(1).optional(), af: z.boolean().optional(), deadline: z.string().optional(), link: z.string().optional(), notitie: z.string().optional() },
+    false,
+    async ({ klant, stap, draaidag, af, deadline, link, notitie }) => {
+      const c = await clientRef(klant)
+      await updateStep(production, c, stap, { done: af, due_on: deadline === undefined ? undefined : deadline || null, link, note: notitie }, { cycleNo: draaidag ?? null, by: BY })
+      return prodView(await getClientProduction(production, c))
+    },
+  )
+  tool('productie_pauzeren', 'Productie van een klant (de)activeren, bv. als de klant stopt. Inactief = niet meer bij de volgende stappen.', { klant: z.string(), actief: z.boolean() }, false, async ({ klant, actief }) => {
+    const c = await clientRef(klant)
+    await production.upsert(c.id, { active: actief })
+    return `${c.name}: productie ${actief ? 'actief' : 'gepauzeerd'}.`
+  })
   // ─── SOP's ──────────────────────────────────────────────
   const sopView = (x: Sop) => ({ sop_id: x.id, titel: x.title, tekst: x.body, categorie: x.category, categorie_label: SOP_CATEGORIES[x.category], status: x.status, bron: x.source, bron_link: x.source_url, citaat: x.quote, sinds: x.created_at.slice(0, 10) })
   const categorie = z.enum(CATEGORY_KEYS as [string, ...string[]])

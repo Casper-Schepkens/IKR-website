@@ -19,6 +19,7 @@ import { memoryLeads } from '../sales/repo'
 import { memoryWeekly } from '../weekly/repo'
 import { memoryClients } from '../clients/repo'
 import { memorySops } from '../sops/repo'
+import { memoryProduction } from '../production/repo'
 import { memoryCalls } from '../calls/repo'
 import { memoryDrafts, type MailDraft } from '../sales/drafts'
 import { memoryChat, type ChatMessage } from '../chat/repo'
@@ -55,6 +56,7 @@ beforeEach(async () => {
     weekly: memoryWeekly(),
     clients: memoryClients(),
     sops: memorySops(),
+    production: memoryProduction(),
     calls: memoryCalls(),
     drafts: memoryDrafts(store),
     chat: memoryChat(chatStore),

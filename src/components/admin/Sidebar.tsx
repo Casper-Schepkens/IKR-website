@@ -32,6 +32,8 @@ export function Sidebar({
       : []),
     { href: '/admin/klanten', label: 'Klanten', icon: Icon.board },
     { href: '/admin/financien', label: 'Financiën', icon: Icon.euro },
+    // Productie is voor Cédric en Milan; Casper ziet het voorlopig ook (temp).
+    { href: '/admin/productie', label: sales ? 'Productie (temp)' : 'Productie', icon: Icon.file },
     { href: '/admin/weekly', label: 'Weekly', icon: Icon.calendar },
     { href: '/admin/sops', label: "SOP's", icon: Icon.book },
     { href: '/admin/instellingen', label: 'Instellingen', icon: Icon.settings },
