@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useOptimistic, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { addTodoNoteAction, deleteTodoAction, pushTodoAction, renameTodoAction, setTodoDoneAction, unpushTodoAction } from '@/app/admin/weekly-actions'
+import { addTodoNoteAction, deleteTodoAction, pushTodoAction, renameTodoAction, setTodoCheckedAction, setTodoDoneAction, unpushTodoAction } from '@/app/admin/weekly-actions'
 import { TEAM, type Todo } from '@/lib/admin/weekly/types'
 import { Icon, input, muted, Pill, Spinner } from '../ui'
 import { cn } from '@/utilities/ui'
@@ -11,7 +11,10 @@ const nameOf = (email: string | null) => TEAM.find((t) => t.email === email)?.na
 const small =
   'ikr-btn inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-xs font-semibold disabled:opacity-60'
 
-export function TodoCard({ todo, overdue, showOwner, me }: { todo: Todo; overdue: boolean; showOwner?: boolean; me: string }) {
+/**
+ * `meeting`: tijdens/na de weekly zelf. Dan geen "afgewerkt"-vinkje en niets grijs: we overlopen alles.
+ */
+export function TodoCard({ todo, overdue, showOwner, me, meeting = false }: { todo: Todo; overdue: boolean; showOwner?: boolean; me: string; meeting?: boolean }) {
   const [pending, start] = useTransition()
   const [noteOpen, setNoteOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -24,6 +27,10 @@ export function TodoCard({ todo, overdue, showOwner, me }: { todo: Todo; overdue
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const done = Boolean(todo.done_at)
+  // Afgewerkt vóór de weekly: enkel voor gewone to-do's, niet tijdens de meeting.
+  const canCheck = todo.kind === 'weekly' && !done && !meeting
+  // Meteen grijs bij klikken; de server bevestigt daarna.
+  const [checked, setChecked] = useOptimistic(canCheck && Boolean(todo.checked_at))
   // Eigen notitie: de Notitie-knop opent die om verder te werken (in plaats van telkens een nieuwe).
   const own = [...todo.notes].reverse().find((n) => n.author === me) ?? null
 
@@ -39,7 +46,7 @@ export function TodoCard({ todo, overdue, showOwner, me }: { todo: Todo; overdue
     })
 
   return (
-    <div className={cn('flex flex-col gap-2 rounded-2xl bg-ikr-cream-light p-3.5', done && 'opacity-60')}>
+    <div className={cn('flex flex-col gap-2 rounded-2xl bg-ikr-cream-light p-3.5', done && 'opacity-60', checked && 'bg-[#E4E1DB] text-[#6F6A76]')}>
       <div className="group flex items-start gap-1.5">
         {editTitle ? (
           <input
@@ -59,6 +66,25 @@ export function TodoCard({ todo, overdue, showOwner, me }: { todo: Todo; overdue
           />
         ) : (
           <>
+            {canCheck && (
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={(e) => {
+                  const v = e.currentTarget.checked
+                  start(async () => {
+                    setChecked(v)
+                    setError(null)
+                    const res = await setTodoCheckedAction(todo.id, v)
+                    if (!res.ok) setError(res.error ?? 'Er ging iets mis.')
+                    router.refresh()
+                  })
+                }}
+                aria-label={`Afgewerkt: ${todo.title}`}
+                title="Afgewerkt (voor jezelf, vóór de weekly)"
+                className="mt-1 size-4 shrink-0 cursor-pointer accent-[#6F6A76]"
+              />
+            )}
             <span className={cn('min-w-0 text-[15px] font-semibold', done && 'line-through')}>{todo.title}</span>
             {/* Potlood: verschijnt bij hover (op touch altijd zichtbaar, lichter). */}
             <button

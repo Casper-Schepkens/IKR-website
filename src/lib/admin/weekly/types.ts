@@ -49,6 +49,8 @@ export type Todo = {
   pushed_at?: string | null
   /** De weekly waar de to-do vóór het doorschuiven bij hoorde (om te annuleren). */
   pushed_from?: string | null
+  /** Zelf aangevinkt als afgewerkt vóór de weekly (grijs); leeg zodra de weekly start. */
+  checked_at?: string | null
   done_at: string | null
   done_by: string | null
   created_by: string | null

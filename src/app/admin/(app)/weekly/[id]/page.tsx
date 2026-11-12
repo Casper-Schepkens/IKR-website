@@ -78,7 +78,7 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
         )
       )}
 
-      <TodoBoard todos={todos} weeklies={weeklies} me={user.email} />
+      <TodoBoard todos={todos} weeklies={weeklies} me={user.email} meeting />
 
       {w.status !== 'concluded' && (
         <>

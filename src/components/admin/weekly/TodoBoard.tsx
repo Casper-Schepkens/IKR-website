@@ -10,16 +10,19 @@ function WeekLabel({ children }: { children: React.ReactNode }) {
 }
 
 /** To-do's per persoon (deze week | lijn | volgende week) en de lange to-do's. */
-export function TodoBoard({ todos, weeklies, me }: { todos: Todo[]; weeklies: Weekly[]; me: string }) {
+export function TodoBoard({ todos, weeklies, me, meeting = false }: { todos: Todo[]; weeklies: Weekly[]; me: string; meeting?: boolean }) {
   const { byOwner, long } = boardTodos(todos, weeklies)
   const concluded = new Set(weeklies.filter((w) => w.status === 'concluded').map((w) => w.id))
   const overdue = (t: Todo) => Boolean(t.weekly_id && concluded.has(t.weekly_id))
+  // Een weekly die al gestart is: die to-do's overlopen we, dus geen grijs/vinkje meer.
+  const started = new Set(weeklies.filter((w) => w.status !== 'planned').map((w) => w.id))
+  const inMeeting = (t: Todo) => meeting || Boolean(t.weekly_id && started.has(t.weekly_id))
   return (
     <>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4">
         {TEAM.map((p) => {
           const { current, thisWeek, nextWeek } = splitByWeek(byOwner('weekly', p.key), weeklies)
-          const card = (t: Todo) => <TodoCard key={t.id} todo={t} overdue={overdue(t)} me={me} />
+          const card = (t: Todo) => <TodoCard key={t.id} todo={t} overdue={overdue(t)} me={me} meeting={inMeeting(t)} />
           return (
             <Card key={p.key} className="flex flex-col gap-3 p-4">
               <Title className="m-0 text-2xl">{p.name}</Title>
@@ -52,7 +55,7 @@ export function TodoBoard({ todos, weeklies, me }: { todos: Todo[]; weeklies: We
         {long.length ? (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
             {long.map((t) => (
-              <TodoCard key={t.id} todo={t} overdue={false} me={me} showOwner />
+              <TodoCard key={t.id} todo={t} overdue={false} me={me} showOwner meeting={meeting} />
             ))}
           </div>
         ) : (

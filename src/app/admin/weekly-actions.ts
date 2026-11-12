@@ -40,7 +40,11 @@ export async function planWeeklyAction(form: FormData) {
 export async function startWeeklyAction(id: string) {
   const session = await requireAdmin()
   const w = await session.weekly.getWeekly(id)
-  if (w && w.status === 'planned') await session.weekly.updateWeekly(id, { status: 'started', started_at: new Date().toISOString() })
+  if (w && w.status === 'planned') {
+    await session.weekly.updateWeekly(id, { status: 'started', started_at: new Date().toISOString() })
+    // Tijdens de meeting overlopen we alles: niets meer grijs.
+    await session.weekly.clearChecked(id)
+  }
   redirect(`/admin/weekly/${id}`)
 }
 
@@ -226,5 +230,13 @@ export async function addFirefliesAction(id: string) {
     const w = await session.weekly.getWeekly(id)
     if (!w?.meet_url) throw new Error('Deze weekly heeft geen Meet-link.')
     await addBotToMeeting(w.meet_url, `IKR weekly ${isoDay(new Date(w.starts_at))}`)
+  })
+}
+
+/** Afgewerkt aanvinken vóór de weekly: de to-do wordt grijs (niet doorstreept). */
+export async function setTodoCheckedAction(id: string, checked: boolean) {
+  return attempt(async () => {
+    const session = await requireAdmin()
+    await session.weekly.setChecked(id, checked)
   })
 }

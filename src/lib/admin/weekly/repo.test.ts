@@ -59,3 +59,24 @@ describe('eigen notitie', () => {
     expect((await get()).notes).toEqual([])
   })
 })
+
+describe('afgewerkt vóór de weekly', () => {
+  it('aanvinken en uitzetten, los van done', async () => {
+    await repo.setChecked(id, true)
+    expect(await get()).toMatchObject({ done_at: null })
+    expect((await get()).checked_at).toBeTruthy()
+    await repo.setChecked(id, false)
+    expect((await get()).checked_at).toBeNull()
+  })
+  it('de start van de weekly maakt de vinkjes van die weekly leeg', async () => {
+    const weeklyId = (await get()).weekly_id!
+    await repo.createTodo({ owner: 'cedric', title: 'Ander', kind: 'weekly', weekly_id: null, created_by: 'cedric@iknowright.be' }, null)
+    const other = (await repo.listTodos()).find((t) => t.title === 'Ander')!.id
+    await repo.setChecked(id, true)
+    await repo.setChecked(other, true)
+    await repo.clearChecked(weeklyId)
+    const all = await repo.listTodos()
+    expect(all.find((t) => t.id === id)!.checked_at).toBeNull()
+    expect(all.find((t) => t.id === other)!.checked_at).toBeTruthy()
+  })
+})
