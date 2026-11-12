@@ -36,6 +36,7 @@ export function Sidebar({
     { href: '/admin/productie', label: sales ? 'Productie (temp)' : 'Productie', icon: Icon.file },
     { href: '/admin/weekly', label: 'Weekly', icon: Icon.calendar },
     { href: '/admin/kalender', label: 'Kalender', icon: Icon.calendar },
+    { href: '/admin/werkplek', label: 'Grok Bot', icon: Icon.sparkle },
     { href: '/admin/sops', label: "SOP's", icon: Icon.book },
     { href: '/admin/instellingen', label: 'Instellingen', icon: Icon.settings },
   ]
