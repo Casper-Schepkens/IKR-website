@@ -562,6 +562,7 @@ export function buildMcpServer(session: AdminSession) {
     titel: t.title,
     soort: t.kind === 'long' ? 'lang' : 'tegen de volgende weekly',
     af: Boolean(t.done_at),
+    afgewerkt_voor_weekly: Boolean(t.checked_at),
     doorgeschoven: t.pushed_count,
     notities: t.notes.map((n) => n.body),
   })
@@ -601,6 +602,16 @@ export function buildMcpServer(session: AdminSession) {
     await weekly.setDone(todo_id, af ? BY : null)
     return af ? 'Afgevinkt.' : 'Terug open.'
   })
+  tool(
+    'todo_afgewerkt',
+    'Vóór de weekly: een to-do als afgewerkt aanvinken (grijs, niet doorstreept) of weer uitzetten. Anders dan todo_af ("done" = tijdens de weekly). De vinkjes verdwijnen als de weekly start.',
+    { todo_id: z.string(), afgewerkt: z.boolean() },
+    false,
+    async ({ todo_id, afgewerkt }) => {
+      await weekly.setChecked(todo_id, afgewerkt)
+      return afgewerkt ? 'Aangevinkt als afgewerkt.' : 'Vinkje weg.'
+    },
+  )
   tool('todo_notitie', 'Notitie bij een to-do toevoegen.', { todo_id: z.string(), notitie: z.string() }, false, async ({ todo_id, notitie }) => {
     await weekly.addNote(todo_id, notitie, BY)
     return 'Notitie toegevoegd.'

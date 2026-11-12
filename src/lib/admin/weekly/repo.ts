@@ -19,6 +19,10 @@ export interface WeeklyRepo {
   updateTodo(id: string, patch: Partial<Pick<Todo, 'title' | 'owner' | 'kind'>>): Promise<void>
   deleteTodo(id: string): Promise<void>
   setDone(id: string, by: string | null): Promise<void>
+  /** Afgewerkt aanvinken vóór de weekly (grijs) of weer uitzetten. */
+  setChecked(id: string, checked: boolean): Promise<void>
+  /** Bij de start van een weekly: alle vinkjes van die weekly leegmaken (dan overlopen we alles). */
+  clearChecked(weeklyId: string): Promise<void>
   addNote(todoId: string, body: string, author: string): Promise<void>
   /**
    * Notitie-knop: past de eigen (laatste) notitie van `author` bij deze to-do aan, of maakt er een
@@ -85,6 +89,12 @@ export function supabaseWeekly(db: SupabaseClient): WeeklyRepo {
     },
     async setDone(id, by) {
       check(await db.from('weekly_todos').update({ done_at: by ? new Date().toISOString() : null, done_by: by }).eq('id', id))
+    },
+    async setChecked(id, checked) {
+      check(await db.from('weekly_todos').update({ checked_at: checked ? new Date().toISOString() : null }).eq('id', id))
+    },
+    async clearChecked(weeklyId) {
+      check(await db.from('weekly_todos').update({ checked_at: null }).eq('weekly_id', weeklyId).not('checked_at', 'is', null))
     },
     async addNote(todoId, body, author) {
       check(await db.from('weekly_todo_notes').insert({ todo_id: todoId, body, author }))
@@ -214,6 +224,12 @@ export function memoryWeekly(): WeeklyRepo {
     },
     async setDone(id, by) {
       Object.assign(todo(id), { done_at: by ? now() : null, done_by: by })
+    },
+    async setChecked(id, checked) {
+      todo(id).checked_at = checked ? now() : null
+    },
+    async clearChecked(weeklyId) {
+      for (const t of s.todos) if (t.weekly_id === weeklyId) t.checked_at = null
     },
     async addNote(todoId, body, author) {
       todo(todoId).notes.push({ id: crypto.randomUUID(), todo_id: todoId, body, author, created_at: now() })
