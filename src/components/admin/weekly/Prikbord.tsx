@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { clearPinsAction, createPinAction, deletePinAction, setPinPinnedAction } from '@/app/admin/weekly-actions'
+import { clearPinsAction, createPinAction, deletePinAction, setPinPinnedAction, startPinUploadAction } from '@/app/admin/weekly-actions'
 import { linkSource, PIN_KIND_LABELS, PIN_KINDS, type Pin, type PinKind } from '@/lib/admin/weekly/pins'
 import { TEAM, type Owner } from '@/lib/admin/weekly/types'
 import { fmtDate } from '@/lib/admin/format'
@@ -95,11 +95,11 @@ export function Prikbord({ pins, me }: { pins: Pin[]; me: Owner | null }) {
       >
         {adding && (
           <div className="mb-5 rounded-2xl bg-ikr-cream-light p-4 shadow-md">
-            <FormAction action={createPinAction} submitLabel="Op het prikbord" pendingText="Prikken…" resetOnSuccess onSuccess={() => setAdding(false)}>
+            <FormAction action={createWithUpload} submitLabel="Op het prikbord" pendingText="Prikken…" resetOnSuccess onSuccess={() => setAdding(false)}>
               <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
                 <label className={cn(label, 'sm:col-span-2')}>
                   Titel
-                  <input name="title" required maxLength={200} className={input} autoFocus />
+                  <input name="title" maxLength={200} placeholder="Leeg = naam van het bestand" className={input} autoFocus />
                 </label>
                 <label className={label}>
                   Voor
@@ -122,6 +122,10 @@ export function Prikbord({ pins, me }: { pins: Pin[]; me: Owner | null }) {
                       </option>
                     ))}
                   </select>
+                </label>
+                <label className={cn(label, 'col-span-full')}>
+                  Bestand (optioneel; komt in de Drive, gedeeld met het team)
+                  <input name="file" type="file" className={cn(input, 'py-2 file:mr-3 file:rounded-full file:border-0 file:bg-ikr-cream file:px-3 file:py-1 file:font-semibold')} />
                 </label>
                 <label className={cn(label, 'col-span-full')}>
                   Link (optioneel)
@@ -255,4 +259,20 @@ function PinNote({ pin, tilt, me }: { pin: Pin; tilt: string; me: Owner | null }
       )}
     </li>
   )
+}
+
+/** Met een bestand: eerst rechtstreeks naar de Drive uploaden (geen limiet van de server), dan het kaartje maken. */
+async function createWithUpload(form: FormData) {
+  const file = form.get('file')
+  form.delete('file')
+  if (file instanceof File && file.size > 0) {
+    const s = await startPinUploadAction(file.name, file.type || 'application/octet-stream', window.location.origin)
+    if (!s.ok) return s
+    const res = await fetch(s.data, { method: 'PUT', headers: { 'Content-Type': file.type || 'application/octet-stream' }, body: file })
+    if (!res.ok) return { ok: false as const, error: `Uploaden naar de Drive mislukt (${res.status}).` }
+    const { id } = (await res.json()) as { id: string }
+    form.set('file_id', id)
+    form.set('file_name', file.name)
+  }
+  return createPinAction(form)
 }
