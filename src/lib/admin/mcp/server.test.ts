@@ -365,3 +365,23 @@ describe("SOP's via MCP", () => {
     expect((await call('sop_aanmaken', { titel: 'x', tekst: 'y', categorie: 'onzin' })).isError).toBe(true)
   })
 })
+
+describe('werkplek via MCP', () => {
+  it('kaart klaarzetten voor Cédric met actie, lijst per teamlid, reageren en uitgevoerd', async () => {
+    ;(globalThis as { __ikrWorkspace?: unknown }).__ikrWorkspace = undefined
+    const [a, b] = InMemoryTransport.createLinkedPair()
+    await buildMcpServer(session).connect(a)
+    client = new Client({ name: 'test', version: '1.0.0' })
+    await client.connect(b)
+    const made = await call('werkplek_kaart_aanmaken', { voor: 'cedric', soort: 'bespreken', titel: 'Briefing Tempus is laat', tekst: 'Draaidag is over 5 dagen.', actie: 'Herinnering op het prikbord zetten' })
+    expect(made.json).toMatchObject({ voor: 'Cedric' })
+    const id = (made.json as { kaart_id: string }).kaart_id
+    expect((await call('werkplek_lijst', { teamlid: 'milan' })).json).toEqual([])
+    expect((await call('werkplek_lijst', { teamlid: 'cedric' })).json).toMatchObject([{ titel: 'Briefing Tempus is laat', actie: { status: 'voorgesteld' } }])
+    await call('werkplek_reageren', { kaart_id: id, tekst: 'Ik heb het op het prikbord gezet.' })
+    await call('werkplek_kaart_bijwerken', { kaart_id: id, actie_uitgevoerd: true, status: 'besproken' })
+    const full = (await call('werkplek_kaart', { kaart_id: id })).json as { status: string; actie: { status: string }; berichten: { van: string }[] }
+    expect(full).toMatchObject({ status: 'besproken', actie: { status: 'uitgevoerd' }, berichten: [{ van: 'Grok Bot' }] })
+    expect((await call('werkplek_kaart_aanmaken', { voor: 'jan', soort: 'vraag', titel: 'x', tekst: 'y' })).isError).toBe(true)
+  })
+})
