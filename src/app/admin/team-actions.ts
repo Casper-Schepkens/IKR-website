@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/admin/session'
 import { removeTeamConnection, setSelectedCalendars, type TeamKind } from '@/lib/admin/team/connections'
 import { listCalendars } from '@/lib/admin/team/google-read'
+import { moveUpcomingInvites, setInviteAddress } from '@/lib/admin/team/invites'
+import { ownerOf } from '@/lib/admin/weekly/types'
 import type { ActionResult } from './actions'
 
 /** Mijn koppelingen: elk teamlid beheert enkel zijn eigen koppelingen (altijd op basis van de sessie). */
@@ -43,4 +45,20 @@ export async function refreshCalendarsAction() {
     const keep = (own?.selected_calendars ?? []).filter((id) => calendars.some((c) => c.id === id))
     await setSelectedCalendars(user.email, keep.length ? keep : calendars.filter((c) => c.primair).map((c) => c.id), calendars)
   })
+}
+
+/** Naar welk adres uitnodigingen voor weeklies (en calls) gaan; komende items krijgen meteen het nieuwe adres. */
+export async function saveInviteAddressAction(form: FormData) {
+  try {
+    const { user } = await requireAdmin()
+    const owner = ownerOf(user.email)
+    if (!owner) throw new Error('Enkel voor teamleden.')
+    const v = form.get('invite_email')
+    const { before, after } = await setInviteAddress(owner, typeof v === 'string' ? v : null)
+    const moved = await moveUpcomingInvites(owner, before, after)
+    revalidatePath('/admin/instellingen')
+    return { ok: true as const, data: { after, moved } }
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : 'Er ging iets mis.' }
+  }
 }

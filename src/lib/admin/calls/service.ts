@@ -1,10 +1,11 @@
 import 'server-only'
+import { inviteAddress } from '../team/invites'
 import { brusselsToIso, fmtDate, fmtTime } from '../format'
 import { createEvent, deleteEvent, isGoogleConfigured, listConnections, listEvents } from '../google'
 import type { DraftsRepo } from '../sales/drafts'
 import type { LeadsRepo } from '../sales/repo'
 import { OPEN_STAGES, type Lead } from '../sales/types'
-import { CONTACT_EMAIL, TEAM } from '../weekly/types'
+import { CONTACT_EMAIL } from '../weekly/types'
 import type { CallsRepo } from './repo'
 import { CALL_KIND_LABELS, CALL_MINUTES, forwardStage, STAGE_AFTER, thankYouMail, type Call, type CallKind } from './types'
 import { isoDay } from '../format'
@@ -16,7 +17,6 @@ import { isoDay } from '../format'
  */
 
 export type CallDeps = { calls: CallsRepo; leads: LeadsRepo }
-const CASPER_CALENDAR = TEAM.find((t) => t.key === 'casper')!.calendar
 
 const title = (kind: CallKind, lead: Pick<Lead, 'name' | 'company'>) => `IKR × ${lead.company ?? lead.name} · ${CALL_KIND_LABELS[kind].toLowerCase()}`
 
@@ -55,7 +55,7 @@ export async function scheduleCall(
       summary: title(input.kind, lead),
       startsAt,
       minutes,
-      attendees: [CASPER_CALENDAR, ...(invite ? [lead.email!] : [])],
+      attendees: [await inviteAddress('casper'), ...(invite ? [lead.email!] : [])],
       meet: input.kind === 'sales',
     })
     await deps.calls.update(call.id, { calendar_event_id: ev.eventId, meet_url: ev.meetUrl, invited: invite, calendar_error: null })
