@@ -38,11 +38,13 @@ export default async function LeadsPage({
   const session = await requireSales()
   const { leads } = session
   await seedDemoWaiting(session)
-  const all = await leads.list()
-  // Teller uit de opgeslagen momentopname (geen Gmail); de lijst zelf werkt die bij als ze verouderd is.
-  const waitingCount = await loadWaiting(session, { sync: 'never' })
-    .then((r) => (r.status === 'ok' ? r.items.length : undefined))
-    .catch(() => undefined)
+  const [all, waitingCount] = await Promise.all([
+    leads.list(),
+    // Teller uit de opgeslagen momentopname (geen Gmail); de lijst zelf werkt die bij als ze verouderd is.
+    loadWaiting(session, { sync: 'never' })
+      .then((r) => (r.status === 'ok' ? r.items.length : undefined))
+      .catch(() => undefined),
+  ])
   // Lopende leads: wie het eerst opgevolgd moet worden staat bovenaan.
   const rows = all
     .filter((l) => inView(l, view))

@@ -1,4 +1,5 @@
 import 'server-only'
+import { unstable_cache } from 'next/cache'
 import { isDemoMode } from '../env'
 
 /**
@@ -62,7 +63,14 @@ type RawCampaign = {
 
 const num = (v: unknown) => (typeof v === 'number' ? v : 0)
 
-export async function coldMailStats(): Promise<ColdMailStats> {
+/**
+ * Stats per sequence + ingeplande mails. Het hele resultaat 5 minuten bewaard (gedeeld door alle
+ * instanties): zonder dat waren het tot 11 opeenvolgende Apollo-calls per bezoek (de POST-zoekopdracht
+ * valt niet onder de fetch-cache).
+ */
+export const coldMailStats = unstable_cache(loadColdMailStats, ['apollo-cold-mail-stats-v1'], { revalidate: REVALIDATE })
+
+async function loadColdMailStats(): Promise<ColdMailStats> {
   if (!isApolloConfigured() && isDemoMode()) return DEMO
 
   const { emailer_campaigns } = await apollo<{ emailer_campaigns: RawCampaign[] }>(

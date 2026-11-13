@@ -7,6 +7,7 @@ import { fmtDate, fmtTime, isoDay } from '@/lib/admin/format'
 import { buttonClass, Card, muted, PageHeader, Title } from '@/components/admin/ui'
 import { FinanceChart } from '@/components/admin/finance/FinanceChart'
 import { SyncFinanceButton, TxList } from '@/components/admin/finance/FinanceClient'
+import { BackgroundSync } from '@/components/admin/BackgroundSync'
 import { cn } from '@/utilities/ui'
 
 export const metadata = { title: 'Financiën' }
@@ -34,7 +35,8 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
   const sp = await searchParams
   const kind: PeriodKind = sp.p === 'kwartaal' || sp.p === 'jaar' ? sp.p : 'maand'
   const period = periodOf(kind, sp.k && /^\d{4}(-(Q[1-4]|\d{2}))?$/.test(sp.k) ? sp.k : periodKeyFor(kind, today()))
-  const syncError = isOdooConfigured() ? await syncFinance().then(() => null, (e: unknown) => (e instanceof Error ? e.message : String(e))) : 'ODOO_API_KEY ontbreekt in Vercel.'
+  // Eerst de bewaarde data tonen; Odoo bijwerken (hoogstens om de 30 min) loopt erna in de stream.
+  const syncError = isOdooConfigured() ? null : 'ODOO_API_KEY ontbreekt in Vercel.'
   const [txs, clients, state] = await Promise.all([loadTxs(), loadClients(), syncState()])
   const o = overview(txs, clients, period)
   const checks = paymentChecks(txs, clients, today())
@@ -54,6 +56,14 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
         <p role="alert" className="m-0 rounded-2xl bg-[#FCE3D2] p-3 text-sm text-[#6E2E09]">
           Odoo niet bijgewerkt: {syncError ?? state.error}
         </p>
+      )}
+      {isOdooConfigured() && (
+        <BackgroundSync
+          run={async () => ({ changed: !(await syncFinance()).overgeslagen })}
+          label="Odoo bijwerken…"
+          errorPrefix="Odoo niet bijgewerkt"
+          knownError={state.error}
+        />
       )}
 
       <div className="flex flex-wrap items-center gap-2">

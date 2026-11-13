@@ -31,9 +31,10 @@ export async function proxy(request: NextRequest) {
     },
   })
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // getClaims controleert de JWT lokaal (asymmetrische sleutel, JWKS gecachet) en ververst een verlopen
+  // sessie; getUser zou bij elk verzoek de Auth-server bellen.
+  const { data } = await supabase.auth.getClaims()
+  const user = data?.claims?.sub ? data.claims : null
 
   const path = request.nextUrl.pathname
   const isPublicAdminPath = path.startsWith('/admin/login') || path.startsWith('/admin/auth')

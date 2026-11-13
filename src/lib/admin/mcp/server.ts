@@ -9,6 +9,7 @@ import { daysSince, leadContext, loadWaiting } from '../sales/waiting'
 import { createServiceSupabase } from '../supabase/server'
 import { SALES_EMAIL } from '../env'
 import { fmtDate, isoDay } from '../format'
+import { sameText, textMatches } from '../search'
 import { DEFAULT_FOLLOW_UP_ACTION, FOLLOW_UP_WORKDAYS } from '../sales/follow-up'
 import type { AdminSession } from '../session'
 import { supabaseLeads } from '../sales/repo'
@@ -40,7 +41,7 @@ import {
 } from '../sales/types'
 import { coldMailStats } from '../sales/apollo'
 import { loadInbox } from '../sales/inbox'
-import { aiEngine, closeChatJob, completeJob, dismissJob, instructionsFor, openJobs, runJob } from '../ai/jobs'
+import { aiEngine, closeChatJob, completeJob, dismissJob, getJob, instructionsFor, openJobs, runJob } from '../ai/jobs'
 import { styleInstructions, styleKeyFor } from '../ai/style-profile'
 import { HANDLERS } from '../ai/handlers'
 import { boardTodos, currentWeekly, weeklyTimeRange } from '../weekly/board'
@@ -286,9 +287,9 @@ export function buildMcpServer(session: AdminSession) {
     const hit =
       all.find((l) => l.id === ref.trim()) ??
       all.find((l) => l.email?.toLowerCase() === q) ??
-      (all.filter((l) => l.name.toLowerCase() === q).length === 1 ? all.find((l) => l.name.toLowerCase() === q) : undefined)
+      (all.filter((l) => sameText(l.name, ref)).length === 1 ? all.find((l) => sameText(l.name, ref)) : undefined)
     if (hit) return hit
-    const partial = all.filter((l) => l.name.toLowerCase().includes(q) || (l.company ?? '').toLowerCase().includes(q))
+    const partial = all.filter((l) => textMatches(l.name, ref) || textMatches(l.company, ref))
     if (partial.length === 1) return partial[0]
     if (!partial.length) throw new Error(`Geen lead gevonden voor "${ref}".`)
     throw new Error(`Meerdere leads passen bij "${ref}": ${partial.map((l) => `${l.name} (${l.company ?? l.email ?? l.id})`).join(', ')}.`)
@@ -301,12 +302,12 @@ export function buildMcpServer(session: AdminSession) {
     { weergave: z.enum(['lopend', 'gewonnen', 'lost', 'alles']).optional(), zoek: z.string().optional() },
     true,
     async ({ weergave = 'lopend', zoek }) => {
-      const q = zoek?.toLowerCase()
+      const q = zoek?.trim()
       return (await leads.list())
         .filter((l) =>
           weergave === 'alles' ? true : weergave === 'lopend' ? OPEN_STAGES.includes(l.stage) : l.stage === (weergave === 'gewonnen' ? 'won' : 'lost'),
         )
-        .filter((l) => !q || [l.name, l.company, l.email, l.notes].some((v) => v?.toLowerCase().includes(q)))
+        .filter((l) => !q || [l.name, l.company, l.email, l.notes].some((v) => textMatches(v, q)))
         .sort((a, b) => (a.follow_up_on ?? '9999').localeCompare(b.follow_up_on ?? '9999'))
         .map((l) => ({ id: l.id, naam: l.name, bedrijf: l.company, fase: STAGE_LABELS[l.stage], volgende_actie: l.next_action, opvolgen_op: l.follow_up_on }))
     },
@@ -618,6 +619,10 @@ export function buildMcpServer(session: AdminSession) {
     { job_id: z.string(), resultaat: z.record(z.string(), z.unknown()) },
     false,
     async ({ job_id, resultaat }) => {
+      // Al afgehandeld (bv. door een parallelle run): geen fout, zodat Grok niet blijft proberen.
+      const current = await getJob(job_id)
+      if (current && (current.status === 'done' || current.status === 'dismissed'))
+        return `Deze taak was al ${current.status === 'done' ? 'klaargezet' : 'weggeklikt'}; er is niets meer te doen.`
       await completeJob(job_id, resultaat, BY)
       return 'Klaargezet in het dashboard.'
     },
@@ -704,9 +709,8 @@ export function buildMcpServer(session: AdminSession) {
   })
   const resolveClient = async (ref: string) => {
     const all = await clients.list()
-    const q = ref.trim().toLowerCase()
-    const hit = all.find((c) => c.id === ref.trim()) ?? all.find((c) => c.name.toLowerCase() === q)
-    const partial = hit ? [hit] : all.filter((c) => c.name.toLowerCase().includes(q))
+    const hit = all.find((c) => c.id === ref.trim()) ?? all.find((c) => sameText(c.name, ref))
+    const partial = hit ? [hit] : all.filter((c) => textMatches(c.name, ref))
     if (partial.length === 1) return partial[0]
     throw new Error(partial.length ? `Meerdere klanten passen bij "${ref}": ${partial.map((c) => c.name).join(', ')}.` : `Geen klant gevonden voor "${ref}".`)
   }

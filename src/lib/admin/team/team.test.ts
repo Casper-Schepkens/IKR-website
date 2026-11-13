@@ -224,7 +224,7 @@ describe('MCP: teamlid_*', () => {
   })
 
   it('fouten (niet gekoppeld, onbekend teamlid) worden ook gelogd', async () => {
-    expect((await call('teamlid_mail_zoeken', { teamlid: 'Milan', zoekterm: 'x' })).text).toMatch(/nog niet gekoppeld/)
+    expect((await call('teamlid_mail_zoeken', { teamlid: 'Milan', zoekterm: 'x' })).text).toMatch(/nog geen mail gekoppeld/)
     expect((await call('teamlid_agenda_events', { teamlid: 'Jan', van: '2026-11-01', tot: '2026-11-02' })).text).toMatch(/Geen teamlid/)
     expect(logs.map((x) => [x.tool, x.ok])).toEqual([
       ['teamlid_mail_zoeken', false],

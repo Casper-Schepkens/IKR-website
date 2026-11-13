@@ -69,14 +69,15 @@ export const requireAdmin = cache(async (): Promise<AdminSession> => {
     }
 
   const supabase = await createServerSupabase()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) redirect('/admin/login')
-  if (!isAllowedAdminEmail(user.email)) redirect('/admin/login?error=geen-toegang')
-  const meta = user.user_metadata ?? {}
+  // JWT lokaal gecontroleerd (asymmetrische sleutel): geen extra roundtrip naar de Auth-server per pagina.
+  const { data } = await supabase.auth.getClaims()
+  const claims = data?.claims
+  const email = typeof claims?.email === 'string' ? claims.email : null
+  if (!claims?.sub || !email) redirect('/admin/login')
+  if (!isAllowedAdminEmail(email)) redirect('/admin/login?error=geen-toegang')
+  const meta = (claims.user_metadata ?? {}) as Record<string, unknown>
   return {
-    user: { id: user.id, email: user.email!, name: firstName(user.email!, (meta.full_name ?? meta.name) as string | undefined) },
+    user: { id: claims.sub, email, name: firstName(email, (meta.full_name ?? meta.name) as string | undefined) },
     mode,
     leads: supabaseLeads(supabase),
     weekly: supabaseWeekly(supabase),
