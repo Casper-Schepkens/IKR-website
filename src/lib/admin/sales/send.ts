@@ -56,4 +56,5 @@ export async function sendDraft(drafts: DraftsRepo, id: string, by: string) {
   await drafts.markSent(id, by)
   // Leren: wat de bot schreef tegenover wat Casper verstuurde.
   await recordFeedback(styleKeyFor(), d.original_body, d.body)
+  return d
 }

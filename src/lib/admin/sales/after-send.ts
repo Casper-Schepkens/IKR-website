@@ -22,6 +22,8 @@ export type SentMail = {
   subject: string
   body: string
   by: string
+  /** Velden die het concept zelf vastlegde: de AI past ze niet meer aan. */
+  keep?: ('volgende_actie' | 'opvolgen_op')[]
 }
 
 /**
@@ -49,12 +51,15 @@ export function scheduleAfterSend(mail: SentMail | SentDraft) {
 async function draftMail({ draftId, by }: SentDraft): Promise<SentMail | null> {
   const { data: d } = await createServiceSupabase()
     .from('mail_drafts')
-    .select('id, lead_id, thread_id, from_email, to_email, subject, body, is_html, status')
+    .select('id, lead_id, thread_id, from_email, to_email, subject, body, is_html, status, follow_up_action, follow_up_on')
     .eq('id', draftId)
     .maybeSingle()
-  if (!d || d.status !== 'sent') return null
+  if (!d || d.status !== 'verstuurd') return null
   const body = d.is_html ? String(d.body).replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ') : String(d.body)
-  return { ref: `draft:${d.id}`, leadId: d.lead_id, threadId: d.thread_id, from: d.from_email, to: d.to_email, subject: d.subject, body, by }
+  const keep: SentMail['keep'] = []
+  if (d.follow_up_action) keep.push('volgende_actie')
+  if (d.follow_up_on) keep.push('opvolgen_op')
+  return { ref: `draft:${d.id}`, leadId: d.lead_id, threadId: d.thread_id, from: d.from_email, to: d.to_email, subject: d.subject, body, by, keep }
 }
 
 const COLUMNS = 'id, name, email, notes, next_action, follow_up_on, stage, phone, company'
@@ -100,6 +105,7 @@ export async function createAfterSendJob(mail: SentMail, sentAt = new Date()) {
       body: mail.body.slice(0, 8000),
     },
     thread,
+    ...(mail.keep?.length ? { keep: mail.keep } : {}),
   }
   const job = await enqueue('na_verzending', mail.ref, input as unknown as Record<string, unknown>, mail.by)
   if (aiEngine() === 'grokbot') await notifyGrok([job.id])

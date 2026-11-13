@@ -7,6 +7,7 @@ import { createServerSupabase } from '@/lib/admin/supabase/server'
 import { isSupabaseConfigured, SALES_EMAIL } from '@/lib/admin/env'
 import { sendDraft, sendInboxReply } from '@/lib/admin/sales/send'
 import { scheduleAfterSend } from '@/lib/admin/sales/after-send'
+import { updateLeadAfterSend } from '@/lib/admin/sales/follow-up'
 import { aiEngine, dismissJob, enqueue, getJob, isAiConfigured, runJob } from '@/lib/admin/ai/jobs'
 import { notifyGrok } from '@/lib/admin/ai/notify'
 import { recordFeedback, saveProfile, STYLE_KEYS, type StyleKey } from '@/lib/admin/ai/style-profile'
@@ -181,7 +182,17 @@ export async function updateDraftAction(id: string, form: FormData) {
     const cc = (str(form, 'cc') ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)
     if (cc.some((e) => !isEmail(e))) throw new Error('Een adres bij "Cc" klopt niet.')
     if (!subject || !body) throw new Error('Onderwerp en tekst zijn verplicht.')
-    const ok = await drafts.update(id, { to_email: to, cc, subject, body })
+    const followUpOn = str(form, 'follow_up_on') ?? null
+    if (followUpOn && !/^\d{4}-\d{2}-\d{2}$/.test(followUpOn)) throw new Error('De opvolgdatum klopt niet.')
+    const ok = await drafts.update(id, {
+      to_email: to,
+      cc,
+      subject,
+      body,
+      // Leeg = standaard na versturen ("antwoord opvolgen", 5 werkdagen later).
+      ...(form.has('follow_up_action') ? { follow_up_action: str(form, 'follow_up_action') ?? null } : {}),
+      ...(form.has('follow_up_on') ? { follow_up_on: followUpOn } : {}),
+    })
     if (!ok) throw new Error('Dit concept kan niet meer aangepast worden.')
     revalidatePath('/admin/sales', 'layout')
   })
@@ -189,8 +200,10 @@ export async function updateDraftAction(id: string, form: FormData) {
 
 export async function sendDraftAction(id: string) {
   return attempt(async () => {
-    const { drafts, user } = await requireSales()
-    await sendDraft(drafts, id, user.email)
+    const { drafts, leads, user } = await requireSales()
+    const sent = await sendDraft(drafts, id, user.email)
+    // Gekoppelde lead: volgende actie, opvolgdatum en een notitie (mislukt dit, dan is de mail wel verstuurd).
+    if (sent) await updateLeadAfterSend(leads, sent)
     // Na het versturen (los van de verzending): AI kijkt of de lead bijgewerkt moet worden.
     scheduleAfterSend({ draftId: id, by: user.email })
     revalidatePath('/admin/sales', 'layout')

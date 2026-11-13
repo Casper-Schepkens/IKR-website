@@ -20,6 +20,10 @@ export type MailDraft = {
   context: string | null
   /** Tekst zoals de bot hem schreef (om te leren van Caspers aanpassingen). */
   original_body: string | null
+  /** Eigen "volgende actie" voor de lead na het versturen (leeg = "antwoord opvolgen"). */
+  follow_up_action: string | null
+  /** Eigen opvolgdatum (YYYY-MM-DD) na het versturen (leeg = 5 werkdagen later). */
+  follow_up_on: string | null
   status: 'concept' | 'verstuurd'
   created_by: string | null
   created_at: string
@@ -28,8 +32,12 @@ export type MailDraft = {
   sent_by: string | null
 }
 
-export type NewDraft = Pick<MailDraft, 'lead_id' | 'from_email' | 'to_email' | 'cc' | 'subject' | 'body' | 'is_html' | 'thread_id' | 'in_reply_to' | 'context' | 'created_by'> & { original_body?: string | null }
-export type DraftPatch = Partial<Pick<MailDraft, 'from_email' | 'to_email' | 'cc' | 'subject' | 'body' | 'is_html' | 'thread_id' | 'in_reply_to' | 'context'>>
+export type NewDraft = Pick<MailDraft, 'lead_id' | 'from_email' | 'to_email' | 'cc' | 'subject' | 'body' | 'is_html' | 'thread_id' | 'in_reply_to' | 'context' | 'created_by'> & {
+  original_body?: string | null
+  follow_up_action?: string | null
+  follow_up_on?: string | null
+}
+export type DraftPatch = Partial<Pick<MailDraft, 'from_email' | 'to_email' | 'cc' | 'subject' | 'body' | 'is_html' | 'thread_id' | 'in_reply_to' | 'context' | 'follow_up_action' | 'follow_up_on'>>
 
 export interface DraftsRepo {
   list(opts?: { leadId?: string; status?: MailDraft['status'] }): Promise<MailDraft[]>
@@ -96,7 +104,7 @@ export function memoryDrafts(store: MailDraft[] = []): DraftsRepo {
       return store.find((d) => d.id === id) ?? null
     },
     async create(input) {
-      const d: MailDraft = { original_body: null, ...input, id: crypto.randomUUID(), status: 'concept', created_at: now(), updated_at: now(), sent_at: null, sent_by: null }
+      const d: MailDraft = { original_body: null, follow_up_action: null, follow_up_on: null, ...input, id: crypto.randomUUID(), status: 'concept', created_at: now(), updated_at: now(), sent_at: null, sent_by: null }
       store.push(d)
       return d
     },

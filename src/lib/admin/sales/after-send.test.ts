@@ -63,6 +63,15 @@ describe('na_verzending toepassen', () => {
     ])
   })
 
+  it('velden die het concept zelf vastlegde past de AI niet aan', async () => {
+    await applyAfterSend({ ...input(), keep: ['volgende_actie', 'opvolgen_op'] }, {
+      volgende_actie: { waarde: 'Jan bellen', reden: 'x' },
+      opvolgen_op: { waarde: '2026-11-10', reden: 'y' },
+      telefoon: { waarde: '0470 12 34 56', reden: 'in handtekening' },
+    })
+    expect(tables.leads[0]).toMatchObject({ next_action: null, follow_up_on: null, phone: '0470 12 34 56' })
+  })
+
   it('leeg resultaat verandert niets', async () => {
     await applyAfterSend(input(), { volgende_actie: null, opvolgen_op: null, fase: null, telefoon: null, bedrijf: null })
     expect(tables.leads[0]).toEqual(LEAD)

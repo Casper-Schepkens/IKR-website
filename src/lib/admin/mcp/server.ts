@@ -9,6 +9,7 @@ import { daysSince, leadContext, loadWaiting } from '../sales/waiting'
 import { createServiceSupabase } from '../supabase/server'
 import { SALES_EMAIL } from '../env'
 import { fmtDate, isoDay } from '../format'
+import { DEFAULT_FOLLOW_UP_ACTION, FOLLOW_UP_WORKDAYS } from '../sales/follow-up'
 import type { AdminSession } from '../session'
 import { supabaseLeads } from '../sales/repo'
 import { supabaseWeekly } from '../weekly/repo'
@@ -148,7 +149,19 @@ function nonEmpty(v: string, field: string, max: number) {
 }
 const optional = (v: string | undefined) => (v === undefined ? undefined : v.trim() || null)
 
-type DraftArgs = { lead_id: string; to: string; cc?: string[]; subject: string; body: string; formaat?: 'text' | 'html'; thread_id?: string; in_reply_to?: string; context?: string }
+type DraftArgs = {
+  lead_id: string
+  to: string
+  cc?: string[]
+  subject: string
+  body: string
+  formaat?: 'text' | 'html'
+  thread_id?: string
+  in_reply_to?: string
+  context?: string
+  volgende_actie?: string | null
+  opvolgen_op?: string | null
+}
 
 /** Strenge controle van een nieuw concept (fouten worden zo ook gelogd). */
 export function validateDraft(a: DraftArgs) {
@@ -164,7 +177,26 @@ export function validateDraft(a: DraftArgs) {
     thread_id: optional(a.thread_id) ?? null,
     in_reply_to: optional(a.in_reply_to) ?? null,
     context: a.context === undefined ? null : contextText(a.context),
+    follow_up_action: followUpAction(a.volgende_actie) ?? null,
+    follow_up_on: followUpOn(a.opvolgen_op) ?? null,
   }
+}
+
+/** Eigen volgende actie na versturen; leeg of null = standaard ("antwoord opvolgen"). */
+function followUpAction(v: string | null | undefined) {
+  if (v === undefined) return undefined
+  const t = (v ?? '').trim()
+  if (t.length > 200) throw new Error('volgende_actie is te lang (max 200 tekens).')
+  return t || null
+}
+
+/** Eigen opvolgdatum na versturen (YYYY-MM-DD); leeg of null = standaard (5 werkdagen later). */
+function followUpOn(v: string | null | undefined) {
+  if (v === undefined) return undefined
+  const t = (v ?? '').trim()
+  if (!t) return null
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(t) || Number.isNaN(Date.parse(`${t}T00:00:00Z`))) throw new Error('opvolgen_op: gebruik YYYY-MM-DD.')
+  return t
 }
 
 function contextText(v: string) {
@@ -184,6 +216,8 @@ function validateDraftPatch(a: Partial<DraftArgs>) {
     thread_id: optional(a.thread_id),
     in_reply_to: optional(a.in_reply_to),
     context: a.context === undefined ? undefined : contextText(a.context),
+    follow_up_action: followUpAction(a.volgende_actie),
+    follow_up_on: followUpOn(a.opvolgen_op),
   }
   const clean = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined))
   if (!Object.keys(clean).length) throw new Error('Niets om aan te passen.')
@@ -433,6 +467,10 @@ export function buildMcpServer(session: AdminSession) {
     thread_id: d.thread_id,
     in_reply_to: d.in_reply_to,
     context: d.context,
+    na_versturen: {
+      volgende_actie: d.follow_up_action ?? `${DEFAULT_FOLLOW_UP_ACTION} (standaard)`,
+      opvolgen_op: d.follow_up_on ?? `${FOLLOW_UP_WORKDAYS} werkdagen na verzending (standaard)`,
+    },
   })
   tool(
     'schrijfstijl',
@@ -443,7 +481,7 @@ export function buildMcpServer(session: AdminSession) {
   )
   tool(
     'mail_concept_aanmaken',
-    'Zet een NIEUWE uitgaande mail als concept klaar bij een lead. Lees eerst lead_fiche en schrijfstijl en geef altijd context mee. Afzender is altijd casper@iknowright.be. Er wordt niets verstuurd: Casper keurt het concept in het dashboard goed en verstuurt het zelf. Geeft het concept_id terug.',
+    'Zet een NIEUWE uitgaande mail als concept klaar bij een lead. Lees eerst lead_fiche en schrijfstijl en geef altijd context mee. Afzender is altijd casper@iknowright.be. Er wordt niets verstuurd: Casper keurt het concept in het dashboard goed en verstuurt het zelf. Na versturen wordt de lead automatisch bijgewerkt (volgende actie, opvolgdatum, notitie met onderwerp); geef volgende_actie/opvolgen_op mee als de standaard niet past. Geeft het concept_id terug.',
     {
       lead_id: z.string().describe('id van de lead (zie leads_lijst of lead_fiche)'),
       to: z.string().describe('e-mailadres van de ontvanger'),
@@ -457,6 +495,14 @@ export function buildMcpServer(session: AdminSession) {
         .string()
         .optional()
         .describe('Korte uitleg voor Casper (2–5 zinnen): wie is de lead, wat gebeurde er al, waarom deze mail nu. Wordt naast het concept getoond.'),
+      volgende_actie: z
+        .string()
+        .optional()
+        .describe(`Optioneel: volgende actie op de lead zodra Casper deze mail verstuurt. Standaard "${DEFAULT_FOLLOW_UP_ACTION}".`),
+      opvolgen_op: z
+        .string()
+        .optional()
+        .describe(`Optioneel: opvolgdatum (YYYY-MM-DD) op de lead na versturen. Standaard ${FOLLOW_UP_WORKDAYS} werkdagen na verzending.`),
     },
     false,
     async (a) => {
@@ -480,6 +526,8 @@ export function buildMcpServer(session: AdminSession) {
       thread_id: z.string().optional(),
       in_reply_to: z.string().optional(),
       context: z.string().optional(),
+      volgende_actie: z.string().nullable().optional().describe('Volgende actie op de lead na versturen; null of "" = standaard.'),
+      opvolgen_op: z.string().nullable().optional().describe('Opvolgdatum (YYYY-MM-DD) na versturen; null of "" = standaard.'),
     },
     false,
     async (a) => {
