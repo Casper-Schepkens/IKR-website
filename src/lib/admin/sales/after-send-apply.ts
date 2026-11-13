@@ -7,6 +7,8 @@ export type AfterSendInput = {
   lead: LeadFields & { id: string; name: string; email: string | null; notes: string | null }
   sent: { at: string; day: string; weekday: string; from: string; to: string; subject: string; body: string }
   thread: { from: string; date: string; text: string; fromCasper: boolean }[]
+  /** Door het concept zelf vastgelegd: voorstellen van de AI voor deze velden worden genegeerd. */
+  keep?: ('volgende_actie' | 'opvolgen_op')[]
 }
 
 const COLUMNS = 'next_action, follow_up_on, stage, phone, company'
@@ -25,8 +27,13 @@ export async function applyAfterSend(input: AfterSendInput, output: AfterSendOut
     tool: 'na_verzending',
     engine,
     meta: { mail: { onderwerp: input.sent.subject, op: input.sent.at } },
-    output,
+    output: withoutKept(output, input.keep),
   })
+}
+
+/** Laat AI-voorstellen weg voor velden die het verstuurde concept zelf vastlegde. */
+export function withoutKept(output: AfterSendOutput, keep: AfterSendInput['keep'] = []): AfterSendOutput {
+  return Object.fromEntries(Object.entries(output).filter(([field]) => !keep.includes(field as 'volgende_actie'))) as AfterSendOutput
 }
 
 /**

@@ -166,6 +166,8 @@ async function Concepts({ session, concepts }: { session: AdminSession; concepts
           createdBy={d.created_by}
           createdAt={d.created_at}
           context={d.context}
+              followUpAction={d.follow_up_action ?? null}
+              followUpOn={d.follow_up_on ?? null}
           rewriter={aiEngine() === 'grokbot' ? 'Grokbot' : 'De AI'}
         />
       ))}

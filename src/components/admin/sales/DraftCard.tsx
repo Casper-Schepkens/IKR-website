@@ -24,6 +24,9 @@ export type DraftCardProps = {
   createdBy: string | null
   createdAt: string
   context: string | null
+  /** Eigen volgende actie / opvolgdatum voor de lead na versturen (null = standaard). */
+  followUpAction: string | null
+  followUpOn: string | null
   /** Wie herschrijft: "Grokbot" of "De AI" */
   rewriter: string
 }
@@ -37,6 +40,8 @@ export function DraftCard(d: DraftCardProps) {
   const [body, setBody] = useFollowServer(d.body)
   const [to, setTo] = useFollowServer(d.to)
   const [cc, setCc] = useFollowServer(d.cc.join(', '))
+  const [followUpAction, setFollowUpAction] = useFollowServer(d.followUpAction ?? '')
+  const [followUpOn, setFollowUpOn] = useFollowServer(d.followUpOn ?? '')
   const router = useRouter()
 
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>, done?: string) =>
@@ -115,6 +120,36 @@ export function DraftCard(d: DraftCardProps) {
               className={cn(input, 'py-3 leading-relaxed', d.isHtml && 'font-mono text-xs')}
             />
           </label>
+          <fieldset className="m-0 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3 rounded-lg border border-black/10 p-3">
+            <legend className={cn('px-1 text-xs font-semibold', muted)}>
+              Na versturen wordt de lead bijgewerkt (leeg = standaard)
+            </legend>
+            <label className={label}>
+              Volgende actie
+              <input
+                name="follow_up_action"
+                value={followUpAction}
+                onChange={(e) => setFollowUpAction(e.target.value)}
+                placeholder="antwoord opvolgen"
+                maxLength={200}
+                className={input}
+              />
+            </label>
+            <label className={label}>
+              Opvolgen op
+              <input
+                name="follow_up_on"
+                type="date"
+                value={followUpOn}
+                onChange={(e) => setFollowUpOn(e.target.value)}
+                aria-describedby={`${d.id}-follow-hint`}
+                className={input}
+              />
+              <span id={`${d.id}-follow-hint`} className={cn('text-xs font-normal', muted)}>
+                Leeg = 5 werkdagen na verzending
+              </span>
+            </label>
+          </fieldset>
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
