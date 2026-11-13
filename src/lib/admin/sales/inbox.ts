@@ -28,15 +28,14 @@ const isInternal = (m: Mail) => m.fromEmail.endsWith('@iknowright.be')
  */
 export async function loadInbox(session: AdminSession): Promise<InboxResult> {
   if (!isGoogleConfigured()) return { status: 'not_connected', reason: 'Google is nog niet ingesteld.' }
+  // Leads alvast ophalen terwijl de koppeling en Gmail gelezen worden.
+  const others = Promise.all([session.leads.list(), session.leads.ignoredEmails()])
+  others.catch(() => undefined)
   const conn = (await listConnections()).find((c) => c.email === SALES_EMAIL)
   if (!hasScopes(conn, [SCOPES.gmailRead, SCOPES.gmailSend]))
     return { status: 'not_connected', reason: 'Gmail is nog niet gekoppeld: klik in Instellingen op "Connect Gmail".' }
 
-  const [threads, leads, ignored] = await Promise.all([
-    recentThreads(SALES_EMAIL),
-    session.leads.list(),
-    session.leads.ignoredEmails(),
-  ])
+  const [threads, [leads, ignored]] = await Promise.all([recentThreads(SALES_EMAIL), others])
   const byEmail = new Map(leads.filter((l) => l.email).map((l) => [l.email!.toLowerCase(), l]))
 
   const waiting = threads.filter((t) => {

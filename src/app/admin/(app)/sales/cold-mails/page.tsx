@@ -2,7 +2,9 @@ import { requireSales } from '@/lib/admin/session'
 import { coldMailStats, isApolloConfigured } from '@/lib/admin/sales/apollo'
 import { isDemoMode } from '@/lib/admin/env'
 import { STAGES, type Stage } from '@/lib/admin/sales/types'
-import { Card, muted, PageHeader, Pill, Stat } from '@/components/admin/ui'
+import { Suspense } from 'react'
+import { Card, muted, PageHeader, Pill, Spinner, Stat } from '@/components/admin/ui'
+import type { LeadsRepo } from '@/lib/admin/sales/repo'
 import { cn } from '@/utilities/ui'
 import { parseSelection, selectSequences } from '@/lib/admin/sales/sequence-filter'
 import { SequenceFilter } from '@/components/admin/sales/SequenceFilter'
@@ -31,23 +33,41 @@ export default async function ColdMailsPage({ searchParams }: { searchParams: Pr
     )
   }
 
+  return (
+    <>
+      <PageHeader eyebrow="Apollo · ververst om de 5 minuten" title="Cold mails" />
+      <Suspense
+        fallback={
+          <Card className="flex items-center gap-2 text-sm font-semibold">
+            <Spinner /> Cijfers uit Apollo laden…
+          </Card>
+        }
+      >
+        <ColdMailStats leads={leads} selection={selection} />
+      </Suspense>
+    </>
+  )
+}
+
+/** Alles wat van Apollo komt: apart gestreamd, zodat de pagina niet op Apollo wacht. */
+async function ColdMailStats({ leads, selection }: { leads: LeadsRepo; selection: ReturnType<typeof parseSelection> }) {
+  // Leads (database) en Apollo tegelijk ophalen.
+  const leadsList = leads.list()
+  leadsList.catch(() => undefined)
   let stats: Awaited<ReturnType<typeof coldMailStats>>
   try {
     stats = await coldMailStats()
   } catch (e) {
     return (
-      <>
-        <PageHeader title="Cold mails" />
-        <Card>
-          <p role="alert" className="m-0 text-[#A3470F]">
-            {e instanceof Error ? e.message : 'Apollo is niet bereikbaar.'}
-          </p>
-        </Card>
-      </>
+      <Card>
+        <p role="alert" className="m-0 text-[#A3470F]">
+          {e instanceof Error ? e.message : 'Apollo is niet bereikbaar.'}
+        </p>
+      </Card>
     )
   }
 
-  const all = await leads.list()
+  const all = await leadsList
   const fromColdMail = all.filter((l) => l.source === 'cold_mail')
   // Een lead die nu in een latere fase zit (of gewonnen is), heeft de vorige fases doorlopen.
   const reached = (s: Stage) =>
@@ -70,8 +90,6 @@ export default async function ColdMailsPage({ searchParams }: { searchParams: Pr
 
   return (
     <>
-      <PageHeader eyebrow="Apollo · ververst om de 5 minuten" title="Cold mails" />
-
       <Card
         className={cn('flex flex-wrap items-center justify-between gap-4', low ? 'bg-[#FCE3D2]' : '')}
       >

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-vi.mock('./google', () => ({ accessToken: vi.fn() }))
+vi.mock('./google', () => ({ accessToken: vi.fn(), forgetAccessToken: vi.fn() }))
 import { isAutoReply } from './gmail'
 
 const headers = (h: Record<string, string>) => (n: string) => h[n] ?? ''

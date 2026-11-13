@@ -5,6 +5,7 @@ import { OPEN_STAGES } from '@/lib/admin/sales/types'
 import { Card, Empty, muted, PageHeader, Title } from '@/components/admin/ui'
 import { CallCard, type CallLead } from '@/components/admin/calls/CallCard'
 import { NewCallForm, SyncCallsButton } from '@/components/admin/calls/CallForms'
+import { BackgroundSync } from '@/components/admin/BackgroundSync'
 import { cn } from '@/utilities/ui'
 
 export const metadata = { title: 'Calls' }
@@ -17,8 +18,6 @@ function clock() {
 /** Setter- en sales calls op één plek: komende calls met context, Meet, ppt, opname en afronden. */
 export default async function CallsPage() {
   const { calls, leads } = await requireSales()
-  // Zelf ingeplande calls uit de contact-agenda ophalen (hoogstens om de 5 minuten).
-  const sync = await syncCallsFromCalendar({ calls, leads }).catch((e: unknown) => ({ error: e instanceof Error ? e.message : 'Agenda lezen mislukt.' }))
   const [all, allLeads] = await Promise.all([calls.list(), leads.list()])
   const byId = new Map(allLeads.map((l) => [l.id, l]))
   const view = (id: string): CallLead | null => {
@@ -35,7 +34,15 @@ export default async function CallsPage() {
       <PageHeader eyebrow={`${open.length} ${open.length === 1 ? 'call' : 'calls'} gepland`} title="Calls">
         <SyncCallsButton />
       </PageHeader>
-      {'error' in sync && <p className="m-0 rounded-2xl bg-[#FCE3D2] p-3 text-sm text-[#6E2E09]">Contact-agenda niet gelezen: {sync.error}</p>}
+      {/* Zelf ingeplande calls uit de contact-agenda ophalen (hoogstens om de 5 min), zonder dat de pagina erop wacht. */}
+      <BackgroundSync
+        run={async () => {
+          const r = await syncCallsFromCalendar({ calls, leads })
+          return { changed: r.nieuw + r.bijgewerkt > 0 }
+        }}
+        label="Contact-agenda nakijken…"
+        errorPrefix="Contact-agenda niet gelezen"
+      />
 
       <section aria-label="Komende calls" className="flex flex-col gap-3">
         {!open.length && (

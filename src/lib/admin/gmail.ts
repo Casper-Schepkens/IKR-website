@@ -1,5 +1,5 @@
 import 'server-only'
-import { accessToken } from './google'
+import { accessToken, forgetAccessToken } from './google'
 
 /** Gmail van Casper: sales-mails lezen en antwoorden versturen. */
 
@@ -33,6 +33,11 @@ async function gmail<T>(owner: string, path: string, init?: RequestInit, retry =
     headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json', ...init?.headers },
     cache: 'no-store',
   })
+  // Gecachet token ongeldig (bv. ingetrokken): vergeten en één keer opnieuw met een vers token.
+  if (res.status === 401 && retry) {
+    forgetAccessToken(owner)
+    return gmail<T>(owner, path, init, false)
+  }
   // Gmail-quotum per seconde: even wachten en één keer opnieuw proberen.
   if ((res.status === 429 || res.status === 403) && retry) {
     const body = await res.clone().text()

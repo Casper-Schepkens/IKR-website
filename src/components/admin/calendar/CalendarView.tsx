@@ -98,25 +98,34 @@ export function CalendarView({ items, days, month, today }: { items: CalItem[]; 
 
 function Chip({ it, large = false }: { it: CalItem; large?: boolean }) {
   const time = it.allDay ? 'hele dag' : `${timeIn(it.start!)}${large && it.end ? `–${timeIn(it.end)}` : ''}`
-  const body = (
-    <span className={cn('flex flex-col rounded-md border-l-[3px] px-1.5 py-1 leading-tight', TONE[it.kind], large ? 'text-sm' : 'text-[11px]')} title={`${KINDS[it.kind]} · ${time} · ${it.title}`}>
+  const text = (
+    <>
       <span className={cn('font-semibold', !large && 'truncate')}>{it.title}</span>
       <span className="text-[#4D465A]">
         {time}
         {large && ` · ${KINDS[it.kind]}`}
       </span>
-      {large && it.meetUrl && (
-        <a href={it.meetUrl} target="_blank" rel="noreferrer" className="mt-0.5 underline" onClick={(e) => e.stopPropagation()}>
-          Google Meet
-        </a>
-      )}
-    </span>
+    </>
   )
+  const meet = large && it.meetUrl && (
+    <a href={it.meetUrl} target="_blank" rel="noreferrer" className="mt-0.5 underline">
+      Google Meet
+    </a>
+  )
+  const box = cn('flex flex-col rounded-md border-l-[3px] px-1.5 py-1 leading-tight', TONE[it.kind], large ? 'text-sm' : 'text-[11px]')
+  const title = `${KINDS[it.kind]} · ${time} · ${it.title}`
+  // Geen link in een link (ongeldige HTML, brak de hydration): de Meet-link staat naast de link naar het item.
   return it.href ? (
-    <Link href={it.href} className="block hover:opacity-80">
-      {body}
-    </Link>
+    <span className={box} title={title}>
+      <Link href={it.href} className="flex flex-col text-inherit no-underline hover:opacity-80">
+        {text}
+      </Link>
+      {meet}
+    </span>
   ) : (
-    body
+    <span className={box} title={title}>
+      {text}
+      {meet}
+    </span>
   )
 }

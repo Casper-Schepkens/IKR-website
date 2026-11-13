@@ -1,8 +1,9 @@
+import { Suspense } from 'react'
 import { requireAdmin } from '@/lib/admin/session'
 import { isGoogleConfigured, listConnections } from '@/lib/admin/google'
 import { CONTACT_EMAIL, TEAM } from '@/lib/admin/weekly/types'
 import { fmtDate } from '@/lib/admin/format'
-import { buttonClass, Card, muted, PageHeader, Pill, Title } from '@/components/admin/ui'
+import { buttonClass, Card, muted, PageHeader, Pill, Spinner, Title } from '@/components/admin/ui'
 import { cn } from '@/utilities/ui'
 import { canSeeSales } from '@/lib/admin/env'
 import { StyleProfiles } from './StyleProfiles'
@@ -75,7 +76,16 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           )
         })}
       </Card>
-      <MyConnections email={user.email} />
+      {/* Elke koppeling wordt live bij Google getest: apart, zodat de rest van de pagina niet wacht. */}
+      <Suspense
+        fallback={
+          <Card className="flex items-center gap-2 text-sm font-semibold">
+            <Spinner /> Mijn koppelingen nakijken…
+          </Card>
+        }
+      >
+        <MyConnections email={user.email} />
+      </Suspense>
       {canSeeSales(user.email) && process.env.SUPABASE_SERVICE_ROLE_KEY && <StyleProfiles />}
     </>
   )

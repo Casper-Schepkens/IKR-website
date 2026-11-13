@@ -123,6 +123,7 @@ const memory = () => (g.__ikrGoogle ??= new Map())
 const googleInMemory = () => !isSupabaseConfigured() && isDemoMode()
 
 export async function saveConnection(email: string, refreshToken: string, scopes: string, by: string) {
+  forgetAccessToken(email)
   if (googleInMemory()) {
     memory().set(email, { email, scopes, refresh_token: refreshToken, connected_at: new Date().toISOString() })
     return
@@ -142,19 +143,47 @@ export async function listConnections(): Promise<Connection[]> {
   return data ?? []
 }
 
-export async function accessToken(email: string) {
-  const { data } = await createServiceSupabase()
-    .from('google_connections')
-    .select('refresh_token')
-    .eq('email', email)
-    .maybeSingle()
-  if (!data) throw new Error(`${email} is nog niet gekoppeld (Instellingen).`)
-  try {
-    return (await token({ refresh_token: data.refresh_token, grant_type: 'refresh_token' })).access_token
-  } catch (e) {
-    // Zeg welk account: bv. "contact@iknowright.be: … Koppel dat account opnieuw in Instellingen."
-    throw new Error(`${email}: ${e instanceof Error ? e.message : String(e)}`)
-  }
+/**
+ * Access tokens per account, in het geheugen van deze instantie. Zonder cache vroeg elke Google-call
+ * (bv. 25 threads in de inbox) eerst de database én Google om een nieuw token.
+ * Hooguit 30 minuten bewaard (Google geeft er 60), en meteen weg bij een fout of een nieuwe koppeling.
+ */
+const TOKEN_TTL_MS = 30 * 60_000
+const tokenStore = globalThis as unknown as { __ikrAccessTokens?: Map<string, { token: Promise<string>; until: number }> }
+const tokens = () => (tokenStore.__ikrAccessTokens ??= new Map())
+
+/** Gecachet token vergeten (na opnieuw koppelen, ontkoppelen of een 401 van Google). */
+export function forgetAccessToken(email: string) {
+  tokens().delete(email)
+}
+
+export async function accessToken(email: string): Promise<string> {
+  const hit = tokens().get(email)
+  if (hit && hit.until > Date.now()) return hit.token
+  // Gelijktijdige calls (bv. threads ophalen) wachten op hetzelfde token in plaats van elk een eigen te vragen.
+  const entry = { token: Promise.resolve(''), until: Date.now() + 60_000 }
+  entry.token = (async () => {
+    const { data } = await createServiceSupabase()
+      .from('google_connections')
+      .select('refresh_token')
+      .eq('email', email)
+      .maybeSingle()
+    if (!data) throw new Error(`${email} is nog niet gekoppeld (Instellingen).`)
+    try {
+      const t = await token({ refresh_token: data.refresh_token, grant_type: 'refresh_token' })
+      const expiresIn = (t as { expires_in?: number }).expires_in ?? 3600
+      entry.until = Date.now() + Math.min(TOKEN_TTL_MS, (expiresIn - 300) * 1000)
+      return t.access_token
+    } catch (e) {
+      // Zeg welk account: bv. "contact@iknowright.be: … Koppel dat account opnieuw in Instellingen."
+      throw new Error(`${email}: ${e instanceof Error ? e.message : String(e)}`)
+    }
+  })()
+  tokens().set(email, entry)
+  entry.token.catch(() => {
+    if (tokens().get(email) === entry) forgetAccessToken(email)
+  })
+  return entry.token
 }
 
 /**

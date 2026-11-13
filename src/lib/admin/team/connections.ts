@@ -157,7 +157,7 @@ export const isRevoked = (e: unknown) => /invalid_grant|unauthorized_client|inva
 export async function teamAccessToken(member: string, kind: TeamKind): Promise<{ token: string; conn: TeamConnection }> {
   const r = await getRow(member, kind)
   const who = memberName(member.toLowerCase())
-  if (!r) throw new Error(`${who} heeft ${kind === 'mail' ? 'zijn mail' : 'geen agenda'} nog niet gekoppeld (Instellingen → Mijn koppelingen).`)
+  if (!r) throw new Error(`${who} heeft nog geen ${kind === 'mail' ? 'mail' : 'agenda'} gekoppeld (Instellingen → Mijn koppelingen).`)
   if (r.status === 'opnieuw_koppelen') throw new Error(`De ${kind === 'mail' ? 'mail' : 'agenda'}-koppeling van ${who} werkt niet meer: ${who} moet opnieuw koppelen.`)
   const { refresh_token_enc: _, ...conn } = r
   const cached = tokenCache().get(keyOf(member, kind))

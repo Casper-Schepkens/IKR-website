@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { requireSales } from '@/lib/admin/session'
@@ -24,9 +25,8 @@ export const metadata = { title: 'Lead' }
 export default async function LeadPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const { leads, drafts } = await requireSales()
-  const lead = await leads.get(id)
+  const [lead, concepts] = await Promise.all([leads.get(id), drafts.list({ leadId: id, status: 'concept' })])
   if (!lead) notFound()
-  const concepts = await drafts.list({ leadId: id, status: 'concept' })
   const lost = lead.stage === 'lost'
   // Zodat een wijziging van Grok Bot in de velden komt, zonder een formulier dat Casper aan het invullen is te wissen.
   const serverValues: Record<string, string> = {
@@ -68,7 +68,10 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
         )}
       </div>
 
-      <AfterSendLog leadId={lead.id} />
+      {/* Logboek apart: de leadfiche wacht er niet op. */}
+      <Suspense fallback={null}>
+        <AfterSendLog leadId={lead.id} />
+      </Suspense>
 
       {concepts.length > 0 && (
         <section className="flex flex-col gap-3" aria-label="Mailconcepten">

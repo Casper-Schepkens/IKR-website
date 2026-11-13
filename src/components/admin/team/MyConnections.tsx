@@ -13,14 +13,18 @@ import { ownerOf } from '@/lib/admin/weekly/types'
  * mail (alleen lezen) en, apart, agenda('s) (alleen lezen). Grok Bot leest ze via MCP; niets verstuurt.
  */
 export async function MyConnections({ email }: { email: string }) {
+  const owner = ownerOf(email)
+  // Uitnodigingsadres en koppelingen tegelijk ophalen.
+  const invitePromise = owner ? inviteAddress(owner).catch(() => defaultInvite(owner)) : Promise.resolve(null)
   const own = await listOwnConnections(email).catch(() => [] as TeamConnection[])
   // Werkt de koppeling nog? (verlopen/ingetrokken → "opnieuw koppelen")
-  const withStatus = await Promise.all(own.map(async (c) => ({ ...c, status: c.status === 'ok' ? await checkConnection(email, c.kind) : c.status })))
+  const [withStatus, invite] = await Promise.all([
+    Promise.all(own.map(async (c) => ({ ...c, status: c.status === 'ok' ? await checkConnection(email, c.kind) : c.status }))),
+    invitePromise,
+  ])
   const mail = withStatus.find((c) => c.kind === 'mail')
   const agenda = withStatus.find((c) => c.kind === 'agenda')
   const blocked = !isGoogleConfigured() ? 'Google is nog niet ingesteld.' : tokenKeyProblem()
-  const owner = ownerOf(email)
-  const invite = owner ? await inviteAddress(owner).catch(() => defaultInvite(owner)) : null
 
   return (
     <div id="koppelingen" className="scroll-mt-24">
