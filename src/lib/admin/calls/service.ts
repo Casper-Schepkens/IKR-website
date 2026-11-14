@@ -1,4 +1,5 @@
 import 'server-only'
+import { SIGNATURE } from '../sales/signature'
 import { inviteAddress } from '../team/invites'
 import { brusselsToIso, fmtDate, fmtTime } from '../format'
 import { createEvent, deleteEvent, isGoogleConfigured, listConnections, listEvents } from '../google'
@@ -126,7 +127,7 @@ export async function finishCall(
   if (lead && outcome === 'no_show' && lead.email && !(await deps.drafts.list({ leadId: lead.id, status: 'concept' })).some((d) => d.context?.startsWith('No-show'))) {
     const first = lead.name.split(' ')[0]
     const when = fmtDate(call.starts_at, { weekday: 'long', day: 'numeric', month: 'long' })
-    const body = `Hoi ${first},\n\nJammer dat het ${when} niet lukte voor onze call. Geen probleem! Zullen we een nieuw moment zoeken? Laat gerust weten wat jou past, dan plan ik het in.\n\nGroetjes,\nCasper`
+    const body = `Hoi ${first},\n\nJammer dat het ${when} niet lukte voor onze call. Geen probleem! Zullen we een nieuw moment zoeken? Laat gerust weten wat jou past, dan plan ik het in.\n\n${SIGNATURE}`
     const d = await deps.drafts.create({
       lead_id: lead.id,
       from_email: 'casper@iknowright.be',
