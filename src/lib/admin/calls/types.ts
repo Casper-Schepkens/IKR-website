@@ -1,4 +1,5 @@
 import { STAGES, type Stage } from '../sales/types'
+import { SIGNATURE } from '../sales/signature'
 
 /** Calls (sales). Setter = kort telefoongesprek (opname via Record), sales = Google Meet (+ Fireflies, ppt). */
 
@@ -123,7 +124,7 @@ export function callStats(all: Call[], van?: string, tot?: string): CallStats {
 export function insertMeetLink(body: string, meetUrl: string, when: string) {
   if (body.includes(meetUrl)) return body
   const line = `Hier is de link voor onze call (${when}): ${meetUrl}`
-  const m = body.match(/\n\s*\n((?:groetjes|groeten|vriendelijke groet|met vriendelijke groet|mvg|tot dan|tot snel|tot binnenkort|beste groeten|warme groet)[^\n]*(?:\n[^\n]*)?)\s*$/i)
+  const m = body.match(/\n\s*\n((?:groetjes|groeten|vriendelijke groet|met vriendelijke groet|mvg|tot dan|tot snel|tot binnenkort|beste groeten|warme groet)[^\n]*(?:\n[^\n]*){0,3})\s*$/i)
   if (m && m.index !== undefined) return `${body.slice(0, m.index).trimEnd()}\n\n${line}\n\n${m[1].trim()}`
   return `${body.trimEnd()}\n\n${line}`
 }
@@ -132,7 +133,7 @@ export function insertMeetLink(body: string, meetUrl: string, when: string) {
 export function thankYouMail(firstName: string, weekday: string, pptUrl: string = SALES_PPT_URL) {
   return {
     subject: 'Bedankt voor de call',
-    body: `Hoi ${firstName},\n\nBedankt voor de fijne call ${weekday}! Zoals beloofd vind je hier de presentatie: ${pptUrl}\n\nLaat gerust weten als je nog vragen hebt.\n\nGroetjes,\nCasper`,
+    body: `Hoi ${firstName},\n\nBedankt voor de fijne call ${weekday}! Zoals beloofd vind je hier de presentatie: ${pptUrl}\n\nLaat gerust weten als je nog vragen hebt.\n\n${SIGNATURE}`,
   }
 }
 
