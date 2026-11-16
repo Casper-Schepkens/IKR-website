@@ -1,4 +1,5 @@
 import 'server-only'
+import type { Lead } from '../../sales/types'
 import { z } from 'zod'
 import { createServiceSupabase } from '../../supabase/server'
 import { isoDay } from '../../format'
@@ -14,8 +15,9 @@ export function registerCallTools(ctx: ToolCtx) {
   const { tool, session, resolveLead } = ctx
   const { leads, drafts, calls } = session
   // ─── Calls (sales) ───────────────────────────────────────
-  const callView = async (c: Call) => {
-    const l = await leads.get(c.lead_id)
+  /** Met een lijst van leads (calls_lijst): geen aparte query per call. */
+  const callView = async (c: Call, known?: Map<string, Lead>) => {
+    const l = known ? (known.get(c.lead_id) ?? null) : await leads.get(c.lead_id)
     return {
       call_id: c.id,
       soort: c.kind,
@@ -53,7 +55,8 @@ export function registerCallTools(ctx: ToolCtx) {
     async ({ status = 'gepland', soort, lead_id }) => {
       await syncCallsFromCalendar(callDeps).catch(() => undefined)
       const list = (await calls.list(lead_id ? { leadId: uuid(lead_id, 'lead_id') } : {})).filter((c) => c.status === status && (!soort || c.kind === soort))
-      return Promise.all(list.slice(0, 50).map(callView))
+      const known = new Map((await leads.list()).map((l) => [l.id, l]))
+      return Promise.all(list.slice(0, 50).map((c) => callView(c, known)))
     },
   )
   tool('call_context_lezen', '"Context van Grok Bot" van een call lezen (markdown, apart van Caspers notitie), met wie en wanneer laatst bijgewerkt.', { call_id: z.string() }, true, async ({ call_id }) => {

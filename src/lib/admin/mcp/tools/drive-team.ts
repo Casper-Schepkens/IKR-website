@@ -1,4 +1,5 @@
 import 'server-only'
+import { SALES_EMAIL } from '../../env'
 import { z } from 'zod'
 import { listAllConnections, memberName, resolveMember } from '../../team/connections'
 import { calendarEvents, getAttachment, gmailQuery, readMessage, readThread, searchMail } from '../../team/google-read'
@@ -13,7 +14,13 @@ import { MCP_CONTENT, dateStr, owner, type ToolCtx } from '../tool'
 
 /** IKR-Drive, gedeelde agenda en (enkel lezen) mail en agenda van teamleden. */
 export function registerDriveTeamTools(ctx: ToolCtx) {
-  const { tool } = ctx
+  const { tool, scope } = ctx
+  /** Team-sessie: de mailbox en agenda van Casper (sales) zijn hier niet te lezen. */
+  const member_ = async (who: string) => {
+    const m = await resolveMember(who)
+    if (scope === 'team' && m.toLowerCase() === SALES_EMAIL) throw new Error('De mailbox en agenda van Casper zijn in deze sessie niet beschikbaar.')
+    return m
+  }
   tool(
     'agenda_uitnodigingsadres',
     'Naar welk adres uitnodigingen voor weeklies (en voor Casper ook calls) gaan, per teamlid. Zonder email: toont de huidige adressen. Met email: zet het adres (leeg = standaard) en past komende items aan. Enkel als dat teamlid erom vraagt.',
@@ -102,7 +109,7 @@ export function registerDriveTeamTools(ctx: ToolCtx) {
     },
     true,
     async ({ teamlid, zoekterm, van, tot, max }) => {
-      const member = await resolveMember(teamlid)
+      const member = await member_(teamlid)
       return { teamlid: memberName(member), berichten: await searchMail(member, gmailQuery(zoekterm, van, tot), max ?? 20) }
     },
     { logReads: true },
@@ -114,7 +121,7 @@ export function registerDriveTeamTools(ctx: ToolCtx) {
     true,
     async ({ teamlid, thread_id, bericht_id }) => {
       if (!thread_id && !bericht_id) throw new Error('Geef een thread_id of een bericht_id.')
-      const member = await resolveMember(teamlid)
+      const member = await member_(teamlid)
       return { teamlid: memberName(member), berichten: thread_id ? await readThread(member, thread_id) : [await readMessage(member, bericht_id!)] }
     },
     { logReads: true },
@@ -125,7 +132,7 @@ export function registerDriveTeamTools(ctx: ToolCtx) {
     { teamlid: z.string(), bericht_id: z.string(), bijlage_id: z.string() },
     true,
     async ({ teamlid, bericht_id, bijlage_id }) => {
-      const member = await resolveMember(teamlid)
+      const member = await member_(teamlid)
       const a = await getAttachment(member, bericht_id, bijlage_id)
       const uri = `ikr://teamlid/${encodeURIComponent(member)}/mail/${encodeURIComponent(bericht_id)}/bijlage/${encodeURIComponent(a.bestandsnaam)}`
       const info = { type: 'text' as const, text: JSON.stringify({ bestandsnaam: a.bestandsnaam, type: a.type, grootte: a.grootte }) }
@@ -146,7 +153,7 @@ export function registerDriveTeamTools(ctx: ToolCtx) {
     async ({ teamlid, van, tot }) => {
       if (tot < van) throw new Error('"tot" ligt vóór "van".')
       if ((new Date(tot).getTime() - new Date(van).getTime()) / 86_400_000 > 92) throw new Error('Vraag hoogstens 3 maanden tegelijk op.')
-      const member = await resolveMember(teamlid)
+      const member = await member_(teamlid)
       return { teamlid: memberName(member), afspraken: await calendarEvents(member, van, tot) }
     },
     { logReads: true },

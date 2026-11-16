@@ -56,7 +56,7 @@ const ff = vi.hoisted(() => ({ getTranscript: vi.fn(), findTranscript: vi.fn() }
 vi.mock('../fireflies', async (orig) => ({ ...(await orig<typeof import('../fireflies')>()), getTranscript: ff.getTranscript, findTranscript: ff.findTranscript }))
 const weeklyJob = vi.hoisted(() => ({ queueWeeklySops: vi.fn(async () => 'JW') }))
 vi.mock('../sops/weekly', () => weeklyJob)
-const jobs = vi.hoisted(() => ({ enqueue: vi.fn(async () => ({ id: 'J1' })), runJob: vi.fn(), getJob: vi.fn(async (id: string) => ({ id, type: 'call_verwerken' })), aiEngine: () => 'grokbot', isAiConfigured: () => true }))
+const jobs = vi.hoisted(() => ({ enqueue: vi.fn(async () => ({ id: 'J1' })), runJob: vi.fn(), getJob: vi.fn(async (id: string) => ({ id, type: 'call_verwerken' })), teamScopeConfigured: () => false, isTeamJob: () => false, aiEngine: () => 'grokbot', isAiConfigured: () => true }))
 vi.mock('../ai/jobs', () => jobs)
 const notify = vi.hoisted(() => ({ notifyGrok: vi.fn(async () => true as const) }))
 vi.mock('../ai/notify', () => notify)
@@ -142,7 +142,7 @@ describe('deel 3: Fireflies-webhook', () => {
     const [type, ref, input] = jobs.enqueue.mock.calls[0] as unknown as [string, string, { bedankmail: { body: string } | null; transcript: string }]
     expect([type, ref]).toEqual(['call_verwerken', `call:${c.id}:FF1`])
     expect(input.bedankmail?.body).toContain(SALES_PPT_URL)
-    expect(notify.notifyGrok).toHaveBeenCalledWith(['J1'])
+    expect(notify.notifyGrok).toHaveBeenCalledWith(['J1'], undefined, 'sales')
     expect(await handleFirefliesEvent('FF1', null, deps)).toEqual({ status: 'gekoppeld' }) // tweede keer niets
     expect(jobs.enqueue).toHaveBeenCalledTimes(1)
   })

@@ -1,7 +1,7 @@
 import 'server-only'
 import { after } from 'next/server'
 import { createServiceSupabase } from '../supabase/server'
-import { aiEngine, getJob, runJob } from './jobs'
+import { aiEngine, getJob, isTeamJob, runJob, teamScopeConfigured } from './jobs'
 import { notifyGrok } from './notify'
 
 /** Taken die zonder tools kunnen: als Grok onbereikbaar is, mogen ze via de Claude API (als er een sleutel is). */
@@ -26,12 +26,18 @@ export async function kickJobs(ids: string[]) {
     const jobs = await Promise.all(ids.map((id) => getJob(id)))
     const viaApi = jobs.filter((j) => j && aiEngine(j.type) === 'api').map((j) => j!.id)
     for (const id of viaApi) await runJob(id)
-    const rest = ids.filter((id) => !viaApi.includes(id))
+    const rest = jobs.filter((j) => j && !viaApi.includes(j.id)).map((j) => j!)
     if (engine === 'worker' || !rest.length) return
-    const reason = await notifyGrok(rest)
-    if (reason === true) return
-    await logPingFailure(rest, typeof reason === 'string' ? reason : 'geen antwoord')
-    for (const id of rest) await handleUnreachable(id)
+    // Team-taken naar de team-automation (zonder sales-tools) als die er is; de rest naar die van Casper.
+    const groups = teamScopeConfigured() ? [rest.filter((j) => !isTeamJob(j)), rest.filter(isTeamJob)] : [rest, []]
+    for (const [i, group] of groups.entries()) {
+      const groupIds = group.map((j) => j.id)
+      if (!groupIds.length) continue
+      const reason = await notifyGrok(groupIds, undefined, i === 1 ? 'team' : 'sales')
+      if (reason === true) continue
+      await logPingFailure(groupIds, typeof reason === 'string' ? reason : 'geen antwoord')
+      for (const id of groupIds) await handleUnreachable(id)
+    }
   } catch (e) {
     console.error('[ai] taken starten mislukt', e)
   }

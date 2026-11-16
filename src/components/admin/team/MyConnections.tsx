@@ -1,7 +1,7 @@
-import { checkConnection, listOwnConnections, type TeamConnection } from '@/lib/admin/team/connections'
+import { checkConnection, listOwnConnections, mailboxReads, type MailboxRead, type TeamConnection } from '@/lib/admin/team/connections'
 import { tokenKeyProblem } from '@/lib/admin/crypto'
 import { isGoogleConfigured } from '@/lib/admin/google'
-import { fmtDate } from '@/lib/admin/format'
+import { fmtDate, fmtTime } from '@/lib/admin/format'
 import { buttonClass, Card, muted, Pill, Title } from '../ui'
 import { cn } from '@/utilities/ui'
 import { CalendarPicker, DisconnectButton, InviteAddress } from './MyConnectionsClient'
@@ -18,9 +18,10 @@ export async function MyConnections({ email }: { email: string }) {
   const invitePromise = owner ? inviteAddress(owner).catch(() => defaultInvite(owner)) : Promise.resolve(null)
   const own = await listOwnConnections(email).catch(() => [] as TeamConnection[])
   // Werkt de koppeling nog? (verlopen/ingetrokken → "opnieuw koppelen")
-  const [withStatus, invite] = await Promise.all([
+  const [withStatus, invite, reads] = await Promise.all([
     Promise.all(own.map(async (c) => ({ ...c, status: c.status === 'ok' ? await checkConnection(email, c.kind) : c.status }))),
     invitePromise,
+    own.length ? mailboxReads(email).catch(() => [] as MailboxRead[]) : Promise.resolve([] as MailboxRead[]),
   ])
   const mail = withStatus.find((c) => c.kind === 'mail')
   const agenda = withStatus.find((c) => c.kind === 'agenda')
@@ -71,6 +72,25 @@ export async function MyConnections({ email }: { email: string }) {
           </section>
         )}
       </div>
+      {own.length > 0 && (
+        <div className="border-t border-[#E6DFD2] pt-3">
+          <p className="m-0 text-sm font-semibold">Wat Grok Bot laatst las</p>
+          {reads.length ? (
+            <ul className="m-0 mt-1 flex list-none flex-col gap-0.5 p-0 text-sm">
+              {reads.map((r) => (
+                <li key={`${r.at}-${r.tool}`}>
+                  <span className={muted}>
+                    {fmtDate(r.at)} {fmtTime(r.at)}
+                  </span>{' '}
+                  · Grok Bot {r.what}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className={cn('m-0 mt-1 text-sm', muted)}>Grok Bot las nog niets uit je mail of agenda.</p>
+          )}
+        </div>
+      )}
     </Card>
     </div>
   )

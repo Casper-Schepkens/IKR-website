@@ -27,7 +27,7 @@ function query(table: string) {
   return api
 }
 vi.mock('../supabase/server', () => ({ createServiceSupabase: () => ({ from: query }), createServerSupabase: vi.fn() }))
-const jobs = vi.hoisted(() => ({ enqueue: vi.fn(), runJob: vi.fn(), getJob: vi.fn(async (id: string) => ({ id, type: 'na_verzending' })), aiEngine: vi.fn(() => 'api'), isAiConfigured: vi.fn(() => true) }))
+const jobs = vi.hoisted(() => ({ enqueue: vi.fn(), runJob: vi.fn(), getJob: vi.fn(async (id: string) => ({ id, type: 'na_verzending' })), teamScopeConfigured: () => false, isTeamJob: () => false, aiEngine: vi.fn(() => 'api'), isAiConfigured: vi.fn(() => true) }))
 vi.mock('../ai/jobs', () => jobs)
 vi.mock('../ai/notify', () => ({ notifyGrok: vi.fn(async () => true) }))
 vi.mock('../gmail', () => ({ getThread: vi.fn(async () => { throw new Error('Gmail plat') }) }))

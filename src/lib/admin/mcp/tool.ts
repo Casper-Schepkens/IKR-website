@@ -37,10 +37,21 @@ export function relinkFinance() {
 
 export const fail = (message: string) => ({ content: [{ type: 'text' as const, text: message }], isError: true })
 
+/**
+ * Lange teksten (mailteksten, notities, concepten) niet volledig in het log: begin + lengte volstaat om
+ * te zien wat er gebeurde, en het log wordt geen tweede kopie van alle mails.
+ */
+export function compactArgs(v: unknown, depth = 0): unknown {
+  if (typeof v === 'string') return v.length > 300 ? `${v.slice(0, 300)}… (${v.length} tekens)` : v
+  if (Array.isArray(v)) return depth > 3 ? `[${v.length} items]` : v.slice(0, 20).map((x) => compactArgs(x, depth + 1))
+  if (v && typeof v === 'object') return depth > 3 ? '{…}' : Object.fromEntries(Object.entries(v).map(([k, x]) => [k, compactArgs(x, depth + 1)]))
+  return v
+}
+
 /** Logt in bot_actions; mag nooit een tool laten falen. */
 export async function log(tool: string, args: unknown, ok: boolean, error?: string) {
   try {
-    const { error: logError } = await createServiceSupabase().from('bot_actions').insert({ bot: BY, tool, args: args ?? null, ok, error: error ?? null })
+    const { error: logError } = await createServiceSupabase().from('bot_actions').insert({ bot: BY, tool, args: compactArgs(args ?? null), ok, error: error ?? null })
     if (logError) throw new Error(logError.message)
   } catch (e) {
     // geen service role (lokaal) of tijdelijk probleem: niet blokkeren, wel zichtbaar in de Vercel-logs

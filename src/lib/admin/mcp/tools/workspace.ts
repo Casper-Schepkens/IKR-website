@@ -1,4 +1,5 @@
 import 'server-only'
+import { SALES_EMAIL } from '../../env'
 import { z } from 'zod'
 import { safeUrl } from '../../weekly/pins'
 import { TEAM } from '../../weekly/types'
@@ -11,7 +12,14 @@ import { owner, type ToolCtx } from '../tool'
 
 /** Werkplek (pagina Grok Bot) en meldingen. */
 export function registerWorkspaceTools(ctx: ToolCtx) {
-  const { tool } = ctx
+  const { tool, scope } = ctx
+  // Team-sessie: de werkplek van Casper kan sales bevatten, dus die is hier niet zichtbaar.
+  const visible = (ownerEmail: string) => scope === 'sales' || ownerEmail.toLowerCase() !== SALES_EMAIL
+  const getCard = async (id: string) => {
+    const c = await workspaceRepo().get(id)
+    if (!c || !visible(c.owner_email)) throw new Error('Kaart niet gevonden.')
+    return c
+  }
   // ─── Werkplek (pagina Grok Bot) ─────────────────────────
   const cardView = (c: CardWithMessages, full = false) => ({
     kaart_id: c.id,
@@ -31,12 +39,11 @@ export function registerWorkspaceTools(ctx: ToolCtx) {
     'Kaarten op de werkplek (pagina Grok Bot) van een teamlid of iedereen: onderwerpen, opdrachten, vragen en voorgestelde acties met hun status. Gebruik dit eerst bij een proactieve ronde om niets dubbel klaar te zetten.',
     { teamlid: owner.optional(), status: z.enum(['open', 'besproken', 'archief', 'alle']).optional().describe('standaard open') },
     true,
-    async ({ teamlid, status = 'open' }) => (await workspaceRepo().list(teamlid ? memberEmail(teamlid) : null)).filter((c) => status === 'alle' || c.status === status).map((c) => cardView(c)),
+    async ({ teamlid, status = 'open' }) =>
+      (await workspaceRepo().list(teamlid ? memberEmail(teamlid) : null)).filter((c) => visible(c.owner_email) && (status === 'alle' || c.status === status)).map((c) => cardView(c)),
   )
   tool('werkplek_kaart', 'Eén kaart met de volledige tekst en het hele draadje.', { kaart_id: z.string() }, true, async ({ kaart_id }) => {
-    const c = await workspaceRepo().get(kaart_id)
-    if (!c) throw new Error('Kaart niet gevonden.')
-    return cardView(c, true)
+    return cardView(await getCard(kaart_id), true)
   })
   tool(
     'werkplek_kaart_aanmaken',
@@ -54,8 +61,7 @@ export function registerWorkspaceTools(ctx: ToolCtx) {
   )
   tool('werkplek_reageren', 'Een bericht in het draadje van een kaart zetten (bv. een antwoord of een update).', { kaart_id: z.string(), tekst: z.string() }, false, async ({ kaart_id, tekst }) => {
     const repo = workspaceRepo()
-    const c = await repo.get(kaart_id)
-    if (!c) throw new Error('Kaart niet gevonden.')
+    const c = await getCard(kaart_id)
     if (!tekst.trim()) throw new Error('Leeg bericht.')
     await repo.addMessage(c.id, WS_BOT, tekst.trim().slice(0, 20000))
     await repo.update(c.id, { bot_busy_since: null, unread: true })
@@ -68,8 +74,7 @@ export function registerWorkspaceTools(ctx: ToolCtx) {
     false,
     async ({ kaart_id, titel, tekst, status, actie, actie_uitleg, actie_uitgevoerd }) => {
       const repo = workspaceRepo()
-      const c = await repo.get(kaart_id)
-      if (!c) throw new Error('Kaart niet gevonden.')
+      const c = await getCard(kaart_id)
       await repo.update(c.id, {
         ...(titel?.trim() ? { title: titel.trim().slice(0, 200) } : {}),
         ...(tekst !== undefined ? { body: tekst.slice(0, 20000) } : {}),
@@ -87,7 +92,7 @@ export function registerWorkspaceTools(ctx: ToolCtx) {
     { teamlid: owner.optional() },
     true,
     async ({ teamlid }) => {
-      const people = teamlid ? TEAM.filter((t) => t.key === teamlid) : TEAM
+      const people = (teamlid ? TEAM.filter((t) => t.key === teamlid) : TEAM).filter((t) => scope === 'sales' || t.email !== SALES_EMAIL)
       return Object.fromEntries(await Promise.all(people.map(async (t) => [t.name, await notificationsFor(t.email)] as const)))
     },
   )
