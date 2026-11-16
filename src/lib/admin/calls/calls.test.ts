@@ -13,7 +13,7 @@ import { memoryCalls } from './repo'
 import { memoryLeads } from '../sales/repo'
 import { memoryDrafts, type MailDraft } from '../sales/drafts'
 import { cancelCall, finishCall, guessKind, matchLead, registerCall, scheduleCall, syncCallsFromCalendar } from './service'
-import { callStats, forwardStage, insertMeetLink, type Call } from './types'
+import { callStats, forwardStage, insertMeetLink, thankYouMail, type Call } from './types'
 import type { Lead } from '../sales/types'
 
 let deps: { calls: ReturnType<typeof memoryCalls>; leads: ReturnType<typeof memoryLeads> }
@@ -34,6 +34,14 @@ describe('helpers', () => {
     expect(out).toBe('Hoi Jan,\n\nDinsdag 14u past perfect!\n\nHier is de link voor onze call (dinsdag 10 november om 14:00): https://meet.google.com/abc-defg-hij\n\nGroetjes,\nCasper')
     expect(insertMeetLink(out, 'https://meet.google.com/abc-defg-hij', 'x')).toBe(out)
     expect(insertMeetLink('Top, tot dinsdag', 'https://meet.google.com/x', 'd')).toBe('Top, tot dinsdag\n\nHier is de link voor onze call (d): https://meet.google.com/x')
+
+    // Volledige ondertekening (Groetjes, / Casper / IKnowRight): link blijft boven de groet.
+    expect(insertMeetLink('Hoi Jan,\n\nTop!\n\nGroetjes,\nCasper\nIKnowRight', 'https://meet.google.com/x', 'd')).toBe(
+      'Hoi Jan,\n\nTop!\n\nHier is de link voor onze call (d): https://meet.google.com/x\n\nGroetjes,\nCasper\nIKnowRight',
+    )
+  })
+  it('bedankmail eindigt met de volledige ondertekening', () => {
+    expect(thankYouMail('Jan', 'vandaag', 'https://x').body.endsWith('Groetjes,\nCasper\nIKnowRight')).toBe(true)
   })
   it('fase enkel vooruit, nooit uit won/lost', () => {
     expect(forwardStage('lead', 'setter_planned')).toBe('setter_planned')

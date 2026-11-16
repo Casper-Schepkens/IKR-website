@@ -10,6 +10,7 @@ import { createServiceSupabase } from '../supabase/server'
 import { SALES_EMAIL } from '../env'
 import { fmtDate, isoDay } from '../format'
 import { sameText, textMatches } from '../search'
+import { SIGNATURE_RULE } from '../sales/signature'
 import { DEFAULT_FOLLOW_UP_ACTION, FOLLOW_UP_WORKDAYS } from '../sales/follow-up'
 import type { AdminSession } from '../session'
 import { supabaseLeads } from '../sales/repo'
@@ -78,6 +79,7 @@ Werkwijze:
 - Bijlagen in de chat: analyseer een geüpload bestand altijd eerst (drive_bestand_lezen). Doe wat gevraagd wordt (bv. in de map van de klant zetten: drive_mappen_zoeken / drive_map_maken + drive_bestand_verplaatsen). Logische vervolgstappen (bv. de ppt als sales-ppt op de call zetten met call_sales_ppt_zetten) stel je VOOR en doe je pas na een ja, tenzij er letterlijk om gevraagd werd.
 - Agenda: kalender toont de gedeelde contact@-agenda (weeklies, calls, draaidagen) voor iedereen.
 - Opvolgen: wachten_op_antwoord_lijst geeft de leads waar wij als laatste mailden zonder antwoord (langst wachtend eerst). Een opvolgmail zet je klaar als concept.
+- Ondertekening van ELKE mail (concepten, antwoorden, opvolg-, no-show- en bedankmails): "Groetjes," en daaronder "Casper" en "IKnowRight", elk op een eigen regel. Nooit enkel "Casper". Het dashboard zet "IKnowRight" er zelf onder als het ontbreekt, maar schrijf het altijd zelf.
 - Het dashboard kan jou AI-taken geven (bv. antwoorden op sales-mails): haal ze op met ai_taken_open en zet het resultaat terug met ai_taak_klaarzetten.
 - Financiën (financien_*): cijfers uit de bank in Odoo, voor het hele team. Odoo wordt nooit aangepast; indelen gebeurt enkel in het dashboard. Verzin geen bedragen: gebruik financien_overzicht. Of klanten betaald hebben: financien_betalingen. Contractbedragen van een klant uit de Drive halen: klant_contract_afleiden (geeft een voorstel; overnemen doet het team). Staat er veel ‘nog in te delen’, zeg dat de cijfers dan onvolledig zijn.
 - SOP's (sops_*, sop_*): de afspraken en best practices van het team. Vraagt iemand hoe iets bij IKR gaat (revisies, draaidagen, freelancers, prijzen …): zoek eerst met sops_zoeken en verwijs naar de SOP. Zegt iemand \"@grokbot nieuwe SOP\" (of vraagt om iets vast te leggen): sop_aanmaken als voorstel; het team keurt het goed met een vinkje.
@@ -478,11 +480,11 @@ export function buildMcpServer(session: AdminSession) {
     'Het schrijfstijlprofiel van Casper (gids + voorbeelden), afgeleid uit zijn echte verzonden mails. Lees dit voor je een mail schrijft.',
     {},
     true,
-    async () => (await styleInstructions(styleKeyFor())) || 'Nog geen schrijfstijlprofiel.',
+    async () => `${(await styleInstructions(styleKeyFor())) || 'Nog geen schrijfstijlprofiel.'}\n\nVaste regel (gaat voor op het profiel): ${SIGNATURE_RULE}`,
   )
   tool(
     'mail_concept_aanmaken',
-    'Zet een NIEUWE uitgaande mail als concept klaar bij een lead. Lees eerst lead_fiche en schrijfstijl en geef altijd context mee. Afzender is altijd casper@iknowright.be. Er wordt niets verstuurd: Casper keurt het concept in het dashboard goed en verstuurt het zelf. Na versturen wordt de lead automatisch bijgewerkt (volgende actie, opvolgdatum, notitie met onderwerp); geef volgende_actie/opvolgen_op mee als de standaard niet past. Geeft het concept_id terug.',
+    'Zet een NIEUWE uitgaande mail als concept klaar bij een lead. Lees eerst lead_fiche en schrijfstijl en geef altijd context mee. Eindig met "Groetjes,", daaronder "Casper" en "IKnowRight" (elk op een eigen regel), nooit enkel "Casper". Afzender is altijd casper@iknowright.be. Er wordt niets verstuurd: Casper keurt het concept in het dashboard goed en verstuurt het zelf. Na versturen wordt de lead automatisch bijgewerkt (volgende actie, opvolgdatum, notitie met onderwerp); geef volgende_actie/opvolgen_op mee als de standaard niet past. Geeft het concept_id terug.',
     {
       lead_id: z.string().describe('id van de lead (zie leads_lijst of lead_fiche)'),
       to: z.string().describe('e-mailadres van de ontvanger'),
@@ -516,7 +518,7 @@ export function buildMcpServer(session: AdminSession) {
   )
   tool(
     'mail_concept_bijwerken',
-    'Past een mailconcept aan (enkel zolang het nog een concept is). Enkel meegegeven velden veranderen. Er wordt niets verstuurd.',
+    'Past een mailconcept aan (enkel zolang het nog een concept is). Enkel meegegeven velden veranderen. Er wordt niets verstuurd. Ondertekening: "Groetjes," / "Casper" / "IKnowRight" (elk op een eigen regel).',
     {
       concept_id: z.string(),
       to: z.string().optional(),

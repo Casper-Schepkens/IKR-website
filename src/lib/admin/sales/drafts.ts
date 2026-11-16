@@ -1,5 +1,6 @@
 import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { ensureSignature } from './signature'
 
 /** Afzender van concepten: enkel casper@ (er wordt niet meer via contact@ verstuurd). */
 export const DRAFT_FROM = ['casper@iknowright.be'] as const
@@ -39,6 +40,14 @@ export type NewDraft = Pick<MailDraft, 'lead_id' | 'from_email' | 'to_email' | '
 }
 export type DraftPatch = Partial<Pick<MailDraft, 'from_email' | 'to_email' | 'cc' | 'subject' | 'body' | 'is_html' | 'thread_id' | 'in_reply_to' | 'context' | 'follow_up_action' | 'follow_up_on'>>
 
+/** Ondertekening nakijken: "IKnowRight" onder "Casper" als het ontbreekt (tekst en origineel). */
+export function signDraft<T extends { body?: string; is_html?: boolean; original_body?: string | null }>(d: T): T {
+  if (d.body === undefined) return d
+  const out = { ...d, body: ensureSignature(d.body, d.is_html) }
+  if (typeof d.original_body === 'string') out.original_body = ensureSignature(d.original_body, d.is_html)
+  return out
+}
+
 export interface DraftsRepo {
   list(opts?: { leadId?: string; status?: MailDraft['status'] }): Promise<MailDraft[]>
   get(id: string): Promise<MailDraft | null>
@@ -65,13 +74,13 @@ export function supabaseDrafts(db: SupabaseClient): DraftsRepo {
       return check(await db.from('mail_drafts').select('*').eq('id', id).maybeSingle()) as MailDraft | null
     },
     async create(input) {
-      const d = check(await db.from('mail_drafts').insert(input).select('*').single()) as MailDraft | null
+      const d = check(await db.from('mail_drafts').insert(signDraft(input)).select('*').single()) as MailDraft | null
       if (!d) throw new Error('Concept bewaren mislukt.')
       return d
     },
     async update(id, patch) {
       const rows = check(
-        await db.from('mail_drafts').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', id).eq('status', 'concept').select('id'),
+        await db.from('mail_drafts').update({ ...signDraft(patch), updated_at: new Date().toISOString() }).eq('id', id).eq('status', 'concept').select('id'),
       )
       return Boolean(rows?.length)
     },
@@ -104,14 +113,14 @@ export function memoryDrafts(store: MailDraft[] = []): DraftsRepo {
       return store.find((d) => d.id === id) ?? null
     },
     async create(input) {
-      const d: MailDraft = { original_body: null, follow_up_action: null, follow_up_on: null, ...input, id: crypto.randomUUID(), status: 'concept', created_at: now(), updated_at: now(), sent_at: null, sent_by: null }
+      const d: MailDraft = { original_body: null, follow_up_action: null, follow_up_on: null, ...signDraft(input), id: crypto.randomUUID(), status: 'concept', created_at: now(), updated_at: now(), sent_at: null, sent_by: null }
       store.push(d)
       return d
     },
     async update(id, patch) {
       const d = store.find((x) => x.id === id && x.status === 'concept')
       if (!d) return false
-      Object.assign(d, patch, { updated_at: now() })
+      Object.assign(d, signDraft({ is_html: d.is_html, ...patch }), { updated_at: now() })
       return true
     },
     async remove(id) {

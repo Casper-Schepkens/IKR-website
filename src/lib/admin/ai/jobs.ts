@@ -4,6 +4,7 @@ import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod'
 import type { z } from 'zod'
 import { createServiceSupabase } from '../supabase/server'
 import { IKR_CONTEXT } from './context'
+import { ensureSignature, SIGNATURE_RULE } from '../sales/signature'
 import { HANDLERS, type JobType } from './handlers'
 import { styleInstructions } from './style-profile'
 
@@ -44,6 +45,17 @@ export function isAiConfigured() {
   return aiEngine() !== 'api' || Boolean(process.env.ANTHROPIC_API_KEY)
 }
 
+/** Velden met een mailtekst per taak: "IKnowRight" onder de naam zetten als het ontbreekt. */
+const MAIL_FIELDS: Partial<Record<string, string[]>> = { inbox_reply: ['draft'], call_verwerken: ['bedankmail'], mail_rewrite: ['body'] }
+
+export function signMailOutput<T extends Record<string, unknown>>(type: string, output: T): T {
+  const fields = MAIL_FIELDS[type]
+  if (!fields || !output || typeof output !== 'object') return output
+  const fixed: Record<string, unknown> = { ...output }
+  for (const f of fields) if (typeof fixed[f] === 'string') fixed[f] = ensureSignature(fixed[f] as string)
+  return fixed as T
+}
+
 /** Open taken voor een externe uitvoerder (Grokbot of worker), oudste eerst. */
 export async function openJobs(limit = 10): Promise<AiJob[]> {
   const { data, error } = await db().from('ai_jobs').select('*').eq('status', 'pending').order('created_at').limit(limit)
@@ -65,12 +77,13 @@ export async function completeJob(id: string, output: unknown, engine: string) {
       : output
   const parsed = handler.schema.safeParse(filled)
   if (!parsed.success) throw new Error(`Resultaat klopt niet met de gevraagde vorm: ${parsed.error.message}`)
+  const result = signMailOutput(job.type, parsed.data as Record<string, unknown>)
   const { error } = await db()
     .from('ai_jobs')
-    .update({ status: 'done', output: parsed.data, engine, model: engine, cost_usd: 0, error: null, finished_at: new Date().toISOString() })
+    .update({ status: 'done', output: result, engine, model: engine, cost_usd: 0, error: null, finished_at: new Date().toISOString() })
     .eq('id', id)
   if (error) throw new Error(error.message)
-  await handler.afterDone?.(job.input, parsed.data as Record<string, unknown>).catch((e) => console.error('[ai] afterDone', e))
+  await handler.afterDone?.(job.input, result).catch((e) => console.error('[ai] afterDone', e))
 }
 
 /** USD per miljoen tokens (standaardtarief). Cache schrijven = 1,25× input. */
@@ -136,7 +149,9 @@ export async function getJob(id: string): Promise<AiJob | null> {
 export async function instructionsFor(job: Pick<AiJob, 'type' | 'input'>) {
   const h = HANDLERS[job.type] as { instructions: string; style?: (i: Record<string, unknown>) => 'casper' }
   const style = h.style ? await styleInstructions(h.style(job.input)) : ''
-  return [IKR_CONTEXT, style, h.instructions].filter(Boolean).join('\n\n')
+  // Mailtaken: de ondertekening als laatste, zodat ze voorgaat op het stijlprofiel (dat soms enkel "Casper" leerde).
+  const sign = h.style ? `Vaste regel voor de ondertekening (gaat voor op het stijlprofiel): ${SIGNATURE_RULE}` : ''
+  return [IKR_CONTEXT, style, h.instructions, sign].filter(Boolean).join('\n\n')
 }
 
 let client: Anthropic | null = null
@@ -177,7 +192,7 @@ export async function runJob(id: string) {
       cacheRead: res.usage.cache_read_input_tokens ?? 0,
       cacheWrite: res.usage.cache_creation_input_tokens ?? 0,
     }
-    const output = res.parsed_output as Record<string, unknown>
+    const output = signMailOutput(job.type, res.parsed_output as Record<string, unknown>)
     await db()
       .from('ai_jobs')
       .update({
