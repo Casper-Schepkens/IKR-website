@@ -15,9 +15,11 @@ export const NOTIFY_PAGES = {
   leads: '/admin/sales',
   klanten: '/admin/klanten',
   financien: '/admin/financien',
+  instellingen: '/admin/instellingen',
 } as const
 export type NotifyKey = keyof typeof NOTIFY_PAGES
-export type Counts = Partial<Record<NotifyKey, number>>
+/** null = kon niet geteld worden (toont "?" in plaats van een valse 0). */
+export type Counts = Partial<Record<NotifyKey, number | null>>
 
 /** Werkplek: eigen open kaarten die nieuw zijn / een nieuw botbericht hebben, of op "Doe maar" wachten. */
 export const countWorkspace = (cards: Pick<Card, 'owner_email' | 'status' | 'unread' | 'action_status'>[], email: string) =>
@@ -42,9 +44,9 @@ export const countFollowUps = (leads: { stage: string; follow_up_on: string | nu
 export const countExpiring = (clients: { contract_end: string | null; contract_indefinite?: boolean }[], today: string) =>
   clients.filter((c) => contractTone(daysLeft(c, today)) === 'red').length
 
-export const total = (c: Counts) => Object.values(c).reduce((a, n) => a + (n ?? 0), 0)
-/** Badge: niets bij 0, "9+" boven 9. */
-export const badge = (n: number | undefined) => (!n ? null : n > 9 ? '9+' : String(n))
+export const total = (c: Counts) => Object.values(c).reduce<number>((a, n) => a + (n ?? 0), 0)
+/** Badge: niets bij 0, "9+" boven 9, "?" als het niet geteld kon worden. */
+export const badge = (n: number | null | undefined) => (n === null ? '?' : !n ? null : n > 9 ? '9+' : String(n))
 /** Tabtitel met het totaal ervoor, zonder een vorige teller te stapelen. */
 export const titleWithCount = (title: string, n: number) => {
   const base = title.replace(/^\(\d+\+?\)\s*/, '')

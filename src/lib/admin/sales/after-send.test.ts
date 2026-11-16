@@ -29,7 +29,7 @@ function query(table: string) {
 vi.mock('../supabase/server', () => ({ createServiceSupabase: () => ({ from: query }), createServerSupabase: vi.fn() }))
 const jobs = vi.hoisted(() => ({ enqueue: vi.fn(), runJob: vi.fn(), aiEngine: vi.fn(() => 'api'), isAiConfigured: vi.fn(() => true) }))
 vi.mock('../ai/jobs', () => jobs)
-vi.mock('../ai/notify', () => ({ notifyGrok: vi.fn() }))
+vi.mock('../ai/notify', () => ({ notifyGrok: vi.fn(async () => true) }))
 vi.mock('../gmail', () => ({ getThread: vi.fn(async () => { throw new Error('Gmail plat') }) }))
 const afterFn = vi.hoisted(() => ({ after: vi.fn() }))
 vi.mock('next/server', () => afterFn)

@@ -1,10 +1,9 @@
 import 'server-only'
-import { after } from 'next/server'
-import { aiEngine, enqueue, runJob } from '../ai/jobs'
-import { notifyGrok } from '../ai/notify'
+import { enqueue } from '../ai/jobs'
 import type { WeeklySopsInput } from '../ai/handlers'
 import { createServiceSupabase } from '../supabase/server'
 import { supabaseSops } from './repo'
+import { kickJobs, kickJobsLater } from '../ai/kick'
 
 /** Komt "SOP" of Grok Bot ("grokbot", "grok bot", "rock bot", "groc bot" …) voor in de tekst? (hint voor de taak) */
 export const mentionsBot = (text: string) => /\bsop|\b(grok|grock|groc|grog|rok|rock)\s?bot/i.test(text)
@@ -29,8 +28,7 @@ export async function queueWeeklySops(t: { id: string; title: string; date: stri
   }
   const job = await enqueue('weekly_sops', `fireflies:${t.id}`, input as unknown as Record<string, unknown>, 'fireflies')
   // Uitvoeren: via de API (cron: na het antwoord, want die heeft weinig tijd) of Grokbot porren (webhook naar Cursor).
-  const kick = () => (aiEngine() === 'grokbot' ? notifyGrok([job.id]).then(() => undefined) : runJob(job.id))
-  if (opts.background) after(kick)
-  else await kick()
+  if (opts.background) kickJobsLater([job.id])
+  else await kickJobs([job.id])
   return job.id
 }

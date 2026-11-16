@@ -2,10 +2,10 @@ import 'server-only'
 import { fmtDate, isoDay } from '../format'
 import { getTranscript, meetCode, type FirefliesTranscript } from '../fireflies'
 import { createDocInFolder, ensureDrivePath, removeFilePermission } from '../google'
-import { aiEngine, enqueue, isAiConfigured, runJob } from '../ai/jobs'
-import { notifyGrok } from '../ai/notify'
+import { enqueue, isAiConfigured } from '../ai/jobs'
 import type { CallVerwerkenInput } from '../ai/handlers'
 import { createServiceSupabase } from '../supabase/server'
+import { must } from '../supabase/must'
 import { supabaseCalls, type CallsRepo } from './repo'
 import { supabaseLeads, type LeadsRepo } from '../sales/repo'
 import { supabaseDrafts, type DraftsRepo } from '../sales/drafts'
@@ -14,6 +14,7 @@ import { CONTACT_EMAIL } from '../weekly/types'
 import { queueWeeklySops } from '../sops/weekly'
 import { finishCall } from './service'
 import { CALL_KIND_LABELS, type Call } from './types'
+import { kickJobs } from '../ai/kick'
 
 /**
  * Fireflies-transcript → juiste call → Drive (Sales / Sales calls / Fireflies) → call afronden (als dat
@@ -64,9 +65,7 @@ export function matchCall(t: Pick<FirefliesTranscript, 'meetingLink' | 'date' | 
 }
 
 async function upsertTranscript(row: Record<string, unknown>) {
-  await createServiceSupabase()
-    .from('call_transcripts')
-    .upsert({ ...row, updated_at: new Date().toISOString() }, { onConflict: 'fireflies_id' })
+  await must(createServiceSupabase().from('call_transcripts').upsert({ ...row, updated_at: new Date().toISOString() }, { onConflict: 'fireflies_id' }), 'transcript bewaren')
 }
 
 /** Webhook "Transcription completed". Idempotent: een transcript wordt maar één keer verwerkt. */
@@ -165,8 +164,7 @@ export async function processTranscript(callId: string, t: FirefliesTranscript, 
     bedankmail,
   }
   const job = await enqueue('call_verwerken', input.ref, input as unknown as Record<string, unknown>, 'fireflies')
-  if (aiEngine() === 'grokbot') await notifyGrok([job.id])
-  else if (aiEngine() === 'api') await runJob(job.id)
+  await kickJobs([job.id])
 }
 
 /** Opname van een weekly: de tijdelijke publieke link intrekken zodra Fireflies het transcript heeft. */

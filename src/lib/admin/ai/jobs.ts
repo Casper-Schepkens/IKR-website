@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod'
 import type { z } from 'zod'
 import { createServiceSupabase } from '../supabase/server'
+import { must } from '../supabase/must'
 import { IKR_CONTEXT } from './context'
 import { ensureSignature, SIGNATURE_RULE } from '../sales/signature'
 import { HANDLERS, type JobType } from './handlers'
@@ -167,9 +168,12 @@ export async function instructionsFor(job: Pick<AiJob, 'type' | 'input'>) {
 
 let client: Anthropic | null = null
 
-/** Voert een taak uit via de Claude API (tenzij een worker dat doet). Faalt nooit hard. */
-export async function runJob(id: string) {
-  if (aiEngine() !== 'api') return
+/**
+ * Voert een taak uit via de Claude API (tenzij een worker of Grokbot dat doet). Faalt nooit hard.
+ * force: ook bij een andere engine (vangnet als Grok onbereikbaar is).
+ */
+export async function runJob(id: string, opts: { force?: boolean } = {}) {
+  if (aiEngine() !== 'api' && !opts.force) return
   // Enkel een taak die nog wacht oppikken (voorkomt dubbel werk).
   // Ook een taak die al 5 minuten op 'running' hangt (de vorige run viel weg) mag opnieuw.
   const stale = new Date(Date.now() - STALE_RUNNING_MS).toISOString()
@@ -206,7 +210,8 @@ export async function runJob(id: string) {
       cacheWrite: res.usage.cache_creation_input_tokens ?? 0,
     }
     const output = signMailOutput(job.type, res.parsed_output as Record<string, unknown>)
-    await db()
+    await must(
+      db()
       .from('ai_jobs')
       .update({
         status: 'done',
@@ -220,11 +225,14 @@ export async function runJob(id: string) {
         finished_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .eq('status', 'running')
+      .eq('status', 'running'),
+      'taak afronden',
+    )
     await handler.afterDone?.(job.input, output).catch((e) => console.error('[ai] afterDone', e))
   } catch (e) {
     const limit = e instanceof Anthropic.RateLimitError
-    await db()
+    console.error('[ai] taak mislukt', id, e instanceof Error ? e.message : e)
+    const { error: saveError } = await db()
       .from('ai_jobs')
       .update({
         status: limit ? 'waiting_limit' : 'error',
@@ -232,5 +240,6 @@ export async function runJob(id: string) {
         finished_at: new Date().toISOString(),
       })
       .eq('id', id)
+    if (saveError) console.error('[ai] fout bewaren mislukt (taak blijft op running en wordt na 5 minuten opnieuw opgepikt)', saveError.message)
   }
 }

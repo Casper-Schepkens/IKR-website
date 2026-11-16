@@ -2,11 +2,11 @@ import 'server-only'
 import { after } from 'next/server'
 import { SALES_EMAIL } from '../env'
 import { getThread } from '../gmail'
-import { aiEngine, enqueue, isAiConfigured, runJob } from '../ai/jobs'
-import { notifyGrok } from '../ai/notify'
+import { enqueue, isAiConfigured } from '../ai/jobs'
 import { fmtDate, isoDay } from '../format'
 import { createServiceSupabase } from '../supabase/server'
 import type { AfterSendInput } from './after-send-apply'
+import { kickJobs } from '../ai/kick'
 
 /** Verstuurd concept: de rest (lead, thread, tekst) wordt na het versturen uit mail_drafts gelezen. */
 export type SentDraft = { draftId: string; by: string }
@@ -108,7 +108,6 @@ export async function createAfterSendJob(mail: SentMail, sentAt = new Date()) {
     ...(mail.keep?.length ? { keep: mail.keep } : {}),
   }
   const job = await enqueue('na_verzending', mail.ref, input as unknown as Record<string, unknown>, mail.by)
-  if (aiEngine() === 'grokbot') await notifyGrok([job.id])
-  else if (aiEngine() === 'api') await runJob(job.id)
+  await kickJobs([job.id])
   return job
 }
