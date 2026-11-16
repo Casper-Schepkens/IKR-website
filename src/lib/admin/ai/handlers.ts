@@ -38,7 +38,6 @@ export const INBOX_REPLY = z.object({
     .nullable()
     .describe('Als er een concreet moment voor een call afgesproken of voorgesteld wordt (door de lead of in jouw antwoord) en dat bevestigd mag worden: dat moment. Anders null.'),
 })
-export type InboxReply = z.infer<typeof INBOX_REPLY>
 
 export const CHAT_REPLY = z.object({
   antwoord: z.string().describe('Het antwoord in de chat (kort, in het Nederlands)'),

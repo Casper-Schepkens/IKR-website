@@ -429,11 +429,11 @@ describe('productie via MCP (data-gedreven)', () => {
     expect((await call('productie_ritme', { klant: 'albert', ritme: 'elke 2e zondag' })).text).toMatch(/elke tweede zondag/)
 
     expect((await call('intern_taak_toevoegen', { titel: 'Facturen nakijken', eigenaar: 'casper', planning: 'elke vrijdag' })).isError).toBe(false)
-    const intern = (await call('intern_taak_bijwerken', { taak: 'facturen', af: true })).json as { taak: string; laatst_af: string | null }[]
+    const intern = (await call('intern_taak_bijwerken', { taak: 'facturen', af: true })).json as unknown as { taak: string; laatst_af: string | null }[]
     expect(intern[0]).toMatchObject({ taak: 'Facturen nakijken' })
     expect(intern[0].laatst_af).not.toBeNull()
 
-    const log = (await call('productie_wijzigingen', { klant: 'albert' })).json as { wijziging_id: string; wat: string; wie: string }[]
+    const log = (await call('productie_wijzigingen', { klant: 'albert' })).json as unknown as { wijziging_id: string; wat: string; wie: string }[]
     expect(log[0]).toMatchObject({ wie: 'grokbot', wat: 'Chez Albert: ritme elke tweede zondag van de maand' })
     const removal = log.find((x) => /revisie|Revisieronde/i.test(x.wat))!
     // Terugdraaien van een oudere wijziging lukt, zolang die rijen sindsdien niet meer veranderden.

@@ -60,12 +60,6 @@ export const MESSAGE_TOPICS_BY_TYPE: Record<ContactType, MessageTopic[]> = {
   solliciteren: SOLLICITEREN_TOPICS,
 }
 
-export const ALL_MESSAGE_TOPICS: MessageTopic[] = [
-  ...BEDRIJF_TOPICS,
-  ...CREATOR_TOPICS,
-  ...SOLLICITEREN_TOPICS,
-]
-
 const MESSAGE_TOPIC_SUBTITLES: Record<MessageTopic, string> = {
   offerte: 'prijsindicatie of pakket op maat',
   gesprek: 'kennismaking of intake',
