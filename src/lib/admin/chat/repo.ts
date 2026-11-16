@@ -28,6 +28,8 @@ export type NewChatMessage = Pick<ChatMessage, 'user_id' | 'role' | 'text'> &
 export interface ChatRepo {
   /** Laatste `limit` berichten van één gebruiker, oudste eerst. */
   list(userId: string, limit: number): Promise<ChatMessage[]>
+  /** Enkel berichten na dit tijdstip (oudste eerst): de chat haalt bij het verversen enkel wat nieuw is. */
+  listSince(userId: string, since: string): Promise<ChatMessage[]>
   add(msg: NewChatMessage): Promise<ChatMessage>
   hasUser(userId: string): Promise<boolean>
 }
@@ -44,6 +46,11 @@ export function supabaseChat(db: SupabaseClient): ChatRepo {
         .limit(limit)
       if (error) throw new Error(error.message)
       return ((data ?? []) as ChatMessage[]).reverse()
+    },
+    async listSince(userId, since) {
+      const { data, error } = await db.from('ai_chat').select('*').eq('user_id', userId).gt('created_at', since).order('created_at').limit(60)
+      if (error) throw new Error(error.message)
+      return (data ?? []) as ChatMessage[]
     },
     async add(msg) {
       const { data, error } = await db.from('ai_chat').insert(msg).select('*').single()
@@ -64,6 +71,9 @@ export function memoryChat(store: ChatMessage[] = []): ChatRepo {
         .filter((m) => m.user_id === userId)
         .sort((a, b) => a.created_at.localeCompare(b.created_at))
         .slice(-limit)
+    },
+    async listSince(userId, since) {
+      return store.filter((m) => m.user_id === userId && m.created_at > since).sort((a, b) => a.created_at.localeCompare(b.created_at))
     },
     async add(msg) {
       const m: ChatMessage = {

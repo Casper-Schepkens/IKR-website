@@ -67,7 +67,10 @@ export async function syncFinance(opts: { force?: boolean } = {}) {
   if (!opts.force && st.synced_at && Date.now() - Date.parse(st.synced_at) < 30 * 60_000) return { overgeslagen: true, nieuw: 0, herindeeld: 0 }
   if (!isOdooConfigured()) throw new Error('ODOO_API_KEY ontbreekt in Vercel.')
   try {
-    const [lines, balance, rules, clients, existing] = await Promise.all([bankLines(), bankBalance(), loadRules(), loadClients(), loadTxs()])
+    // Na een eerste volledige sync enkel de laatste 60 dagen vóór de vorige sync (latere boekingen en
+    // correcties); "Odoo bijwerken" met force haalt alles opnieuw.
+    const since = !opts.force && st.synced_at ? new Date(Date.parse(st.synced_at) - 60 * 86_400_000).toISOString().slice(0, 10) : undefined
+    const [lines, balance, rules, clients, existing] = await Promise.all([bankLines(since), bankBalance(), loadRules(), loadClients(), loadTxs()])
     const known = new Map(existing.map((t) => [t.odoo_id, t]))
     let nieuw = 0
     let herindeeld = 0
@@ -84,7 +87,7 @@ export async function syncFinance(opts: { force?: boolean } = {}) {
       rows.push({ odoo_id: l.id, date: l.date, amount: l.amount, counterparty: l.counterparty, description: l.description, category: c.category, client_id: c.client_id, rule_id: c.rule_id, manual: false })
     }
     const now = new Date().toISOString()
-    if (inMemory()) Object.assign(mem(), { txs: rows, synced_at: now, balance })
+    if (inMemory()) Object.assign(mem(), { txs: since ? [...existing.filter((t) => !rows.some((r) => r.odoo_id === t.odoo_id)), ...rows] : rows, synced_at: now, balance })
     else {
       for (let i = 0; i < rows.length; i += 500) {
         const { error } = await db().from('finance_transactions').upsert(rows.slice(i, i + 500).map((r) => ({ ...r, synced_at: now })), { onConflict: 'odoo_id' })
@@ -131,6 +134,19 @@ export async function reclassify() {
   const [txs, rules, clients] = await Promise.all([loadTxs(), loadRules(), loadClients()])
   const changed = txs.filter((t) => !t.manual).map((t) => ({ t, c: classify(t, rules, clients) })).filter(({ t, c }) => t.category !== c.category || t.client_id !== c.client_id || (t.rule_id ?? null) !== c.rule_id)
   if (inMemory()) changed.forEach(({ t, c }) => Object.assign(t, { category: c.category, client_id: c.client_id }))
-  else for (const { t, c } of changed) await db().from('finance_transactions').update({ category: c.category, client_id: c.client_id, rule_id: c.rule_id }).eq('odoo_id', t.odoo_id)
+  else {
+    // Per uitkomst één update voor alle transacties die zo ingedeeld worden (niet één update per transactie).
+    const groups = new Map<string, { patch: { category: string; client_id: string | null; rule_id: string | null }; ids: number[] }>()
+    for (const { t, c } of changed) {
+      const key = JSON.stringify([c.category, c.client_id, c.rule_id])
+      const g = groups.get(key) ?? { patch: { category: c.category, client_id: c.client_id, rule_id: c.rule_id }, ids: [] }
+      g.ids.push(t.odoo_id)
+      groups.set(key, g)
+    }
+    for (const g of groups.values()) {
+      const { error } = await db().from('finance_transactions').update(g.patch).in('odoo_id', g.ids)
+      if (error) throw new Error(error.message)
+    }
+  }
   return changed.length
 }

@@ -166,6 +166,36 @@ const tokens = () => (tokenStore.__ikrAccessTokens ??= new Map())
 /** Gecachet token vergeten (na opnieuw koppelen, ontkoppelen of een 401 van Google). */
 export function forgetAccessToken(email: string) {
   tokens().delete(email)
+  // Ook het gedeelde token vergeten (bv. na een 401 of opnieuw koppelen), anders pakt een andere instantie het op.
+  if (hasTokenColumns && process.env.SUPABASE_SERVICE_ROLE_KEY)
+    void createServiceSupabase().from('google_connections').update({ access_token_enc: null, access_token_expires_at: null }).eq('email', email).then(() => undefined, () => undefined)
+}
+
+type ConnRow = { refresh_token: string; access_token_enc?: string | null; access_token_expires_at?: string | null }
+/** Bestaan de kolommen voor het gedeelde token al (migratie 20261117000300)? Zo niet: zoals vroeger. */
+let hasTokenColumns = true
+
+async function readConnection(email: string): Promise<ConnRow | null> {
+  const db = createServiceSupabase().from('google_connections')
+  if (hasTokenColumns) {
+    const r = await db.select('refresh_token, access_token_enc, access_token_expires_at').eq('email', email).maybeSingle()
+    if (!r.error) return r.data as ConnRow | null
+    if (!/access_token/.test(r.error.message)) throw new Error(r.error.message)
+    hasTokenColumns = false
+  }
+  const { data } = await createServiceSupabase().from('google_connections').select('refresh_token').eq('email', email).maybeSingle()
+  return data as ConnRow | null
+}
+
+/** Nog minstens 5 minuten geldig? Dan het gedeelde token gebruiken. */
+function sharedToken(row: ConnRow) {
+  if (!row.access_token_enc || !row.access_token_expires_at || !isTokenKeyReady()) return null
+  if (Date.parse(row.access_token_expires_at) - Date.now() < 5 * 60_000) return null
+  try {
+    return decryptSecret(row.access_token_enc)
+  } catch {
+    return null
+  }
 }
 
 export async function accessToken(email: string): Promise<string> {
@@ -174,12 +204,14 @@ export async function accessToken(email: string): Promise<string> {
   // Gelijktijdige calls (bv. threads ophalen) wachten op hetzelfde token in plaats van elk een eigen te vragen.
   const entry = { token: Promise.resolve(''), until: Date.now() + 60_000 }
   entry.token = (async () => {
-    const { data } = await createServiceSupabase()
-      .from('google_connections')
-      .select('refresh_token')
-      .eq('email', email)
-      .maybeSingle()
+    const data = await readConnection(email)
     if (!data) throw new Error(`${email} is nog niet gekoppeld (Instellingen).`)
+    // Gedeeld token uit de database (gezet door een andere serverinstantie): geen ronde naar Google nodig.
+    const shared = sharedToken(data)
+    if (shared) {
+      entry.until = Math.min(Date.now() + TOKEN_TTL_MS, Date.parse(data.access_token_expires_at!) - 5 * 60_000)
+      return shared
+    }
     try {
       const t = await token({ refresh_token: openToken(data.refresh_token), grant_type: 'refresh_token' })
       // Oude koppeling met een onversleuteld token: meteen versleuteld terugschrijven.
@@ -187,6 +219,12 @@ export async function accessToken(email: string): Promise<string> {
         void createServiceSupabase().from('google_connections').update({ refresh_token: sealToken(data.refresh_token) }).eq('email', email).eq('refresh_token', data.refresh_token).then(() => undefined, () => undefined)
       const expiresIn = (t as { expires_in?: number }).expires_in ?? 3600
       entry.until = Date.now() + Math.min(TOKEN_TTL_MS, (expiresIn - 300) * 1000)
+      if (hasTokenColumns && isTokenKeyReady())
+        void createServiceSupabase()
+          .from('google_connections')
+          .update({ access_token_enc: encryptSecret(t.access_token), access_token_expires_at: new Date(Date.now() + expiresIn * 1000).toISOString() })
+          .eq('email', email)
+          .then(() => undefined, () => undefined)
       return t.access_token
     } catch (e) {
       // Zeg welk account: bv. "contact@iknowright.be: … Koppel dat account opnieuw in Instellingen."

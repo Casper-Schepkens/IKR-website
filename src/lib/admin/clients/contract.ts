@@ -1,5 +1,5 @@
 import 'server-only'
-import { enqueue, getJob, type AiJob } from '../ai/jobs'
+import { enqueue, getJob, getJobs, type AiJob } from '../ai/jobs'
 import type { ContractAfleiden, ContractAfleidenInput } from '../ai/handlers'
 import { isSupabaseConfigured } from '../env'
 import { findContractDocs } from './contract-docs'
@@ -75,6 +75,13 @@ export function describeProposal(c: Client, job: AiJob | null): ContractProposal
 
 export async function loadProposal(c: Client) {
   return describeProposal(c, c.contract_job_id ? await getJob(c.contract_job_id) : null)
+}
+
+/** Voorstellen van meerdere klanten in één query (Klanten-pagina), in plaats van één per klant. */
+export async function loadProposals(list: Client[]) {
+  const ids = list.map((c) => c.contract_job_id).filter((x): x is string => Boolean(x))
+  const jobs = new Map((await getJobs(ids)).map((j) => [j.id, j]))
+  return new Map(list.filter((c) => c.contract_job_id).map((c) => [c.id, describeProposal(c, jobs.get(c.contract_job_id!) ?? null)] as const))
 }
 
 /** Voorstel overnemen: enkel gevonden velden, de rest blijft. */

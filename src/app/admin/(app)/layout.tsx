@@ -1,4 +1,7 @@
+import { headers } from 'next/headers'
 import { requireAdmin } from '@/lib/admin/session'
+import { isLivePath, PATH_HEADER } from '@/lib/admin/live'
+import { logIfSlow } from '@/lib/admin/timing'
 import { canSeeSales } from '@/lib/admin/env'
 import { Sidebar } from '@/components/admin/Sidebar'
 import { AdminChat } from '@/components/admin/AdminChat'
@@ -15,12 +18,14 @@ export default async function AdminAppLayout({ children }: { children: React.Rea
   const session = await requireAdmin()
   const { user, mode } = session
   // Chat met Grok Bot op elke pagina; geschiedenis uit de database (enkel die van deze gebruiker).
-  const [chat, stamp, navPrefs] = await Promise.all([
+  const path = (await headers()).get(PATH_HEADER) ?? ''
+  const [chat, stamp, navPrefs] = await logIfSlow(`layout ${path || '/admin'}`, Promise.all([
     chatState(session).catch(() => ({ messages: [], thinking: false })),
-    // Stand van de data bij deze render: LiveData vergelijkt daarmee, zodat niets tussen render en eerste controle verloren gaat.
-    liveStamp(session).catch(() => null),
+    // Stand van de data bij deze render (enkel op pagina's die live verversen): LiveData vergelijkt daarmee,
+    // zodat niets tussen render en eerste controle verloren gaat. Andere pagina's besparen zo 10 queries.
+    isLivePath(path) ? liveStamp(session).catch(() => null) : Promise.resolve(null),
     getNavPrefs(user.email).catch(() => EMPTY_NAV),
-  ])
+  ]))
   return (
     <div className="flex min-h-dvh flex-col lg:flex-row">
       <Sidebar name={user.name} email={user.email} demo={mode === 'demo'} sales={canSeeSales(user.email)} navPrefs={navPrefs} />

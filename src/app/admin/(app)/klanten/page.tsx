@@ -6,7 +6,7 @@ import { FormAction } from '@/components/admin/FormAction'
 import { ClientRow } from '@/components/admin/clients/ClientRow'
 import { ClientFields } from '@/components/admin/clients/ClientFields'
 import { createClientAction } from '../../clients-actions'
-import { loadProposal } from '@/lib/admin/clients/contract'
+import { loadProposals } from '@/lib/admin/clients/contract'
 import { cn } from '@/utilities/ui'
 
 export const metadata = { title: 'Klanten' }
@@ -16,7 +16,7 @@ export default async function ClientsPage() {
   const { clients } = await requireAdmin()
   const list = await clients.list()
   // Voorstellen uit "Leid af uit het contract" (enkel waar er een taak loopt of klaarstaat).
-  const proposals = new Map(await Promise.all(list.filter((c) => c.contract_job_id).map(async (c) => [c.id, await loadProposal(c).catch(() => null)] as const)))
+  const proposals = await loadProposals(list).catch(() => new Map())
   const today = isoDay(new Date())
   const soon = list.filter((c) => contractTone(daysLeft(c, today)) === 'red').length
 

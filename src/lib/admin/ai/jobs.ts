@@ -184,6 +184,13 @@ export async function closeChatJob(id: string, userId: string, by: string) {
   return Boolean(data?.length)
 }
 
+export async function getJobs(ids: string[]): Promise<AiJob[]> {
+  if (!ids.length) return []
+  const { data, error } = await db().from('ai_jobs').select('*').in('id', ids)
+  if (error) throw new Error(error.message)
+  return (data ?? []) as AiJob[]
+}
+
 export async function getJob(id: string): Promise<AiJob | null> {
   const { data } = await db().from('ai_jobs').select('*').eq('id', id).maybeSingle()
   return (data as AiJob | null) ?? null

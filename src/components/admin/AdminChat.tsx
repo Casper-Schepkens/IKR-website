@@ -60,15 +60,29 @@ export function AdminChat({ initial }: { initial: State }) {
   const showJump = open && anchor !== null && anchor !== contentKey
   const snapRef = useRef(chatSnap(initial.messages, initial.thinking))
 
+  // Laatst gekend bericht: bij het verversen enkel wat daarna kwam ophalen (niet telkens 60 berichten).
+  const lastAt = useRef<string | null>(null)
+  useEffect(() => {
+    lastAt.current = state.messages.at(-1)?.created_at ?? null
+  }, [state.messages])
   const refresh = useCallback(async () => {
-    const res = await getChatAction()
-    if (res.ok) setState(res.data)
+    const since = lastAt.current
+    const res = await getChatAction(since ?? undefined)
+    if (!res.ok) return
+    if (!since) return setState(res.data)
+    setState((cur) => {
+      const known = new Set(cur.messages.map((m) => m.id))
+      const fresh = res.data.messages.filter((m) => !known.has(m.id))
+      return fresh.length || cur.thinking !== res.data.thinking ? { messages: [...cur.messages, ...fresh], thinking: res.data.thinking } : cur
+    })
   }, [])
 
-  // Live bijwerken zolang het paneel open is of Grok Bot nadenkt.
+  // Live bijwerken: elke 3 s zolang Grok Bot nadenkt, anders elke 15 s zolang het paneel open is.
   useEffect(() => {
     if (!open && !state.thinking) return
-    const t = setInterval(refresh, 3000)
+    const t = setInterval(() => {
+      if (!document.hidden) void refresh()
+    }, state.thinking ? 3000 : 15_000)
     return () => clearInterval(t)
   }, [open, state.thinking, refresh])
 

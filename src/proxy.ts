@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { PATH_HEADER } from '@/lib/admin/live'
 
 /**
  * Beschermt /admin: ververst de Supabase-sessie en stuurt niet-ingelogde bezoekers naar /admin/login.
@@ -8,6 +9,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  request.headers.set(PATH_HEADER, request.nextUrl.pathname)
 
   let response = NextResponse.next({ request })
   response.headers.set('X-Robots-Tag', 'noindex, nofollow')
