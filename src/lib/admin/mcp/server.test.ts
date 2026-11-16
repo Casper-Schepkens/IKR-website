@@ -47,6 +47,8 @@ beforeEach(async () => {
   logs.length = 0
   vi.clearAllMocks()
   ;(globalThis as { __ikrLeads?: unknown }).__ikrLeads = []
+  ;(globalThis as { __ikrProdStore?: unknown }).__ikrProdStore = undefined
+  ;(globalThis as { __ikrClients?: unknown }).__ikrClients = []
   store = []
   chatStore = []
   session = {
@@ -394,5 +396,51 @@ describe('werkplek via MCP', () => {
     const full = (await call('werkplek_kaart', { kaart_id: id })).json as { status: string; actie: { status: string }; berichten: { van: string }[] }
     expect(full).toMatchObject({ status: 'besproken', actie: { status: 'uitgevoerd' }, berichten: [{ van: 'Grok Bot' }] })
     expect((await call('werkplek_kaart_aanmaken', { voor: 'jan', soort: 'vraag', titel: 'x', tekst: 'y' })).isError).toBe(true)
+  })
+})
+
+describe('productie via MCP (data-gedreven)', () => {
+  it('sjabloon, stappen per klant, ritme, intern, wijzigingslog en terugdraaien', async () => {
+    const names = (await client.listTools()).tools.map((t) => t.name)
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'workflow_sjabloon_lezen', 'workflow_sjabloon_bijwerken', 'productie_stap_toevoegen', 'productie_stap_verwijderen', 'productie_stap_verplaatsen',
+        'productie_eigenaar', 'productie_deadlineregel', 'productie_ritme', 'intern_taak_toevoegen', 'intern_taak_bijwerken', 'intern_taak_verwijderen',
+        'productie_wijzigingen', 'productie_terugdraaien',
+      ]),
+    )
+    await session.clients.create({ name: 'Chez Albert', freelancer: null, contract_end: null, contract_indefinite: true }, 'test')
+    const tpl = (await call('workflow_sjabloon_lezen', {})).json as { opstart: { stap: string }[]; per_draaidag: { stap: string; deadlineregel: string }[] }
+    expect(tpl.opstart[0].stap).toBe('contract')
+    expect(tpl.per_draaidag.find((x) => x.stap === 'briefing')!.deadlineregel).toBe('7 dagen voor draaidag')
+
+    expect((await call('productie_starten', { klant: 'albert', getekend: '2026-11-02' })).isError).toBe(false)
+    let r = await call('productie_stap_toevoegen', { klant: 'Chez Albert', fase: 'draaidag', titel: 'Thumbnails', eigenaar: 'Milan', regel: '2 dagen na draaidag', na_stap: 'draaidag' })
+    expect(r.isError).toBe(false)
+    expect((r.json as { per_draaidag: { stap: string }[] }).per_draaidag.map((x) => x.stap)).toContain('thumbnails')
+    expect((await call('productie_eigenaar', { klant: 'albert', stap: 'briefing', eigenaar: 'Casper' })).isError).toBe(false)
+    r = await call('productie_deadlineregel', { klant: 'albert', stap: 'briefing', regel: 'eerste woensdag' })
+    expect((r.json as { per_draaidag: { stap: string; deadlineregel: string; eigenaar: string }[] }).per_draaidag.find((x) => x.stap === 'briefing')).toMatchObject({ eigenaar: 'Casper', deadlineregel: 'eerste woensdag van de maand' })
+    r = await call('productie_deadlineregel', { klant: 'albert', stap: 'briefing', regel: 'ooit' })
+    expect(r.isError).toBe(true)
+    expect(r.text).toMatch(/Snap de regel/)
+    expect((await call('productie_stap_verplaatsen', { klant: 'albert', stap: 'thumbnails', plaats: 1 })).isError).toBe(false)
+    expect((await call('productie_stap_verwijderen', { klant: 'albert', stap: 'revisie' })).isError).toBe(false)
+    expect((await call('productie_ritme', { klant: 'albert', ritme: 'elke 2e zondag' })).text).toMatch(/elke tweede zondag/)
+
+    expect((await call('intern_taak_toevoegen', { titel: 'Facturen nakijken', eigenaar: 'casper', planning: 'elke vrijdag' })).isError).toBe(false)
+    const intern = (await call('intern_taak_bijwerken', { taak: 'facturen', af: true })).json as { taak: string; laatst_af: string | null }[]
+    expect(intern[0]).toMatchObject({ taak: 'Facturen nakijken' })
+    expect(intern[0].laatst_af).not.toBeNull()
+
+    const log = (await call('productie_wijzigingen', { klant: 'albert' })).json as { wijziging_id: string; wat: string; wie: string }[]
+    expect(log[0]).toMatchObject({ wie: 'grokbot', wat: 'Chez Albert: ritme elke tweede zondag van de maand' })
+    const removal = log.find((x) => /revisie|Revisieronde/i.test(x.wat))!
+    // Terugdraaien van een oudere wijziging lukt, zolang die rijen sindsdien niet meer veranderden.
+    r = await call('productie_terugdraaien', { wijziging_id: removal.wijziging_id })
+    expect(r.text).toMatch(/Teruggedraaid/)
+    const klant = (await call('productie_klant', { klant: 'albert' })).json as { stappen_van_deze_klant: { per_draaidag: { stap: string }[] } }
+    expect(klant.stappen_van_deze_klant.per_draaidag.map((x) => x.stap)).toContain('revisie')
+    expect((await call('intern_taak_verwijderen', { taak: 'facturen' })).isError).toBe(false)
   })
 })

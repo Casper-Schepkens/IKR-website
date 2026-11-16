@@ -8,7 +8,7 @@ import { memoryCalls, supabaseCalls } from '../calls/repo'
 import { memoryClients, supabaseClients } from '../clients/repo'
 import { memorySops, supabaseSops } from '../sops/repo'
 import { memoryProduction, supabaseProduction } from '../production/repo'
-import { myNextSteps } from '../production/core'
+import { myInternalItems, myNextSteps, type InternalItem } from '../production/core'
 import { loadProduction } from '../production/service'
 import { paymentChecks } from '../finance/core'
 import { loadClients as financeClients, loadTxs } from '../finance/store'
@@ -47,8 +47,8 @@ export async function notificationsFor(email: string): Promise<Counts> {
     weekly: owner ? countOverdueTodos(todos, weeklies, owner) : 0,
   }
   if (owner) {
-    const prod = await safe(loadProduction(r.production, clients.map((c) => ({ id: c.id, name: c.name })), day), { list: [], notStarted: [] })
-    counts.productie = myNextSteps(prod.list, owner).filter((x) => x.step.overdue).length
+    const prod = await safe(loadProduction(r.production, clients.map((c) => ({ id: c.id, name: c.name })), day), { list: [], notStarted: [], internal: [] as InternalItem[], tasks: [], template: null })
+    counts.productie = myNextSteps(prod.list, owner).filter((x) => x.step.overdue).length + myInternalItems(prod.internal, owner).filter((i) => i.overdue).length
   }
   if (sales) {
     const [drafts, calls, leads, unlinked, txs, finClients] = await Promise.all([
