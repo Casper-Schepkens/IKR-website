@@ -7,19 +7,15 @@ import {
   removeShootDayAction,
   setAnchorAction,
   setProductionActiveAction,
+  setRhythmAction,
   setStartPointAction,
   startProductionAction,
 } from '@/app/admin/production-actions'
-import {
-  CYCLE,
-  isNextCycle,
-  ONBOARDING,
-  WHO_LABEL,
-  type Anchor,
-  type ClientProduction,
-} from '@/lib/admin/production/core'
+import { byPosition, isNextCycle, WHO_LABEL, type ClientProduction, type StepDef } from '@/lib/admin/production/core'
+import { rhythmLabel } from '@/lib/admin/production/rules'
 import { buttonClass, Card, Empty, input, muted, Pill, Spinner, Title } from '../ui'
 import { DuePill, StepRow } from './shared'
+import { StepDefEditor } from './StepDefEditor'
 import { cn } from '@/utilities/ui'
 
 type Run = (fn: () => Promise<{ ok: boolean; error?: string }>) => void
@@ -105,6 +101,7 @@ function ClientRow({ cp, today }: { cp: ClientProduction; today: string }) {
           </span>
           <span className="font-bold">{cp.name}</span>
           {!cp.production.active && <Pill tone="neutral">gepauzeerd</Pill>}
+          {cp.production.rhythm && <Pill tone="light">{rhythmLabel(cp.production.rhythm)}</Pill>}
         </span>
         <span className="flex min-w-0 flex-col gap-1">
           <span className="truncate text-sm">{cp.phase}</span>
@@ -121,7 +118,7 @@ function ClientRow({ cp, today }: { cp: ClientProduction; today: string }) {
         <span className="flex flex-wrap items-center gap-1.5 md:justify-end">
           {n ? (
             <>
-              <span className={cn('text-xs', muted)}>{WHO_LABEL[n.who]}</span>
+              <span className={cn('text-xs', muted)}>{WHO_LABEL[n.owner]}</span>
               <DuePill due={n.due_on} today={today} />
             </>
           ) : (
@@ -147,7 +144,7 @@ function DateField({
   time,
 }: {
   clientId: string
-  anchor: Anchor
+  anchor: 'getekend' | 'kickoff' | 'strategie' | 'draaidag'
   label: string
   value: string | null
   cycle?: number
@@ -200,10 +197,13 @@ function DateField({
 function Detail({ cp, today }: { cp: ClientProduction; today: string }) {
   const { pending, error, run } = useRun()
   const p = cp.production
+  const [editSteps, setEditSteps] = useState(false)
+  const onb = cp.defs.filter((d) => d.phase === 'opstart').sort(byPosition)
+  const cyc = cp.defs.filter((d) => d.phase === 'draaidag').sort(byPosition)
   const points = [
-    ...ONBOARDING.map((s) => ({ v: s.key, l: `Opstart: ${s.title}` })),
+    ...onb.map((s) => ({ v: s.key, l: `Opstart: ${s.title}` })),
     ...Array.from({ length: Math.max(1, cp.cycles.length) + 1 }, (_, i) => i + 1).flatMap((no) =>
-      CYCLE.map((s) => ({ v: `${s.key}|${no}`, l: `Draaidag ${no}: ${s.title}` })),
+      cyc.map((s) => ({ v: `${s.key}|${no}`, l: `Draaidag ${no}: ${s.title}` })),
     ),
   ]
   const current = cp.next
@@ -227,6 +227,21 @@ function Detail({ cp, today }: { cp: ClientProduction; today: string }) {
           label="Strategiemeeting"
           value={p.strategy_on}
         />
+      </div>
+
+      <RhythmField clientId={cp.client_id} value={cp.production.rhythm ? rhythmLabel(cp.production.rhythm) : ''} />
+
+      <div className="flex flex-col gap-2 rounded-2xl border border-[#E6DFD2] bg-white/40 p-3">
+        <button type="button" onClick={() => setEditSteps(!editSteps)} aria-expanded={editSteps} className="flex items-center gap-2 text-left text-sm font-bold">
+          <span aria-hidden className={cn('inline-block text-xs transition-transform', editSteps && 'rotate-90')}>
+            ▸
+          </span>
+          Stappen van {cp.name} aanpassen
+          <span className={cn('font-normal', muted)}>
+            ({cp.fromTemplate ? 'nog het sjabloon' : 'eigen kopie van het sjabloon'}: naam, eigenaar, volgorde, deadlineregel)
+          </span>
+        </button>
+        {editSteps && <StepDefEditor clientId={cp.client_id} defs={cp.defs as StepDef[]} />}
       </div>
 
       <form
@@ -344,6 +359,56 @@ function Detail({ cp, today }: { cp: ClientProduction; today: string }) {
         )}
       </div>
     </div>
+  )
+}
+
+function RhythmField({ clientId, value }: { clientId: string; value: string }) {
+  const { pending, error, run } = useRun()
+  return (
+    <form
+      className="flex flex-wrap items-end gap-2"
+      onSubmit={(e) => {
+        e.preventDefault()
+        const data = new FormData(e.currentTarget)
+        run(() => setRhythmAction(clientId, data))
+      }}
+    >
+      <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs font-semibold">
+        Ritme van de draaidagen (draaidag af = de volgende wordt vanzelf gepland)
+        <input name="rhythm" defaultValue={value} placeholder="elke 2e zondag, elke 3 weken of geen" className={cn(input, 'min-h-9 py-1 text-sm')} />
+      </label>
+      <button type="submit" disabled={pending} className={buttonClass('soft', true)}>
+        Bewaar ritme
+      </button>
+      {pending && <Spinner />}
+      {error && (
+        <span role="alert" className="w-full text-xs text-[#A3470F]">
+          {error}
+        </span>
+      )}
+    </form>
+  )
+}
+
+/** Het workflow-sjabloon: de standaardstappen voor klanten die vanaf nu starten. */
+export function TemplateCard({ steps, name }: { steps: StepDef[]; name: string }) {
+  return (
+    <Card className="flex flex-col gap-2">
+      <details>
+        <summary className="cursor-pointer">
+          <Title as="h2" className="m-0 inline text-2xl">
+            Workflow-sjabloon
+          </Title>
+          <span className={cn('ml-2 text-sm', muted)}>
+            {name} · {steps.length} stappen · voor klanten die vanaf nu starten
+          </span>
+        </summary>
+        <p className={cn('m-0 mt-2 mb-3 text-sm', muted)}>
+          Elke klant krijgt bij de start een eigen kopie; die pas je aan bij de klant zelf. Wijzigingen hier gelden niet voor klanten die al gestart zijn.
+        </p>
+        <StepDefEditor clientId={null} defs={steps} />
+      </details>
+    </Card>
   )
 }
 

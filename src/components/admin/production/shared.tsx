@@ -88,7 +88,7 @@ export function StepRow({
       {label && (
         <span className={cn('text-[11px] font-bold tracking-wide uppercase', muted)}>{label}</span>
       )}
-      {s.key === 'draaidag_plannen' && !s.done ? (
+      {s.done_when === 'draaidag' && !s.done ? (
         <form
           className="flex flex-wrap items-center gap-2"
           onSubmit={(e) => {
@@ -101,7 +101,7 @@ export function StepRow({
             {s.title}
             {s.cycle && ` ${s.cycle.no}`}
             {showWho && (
-              <span className={cn('ml-1.5 text-xs font-normal', muted)}>· {WHO_LABEL[s.who]}</span>
+              <span className={cn('ml-1.5 text-xs font-normal', muted)}>· {WHO_LABEL[s.owner]}</span>
             )}
           </span>
           <input type="hidden" name="cycle" value={cycleNo ?? ''} />
@@ -145,7 +145,7 @@ export function StepRow({
           <span className={cn('min-w-0 flex-1 text-sm', !s.done && 'font-semibold')}>
             {s.title}
             {showWho && (
-              <span className={cn('ml-1.5 text-xs font-normal', muted)}>· {WHO_LABEL[s.who]}</span>
+              <span className={cn('ml-1.5 text-xs font-normal', muted)}>· {WHO_LABEL[s.owner]}</span>
             )}
             {s.link && (
               <a
