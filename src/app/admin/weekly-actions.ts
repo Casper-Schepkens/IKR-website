@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/admin/session'
 import { isoDay } from '@/lib/admin/format'
-import { makeFilePublic, removeFilePermission, shareWithDomain, startDriveUpload } from '@/lib/admin/google'
+import { makeFilePublic, removeFilePermission, assertDashboardUpload, shareWithDomain, startDriveUpload } from '@/lib/admin/google'
 import { scheduleWeekly, syncWeeklyCalendar } from '@/lib/admin/weekly/schedule'
 import { CONTACT_EMAIL, OWNERS, type Owner } from '@/lib/admin/weekly/types'
 import { currentWeekly } from '@/lib/admin/weekly/board'
@@ -125,6 +125,7 @@ export async function createPinAction(form: FormData) {
     if (fileId && !/^[\w-]{10,}$/.test(fileId)) throw new Error('Ongeldig bestand.')
     const title = str(form, 'title') || fileName
     if (!title) throw new Error('Geef het kaartje een titel.')
+    if (fileId) await assertDashboardUpload(CONTACT_EMAIL, fileId, 'IKR Dashboard – Prikbord')
     const rawUrl = fileId ? await shareWithDomain(CONTACT_EMAIL, fileId, 'iknowright.be') : str(form, 'url')
     const url = safeUrl(rawUrl)
     if (rawUrl && !url) throw new Error('Die link klopt niet (enkel http/https).')
@@ -225,7 +226,7 @@ export async function startWeeklyRecordingAction(id: string, mimeType: string, o
 export async function finishWeeklyRecordingAction(id: string, fileId: string) {
   return attempt(async () => {
     const session = await requireAdmin()
-    if (!/^[\w-]{10,}$/.test(fileId)) throw new Error('Ongeldig bestand.')
+    await assertDashboardUpload(CONTACT_EMAIL, fileId, 'IKR Dashboard – Weeklies')
     const url = await shareWithDomain(CONTACT_EMAIL, fileId, 'iknowright.be')
     await session.weekly.updateWeekly(id, { recording_url: url, recording_file_id: fileId })
     // Naar Fireflies: tijdelijk "iedereen met de link", zodat Fireflies de opname kan ophalen. Zodra het

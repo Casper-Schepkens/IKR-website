@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { requireSales } from '@/lib/admin/session'
 import { addBotToMeeting, isBotInMeeting, isFirefliesConfigured, uploadAudio } from '@/lib/admin/fireflies'
-import { makeFilePublic, removeFilePermission, shareWithDomain, startDriveUpload } from '@/lib/admin/google'
+import { makeFilePublic, removeFilePermission, assertDashboardUpload, shareWithDomain, startDriveUpload } from '@/lib/admin/google'
 import { fmtDate, fmtTime, isoDay } from '@/lib/admin/format'
 import { cancelCall, finishCall, scheduleCall, syncCallsFromCalendar } from '@/lib/admin/calls/service'
 import { CALL_KIND_LABELS, cleanPptUrl, insertMeetLink, nextBotContext, type CallKind } from '@/lib/admin/calls/types'
@@ -166,7 +166,7 @@ export async function startCallRecordingAction(id: string, mimeType: string, ori
 export async function finishCallRecordingAction(id: string, fileId: string) {
   return attempt(async () => {
     const { calls } = await requireSales()
-    if (!/^[\w-]{10,}$/.test(fileId)) throw new Error('Ongeldig bestand.')
+    await assertDashboardUpload(CONTACT_EMAIL, fileId, 'IKR Dashboard – Calls')
     const url = await shareWithDomain(CONTACT_EMAIL, fileId, 'iknowright.be')
     await calls.update(id, { recording_url: url, recording_file_id: fileId })
     // Naar Fireflies: tijdelijk "iedereen met de link" zodat Fireflies de opname kan ophalen; de link wordt
