@@ -108,8 +108,10 @@ export function registerLeadTools(ctx: ToolCtx) {
     await leads.markLost(l.id, reden, notitie ?? null)
     return `${l.name} staat op lost (${LOST_REASON_LABELS[reden]}).`
   })
-  tool('lead_verwijderen', 'Geen lead (bv. een freelancer): verwijderen zonder lost te zetten. Mails van dit adres verschijnen niet meer in de inbox.', { lead: z.string() }, false, async ({ lead }) => {
-    const l = await resolveLead(lead)
+  tool('lead_verwijderen', 'Geen lead (bv. een freelancer): verwijderen zonder lost te zetten. Enkel met het exacte id of e-mailadres (nooit op naam). Mails van dit adres verschijnen niet meer in de inbox. Lukt niet als de lead calls of verstuurde mails heeft.', { lead: z.string().describe('id of e-mailadres') }, false, async ({ lead }) => {
+    const q = lead.trim().toLowerCase()
+    const l = (await leads.list()).find((x) => x.id === lead.trim() || (x.email && x.email.toLowerCase() === q))
+    if (!l) throw new Error('Geef het exacte id of e-mailadres van de lead (zie lead_fiche); verwijderen op naam kan niet.')
     await leads.removeNotALead(l.id)
     return `${l.name} is verwijderd.`
   })

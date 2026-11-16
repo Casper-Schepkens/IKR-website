@@ -22,8 +22,9 @@ import { cn } from '@/utilities/ui'
 
 export const metadata = { title: 'Lead' }
 
-export default async function LeadPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function LeadPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ fout?: string }> }) {
   const { id } = await params
+  const { fout } = await searchParams
   const { leads, drafts } = await requireSales()
   const [lead, concepts] = await Promise.all([leads.get(id), drafts.list({ leadId: id, status: 'concept' })])
   if (!lead) notFound()
@@ -49,6 +50,11 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
         </Link>{' '}
         / <span className="font-semibold text-ikr-navy">{lead.name}</span>
       </nav>
+      {fout && (
+        <p role="alert" className="m-0 rounded-2xl bg-[#FCE3D2] p-4 text-sm text-[#6E2E09]">
+          {fout}
+        </p>
+      )}
 
       <div className="flex flex-col gap-2">
         <Title as="h1" className="m-0 text-5xl leading-[0.9] md:text-[72px] md:leading-[0.88]">

@@ -37,7 +37,7 @@ export async function loadTxs(): Promise<Tx[]> {
   if (inMemory()) return mem().txs
   const out: Tx[] = []
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await db().from('finance_transactions').select('odoo_id, date, amount, counterparty, description, category, client_id, manual').order('date').range(from, from + 999)
+    const { data, error } = await db().from('finance_transactions').select('odoo_id, date, amount, counterparty, description, category, client_id, manual, rule_id').order('date').range(from, from + 999)
     if (error) throw new Error(error.message)
     out.push(...(data ?? []).map((t) => ({ ...t, amount: Number(t.amount) }) as Tx))
     if (!data || data.length < 1000) break
@@ -47,7 +47,7 @@ export async function loadTxs(): Promise<Tx[]> {
 
 export async function loadRules(): Promise<(Rule & { id: string })[]> {
   if (inMemory()) return mem().rules
-  const { data, error } = await db().from('finance_rules').select('id, pattern, category, client_id, priority').order('priority', { ascending: false })
+  const { data, error } = await db().from('finance_rules').select('id, pattern, category, client_id, priority, field').order('priority', { ascending: false })
   if (error) throw new Error(error.message)
   return (data ?? []) as (Rule & { id: string })[]
 }
@@ -81,7 +81,7 @@ export async function syncFinance(opts: { force?: boolean } = {}) {
       const c = classify(l, rules, clients)
       if (!prev) nieuw++
       else if (prev.category !== c.category || prev.client_id !== c.client_id) herindeeld++
-      rows.push({ odoo_id: l.id, date: l.date, amount: l.amount, counterparty: l.counterparty, description: l.description, category: c.category, client_id: c.client_id, manual: false })
+      rows.push({ odoo_id: l.id, date: l.date, amount: l.amount, counterparty: l.counterparty, description: l.description, category: c.category, client_id: c.client_id, rule_id: c.rule_id, manual: false })
     }
     const now = new Date().toISOString()
     if (inMemory()) Object.assign(mem(), { txs: rows, synced_at: now, balance })
@@ -106,7 +106,7 @@ export async function setTxCategory(odooId: number, category: string, clientId: 
   if (!tx) throw new Error('Transactie niet gevonden.')
   if (inMemory()) Object.assign(tx, { category, client_id: clientId, manual: true })
   else {
-    const { error } = await db().from('finance_transactions').update({ category, client_id: clientId, manual: true }).eq('odoo_id', odooId)
+    const { error } = await db().from('finance_transactions').update({ category, client_id: clientId, rule_id: null, manual: true }).eq('odoo_id', odooId)
     if (error) throw new Error(error.message)
   }
   if (opts.makeRule) {
@@ -117,7 +117,7 @@ export async function setTxCategory(odooId: number, category: string, clientId: 
 }
 
 export async function addRule(rule: Rule, by?: string) {
-  const row = { pattern: rule.pattern.trim(), category: rule.category, client_id: rule.client_id ?? null, priority: rule.priority ?? 10 }
+  const row = { pattern: rule.pattern.trim(), category: rule.category, client_id: rule.client_id ?? null, priority: rule.priority ?? 10, field: rule.field ?? 'alles' }
   if (inMemory()) mem().rules.push({ ...row, id: crypto.randomUUID() })
   else {
     const { error } = await db().from('finance_rules').insert({ ...row, created_by: by ?? null })
@@ -129,8 +129,8 @@ export async function addRule(rule: Rule, by?: string) {
 /** Na een nieuwe regel: alle niet-handmatige transacties opnieuw indelen (zonder Odoo). */
 export async function reclassify() {
   const [txs, rules, clients] = await Promise.all([loadTxs(), loadRules(), loadClients()])
-  const changed = txs.filter((t) => !t.manual).map((t) => ({ t, c: classify(t, rules, clients) })).filter(({ t, c }) => t.category !== c.category || t.client_id !== c.client_id)
+  const changed = txs.filter((t) => !t.manual).map((t) => ({ t, c: classify(t, rules, clients) })).filter(({ t, c }) => t.category !== c.category || t.client_id !== c.client_id || (t.rule_id ?? null) !== c.rule_id)
   if (inMemory()) changed.forEach(({ t, c }) => Object.assign(t, { category: c.category, client_id: c.client_id }))
-  else for (const { t, c } of changed) await db().from('finance_transactions').update({ category: c.category, client_id: c.client_id }).eq('odoo_id', t.odoo_id)
+  else for (const { t, c } of changed) await db().from('finance_transactions').update({ category: c.category, client_id: c.client_id, rule_id: c.rule_id }).eq('odoo_id', t.odoo_id)
   return changed.length
 }

@@ -163,7 +163,12 @@ export async function removeNotALeadAction(id: string) {
 
 export async function removeNotALeadAndBackAction(id: string) {
   const { leads } = await requireSales()
-  await leads.removeNotALead(id)
+  try {
+    await leads.removeNotALead(id)
+  } catch (e) {
+    // Bv. de lead heeft calls of verstuurde mails: terug naar de fiche met de reden.
+    redirect(`/admin/sales/leads/${id}?fout=${encodeURIComponent(e instanceof Error ? e.message : 'Verwijderen mislukt.')}`)
+  }
   revalidatePath('/admin/sales')
   redirect('/admin/sales')
 }

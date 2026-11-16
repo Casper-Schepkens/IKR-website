@@ -29,6 +29,9 @@ export function supabaseClients(db: SupabaseClient): ClientsRepo {
       check(await db.from('clients').update({ ...input, updated_at: new Date().toISOString() }).eq('id', id))
     },
     async remove(id) {
+      // Productie (stappen, draaidagen, afvinkingen) niet stil mee wissen.
+      const { count } = await db.from('production').select('client_id', { count: 'exact', head: true }).eq('client_id', id)
+      if (count) throw new Error('Deze klant heeft een productie. Zet die eerst op pauze of verwijder ze op Productie; zo gaat er geen historiek verloren.')
       check(await db.from('clients').delete().eq('id', id))
     },
   }
