@@ -39,7 +39,7 @@ export function FinanceChart({ data }: { data: { maand: string; omzet: number; k
             </div>
           ))}
         </div>
-        <div className="mt-1 flex gap-[6px] text-[11px]" aria-hidden="true">
+        <div className="mt-1 flex gap-[6px] text-xs" aria-hidden="true">
           {data.map((d) => (
             <span key={d.maand} className={cn('flex-1 text-center', muted)}>
               {label(d.maand)}
@@ -60,7 +60,7 @@ export function FinanceChart({ data }: { data: { maand: string; omzet: number; k
         )}
       </div>
       <details className="text-sm">
-        <summary className={cn('cursor-pointer text-xs', muted)}>Als tabel</summary>
+        <summary className={cn('flex min-h-11 cursor-pointer items-center text-sm', muted)}>Als tabel</summary>
         <table className="mt-2 w-full border-collapse text-left">
           <thead>
             <tr className={cn('text-xs', muted)}>

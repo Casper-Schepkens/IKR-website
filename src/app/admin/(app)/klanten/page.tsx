@@ -33,7 +33,7 @@ export default async function ClientsPage() {
             <Empty>Nog geen klanten. Voeg er hieronder een toe (of vraag het aan Grok Bot).</Empty>
           </div>
         ) : (
-          <table className="w-full min-w-[520px] border-collapse text-left text-sm">
+          <table className="ikr-stack w-full min-w-[520px] border-collapse text-left text-sm">
             <thead>
               <tr className={cn('text-xs', muted)}>
                 <th scope="col" className="px-6 py-4 font-semibold">Klant</th>

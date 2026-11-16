@@ -129,7 +129,7 @@ export function ClientFields({ client }: { client?: Client }) {
             Bedragen en looptijd afleiden uit het contract in de Drive (je krijgt een voorstel)
           </label>
           <details>
-            <summary className="cursor-pointer text-sm font-semibold">
+            <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold">
               Bedragen zelf invullen
             </summary>
             <div className="mt-3">{extra}</div>

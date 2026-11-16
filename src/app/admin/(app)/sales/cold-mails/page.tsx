@@ -129,7 +129,7 @@ async function ColdMailStats({ leads, selection }: { leads: LeadsRepo; selection
       </p>
 
       <Card className="relative overflow-x-auto p-0">
-        <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+        <table className="ikr-stack w-full min-w-[640px] border-collapse text-left text-sm">
           <thead>
             <tr className={cn('text-xs', muted)}>
               <th scope="col" className="px-6 py-4 font-semibold">Sequence</th>

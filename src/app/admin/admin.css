@@ -89,3 +89,60 @@
     animation-duration: 0s;
   }
 }
+
+/* Toegankelijkheid: plaatshoudertekst leesbaar (min. 4,5:1 op crème), ook in velden met eigen klassen. */
+.ikr-admin ::placeholder {
+  color: #69617b;
+  opacity: 1;
+}
+
+/* Zichtbare focus voor wie met het toetsenbord werkt: knoppen, links en het menu (ook op de donkere zijbalk). */
+.ikr-admin :is(a, button, summary, [role='button'], select):focus-visible {
+  outline: 2px solid #0fc1de;
+  outline-offset: 2px;
+  border-radius: 9999px;
+}
+.ikr-admin .ikr-nav:focus-visible {
+  border-radius: 0.75rem;
+}
+
+/*
+ * Gsm: brede tabellen (leads, wachtlijst, cold mails, financiën, klanten) als gestapelde kaartjes in plaats
+ * van zijwaarts te scrollen. De eerste cel (naam) blijft bovenaan; cellen met data-label tonen hun kolomnaam.
+ */
+@media (max-width: 639px) {
+  .ikr-admin table.ikr-stack {
+    min-width: 0 !important;
+  }
+  .ikr-admin table.ikr-stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .ikr-admin table.ikr-stack tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    padding: 0.75rem 1rem;
+  }
+  .ikr-admin table.ikr-stack td {
+    display: block;
+    padding: 0 !important;
+    max-width: 100%;
+  }
+  .ikr-admin table.ikr-stack td:first-child {
+    flex-basis: 100%;
+  }
+  .ikr-admin table.ikr-stack td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.75rem;
+    color: #5e5670;
+  }
+  .ikr-admin table.ikr-stack .ikr-stack-hide {
+    display: none;
+  }
+}

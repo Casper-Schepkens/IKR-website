@@ -169,7 +169,7 @@ export default async function LeadsPage({
               <Empty>{view === 'open' ? 'Nog geen lopende leads.' : 'Niets in deze lijst.'}</Empty>
             </div>
           ) : (
-            <table className="w-full min-w-[760px] border-collapse text-left text-sm">
+            <table className="ikr-stack w-full min-w-[760px] border-collapse text-left text-sm">
               <thead>
                 <tr className={cn('text-xs', muted)}>
                   <th scope="col" className="px-6 py-4 font-semibold">Lead</th>
@@ -195,7 +195,7 @@ export default async function LeadsPage({
                           {STAGE_LABELS[l.stage]}
                         </Pill>
                       </td>
-                      <td className={cn('max-w-[360px] px-3 py-3', muted)}>
+                      <td data-label="Volgende actie" className={cn('max-w-[360px] px-3 py-3', muted)}>
                         <span className="line-clamp-2">{l.next_action ?? '—'}</span>
                       </td>
                       <td className="px-3 py-3 whitespace-nowrap">
@@ -207,7 +207,7 @@ export default async function LeadsPage({
                           '—'
                         )}
                       </td>
-                      <td className="px-6 py-3 text-right">
+                      <td className="ikr-stack-hide px-6 py-3 text-right">
                         <Link href={`/admin/sales/leads/${l.id}`} className={buttonClass('soft', true)}>
                           Open lead
                         </Link>

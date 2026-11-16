@@ -90,7 +90,7 @@ export function CommandPalette() {
           }}
           placeholder="Ga naar… (klant, pagina, lead, SOP)"
           aria-label="Ga naar"
-          className="w-full border-0 border-b border-[#E6DFD2] bg-transparent px-5 py-4 text-lg text-ikr-navy outline-none placeholder:text-[#8A8296]"
+          className="w-full border-0 border-b border-[#E6DFD2] bg-transparent px-5 py-4 text-lg text-ikr-navy outline-none placeholder:text-[#69617B]"
         />
         <ul role="listbox" aria-label="Resultaten" className="m-0 max-h-[50vh] list-none overflow-y-auto p-2">
           {error && <li className="px-3 py-2 text-sm text-[#A3470F]">{error}</li>}
