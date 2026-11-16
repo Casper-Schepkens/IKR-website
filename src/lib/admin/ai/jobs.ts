@@ -67,7 +67,7 @@ export async function openJobs(limit = 10): Promise<AiJob[]> {
 export async function completeJob(id: string, output: unknown, engine: string) {
   const job = await getJob(id)
   if (!job) throw new Error('Taak niet gevonden.')
-  if (job.status === 'done' || job.status === 'dismissed') throw new Error('Deze taak is al afgehandeld.')
+  if (job.status === 'done' || job.status === 'dismissed') throw new Error(JOB_ALREADY_HANDLED)
   const handler = HANDLERS[job.type]
   // Ontbrekende velden (bv. geen telefoonnummer) als leeg beschouwen.
   const shape = (handler.schema as unknown as { shape?: Record<string, unknown> }).shape
@@ -78,13 +78,23 @@ export async function completeJob(id: string, output: unknown, engine: string) {
   const parsed = handler.schema.safeParse(filled)
   if (!parsed.success) throw new Error(`Resultaat klopt niet met de gevraagde vorm: ${parsed.error.message}`)
   const result = signMailOutput(job.type, parsed.data as Record<string, unknown>)
-  const { error } = await db()
+  // Atomair afronden: enkel wie de taak nog open vindt, voert afterDone uit (geen dubbele notities of kaarten).
+  const { data, error } = await db()
     .from('ai_jobs')
     .update({ status: 'done', output: result, engine, model: engine, cost_usd: 0, error: null, finished_at: new Date().toISOString() })
     .eq('id', id)
+    .in('status', OPEN_STATUSES)
+    .select('id')
   if (error) throw new Error(error.message)
+  if (!data?.length) throw new Error(JOB_ALREADY_HANDLED)
   await handler.afterDone?.(job.input, result).catch((e) => console.error('[ai] afterDone', e))
 }
+
+export const JOB_ALREADY_HANDLED = 'Deze taak is al afgehandeld.'
+/** Statussen waarin een taak nog afgerond mag worden. */
+const OPEN_STATUSES = ['pending', 'running', 'error', 'waiting_limit']
+/** Een taak die zo lang op 'running' staat, is achtergelaten (functie gestopt) en mag opnieuw opgepikt worden. */
+export const STALE_RUNNING_MS = 5 * 60_000
 
 /** USD per miljoen tokens (standaardtarief). Cache schrijven = 1,25× input. */
 const PRICES: Record<string, { input: number; output: number; cacheRead: number }> = {
@@ -137,6 +147,7 @@ export async function closeChatJob(id: string, userId: string, by: string) {
     .from('ai_jobs')
     .update({ status: 'done', engine: by, model: by, cost_usd: 0, error: null, finished_at: new Date().toISOString() })
     .eq('id', id)
+    .in('status', OPEN_STATUSES)
   if (error) throw new Error(error.message)
 }
 
@@ -160,11 +171,13 @@ let client: Anthropic | null = null
 export async function runJob(id: string) {
   if (aiEngine() !== 'api') return
   // Enkel een taak die nog wacht oppikken (voorkomt dubbel werk).
+  // Ook een taak die al 5 minuten op 'running' hangt (de vorige run viel weg) mag opnieuw.
+  const stale = new Date(Date.now() - STALE_RUNNING_MS).toISOString()
   const claimed = await db()
     .from('ai_jobs')
     .update({ status: 'running', started_at: new Date().toISOString(), engine: 'api', error: null })
     .eq('id', id)
-    .in('status', ['pending', 'error', 'waiting_limit'])
+    .or(`status.in.(pending,error,waiting_limit),and(status.eq.running,started_at.lt.${stale})`)
     .select('*')
     .maybeSingle()
   const job = claimed.data as AiJob | null
@@ -207,6 +220,7 @@ export async function runJob(id: string) {
         finished_at: new Date().toISOString(),
       })
       .eq('id', id)
+      .eq('status', 'running')
     await handler.afterDone?.(job.input, output).catch((e) => console.error('[ai] afterDone', e))
   } catch (e) {
     const limit = e instanceof Anthropic.RateLimitError

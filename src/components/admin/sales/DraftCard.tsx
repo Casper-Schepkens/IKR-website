@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { deleteDraftAction, sendDraftAction, updateDraftAction } from '@/app/admin/actions'
+import { deleteDraftAction, resolveInterruptedSendAction, sendDraftAction, updateDraftAction } from '@/app/admin/actions'
 import { buttonClass, Card, input, label, muted, Pill, Spinner } from '../ui'
 import { cn } from '@/utilities/ui'
 import { useFollowServer } from '../follow-server'
@@ -29,6 +29,8 @@ export type DraftCardProps = {
   followUpOn: string | null
   /** Wie herschrijft: "Grokbot" of "De AI" */
   rewriter: string
+  /** Gezet als een verzending begon maar niet afgerond werd (sent_at zonder status verstuurd). */
+  sendingSince?: string | null
 }
 
 /** Mailconcept (bv. van Grokbot): Casper bewerkt, verstuurt of verwijdert het. */
@@ -54,6 +56,32 @@ export function DraftCard(d: DraftCardProps) {
     })
 
   if (gone) return <p className={cn('m-0 text-sm', muted)}>{gone}</p>
+
+  if (d.sendingSince)
+    return (
+      <Card className="flex flex-col gap-3">
+        <p className="m-0 text-sm font-semibold">
+          {d.subject} <span className={cn('font-normal', muted)}>aan {d.to}</span>
+        </p>
+        <p className="m-0 text-sm">
+          Het versturen begon om {new Date(d.sendingSince).toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Brussels' })} maar
+          werd niet afgerond. Kijk in Gmail bij Verzonden of de mail vertrokken is.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" disabled={pending} className={buttonClass('navy', true)} onClick={() => run(() => resolveInterruptedSendAction(d.id, true), 'Gemarkeerd als verstuurd.')}>
+            Hij is vertrokken
+          </button>
+          <button type="button" disabled={pending} className={buttonClass('soft', true)} onClick={() => run(() => resolveInterruptedSendAction(d.id, false))}>
+            Niet vertrokken: terug naar concept
+          </button>
+        </div>
+        {error && (
+          <span role="alert" className="text-sm font-medium text-[#A3470F]">
+            {error}
+          </span>
+        )}
+      </Card>
+    )
 
   return (
     <Card className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">

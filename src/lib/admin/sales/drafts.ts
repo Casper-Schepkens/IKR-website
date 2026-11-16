@@ -55,6 +55,13 @@ export interface DraftsRepo {
   /** Enkel concepten (status 'concept'); geeft false als er niets aangepast werd. */
   update(id: string, patch: DraftPatch): Promise<boolean>
   remove(id: string): Promise<boolean>
+  /**
+   * Claimt een concept om te versturen (zet sent_at, status blijft 'concept'). Geeft het concept terug als
+   * deze aanroep de claim kreeg, anders null: dan is het al verstuurd of wordt het net verstuurd.
+   */
+  claimSend(id: string, by: string): Promise<MailDraft | null>
+  /** Versturen mislukt: de claim loslaten zodat Casper het opnieuw kan proberen. */
+  releaseSend(id: string): Promise<void>
   markSent(id: string, by: string): Promise<void>
 }
 
@@ -80,13 +87,29 @@ export function supabaseDrafts(db: SupabaseClient): DraftsRepo {
     },
     async update(id, patch) {
       const rows = check(
-        await db.from('mail_drafts').update({ ...signDraft(patch), updated_at: new Date().toISOString() }).eq('id', id).eq('status', 'concept').select('id'),
+        await db.from('mail_drafts').update({ ...signDraft(patch), updated_at: new Date().toISOString() }).eq('id', id).eq('status', 'concept').is('sent_at', null).select('id'),
       )
       return Boolean(rows?.length)
     },
     async remove(id) {
-      const rows = check(await db.from('mail_drafts').delete().eq('id', id).eq('status', 'concept').select('id'))
+      const rows = check(await db.from('mail_drafts').delete().eq('id', id).eq('status', 'concept').is('sent_at', null).select('id'))
       return Boolean(rows?.length)
+    },
+    async claimSend(id, by) {
+      // Eén atomaire update: enkel wie de rij nog als vrij concept vindt, krijgt ze terug.
+      const rows = check(
+        await db
+          .from('mail_drafts')
+          .update({ sent_at: new Date().toISOString(), sent_by: by })
+          .eq('id', id)
+          .eq('status', 'concept')
+          .is('sent_at', null)
+          .select('*'),
+      ) as MailDraft[] | null
+      return rows?.[0] ?? null
+    },
+    async releaseSend(id) {
+      check(await db.from('mail_drafts').update({ sent_at: null, sent_by: null }).eq('id', id).eq('status', 'concept'))
     },
     async markSent(id, by) {
       check(
@@ -118,16 +141,26 @@ export function memoryDrafts(store: MailDraft[] = []): DraftsRepo {
       return d
     },
     async update(id, patch) {
-      const d = store.find((x) => x.id === id && x.status === 'concept')
+      const d = store.find((x) => x.id === id && x.status === 'concept' && !x.sent_at)
       if (!d) return false
       Object.assign(d, signDraft({ is_html: d.is_html, ...patch }), { updated_at: now() })
       return true
     },
     async remove(id) {
-      const i = store.findIndex((x) => x.id === id && x.status === 'concept')
+      const i = store.findIndex((x) => x.id === id && x.status === 'concept' && !x.sent_at)
       if (i < 0) return false
       store.splice(i, 1)
       return true
+    },
+    async claimSend(id, by) {
+      const d = store.find((x) => x.id === id && x.status === 'concept' && !x.sent_at)
+      if (!d) return null
+      Object.assign(d, { sent_at: now(), sent_by: by })
+      return { ...d }
+    },
+    async releaseSend(id) {
+      const d = store.find((x) => x.id === id && x.status === 'concept')
+      if (d) Object.assign(d, { sent_at: null, sent_by: null })
     },
     async markSent(id, by) {
       const d = store.find((x) => x.id === id && x.status === 'concept')
