@@ -40,7 +40,8 @@ const NTH_LABEL: Record<string, string> = { '1': 'eerste', '2': 'tweede', '3': '
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 
 // ─── Datums ────────────────────────────────────────────────
-export const addDays = (day: string, n: number) => new Date(Date.parse(`${day}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10)
+export { addDays } from '../dates'
+import { addDays } from '../dates'
 const weekdayOf = (day: string) => new Date(`${day}T00:00:00Z`).getUTCDay() as Weekday
 export const isDate = (v: unknown): v is string => {
   if (typeof v !== 'string' || !DATE.test(v)) return false

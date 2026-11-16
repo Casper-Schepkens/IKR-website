@@ -1,5 +1,6 @@
 import 'server-only'
 import { createHmac, randomUUID } from 'node:crypto'
+import { timeout } from '../http'
 
 /**
  * Port Grokbot via de webhook van de Grok-automation. De automation haalt de taken zelf op via de
@@ -65,7 +66,7 @@ export async function notifyGrok(jobIds: string[], delays = RETRY_DELAYS, target
   for (let attempt = 0; attempt <= delays.length; attempt++) {
     try {
       // Elke poging opnieuw ondertekenen (verse timestamp).
-      const res = await fetch(url, { method: 'POST', headers: webhookHeaders(secret, body), body, cache: 'no-store' })
+      const res = await fetch(url, { method: 'POST', headers: webhookHeaders(secret, body), body, cache: 'no-store', signal: timeout(10_000) })
       if (res.ok) return true
       const text = await res.text().catch(() => '')
       const retryable = res.status === 429 || res.status >= 500

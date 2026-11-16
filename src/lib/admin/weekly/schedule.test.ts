@@ -61,3 +61,24 @@ describe('start- en einduur', () => {
     expect((await repo.getWeekly(w.id))?.ends_at).toBe('2026-11-12T11:15:00.000Z')
   })
 })
+
+describe('weekly afsluiten en de volgende inplannen', () => {
+  it('ongeldig uur: niets afgesloten', async () => {
+    const { concludeAndSchedule } = await import('./schedule')
+    const { memoryWeekly } = await import('./repo')
+    const repo = memoryWeekly()
+    const w = await repo.createWeekly({ starts_at: '2026-11-17T09:00:00.000Z', ends_at: '2026-11-17T10:00:00.000Z', mode: 'live', created_by: 'test' })
+    await expect(concludeAndSchedule(repo, 'test', w.id, { date: '2026-11-24', time: '10:00', endTime: '09:00', mode: 'live' })).rejects.toThrow(/einduur/)
+    expect((await repo.getWeekly(w.id))?.status).not.toBe('concluded')
+  })
+
+  it('volgende maken mislukt: de oude weekly blijft open', async () => {
+    const { concludeAndSchedule } = await import('./schedule')
+    const { memoryWeekly } = await import('./repo')
+    const repo = memoryWeekly()
+    const w = await repo.createWeekly({ starts_at: '2026-11-17T09:00:00.000Z', ends_at: '2026-11-17T10:00:00.000Z', mode: 'live', created_by: 'test' })
+    const broken = { ...repo, createWeekly: async () => { throw new Error('DB plat') } }
+    await expect(concludeAndSchedule(broken, 'test', w.id, { date: '2026-11-24', time: '10:00', endTime: '11:00', mode: 'live' })).rejects.toThrow('DB plat')
+    expect((await repo.getWeekly(w.id))?.status).not.toBe('concluded')
+  })
+})

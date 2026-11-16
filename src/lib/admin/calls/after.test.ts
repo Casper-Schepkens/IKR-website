@@ -28,6 +28,8 @@ function q(table: string) {
     eq: (c: string, v: unknown) => (conds.push((r) => r[c] === v), api),
     is: (c: string, v: unknown) => (conds.push((r) => (r[c] ?? null) === v), api),
     in: (c: string, v: unknown[]) => (conds.push((r) => v.includes(r[c])), api),
+    not: (c: string, op: string, v: unknown) => (conds.push((r) => (op === 'is' ? (r[c] ?? null) !== v : r[c] !== v)), api),
+    gte: (c: string, v: unknown) => (conds.push((r) => r[c] != null && String(r[c]) >= String(v)), api),
     order: () => api,
     limit: () => api,
     maybeSingle: async () => ({ data: tables[table].find((r) => conds.every((f) => f(r))) ?? null, error: null }),
@@ -151,7 +153,12 @@ describe('deel 3: Fireflies-webhook', () => {
     ff.getTranscript.mockResolvedValue(transcript({ id: 'FF9', meetingLink: null, participants: [], title: 'Onbekend gesprek' }))
     expect(await handleFirefliesEvent('FF9', null, deps)).toEqual({ status: 'ongekoppeld' })
     expect(tables.call_transcripts.find((r) => r.fireflies_id === 'FF9')?.status).toBe('ongekoppeld')
-    ff.getTranscript.mockResolvedValue(transcript({ id: 'FF8', meetingLink: null, participants: [], title: 'IKR weekly 2026-11-05' }))
+    // "weekly" in de titel volstaat niet meer (bv. een klantmeeting met die naam)…
+    ff.getTranscript.mockResolvedValue(transcript({ id: 'FF7', meetingLink: 'https://meet.google.com/kli-entm-eet', participants: [], title: 'Weekly met klant X' }))
+    expect(await handleFirefliesEvent('FF7', null, deps)).toEqual({ status: 'ongekoppeld' })
+    // …de Meet van een gekende weekly wel.
+    tables.weeklies = [{ id: 'W1', meet_url: 'https://meet.google.com/wee-klyi-ikr', starts_at: '2026-11-05T09:00:00Z' }]
+    ff.getTranscript.mockResolvedValue(transcript({ id: 'FF8', meetingLink: 'https://meet.google.com/wee-klyi-ikr', participants: [], title: 'IKR weekly 2026-11-05' }))
     expect(await handleFirefliesEvent('FF8', null, deps)).toEqual({ status: 'weekly_verwerkt' })
   })
 

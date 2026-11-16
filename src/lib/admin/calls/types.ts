@@ -1,5 +1,6 @@
 import { STAGES, type Stage } from '../sales/types'
 import { SIGNATURE } from '../sales/signature'
+import { isoDay } from '../format'
 
 /** Calls (sales). Setter = kort telefoongesprek (opname via Record), sales = Google Meet (+ Fireflies, ppt). */
 
@@ -106,7 +107,8 @@ export type CallStats = Record<CallKind, { gepland: number; afgerond: number; no
 
 /** Cijfers over calls die starten in [van, tot] (ISO-datums, tot inclusief). Enkel opgeslagen/opvraagbaar, niet getoond. */
 export function callStats(all: Call[], van?: string, tot?: string): CallStats {
-  const inRange = all.filter((c) => (!van || c.starts_at.slice(0, 10) >= van) && (!tot || c.starts_at.slice(0, 10) <= tot))
+  // Dag in Brussel (een call om 00:30 op 1 mei is in UTC nog 30 april).
+  const inRange = all.filter((c) => (!van || isoDay(new Date(c.starts_at)) >= van) && (!tot || isoDay(new Date(c.starts_at)) <= tot))
   const per = (kind: CallKind) => {
     const k = inRange.filter((c) => c.kind === kind)
     const count = (s: CallStatus) => k.filter((c) => c.status === s).length

@@ -4,6 +4,7 @@ import type { WeeklySopsInput } from '../ai/handlers'
 import { createServiceSupabase } from '../supabase/server'
 import { supabaseSops } from './repo'
 import { kickJobs, kickJobsLater } from '../ai/kick'
+import { fmtDate } from '../format'
 
 /** Komt "SOP" of Grok Bot ("grokbot", "grok bot", "rock bot", "groc bot" …) voor in de tekst? (hint voor de taak) */
 export const mentionsBot = (text: string) => /\bsop|\b(grok|grock|groc|grog|rok|rock)\s?bot/i.test(text)
@@ -20,7 +21,7 @@ export async function queueWeeklySops(t: { id: string; title: string; date: stri
   const bestaande = (await supabaseSops(createServiceSupabase()).list()).map((s) => s.title)
   const d = t.date ? new Date(t.date) : new Date()
   const input: WeeklySopsInput = {
-    weekly: { datum: `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`, titel: t.title },
+    weekly: { datum: fmtDate(d, { day: '2-digit', month: '2-digit' }), titel: t.title },
     transcript: t.text,
     fireflies_url: t.url,
     bestaande,

@@ -1,4 +1,5 @@
 import 'server-only'
+import { timeout, WRITE_TIMEOUT_MS } from './http'
 
 /** Fireflies (GraphQL): check of de bot in de Meet zit, bot toevoegen, transcript ophalen. */
 
@@ -11,7 +12,7 @@ async function gql<T>(query: string, variables: Record<string, unknown>): Promis
     method: 'POST',
     headers: { Authorization: `Bearer ${process.env.FIREFLIES_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, variables }),
-    cache: 'no-store',
+    cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS),
   })
   const json = (await res.json()) as { data?: T; errors?: { message: string; code?: string }[] }
   if (json.errors?.length) {

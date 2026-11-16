@@ -1,4 +1,5 @@
 import 'server-only'
+import { cleanLeadInput } from '../../sales/types'
 import { z } from 'zod'
 import { fmtDate } from '../../format'
 import { textMatches } from '../../search'
@@ -44,16 +45,9 @@ export function registerLeadTools(ctx: ToolCtx) {
     },
     false,
     async (a) => {
-      const l = await leads.create({
-        name: a.naam,
-        company: a.bedrijf ?? null,
-        email: a.email?.toLowerCase() ?? null,
-        phone: a.telefoon ?? null,
-        source: a.bron ?? 'cold_mail',
-        next_action: a.volgende_actie ?? null,
-        follow_up_on: a.opvolgen_op ?? null,
-        notes: a.notities ?? null,
-      })
+      const l = await leads.create(
+        cleanLeadInput({ name: a.naam, company: a.bedrijf, email: a.email, phone: a.telefoon, source: a.bron, next_action: a.volgende_actie, follow_up_on: a.opvolgen_op, notes: a.notities }, 'cold_mail'),
+      )
       return leadView(l)
     },
   )
@@ -76,6 +70,7 @@ export function registerLeadTools(ctx: ToolCtx) {
       const l = await resolveLead(a.lead)
       const v = (x: string | undefined) => (x === undefined ? undefined : x.trim() || null)
       if (a.opvolgen_op && !/^\d{4}-\d{2}-\d{2}$/.test(a.opvolgen_op)) throw new Error('opvolgen_op moet YYYY-MM-DD zijn.')
+      if (a.email?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email.trim())) throw new Error(`Dat e-mailadres klopt niet: "${a.email}".`)
       const patch = Object.fromEntries(
         Object.entries({
           name: a.naam?.trim() || undefined,

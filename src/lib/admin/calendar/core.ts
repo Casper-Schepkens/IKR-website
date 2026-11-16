@@ -1,3 +1,4 @@
+import { addDays } from '../dates'
 /** Kalender: de contact@-agenda gespiegeld, ingedeeld per soort (voor filters en kleuren). */
 
 export const KINDS = {
@@ -40,7 +41,6 @@ const BRUSSELS = 'Europe/Brussels'
 export const dayIn = (iso: string) => new Intl.DateTimeFormat('en-CA', { timeZone: BRUSSELS, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso))
 export const timeIn = (iso: string) => new Intl.DateTimeFormat('nl-BE', { timeZone: BRUSSELS, hour: '2-digit', minute: '2-digit' }).format(new Date(iso))
 
-const addDays = (day: string, n: number) => new Date(Date.parse(`${day}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10)
 
 /** Maand ('2026-11') → eerste en laatste dag, en de dagen van het rooster (maandag tot zondag, volledige weken). */
 export function monthGrid(month: string) {

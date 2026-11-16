@@ -7,6 +7,7 @@ import { requireAdmin } from '@/lib/admin/session'
 import { cleanClientInput } from '@/lib/admin/clients/types'
 import { applyContractProposal, deriveContract, dismissContractProposal } from '@/lib/admin/clients/contract'
 import type { ActionResult } from './actions'
+import { formRaw as str } from '@/lib/admin/forms'
 
 async function attempt(fn: () => Promise<void>): Promise<ActionResult> {
   try {
@@ -19,12 +20,7 @@ async function attempt(fn: () => Promise<void>): Promise<ActionResult> {
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Er ging iets mis.' }
   }
-}
-const str = (form: FormData, key: string) => {
-  const v = form.get(key)
-  return typeof v === 'string' ? v : null
-}
-const input = (form: FormData) => {
+}const input = (form: FormData) => {
   const indefinite = str(form, 'contract_kind') === 'onbepaald'
   return cleanClientInput({
     name: str(form, 'name'),

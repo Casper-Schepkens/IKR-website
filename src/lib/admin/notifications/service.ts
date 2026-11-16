@@ -16,6 +16,7 @@ import { workspaceRepo } from '../workspace/repo'
 import { ownerOf } from '../weekly/types'
 import { countProblems, systemStatus } from '../system-status'
 import { countCallsToFinish, countExpiring, countFollowUps, countOverdueTodos, countSopProposals, countWorkspace, type Counts } from './core'
+import { todayBrussels } from '../dates'
 
 /** Repos met de service role (meldingen worden server-side berekend, per gebruiker gefilterd); lokaal in het geheugen. */
 function repos() {
@@ -36,7 +37,7 @@ const when = <A extends unknown[]>(...args: [...{ [K in keyof A]: A[K] | null },
   const fn = args.pop() as (...v: A) => number
   return args.some((a) => a === null) ? null : fn(...(args as unknown as A))
 }
-const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Brussels' }).format(new Date())
+const today = () => todayBrussels()
 
 /**
  * Tellers kort bewaren per gebruiker (per serverinstantie): de zijbalk vraagt ze elke 30 s en bij elke

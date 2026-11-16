@@ -3,6 +3,7 @@ import { clip } from './ai/clip'
 import { decryptSecret, encryptSecret, tokenKeyProblem } from './crypto'
 import { isDemoMode, isSupabaseConfigured } from './env'
 import { createServiceSupabase } from './supabase/server'
+import { timeout, WRITE_TIMEOUT_MS } from './http'
 
 /**
  * Google-koppeling per account (agenda + Meet; Drive voor contact@).
@@ -79,7 +80,7 @@ async function token(body: Record<string, string>): Promise<TokenResponse> {
       client_secret: process.env.GOOGLE_CLIENT_SECRET!,
       ...body,
     }),
-    cache: 'no-store',
+    cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS),
   })
   const json = (await res.json()) as TokenResponse
   if (!res.ok) throw new Error(googleTokenError(String(json.error ?? res.status), body.refresh_token ? 'refresh' : 'code'))
@@ -99,7 +100,7 @@ export async function revokeToken(tokenValue: string) {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({ token: tokenValue }),
-      cache: 'no-store',
+      cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS),
     })
     return res.ok || res.status === 400 // 400 = al ongeldig
   } catch {
@@ -266,7 +267,7 @@ export async function createEvent(opts: {
           ? { conferenceData: { createRequest: { requestId: crypto.randomUUID(), conferenceSolutionKey: { type: 'hangoutsMeet' } } } }
           : {}),
       }),
-      cache: 'no-store',
+      cache: 'no-store', signal: timeout(),
     },
   )
   const json = (await res.json()) as { id?: string; hangoutLink?: string; error?: { message?: string } }
@@ -279,7 +280,7 @@ export async function deleteEvent(calendarOwner: string, eventId: string, notify
   const at = await accessToken(calendarOwner)
   const res = await fetch(
     `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(eventId)}?sendUpdates=${notify ? 'all' : 'none'}`,
-    { method: 'DELETE', headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' },
+    { method: 'DELETE', headers: { Authorization: `Bearer ${at}` }, cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS) },
   )
   if (!res.ok && res.status !== 404 && res.status !== 410) throw new Error(`Agenda-item verwijderen mislukt (${res.status}).`)
 }
@@ -298,7 +299,7 @@ export type CalendarEvent = {
 export async function listEvents(calendarOwner: string, timeMin: Date, timeMax: Date): Promise<CalendarEvent[]> {
   const at = await accessToken(calendarOwner)
   const p = new URLSearchParams({ singleEvents: 'true', orderBy: 'startTime', maxResults: '250', timeMin: timeMin.toISOString(), timeMax: timeMax.toISOString() })
-  const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?${p}`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' })
+  const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?${p}`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store', signal: timeout() })
   const json = (await res.json()) as {
     items?: { id: string; summary?: string; status?: string; hangoutLink?: string; start?: { dateTime?: string; date?: string }; end?: { dateTime?: string; date?: string }; attendees?: { email?: string }[] }[]
     error?: { message?: string }
@@ -317,19 +318,22 @@ export async function listEvents(calendarOwner: string, timeMin: Date, timeMax: 
     }))
 }
 
+/** Tekst veilig in een Drive-zoekopdracht (tussen enkele aanhalingstekens): backslash en aanhalingsteken escapen. */
+export const escDriveQuery = (v: string) => v.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+
 /** Zoekt (of maakt) een map in de Drive van `owner`. Met drive.file ziet het dashboard enkel zijn eigen mappen. */
 async function driveFolder(at: string, name: string) {
-  const q = `name = '${name.replace(/'/g, "\\'")}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`
+  const q = `name = '${escDriveQuery(name)}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`
   const found = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)`, {
     headers: { Authorization: `Bearer ${at}` },
-    cache: 'no-store',
+    cache: 'no-store', signal: timeout(),
   }).then((r) => r.json() as Promise<{ files?: { id: string }[] }>)
   if (found.files?.[0]) return found.files[0].id
   const res = await fetch('https://www.googleapis.com/drive/v3/files?fields=id', {
     method: 'POST',
     headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder' }),
-    cache: 'no-store',
+    cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS),
   })
   const json = (await res.json()) as { id?: string; error?: { message?: string } }
   if (!json.id) throw new Error(`Map maken in de Drive mislukt: ${json.error?.message ?? res.status}`)
@@ -353,7 +357,7 @@ export async function startDriveUpload(opts: { owner: string; folder: string; na
       Origin: opts.origin,
     },
     body: JSON.stringify({ name: opts.name, parents: [parent] }),
-    cache: 'no-store',
+    cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS),
   })
   const url = res.headers.get('location')
   if (!res.ok || !url) throw new Error(`Upload starten mislukt (${res.status}).`)
@@ -367,7 +371,7 @@ export async function shareWithDomain(owner: string, fileId: string, domain: str
     method: 'POST',
     headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ type: 'domain', role: 'reader', domain }),
-    cache: 'no-store',
+    cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS),
   })
   if (!res.ok) throw new Error(`Delen in de Drive mislukt (${res.status}).`)
   return `https://drive.google.com/open?id=${fileId}`
@@ -386,7 +390,7 @@ export async function uploadDoc(opts: { owner: string; folder: string; name: str
     method: 'POST',
     headers: { Authorization: `Bearer ${at}`, 'Content-Type': `multipart/related; boundary=${boundary}` },
     body,
-    cache: 'no-store',
+    cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS),
   })
   const json = (await res.json()) as { id?: string; error?: { message?: string } }
   if (!json.id) throw new Error(`Transcript opslaan in de Drive mislukt: ${json.error?.message ?? res.status}`)
@@ -398,14 +402,14 @@ type DriveFile = { id: string; name: string; parents?: string[] }
 
 async function driveGet<T>(at: string, path: string): Promise<T> {
   const sep = path.includes('?') ? '&' : '?'
-  const res = await fetch(`https://www.googleapis.com/drive/v3/${path}${sep}supportsAllDrives=true`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' })
+  const res = await fetch(`https://www.googleapis.com/drive/v3/${path}${sep}supportsAllDrives=true`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store', signal: timeout() })
   const json = (await res.json()) as T & { error?: { message?: string } }
   if (!res.ok) throw new Error(`Drive: ${json.error?.message ?? res.status}`)
   return json
 }
 
 async function folderNamed(at: string, name: string, parent?: string): Promise<DriveFile[]> {
-  const q = [`name = '${name.replace(/'/g, "\\'")}'`, "mimeType = 'application/vnd.google-apps.folder'", 'trashed = false', parent ? `'${parent}' in parents` : '']
+  const q = [`name = '${escDriveQuery(name)}'`, "mimeType = 'application/vnd.google-apps.folder'", 'trashed = false', parent ? `'${parent}' in parents` : '']
     .filter(Boolean)
     .join(' and ')
   const r = await driveGet<{ files?: DriveFile[] }>(at, `files?q=${encodeURIComponent(q)}&fields=files(id,name,parents)&includeItemsFromAllDrives=true&corpora=allDrives&pageSize=50`)
@@ -446,7 +450,7 @@ export async function ensureDrivePath(owner: string, path: string[]): Promise<st
       method: 'POST',
       headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder', ...(parent ? { parents: [parent] } : {}) }),
-      cache: 'no-store',
+      cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS),
     })
     const json = (await res.json()) as { id?: string; error?: { message?: string } }
     if (!json.id) throw new Error(`Map "${name}" maken mislukt: ${json.error?.message ?? res.status}`)
@@ -467,7 +471,7 @@ export async function createDocInFolder(owner: string, folderId: string, name: s
     method: 'POST',
     headers: { Authorization: `Bearer ${at}`, 'Content-Type': `multipart/related; boundary=${boundary}` },
     body,
-    cache: 'no-store',
+    cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS),
   })
   const json = (await res.json()) as { id?: string; webViewLink?: string; error?: { message?: string } }
   if (!json.id) throw new Error(`Transcript in de Drive zetten mislukt: ${json.error?.message ?? res.status}`)
@@ -481,7 +485,7 @@ export async function makeFilePublic(owner: string, fileId: string) {
     method: 'POST',
     headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ type: 'anyone', role: 'reader' }),
-    cache: 'no-store',
+    cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS),
   })
   const json = (await res.json()) as { id?: string; error?: { message?: string } }
   if (!json.id) throw new Error(`Opname delen mislukt: ${json.error?.message ?? res.status}`)
@@ -493,7 +497,7 @@ export async function removeFilePermission(owner: string, fileId: string, permis
   const res = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}/permissions/${encodeURIComponent(permissionId)}?supportsAllDrives=true`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${at}` },
-    cache: 'no-store',
+    cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS),
   })
   if (!res.ok && res.status !== 404) throw new Error(`Delen intrekken mislukt (${res.status}).`)
 }
@@ -524,17 +528,17 @@ const TO_SLIDES = ['application/vnd.openxmlformats-officedocument.presentationml
 export async function driveText(owner: string, file: Pick<DriveDoc, 'id' | 'mimeType'>, maxChars = 15_000): Promise<string | null> {
   const at = await accessToken(owner)
   const exportText = async (id: string) => {
-    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${id}/export?mimeType=text/plain`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' })
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${id}/export?mimeType=text/plain`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store', signal: timeout() })
     if (!res.ok) throw new Error(`Drive export: ${res.status}`)
     return clip(await res.text(), maxChars)
   }
   if (file.mimeType === DOC || file.mimeType === SLIDES || file.mimeType === 'application/vnd.google-apps.spreadsheet') {
     if (file.mimeType !== 'application/vnd.google-apps.spreadsheet') return exportText(file.id)
-    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}/export?mimeType=text/csv`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' })
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}/export?mimeType=text/csv`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store', signal: timeout() })
     return res.ok ? clip(await res.text(), maxChars) : null
   }
   if (file.mimeType.startsWith('text/') || file.mimeType === 'application/json') {
-    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&supportsAllDrives=true`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' })
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&supportsAllDrives=true`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store', signal: timeout() })
     return res.ok ? clip(await res.text(), maxChars) : null
   }
   const target = TO_SLIDES.includes(file.mimeType) ? SLIDES : CONVERTIBLE.includes(file.mimeType) ? DOC : null
@@ -543,13 +547,13 @@ export async function driveText(owner: string, file: Pick<DriveDoc, 'id' | 'mime
     method: 'POST',
     headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ mimeType: target, name: `tmp-ikr-dashboard-${file.id}` }),
-    cache: 'no-store',
+    cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS),
   }).then((r) => r.json() as Promise<{ id?: string; error?: { message?: string } }>)
   if (!copy.id) throw new Error(`Drive omzetten: ${copy.error?.message ?? 'mislukt'}`)
   try {
     return await exportText(copy.id)
   } finally {
-    await fetch(`https://www.googleapis.com/drive/v3/files/${copy.id}?supportsAllDrives=true`, { method: 'DELETE', headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' }).catch(() => undefined)
+    await fetch(`https://www.googleapis.com/drive/v3/files/${copy.id}?supportsAllDrives=true`, { method: 'DELETE', headers: { Authorization: `Bearer ${at}` }, cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS) }).catch(() => undefined)
   }
 }
 
@@ -560,7 +564,7 @@ export async function driveText(owner: string, file: Pick<DriveDoc, 'id' | 'mime
 export async function swapAttendee(calendarOwner: string, eventId: string, from: string, to: string) {
   const at = await accessToken(calendarOwner)
   const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(eventId)}`
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' })
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store', signal: timeout() })
   if (res.status === 404 || res.status === 410) return false
   const ev = (await res.json()) as { attendees?: { email: string }[]; status?: string; error?: { message?: string } }
   if (!res.ok) throw new Error(`Agenda-item lezen mislukt: ${ev.error?.message ?? res.status}`)
@@ -571,7 +575,7 @@ export async function swapAttendee(calendarOwner: string, eventId: string, from:
     method: 'PATCH',
     headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ attendees: [...kept, { email: to }] }),
-    cache: 'no-store',
+    cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS),
   })
   if (!patch.ok) throw new Error(`Genodigde aanpassen mislukt (${patch.status}).`)
   return true
@@ -585,7 +589,7 @@ export async function createAllDayEvent(opts: { calendarOwner: string; summary: 
     method: 'POST',
     headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ summary: opts.summary, description: opts.description, start: { date: opts.date }, end: { date: next }, attendees: opts.attendees.map((email) => ({ email })), transparency: 'transparent' }),
-    cache: 'no-store',
+    cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS),
   })
   const json = (await res.json()) as { id?: string; error?: { message?: string } }
   if (!res.ok || !json.id) throw new Error(`Agenda-item maken mislukt: ${json.error?.message ?? res.status}`)
@@ -601,7 +605,7 @@ export async function listCalendarItems(calendarOwner: string, timeMin: Date, ti
   let pageToken: string | undefined
   do {
     const p = new URLSearchParams({ singleEvents: 'true', orderBy: 'startTime', maxResults: '250', timeMin: timeMin.toISOString(), timeMax: timeMax.toISOString(), ...(pageToken ? { pageToken } : {}) })
-    const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?${p}`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' })
+    const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?${p}`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store', signal: timeout() })
     const json = (await res.json()) as { items?: (CalendarItem & { summary?: string; status?: string })[]; nextPageToken?: string; error?: { message?: string } }
     if (!res.ok) throw new Error(`Agenda lezen mislukt: ${json.error?.message ?? res.status}`)
     out.push(...(json.items ?? []).map((e) => ({ ...e, summary: e.summary ?? '(zonder titel)', status: e.status ?? 'confirmed' })))
@@ -643,7 +647,7 @@ export async function moveDriveFile(owner: string, fileId: string, folderId: str
   const info = await driveGet<DriveFileInfo>(at, `files/${encodeURIComponent(fileId)}?fields=id,parents,webViewLink`)
   const p = new URLSearchParams({ addParents: folderId, supportsAllDrives: 'true', fields: 'id,webViewLink' })
   if (info.parents?.length) p.set('removeParents', info.parents.join(','))
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?${p}`, { method: 'PATCH', headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' }, body: '{}', cache: 'no-store' })
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?${p}`, { method: 'PATCH', headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json' }, body: '{}', cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS) })
   const json = (await res.json()) as { webViewLink?: string; error?: { message?: string } }
   if (!res.ok) throw new Error(`Verplaatsen in de Drive mislukt: ${json.error?.message ?? res.status}`)
   return json.webViewLink ?? info.webViewLink

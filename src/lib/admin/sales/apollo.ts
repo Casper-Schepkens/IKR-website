@@ -1,6 +1,7 @@
 import 'server-only'
 import { unstable_cache } from 'next/cache'
 import { isDemoMode } from '../env'
+import { timeout } from '../http'
 
 /**
  * Cold mails via Apollo (alleen lezen). Docs: docs.apollo.io
@@ -41,6 +42,7 @@ async function apollo<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.APOLLO_API_KEY!, ...init?.headers },
     next: { revalidate: REVALIDATE },
+    signal: timeout(),
   })
   if (res.status === 401) throw new Error('De Apollo API-sleutel is ongeldig.')
   if (res.status === 429) throw new Error('Even te veel aanvragen bij Apollo. Probeer het binnen een paar minuten opnieuw.')

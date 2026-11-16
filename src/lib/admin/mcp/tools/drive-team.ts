@@ -5,7 +5,7 @@ import { listAllConnections, memberName, resolveMember } from '../../team/connec
 import { calendarEvents, getAttachment, gmailQuery, readMessage, readThread, searchMail } from '../../team/google-read'
 import { isoDay } from '../../format'
 import { TEAM, CONTACT_EMAIL as IKR_DRIVE } from '../../weekly/types'
-import { driveFileInfo, driveSearch, driveText, ensureDrivePath, moveDriveFile } from '../../google'
+import { driveFileInfo, driveSearch, driveText, ensureDrivePath, escDriveQuery, moveDriveFile } from '../../google'
 import { KIND_KEYS as CAL_KINDS, KINDS as CAL_KIND_LABELS, timeIn } from '../../calendar/core'
 import { loadCalendar } from '../../calendar/service'
 import { inviteAddresses, moveUpcomingInvites, setInviteAddress } from '../../team/invites'
@@ -49,7 +49,6 @@ export function registerDriveTeamTools(ctx: ToolCtx) {
     },
   )
   // ─── Drive (IKR-Drive van contact@): bijlagen uit de chat lezen en op de juiste plek zetten ──
-  const esc = (v: string) => v.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
   const driveId = (v: string) => {
     if (!/^[\w-]{10,}$/.test(v.trim())) throw new Error('Ongeldig Drive-id.')
     return v.trim()
@@ -57,11 +56,15 @@ export function registerDriveTeamTools(ctx: ToolCtx) {
   tool('drive_bestand_lezen', 'Een bestand uit de IKR-Drive analyseren (bv. een bijlage uit de chat): naam, soort, link en de tekst (Docs, PDF, Word, PowerPoint, Sheets, tekst). Afbeeldingen geven geen tekst.', { file_id: z.string() }, true, async ({ file_id }) => {
     const id = driveId(file_id)
     const info = await driveFileInfo(IKR_DRIVE, id)
-    const tekst = await driveText(IKR_DRIVE, info, 30_000).catch(() => null)
-    return { file_id: info.id, naam: info.name, soort: info.mimeType, link: info.webViewLink, tekst: tekst ?? null, opmerking: tekst ? null : 'Geen tekst uit dit bestand te halen (bv. een afbeelding of video).' }
+    let leesfout: string | null = null
+    const tekst = await driveText(IKR_DRIVE, info, 30_000).catch((e: unknown) => {
+      leesfout = e instanceof Error ? e.message : String(e)
+      return null
+    })
+    return { file_id: info.id, naam: info.name, soort: info.mimeType, link: info.webViewLink, tekst: tekst ?? null, opmerking: tekst ? null : leesfout ? `Lezen mislukt: ${leesfout}` : 'Geen tekst uit dit bestand te halen (bv. een afbeelding of video).' }
   })
   tool('drive_mappen_zoeken', 'Mappen in de IKR-Drive zoeken op naam (bv. de map van een klant of lead).', { naam: z.string() }, true, async ({ naam }) => {
-    const q = `name contains '${esc(naam.trim())}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`
+    const q = `name contains '${escDriveQuery(naam.trim())}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`
     return (await driveSearch(IKR_DRIVE, q, 15)).map((f) => ({ map_id: f.id, naam: f.name, link: f.webViewLink, gewijzigd: f.modifiedTime.slice(0, 10) }))
   })
   tool('drive_map_maken', 'Een mappenpad in de IKR-Drive opzoeken of aanmaken (bv. ["Sales", "Leads", "Tomeco"]); bestaande mappen worden hergebruikt.', { pad: z.array(z.string().min(1)).min(1).max(6) }, false, async ({ pad }) => {

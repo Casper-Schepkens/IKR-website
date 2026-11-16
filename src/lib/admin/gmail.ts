@@ -1,5 +1,6 @@
 import 'server-only'
 import { accessToken, forgetAccessToken } from './google'
+import { timeout } from './http'
 
 /** Gmail van Casper: sales-mails lezen en antwoorden versturen. */
 
@@ -31,7 +32,7 @@ async function gmail<T>(owner: string, path: string, init?: RequestInit, retry =
   const res = await fetch(`${API}${path}`, {
     ...init,
     headers: { Authorization: `Bearer ${at}`, 'Content-Type': 'application/json', ...init?.headers },
-    cache: 'no-store',
+    cache: 'no-store', signal: timeout(),
   })
   // Gecachet token ongeldig (bv. ingetrokken): vergeten en één keer opnieuw met een vers token.
   if (res.status === 401 && retry) {

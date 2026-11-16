@@ -9,6 +9,7 @@ import { cancelCall, finishCall, scheduleCall, syncCallsFromCalendar } from '@/l
 import { CALL_KIND_LABELS, cleanPptUrl, insertMeetLink, nextBotContext, type CallKind } from '@/lib/admin/calls/types'
 import { CONTACT_EMAIL } from '@/lib/admin/weekly/types'
 import { sendInboxReplyAction, type ActionResult } from './actions'
+import { formText as str } from '@/lib/admin/forms'
 
 /** Calls (sales, enkel Casper). Niets hier verstuurt mail, behalve "Verstuur en plan" via de bestaande verzendactie. */
 
@@ -20,12 +21,7 @@ async function attempt<T = void>(fn: () => Promise<T>): Promise<ActionResult<T>>
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Er ging iets mis.' }
   }
-}
-const str = (form: FormData, key: string) => {
-  const v = form.get(key)
-  return typeof v === 'string' && v.trim() ? v.trim() : null
-}
-const kindOf = (v: string | null): CallKind => (v === 'setter' ? 'setter' : 'sales')
+}const kindOf = (v: string | null): CallKind => (v === 'setter' ? 'setter' : 'sales')
 const minutesOf = (v: string | null) => (v ? Number(v) : null)
 
 /** Calls-pagina: call toevoegen (in de contact-agenda; lead enkel uitnodigen als aangevinkt). */

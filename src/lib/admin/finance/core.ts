@@ -1,4 +1,5 @@
 /** Financiën: pure logica (indeling, periodes, cijfers). Geen DB en geen Odoo, zodat het testbaar is. */
+import { addDays } from '../dates'
 
 export const IN_CATEGORIES = {
   klant: 'Klanten',
@@ -299,7 +300,6 @@ export type PaymentCheck = {
 
 /** Betalingstermijn uit de contracten: 21 dagen na de factuur (die valt ten laatste op het einde van de maand). */
 export const PAYMENT_TERM_DAYS = 21
-const addDays = (day: string, n: number) => new Date(Date.parse(`${day}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10)
 
 /**
  * Kwam elke maand het contractbedrag (incl. btw) binnen? Betalingen van een klant vanaf de contractstart worden

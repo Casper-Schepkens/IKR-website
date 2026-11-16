@@ -5,12 +5,13 @@ import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/admin/session'
 import { isoDay } from '@/lib/admin/format'
 import { makeFilePublic, removeFilePermission, assertDashboardUpload, shareWithDomain, startDriveUpload } from '@/lib/admin/google'
-import { scheduleWeekly, syncWeeklyCalendar } from '@/lib/admin/weekly/schedule'
+import { concludeAndSchedule, scheduleWeekly, syncWeeklyCalendar } from '@/lib/admin/weekly/schedule'
 import { CONTACT_EMAIL, OWNERS, type Owner } from '@/lib/admin/weekly/types'
 import { currentWeekly } from '@/lib/admin/weekly/board'
 import type { ActionResult } from './actions'
 import { addBotToMeeting, isBotInMeeting, isFirefliesConfigured, uploadAudio } from '@/lib/admin/fireflies'
 import { inferKind, safeUrl } from '@/lib/admin/weekly/pins'
+import { formText as str } from '@/lib/admin/forms'
 
 async function attempt(fn: () => Promise<void>): Promise<ActionResult> {
   try {
@@ -20,11 +21,6 @@ async function attempt(fn: () => Promise<void>): Promise<ActionResult> {
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Er ging iets mis.' }
   }
-}
-
-function str(form: FormData, key: string) {
-  const v = form.get(key)
-  return typeof v === 'string' && v.trim() ? v.trim() : null
 }
 
 export async function planWeeklyAction(form: FormData) {
@@ -65,11 +61,7 @@ export async function retryWeeklyCalendarAction(id: string) {
 export async function concludeWeeklyAction(id: string, form: FormData) {
   return attempt(async () => {
     const session = await requireAdmin()
-    const w = await session.weekly.getWeekly(id)
-    if (!w || w.status === 'concluded') throw new Error('Deze weekly is al afgesloten.')
-    const next = await scheduleWeekly(session.weekly, session.user.email, { date: str(form, 'date'), time: str(form, 'time'), endTime: str(form, 'end_time'), mode: str(form, 'mode') })
-    await session.weekly.assignPending(next.id)
-    await session.weekly.updateWeekly(id, { status: 'concluded', concluded_at: new Date().toISOString() })
+    await concludeAndSchedule(session.weekly, session.user.email, id, { date: str(form, 'date'), time: str(form, 'time'), endTime: str(form, 'end_time'), mode: str(form, 'mode') })
   })
 }
 

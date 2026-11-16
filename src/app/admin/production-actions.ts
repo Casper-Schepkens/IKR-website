@@ -24,6 +24,7 @@ import {
   type StepTarget,
 } from '@/lib/admin/production/service'
 import type { ActionResult } from './actions'
+import { formRaw as str } from '@/lib/admin/forms'
 
 /** Productie (hele team). Alles wat hier kan, kan Grokbot ook via de productie_*-, workflow_*- en intern_*-tools. */
 async function attempt(fn: () => Promise<unknown>): Promise<ActionResult> {
@@ -35,12 +36,7 @@ async function attempt(fn: () => Promise<unknown>): Promise<ActionResult> {
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Er ging iets mis.' }
   }
-}
-const str = (form: FormData, key: string) => {
-  const v = form.get(key)
-  return typeof v === 'string' ? v : null
-}
-async function ctx(clientId: string) {
+}async function ctx(clientId: string) {
   const session = await requireAdmin()
   const c = (await session.clients.list()).find((x) => x.id === clientId)
   if (!c) throw new Error('Klant niet gevonden.')

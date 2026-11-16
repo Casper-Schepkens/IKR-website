@@ -11,16 +11,9 @@ import { updateLeadAfterSend } from '@/lib/admin/sales/follow-up'
 import { dismissJob, enqueue, getJob, isAiConfigured, runJob } from '@/lib/admin/ai/jobs'
 import { recordFeedback, saveProfile, STYLE_KEYS, type StyleKey } from '@/lib/admin/ai/style-profile'
 import { enqueueStyleRebuild } from '@/lib/admin/ai/style'
-import {
-  LOST_REASONS,
-  SOURCES,
-  STAGES,
-  type LeadInput,
-  type LostReason,
-  type Source,
-  type Stage,
-} from '@/lib/admin/sales/types'
+import { cleanLeadInput, LOST_REASONS, STAGES, type LeadInput, type LostReason, type Stage } from '@/lib/admin/sales/types'
 import { kickJobsLater } from '@/lib/admin/ai/kick'
+import { formText as str } from '@/lib/admin/forms'
 
 export type ActionResult<T = void> = { ok: true; data?: T } | { ok: false; error: string }
 
@@ -32,32 +25,15 @@ async function attempt<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
   }
 }
 
-function str(form: FormData, key: string) {
-  const v = form.get(key)
-  if (typeof v !== 'string') return null
-  const t = v.trim()
-  return t.length ? t : null
-}
-
 function followUpInput(form: FormData) {
   const date = str(form, 'follow_up_on')
   if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('Kies een geldige datum.')
   return { next_action: str(form, 'next_action'), follow_up_on: date, notes: str(form, 'notes') }
 }
 
+/** Zelfde controle als Grok Bot (cleanLeadInput); enkel de standaardbron verschilt. */
 function leadInput(form: FormData): LeadInput {
-  const name = str(form, 'name')
-  if (!name) throw new Error('Naam is verplicht.')
-  const email = str(form, 'email')?.toLowerCase() ?? null
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Dat e-mailadres klopt niet.')
-  const source = str(form, 'source') as Source | null
-  return {
-    name,
-    company: str(form, 'company'),
-    email,
-    phone: str(form, 'phone'),
-    source: source && SOURCES.includes(source) ? source : 'other',
-  }
+  return cleanLeadInput({ name: str(form, 'name'), company: str(form, 'company'), email: str(form, 'email'), phone: str(form, 'phone'), source: str(form, 'source') }, 'other')
 }
 
 export async function signOutAction() {
