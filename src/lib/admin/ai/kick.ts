@@ -22,11 +22,16 @@ export async function kickJobs(ids: string[]) {
       for (const id of ids) await runJob(id)
       return
     }
-    if (engine === 'worker') return
-    const reason = await notifyGrok(ids)
+    // Taken zonder tools (tekst van buitenaf) via de API; de rest naar Grokbot of de worker.
+    const jobs = await Promise.all(ids.map((id) => getJob(id)))
+    const viaApi = jobs.filter((j) => j && aiEngine(j.type) === 'api').map((j) => j!.id)
+    for (const id of viaApi) await runJob(id)
+    const rest = ids.filter((id) => !viaApi.includes(id))
+    if (engine === 'worker' || !rest.length) return
+    const reason = await notifyGrok(rest)
     if (reason === true) return
-    await logPingFailure(ids, typeof reason === 'string' ? reason : 'geen antwoord')
-    for (const id of ids) await handleUnreachable(id)
+    await logPingFailure(rest, typeof reason === 'string' ? reason : 'geen antwoord')
+    for (const id of rest) await handleUnreachable(id)
   } catch (e) {
     console.error('[ai] taken starten mislukt', e)
   }

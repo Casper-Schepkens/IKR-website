@@ -69,7 +69,7 @@ async function Inbox({ session, tab, concepts }: { session: AdminSession; tab: '
 
   // Antwoorden klaarzetten na het tonen van de pagina; de pagina ververst zichzelf tot ze klaar zijn.
   // Grokbot: enkel porren voor taken die net aangemaakt zijn (niet bij elk bezoek opnieuw); API: alles wat nog wacht.
-  if (isAiConfigured()) kickJobsLater(aiEngine() === 'api' ? result.pendingJobIds : result.newJobIds)
+  if (isAiConfigured()) kickJobsLater(aiEngine('inbox_reply') === 'api' ? result.pendingJobIds : result.newJobIds)
 
   const items = result.items.filter((i) => i.tab === tab)
   const count = (t: 'nieuw' | 'gemaild') => result.items.filter((i) => i.tab === t).length
@@ -99,8 +99,8 @@ async function Inbox({ session, tab, concepts }: { session: AdminSession; tab: '
           date={i.last.date}
           subject={i.last.subject}
           text={i.last.text}
-          rewriter={aiEngine() === 'grokbot' ? 'Grokbot' : 'De AI'}
-          waitingLabel={aiEngine() === 'grokbot' ? 'Wacht op Grokbot…' : aiEngine() === 'worker' ? 'Wacht op de AI-server…' : 'AI zet een antwoord klaar…'}
+          rewriter={aiEngine('mail_rewrite') === 'grokbot' ? 'Grokbot' : 'De AI'}
+          waitingLabel={aiEngine('inbox_reply') === 'grokbot' ? 'Wacht op Grokbot…' : aiEngine('inbox_reply') === 'worker' ? 'Wacht op de AI-server…' : 'AI zet een antwoord klaar…'}
           job={i.job ? { id: i.job.id, status: i.job.status, error: i.job.error, output: i.job.output as never } : null}
         />
       ))}
@@ -158,7 +158,7 @@ async function Concepts({ session, concepts }: { session: AdminSession; concepts
           context={d.context}
               followUpAction={d.follow_up_action ?? null}
               followUpOn={d.follow_up_on ?? null}
-          rewriter={aiEngine() === 'grokbot' ? 'Grokbot' : 'De AI'}
+          rewriter={aiEngine('mail_rewrite') === 'grokbot' ? 'Grokbot' : 'De AI'}
               sendingSince={d.sent_at}
         />
       ))}
