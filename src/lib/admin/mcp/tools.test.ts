@@ -42,7 +42,7 @@ describe('Grokbot-sessie', () => {
     await client.connect(b)
     const names = (await client.listTools()).tools.map((t) => t.name)
     for (const t of SALES_TOOLS) expect(names).toContain(t)
-    expect(names).toHaveLength(108)
+    expect(names).toHaveLength(109) // + whatsapp_gesprekken (read-only)
   })
 
   it('instructies: sales-vragen van het team altijd beantwoorden', () => {

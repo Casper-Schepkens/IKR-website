@@ -61,6 +61,7 @@ export function Sidebar({
     { href: '/admin/sales/inbox', label: 'Inbox', icon: Icon.mail },
     { href: '/admin/sales/calls', label: 'Calls', icon: Icon.phone },
     { href: '/admin/sales', label: 'Leads', icon: Icon.users, exact: true },
+    { href: '/admin/whatsapp', label: 'WhatsApp', icon: Icon.chat },
     { href: '/admin/klanten', label: 'Klanten', icon: Icon.board },
     { href: '/admin/financien', label: 'Financiën', icon: Icon.euro },
     // Productie is voor Cédric en Milan; Casper ziet het voorlopig ook (temp).

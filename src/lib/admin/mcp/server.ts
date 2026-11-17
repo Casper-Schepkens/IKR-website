@@ -23,11 +23,12 @@ import { registerProductionTools } from './tools/production'
 import { registerSopTools } from './tools/sops'
 import { registerWorkspaceTools } from './tools/workspace'
 import { registerDriveTeamTools } from './tools/drive-team'
+import { registerWhatsappTools } from './tools/whatsapp'
 
 export { validateDraft } from './tool'
 
 /** Alle tools; het hele team mag alles vragen, ook over sales. */
-const MODULES = [registerLeadTools, registerInboxTools, registerCallTools, registerJobTools, registerWeeklyTools, registerClientTools, registerProductionTools, registerSopTools, registerWorkspaceTools, registerDriveTeamTools]
+const MODULES = [registerLeadTools, registerInboxTools, registerCallTools, registerJobTools, registerWeeklyTools, registerClientTools, registerProductionTools, registerSopTools, registerWorkspaceTools, registerDriveTeamTools, registerWhatsappTools]
 
 /** Grokbot werkt als Casper, rechtstreeks op de database (service role). */
 export function botSession(): AdminSession {

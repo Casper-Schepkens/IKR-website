@@ -50,6 +50,7 @@ beforeEach(async () => {
   ;(globalThis as { __ikrProdStore?: unknown }).__ikrProdStore = undefined
   ;(globalThis as { __ikrClients?: unknown }).__ikrClients = []
   ;(globalThis as { __ikrWeekly?: unknown }).__ikrWeekly = undefined
+  ;(globalThis as { __ikrWhatsapp?: unknown }).__ikrWhatsapp = undefined
   store = []
   chatStore = []
   session = {
@@ -491,5 +492,28 @@ describe('weekly ↔ productie', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+})
+
+describe('whatsapp via MCP (read-only)', () => {
+  it('whatsapp_gesprekken geeft de laatste berichten van gekoppelde, actieve chats; geen enkele tool verstuurt', async () => {
+    const names = (await client.listTools()).tools.map((t) => t.name)
+    expect(names).toContain('whatsapp_gesprekken')
+    expect(names.filter((n) => /whatsapp/.test(n))).toEqual(['whatsapp_gesprekken'])
+    const klant = await session.clients.create({ name: 'Bakkerij Peeters', freelancer: null, contract_end: null, contract_indefinite: true }, 'test')
+    let r = await call('whatsapp_gesprekken', { klant_id: klant.id })
+    expect(r.json).toMatchObject({ chats: [], berichten: [] })
+    expect(r.text).toMatch(/Nog geen WhatsApp-chat gekoppeld/)
+    const { memoryWhatsapp } = await import('../whatsapp/repo')
+    await memoryWhatsapp().updateChat('120363000000000001@g.us', { klant_id: klant.id, actief: true })
+    r = await call('whatsapp_gesprekken', { klant_id: 'Bakkerij Peeters', limit: 2 })
+    const out = r.json as { berichten: { van: string; tekst: string | null; media: string | null }[]; chats: { naam: string; actief: boolean }[] }
+    expect(out.chats).toEqual([expect.objectContaining({ naam: 'IKR × Bakkerij Peeters', actief: true })])
+    expect(out.berichten).toEqual([
+      expect.objectContaining({ van: 'IKR', tekst: 'Top, dinsdag 9u! Briefing volgt morgen.' }),
+      expect.objectContaining({ van: 'Jan Peeters', tekst: null, media: 'image' }),
+    ])
+    expect((await call('whatsapp_gesprekken', {})).isError).toBe(true)
+    expect((await call('whatsapp_gesprekken', { lead_id: leadId, klant_id: klant.id })).isError).toBe(true)
   })
 })
