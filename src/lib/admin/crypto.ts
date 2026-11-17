@@ -19,8 +19,6 @@ function key() {
   return k
 }
 
-export const isTokenKeyConfigured = () => tokenKeyProblem() === null
-
 /** Wat er mis is met IKR_TOKEN_KEY (null = in orde), zonder de waarde zelf te tonen. */
 export function tokenKeyProblem(): string | null {
   const raw = process.env.IKR_TOKEN_KEY

@@ -124,19 +124,6 @@ export function Pill({
   )
 }
 
-export function Avatar({ text, className }: { text: string; className?: string }) {
-  return (
-    <span
-      className={cn(
-        'flex size-7 shrink-0 items-center justify-center rounded-full bg-ikr-cream text-[11px] font-bold text-ikr-navy',
-        className,
-      )}
-    >
-      {text}
-    </span>
-  )
-}
-
 export function Stat({
   label: l,
   value,

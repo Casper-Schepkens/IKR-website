@@ -32,6 +32,5 @@ export type Card = {
 export type CardMessage = { id: string; card_id: string; author: string; body: string; created_at: string }
 export type CardWithMessages = Card & { messages: CardMessage[] }
 
-export const isCardKind = (k: unknown): k is CardKind => typeof k === 'string' && k in CARD_KINDS
 /** Grok Bot denkt nog na (max. 15 minuten, daarna tonen we het niet meer als bezig). */
 export const isBusy = (c: Pick<Card, 'bot_busy_since'>, now = Date.now()) => Boolean(c.bot_busy_since && now - Date.parse(c.bot_busy_since) < 15 * 60_000)
