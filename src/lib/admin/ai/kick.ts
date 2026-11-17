@@ -4,14 +4,15 @@ import { createServiceSupabase } from '../supabase/server'
 import { aiEngine, getJob, isTeamJob, runJob, teamScopeConfigured } from './jobs'
 import { notifyGrok } from './notify'
 
-/** Taken die zonder tools kunnen: als Grok onbereikbaar is, mogen ze via de Claude API (als er een sleutel is). */
+/** Taken waar iemand op zit te wachten (chat, werkplek): die krijgen meteen een melding als Grok onbereikbaar is. */
 const NEEDS_TOOLS = new Set(['chat', 'werkplek'])
 
 export const GROK_UNREACHABLE = 'Grok Bot is nu niet bereikbaar (de automation reageerde niet). Probeer het straks opnieuw of zeg het aan Casper.'
 
 /**
  * Zet AI-taken aan het werk volgens de engine. Bij Grokbot: pingen, en als dat mislukt niet stil
- * laten liggen: taken zonder tools via de API, chat en werkplek krijgen een duidelijke melding.
+ * laten liggen: chat en werkplek krijgen een duidelijke melding; andere taken blijven open voor Grok
+ * (nooit via de Claude API: die kost credits). De mislukte ping staat in Instellingen.
  * Faalt nooit hard.
  */
 export async function kickJobs(ids: string[]) {
@@ -66,11 +67,8 @@ export function kickJobsLater(ids: string[]) {
 async function handleUnreachable(id: string) {
   const job = await getJob(id)
   if (!job || job.status !== 'pending') return
-  if (!NEEDS_TOOLS.has(job.type)) {
-    // Zonder tools: via de API als die ingesteld is, anders blijft de taak open voor Grok later.
-    if (process.env.ANTHROPIC_API_KEY) await runJob(id, { force: true })
-    return
-  }
+  // Andere taken blijven open: Grok haalt ze op bij de volgende ping (ai_taken_open).
+  if (!NEEDS_TOOLS.has(job.type)) return
   const db = createServiceSupabase()
   const input = job.input as { user_id?: string; page?: string | null; kaart?: { id?: string } }
   await db.from('ai_jobs').update({ status: 'error', error: GROK_UNREACHABLE, finished_at: new Date().toISOString() }).eq('id', id).eq('status', 'pending')
