@@ -6,6 +6,7 @@ import { enqueue, isAiConfigured } from '../ai/jobs'
 import type { CallVerwerkenInput } from '../ai/handlers'
 import { createServiceSupabase } from '../supabase/server'
 import { must } from '../supabase/must'
+import { clip } from '../ai/clip'
 import { supabaseCalls, type CallsRepo } from './repo'
 import { supabaseLeads, type LeadsRepo } from '../sales/repo'
 import { supabaseDrafts, type DraftsRepo } from '../sales/drafts'
@@ -160,7 +161,8 @@ export async function processTranscript(callId: string, t: FirefliesTranscript, 
       phone: freshLead.phone,
       company: freshLead.company,
     },
-    transcript: t.text.slice(0, 80_000),
+    // Begin en einde houden: de afspraken en volgende stappen staan meestal op het einde.
+    transcript: clip(t.text, 80_000, { tail: 25_000 }),
     bedankmail,
   }
   const job = await enqueue('call_verwerken', input.ref, input as unknown as Record<string, unknown>, 'fireflies')

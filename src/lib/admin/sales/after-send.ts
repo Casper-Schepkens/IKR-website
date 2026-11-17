@@ -6,6 +6,7 @@ import { enqueue, isAiConfigured } from '../ai/jobs'
 import { fmtDate, isoDay } from '../format'
 import { createServiceSupabase } from '../supabase/server'
 import type { AfterSendInput } from './after-send-apply'
+import { clip } from '../ai/clip'
 import { kickJobs } from '../ai/kick'
 
 /** Verstuurd concept: de rest (lead, thread, tekst) wordt na het versturen uit mail_drafts gelezen. */
@@ -86,7 +87,7 @@ export async function createAfterSendJob(mail: SentMail, sentAt = new Date()) {
       thread = t.mails
         .filter((m) => new Date(m.date) < new Date(sentAt.getTime() - 5000))
         .slice(-6)
-        .map((m) => ({ from: m.fromEmail, date: m.date, text: m.text.slice(0, 3000), fromCasper: m.fromEmail === SALES_EMAIL }))
+        .map((m) => ({ from: m.fromEmail, date: m.date, text: clip(m.text, 3000), fromCasper: m.fromEmail === SALES_EMAIL }))
     } catch {
       thread = []
     }
@@ -102,7 +103,7 @@ export async function createAfterSendJob(mail: SentMail, sentAt = new Date()) {
       from: mail.from,
       to: mail.to,
       subject,
-      body: mail.body.slice(0, 8000),
+      body: clip(mail.body, 8000),
     },
     thread,
     ...(mail.keep?.length ? { keep: mail.keep } : {}),
