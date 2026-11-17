@@ -2,7 +2,7 @@ import { headers } from 'next/headers'
 import { requireAdmin } from '@/lib/admin/session'
 import { isLivePath, PATH_HEADER } from '@/lib/admin/live'
 import { logIfSlow } from '@/lib/admin/timing'
-import { canSeeSales } from '@/lib/admin/env'
+import { isSalesOwner } from '@/lib/admin/env'
 import { Sidebar } from '@/components/admin/Sidebar'
 import { AdminChat } from '@/components/admin/AdminChat'
 import { LiveData } from '@/components/admin/LiveData'
@@ -28,7 +28,7 @@ export default async function AdminAppLayout({ children }: { children: React.Rea
   ]))
   return (
     <div className="flex min-h-dvh flex-col lg:flex-row">
-      <Sidebar name={user.name} email={user.email} demo={mode === 'demo'} sales={canSeeSales(user.email)} navPrefs={navPrefs} />
+      <Sidebar name={user.name} email={user.email} demo={mode === 'demo'} sales={isSalesOwner(user.email)} navPrefs={navPrefs} />
       <main className="flex min-w-0 flex-1 flex-col gap-7 px-4 pt-6 pb-14 sm:px-9">
         <AdminChat initial={chat} />
         <LiveData stamp={stamp} />

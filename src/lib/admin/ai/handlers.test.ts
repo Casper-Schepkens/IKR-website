@@ -89,8 +89,10 @@ describe('chat', () => {
     expect(p).toContain('Doe hetzelfde voor Jan')
   })
 
-  it('verstuurt nooit zelf en houdt sales enkel voor Casper', () => {
+  it('verstuurt nooit zelf en beantwoordt sales-vragen van iedereen', () => {
     expect(HANDLERS.chat.instructions).toMatch(/Verstuur nooit zelf mails/)
-    expect(HANDLERS.chat.instructions).toMatch(/enkel aan casper@iknowright.be/)
+    expect(HANDLERS.chat.instructions).toMatch(/sales.*beantwoord je altijd, voor elk teamlid/)
+    expect(HANDLERS.chat.instructions).not.toMatch(/enkel aan casper/)
+    expect(HANDLERS.werkplek.instructions).not.toMatch(/enkel op de werkplek van Casper/)
   })
 })

@@ -1,5 +1,5 @@
 import { requireAdmin } from '@/lib/admin/session'
-import { canSeeSales } from '@/lib/admin/env'
+import { isSalesOwner } from '@/lib/admin/env'
 import { myInternalItems, myNextSteps, type TeamMember } from '@/lib/admin/production/core'
 import { listChanges, loadProduction, today } from '@/lib/admin/production/service'
 import { ownerOf } from '@/lib/admin/weekly/types'
@@ -21,7 +21,7 @@ export default async function ProductionPage() {
   const day = today()
   const [clientList, changes] = await Promise.all([clients.list(), listChanges(production, { limit: 40 }).catch(() => [])])
   const { list, notStarted, internal, template } = await loadProduction(production, clientList.map((c) => ({ id: c.id, name: c.name })), day)
-  const temp = canSeeSales(user.email)
+  const temp = isSalesOwner(user.email)
   const me = ownerOf(user.email) as TeamMember | null
   const people: PersonSteps[] = (
     [

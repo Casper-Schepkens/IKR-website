@@ -4,7 +4,7 @@ import { requireAdmin } from '@/lib/admin/session'
 import { authUrl, isGoogleConfigured, SCOPES, TEAM_SCOPES } from '@/lib/admin/google'
 import { tokenKeyProblem } from '@/lib/admin/crypto'
 import { CONTACT_EMAIL } from '@/lib/admin/weekly/types'
-import { canSeeSales } from '@/lib/admin/env'
+import { isSalesOwner } from '@/lib/admin/env'
 
 /** Start "Connect calendar": voor jezelf (?voor=mij) of voor de contact-agenda (?voor=contact). */
 export async function GET(req: NextRequest) {
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
       // Cedric en Milan: hun agenda.
       scopes: forContact
         ? [SCOPES.calendar, SCOPES.drive, SCOPES.driveFull, SCOPES.gmailRead]
-        : canSeeSales(user.email)
+        : isSalesOwner(user.email)
           ? [SCOPES.gmailRead, SCOPES.gmailSend]
           : [SCOPES.calendar],
     }),

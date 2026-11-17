@@ -1,6 +1,6 @@
 import 'server-only'
 import { enqueue } from '../ai/jobs'
-import { canSeeSales, isSupabaseConfigured, SALES_EMAIL } from '../env'
+import { isSalesOwner, isSupabaseConfigured, SALES_EMAIL } from '../env'
 import { TEAM } from '../weekly/types'
 import { workspaceRepo } from './repo'
 import { CARD_KINDS, type Card, type CardWithMessages } from './types'
@@ -24,7 +24,7 @@ export const memberName = (email: string) => TEAM.find((m) => m.email === email.
 
 /** Eigen kaarten; Casper mag (voorlopig) alles zien en doen. */
 export function canUse(card: Pick<Card, 'owner_email'>, userEmail: string) {
-  return card.owner_email.toLowerCase() === userEmail.toLowerCase() || canSeeSales(userEmail)
+  return card.owner_email.toLowerCase() === userEmail.toLowerCase() || isSalesOwner(userEmail)
 }
 
 export async function getOwnCard(id: string, userEmail: string) {

@@ -11,7 +11,7 @@ import { CONTACT_EMAIL } from '@/lib/admin/weekly/types'
 import { sendInboxReplyAction, type ActionResult } from './actions'
 import { formText as str } from '@/lib/admin/forms'
 
-/** Calls (sales, enkel Casper). Niets hier verstuurt mail, behalve "Verstuur en plan" via de bestaande verzendactie. */
+/** Calls (sales, elk teamlid). Niets hier verstuurt mail, behalve "Verstuur en plan" via de bestaande verzendactie. */
 
 async function attempt<T = void>(fn: () => Promise<T>): Promise<ActionResult<T>> {
   try {

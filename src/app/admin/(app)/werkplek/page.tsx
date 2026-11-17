@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/admin/session'
-import { canSeeSales } from '@/lib/admin/env'
+import { isSalesOwner } from '@/lib/admin/env'
 import { workspaceRepo } from '@/lib/admin/workspace/repo'
 import { TEAM } from '@/lib/admin/weekly/types'
 import { buttonClass, PageHeader } from '@/components/admin/ui'
@@ -14,7 +14,7 @@ export const metadata = { title: 'Grok Bot' }
  */
 export default async function WorkspacePage({ searchParams }: { searchParams: Promise<{ voor?: string }> }) {
   const { user } = await requireAdmin()
-  const admin = canSeeSales(user.email)
+  const admin = isSalesOwner(user.email)
   const sp = await searchParams
   const other = admin ? TEAM.find((t) => t.key === sp.voor && t.email !== user.email) : undefined
   const owner = other ?? TEAM.find((t) => t.email === user.email)

@@ -5,17 +5,21 @@ import { CONTACT_EMAIL, TEAM } from '@/lib/admin/weekly/types'
 import { fmtDate } from '@/lib/admin/format'
 import { buttonClass, Card, muted, PageHeader, Pill, Spinner, Title } from '@/components/admin/ui'
 import { cn } from '@/utilities/ui'
-import { canSeeSales } from '@/lib/admin/env'
+import { isSalesOwner } from '@/lib/admin/env'
 import { StyleProfiles } from './StyleProfiles'
 import { MyConnections } from '@/components/admin/team/MyConnections'
 import { SystemStatusCard } from '@/components/admin/SystemStatusCard'
+import { MenuPages } from '@/components/admin/team/MenuPages'
+import { getNavPrefs } from '@/lib/admin/team/nav-prefs'
+import { EMPTY_NAV, hiddenPages } from '@/lib/admin/team/nav-core'
 
 export const metadata = { title: 'Instellingen' }
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ ok?: string; fout?: string }> }) {
   const { ok, fout } = await searchParams
   const { user } = await requireAdmin()
-  const connections = await listConnections()
+  const [connections, navPrefs] = await Promise.all([listConnections(), getNavPrefs(user.email).catch(() => EMPTY_NAV)])
+  const salesOwner = isSalesOwner(user.email)
   const status = (email: string) => connections.find((c) => c.email === email)
   const rows = [
     ...TEAM.map((t) => ({
@@ -87,10 +91,11 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       >
         <MyConnections email={user.email} />
       </Suspense>
+      <MenuPages hidden={hiddenPages(navPrefs, salesOwner)} salesOwner={salesOwner} />
       <Suspense fallback={null}>
-        <SystemStatusCard details={canSeeSales(user.email)} />
+        <SystemStatusCard details={isSalesOwner(user.email)} />
       </Suspense>
-      {canSeeSales(user.email) && process.env.SUPABASE_SERVICE_ROLE_KEY && <StyleProfiles />}
+      {isSalesOwner(user.email) && process.env.SUPABASE_SERVICE_ROLE_KEY && <StyleProfiles />}
     </>
   )
 }

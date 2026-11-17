@@ -6,7 +6,7 @@ de workflow staat, geen extra features.
 
 ## Stand (2 nov 2026)
 
-- **Sales (Casper)**, enkel voor `casper@iknowright.be`:
+- **Sales (Casper)**, open voor het hele team. De pagina's staan standaard enkel in het menu van Casper; elk teamlid zet ze aan in Instellingen → Mijn menu (RLS: `is_sales_user()` = `is_team_member()`):
   - `/admin/sales/cold-mails`: cold mails-dashboard (Apollo, enkel lezen). Toont het aantal nieuwe
     adressen dat nog gemaild moet worden in de actieve sequence (oranje onder 20 → Grokbot vragen),
     verstuurd → reacties → leads → setter calls → sales calls → gewonnen, en een overzicht per sequence;
@@ -108,7 +108,7 @@ Volgens de sales-workflow in Lucid:
 
 - MCP: `mail_concept_aanmaken`, `mail_concept_bijwerken`, `mail_concept_verwijderen`. Tabel `mail_drafts`.
 - **Een bot verstuurt nooit zelf.** De MCP-server heeft geen enkele verzendtool (ook `inbox_versturen` is weg);
-  versturen kan enkel via de knop Verstuur in het dashboard (server action, ingelogd als Casper).
+  versturen kan enkel via de knop Verstuur in het dashboard (server action, door een ingelogd teamlid; de mail vertrekt uit de mailbox van Casper).
 - Concepten staan in de inbox (tab Concepten) en op de leadfiche (Mailconcepten): bewerken, versturen, verwijderen.
 - Afzender is altijd casper@ (er wordt niet meer via contact@ verstuurd).
 - Tests: `npm test` (Vitest, `src/lib/admin/mcp/server.test.ts`).
@@ -134,7 +134,7 @@ Volgens de sales-workflow in Lucid:
 - Herschrijf-instructies bij een concept komen ook in de chat (object `concept` + id).
 - MCP: `ai_chat_geschiedenis(user_id, limit)`, `ai_chat_antwoorden(user_id, tekst, job_id?)`,
   `mail_concepten_lijst(lead_id?)`. Antwoorden kan ook als resultaat van de taak (`{ antwoord }`).
-- Grok Bot verstuurt niets; sales-gegevens enkel voor casper@ (instructie aan de bot, geen harde blokkering).
+- Grok Bot verstuurt niets. Sales-vragen beantwoordt hij voor elk teamlid.
 
 ## Mijn koppelingen (mail + agenda per teamlid, alleen lezen)
 Elk teamlid koppelt in **Instellingen → Mijn koppelingen** zelf:
