@@ -1,10 +1,11 @@
-import { mkdir, rm } from 'node:fs/promises'
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
+import { dirname, join } from 'node:path'
 import makeWASocket, { Browsers, DisconnectReason, fetchLatestBaileysVersion, useMultiFileAuthState, type WASocket } from 'baileys'
 import pino from 'pino'
 import qrTerminal from 'qrcode-terminal'
 import { supabaseBridgeDb } from './db.js'
 import { lockDown, type RawMessage } from './extract.js'
-import { Recorder } from './recorder.js'
+import { Recorder, type NameStore, type SavedNames } from './recorder.js'
 import { startServer, type BridgeStatus } from './server.js'
 
 /**
@@ -27,13 +28,25 @@ const AUTH_DIR = env('AUTH_DIR', false) || '/data/auth'
 const PORT = Number(env('PORT', false) || 8080)
 /** Optioneel: bij het actief zetten van een chat je eigen telefoon om oudere berichten vragen (standaard uit). */
 const HISTORY_ON_ACTIVATE = env('HISTORIEK_OPVRAGEN', false) === 'true'
+/** Nummers van Milan en Cédric (komma-gescheiden): groepen met het hele team komen bovenaan in het dashboard. */
+const TEAM_NUMBERS = env('TEAM_NUMMERS', false).split(/[,;\s]+/).filter(Boolean)
 /** Optioneel: bij het koppelen de volledige historiek laten synchroniseren (standaard uit). */
 const FULL_HISTORY = env('VOLLEDIGE_HISTORIEK', false) === 'true'
 
 const logger = pino({ level: env('LOG_LEVEL', false) || 'info' })
 const log = (msg: string, extra?: Record<string, unknown>) => logger.info(extra ?? {}, msg)
 const db = supabaseBridgeDb(SUPABASE_URL, SERVICE_KEY)
-const recorder = new Recorder(db, log)
+/** Namen en nummers op het volume (naast de koppeling): WhatsApp stuurt het adresboek maar één keer. */
+const NAMES_FILE = join(dirname(AUTH_DIR), 'namen.json')
+const nameStore: NameStore = {
+  load: async () => JSON.parse(await readFile(NAMES_FILE, 'utf8')) as SavedNames,
+  save: async (v) => {
+    await mkdir(dirname(NAMES_FILE), { recursive: true })
+    await writeFile(`${NAMES_FILE}.tmp`, JSON.stringify(v))
+    await rename(`${NAMES_FILE}.tmp`, NAMES_FILE)
+  },
+}
+const recorder = new Recorder(db, log, Date.now, nameStore)
 
 const status: BridgeStatus = { connection: 'connecting', qr: null, me: null, since: new Date().toISOString() }
 startServer(PORT, () => status, QR_SECRET)
@@ -78,6 +91,7 @@ async function connect() {
       status.me = s.user?.id ?? null
       status.since = new Date().toISOString()
       log('Verbonden (read-only).', { me: status.me })
+      void syncGroupNames()
     }
     if (u.connection === 'close') {
       const code = (u.lastDisconnect?.error as { output?: { statusCode?: number } } | undefined)?.output?.statusCode
@@ -102,10 +116,26 @@ async function connect() {
     })().catch((e) => logger.error(e, 'Historiek verwerken mislukt'))
   })
   s.ev.on('chats.upsert', (chats) => void recorder.onChats(chats as never[]).catch((e) => logger.error(e, 'Chats bewaren mislukt')))
-  s.ev.on('contacts.upsert', (contacts) => recorder.rememberContacts(contacts as never[]))
+  s.ev.on('contacts.upsert', (contacts) => void recorder.onContacts(contacts as never[]).catch((e) => logger.error(e, 'Contacten verwerken mislukt')))
+  s.ev.on('contacts.update', (contacts) => void recorder.onContacts(contacts as never[]).catch((e) => logger.error(e, 'Contacten verwerken mislukt')))
+  s.ev.on('chats.phoneNumberShare', ({ lid, jid }) => void recorder.onPhoneNumber(lid, jid).catch((e) => logger.error(e, 'Nummer verwerken mislukt')))
   s.ev.on('groups.upsert', (groups) => void recorder.onChats(groups.map((g) => ({ id: g.id, subject: g.subject }))).catch((e) => logger.error(e, 'Groepen bewaren mislukt')))
+  s.ev.on('groups.update', (groups) => void recorder.onChats(groups.filter((g) => g.id && g.subject).map((g) => ({ id: g.id!, subject: g.subject }))).catch((e) => logger.error(e, 'Groepen bewaren mislukt')))
   s.ev.on('messages.upsert', ({ messages }) => void recorder.onMessages(messages as RawMessage[], 'live').catch((e) => logger.error(e, 'Berichten bewaren mislukt')))
 }
+
+/** Groepsnamen ophalen (leesvraag aan WhatsApp, verstuurt niets): bij het verbinden en elke 6 uur. */
+async function syncGroupNames() {
+  if (!sock || status.connection !== 'open') return
+  try {
+    const groups = await sock.groupFetchAllParticipating()
+    const rows = await recorder.onGroups(Object.values(groups), TEAM_NUMBERS)
+    log('Groepen bijgewerkt.', { groepen: rows.length, met_hele_team: rows.filter((r) => r.hele_team).length })
+  } catch (e) {
+    logger.warn(e, 'Groepsnamen ophalen mislukt')
+  }
+}
+setInterval(() => void syncGroupNames(), 6 * 60 * 60_000).unref()
 
 /** Optioneel: voor pas geactiveerde chats je eigen telefoon om de laatste 50 berichten vragen. */
 async function requestHistory() {

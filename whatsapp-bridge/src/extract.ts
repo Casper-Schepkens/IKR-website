@@ -19,7 +19,7 @@ export type BerichtRij = {
 
 /** Minimale vorm van een Baileys-bericht (WAMessage) die we gebruiken. */
 export type RawMessage = {
-  key?: { remoteJid?: string | null; fromMe?: boolean | null; id?: string | null; participant?: string | null } | null
+  key?: { remoteJid?: string | null; fromMe?: boolean | null; id?: string | null; participant?: string | null; senderPn?: string | null } | null
   message?: Record<string, unknown> | null
   messageTimestamp?: number | { toNumber(): number } | { low: number; high: number } | string | null
   pushName?: string | null

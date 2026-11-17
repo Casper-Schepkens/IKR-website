@@ -1,5 +1,5 @@
 import { requireSales } from '@/lib/admin/session'
-import { chatLabel, whatsappFor } from '@/lib/admin/whatsapp/service'
+import { chatLabel, chatPhone, suggestLead, whatsappFor } from '@/lib/admin/whatsapp/service'
 import { Card, muted, PageHeader } from '@/components/admin/ui'
 import { WhatsappChats, type ChatView } from '@/components/admin/whatsapp/WhatsappChats'
 import { cn } from '@/utilities/ui'
@@ -20,7 +20,16 @@ export default async function WhatsappPage() {
   const view: ChatView[] = (chats ?? []).map((c) => ({
     jid: c.jid,
     label: chatLabel(c),
+    naamWhatsapp: c.naam,
+    naamEigen: c.naam_eigen,
+    telefoon: chatPhone(c),
     groep: c.is_groep,
+    heleTeam: c.hele_team,
+    deelnemers: c.deelnemers,
+    suggestie: (() => {
+      const l = c.lead_id || c.klant_id ? null : suggestLead(c, leads)
+      return l ? { id: l.id, label: l.company ? `${l.name} (${l.company})` : l.name } : null
+    })(),
     lead_id: c.lead_id,
     klant_id: c.klant_id,
     actief: c.actief,

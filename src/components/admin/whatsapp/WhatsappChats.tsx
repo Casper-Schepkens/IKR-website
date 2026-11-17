@@ -9,7 +9,15 @@ import { cn } from '@/utilities/ui'
 export type ChatView = {
   jid: string
   label: string
+  naamWhatsapp: string | null
+  naamEigen: string | null
+  telefoon: string | null
   groep: boolean
+  /** Groep met Casper, Milan én Cédric. */
+  heleTeam: boolean
+  deelnemers: number | null
+  /** Lead met hetzelfde nummer (voorstel). */
+  suggestie: { id: string; label: string } | null
   lead_id: string | null
   klant_id: string | null
   actief: boolean
@@ -25,9 +33,12 @@ const MEDIA: Record<string, string> = { image: 'foto', video: 'video', audio: 's
 /** Gedetecteerde WhatsApp-chats koppelen aan een lead of klant en actief zetten. */
 export function WhatsappChats({ chats, leads, klanten }: { chats: ChatView[]; leads: Option[]; klanten: Option[] }) {
   const [q, setQ] = useState('')
-  const match = (c: ChatView) => !q.trim() || `${c.label} ${c.jid}`.toLowerCase().includes(q.trim().toLowerCase())
+  const match = (c: ChatView) => !q.trim() || `${c.label} ${c.naamWhatsapp ?? ''} ${c.telefoon ?? ''} ${c.jid}`.toLowerCase().includes(q.trim().toLowerCase())
   const active = chats.filter((c) => c.actief && match(c))
   const rest = chats.filter((c) => !c.actief && match(c))
+  // Groepen met het hele team (meestal klantgroepen) eerst.
+  const team = rest.filter((c) => c.heleTeam)
+  const other = rest.filter((c) => !c.heleTeam)
   return (
     <>
       <label className="flex max-w-md flex-col gap-1 text-xs font-semibold">
@@ -50,16 +61,27 @@ export function WhatsappChats({ chats, leads, klanten }: { chats: ChatView[]; le
       <Card className="flex flex-col gap-2">
         <Title className="m-0 text-2xl">Gedetecteerd ({rest.length})</Title>
         <p className={cn('m-0 text-sm', muted)}>Van deze chats staat enkel de naam en het laatste tijdstip hier, nooit de inhoud.</p>
-        {rest.length ? (
+        {team.length > 0 && (
+          <section aria-label="Groepen met het hele team" className="flex flex-col gap-1 rounded-2xl bg-[#D3F3F9]/40 p-3">
+            <h3 className="m-0 text-sm font-bold tracking-wide uppercase">Groepen met het hele team ({team.length})</h3>
+            <p className={cn('m-0 text-xs', muted)}>Casper, Milan en Cédric zitten erin: meestal een klantgroep. Koppel ze aan de klant.</p>
+            <ul className="m-0 flex list-none flex-col p-0">
+              {team.map((c) => (
+                <ChatRow key={c.jid} chat={c} leads={leads} klanten={klanten} />
+              ))}
+            </ul>
+          </section>
+        )}
+        {other.length ? (
           <ul className="m-0 flex list-none flex-col p-0">
-            {rest.slice(0, 200).map((c) => (
+            {other.slice(0, 200).map((c) => (
               <ChatRow key={c.jid} chat={c} leads={leads} klanten={klanten} />
             ))}
           </ul>
         ) : (
-          <Empty>{q ? 'Niets gevonden.' : 'Nog geen chats gedetecteerd.'}</Empty>
+          !team.length && <Empty>{q ? 'Niets gevonden.' : 'Nog geen chats gedetecteerd.'}</Empty>
         )}
-        {rest.length > 200 && <p className={cn('m-0 text-xs', muted)}>De 200 meest recente; zoek om andere te vinden.</p>}
+        {other.length > 200 && <p className={cn('m-0 text-xs', muted)}>De 200 meest recente; zoek om andere te vinden.</p>}
       </Card>
     </>
   )
@@ -87,16 +109,30 @@ function ChatRow({ chat: c, leads, klanten }: { chat: ChatView; leads: Option[];
           })
         }}
       >
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="flex flex-wrap items-center gap-1.5 font-bold">
-            <span className="truncate">{c.label}</span>
-            {c.groep && <Pill tone="light">groep</Pill>}
+        <div className="flex min-w-0 flex-col gap-1">
+          <label className="flex flex-col gap-0.5 text-xs font-semibold">
+            <span className="flex flex-wrap items-center gap-1.5">
+              Naam {c.groep && <Pill tone="light">groep{c.deelnemers ? ` · ${c.deelnemers}` : ''}</Pill>}
+              {c.heleTeam && <Pill tone="teal">hele team</Pill>}
+            </span>
+            <input
+              name="naam_eigen"
+              defaultValue={c.naamEigen ?? ''}
+              placeholder={c.naamWhatsapp ?? c.label}
+              maxLength={300}
+              aria-label={`Eigen naam voor ${c.label}`}
+              className={cn(input, 'min-h-9 py-1 text-sm font-bold')}
+            />
+          </label>
+          <span className={cn('text-xs', muted)}>
+            {c.telefoon && <>{c.telefoon} · </>}
+            {c.naamEigen && c.naamWhatsapp && <>in WhatsApp: {c.naamWhatsapp} · </>}
+            laatst actief: {when(c.laatst_actief)}
           </span>
-          <span className={cn('text-xs', muted)}>laatst actief: {when(c.laatst_actief)}</span>
         </div>
         <label className="flex flex-col gap-1 text-xs font-semibold">
           Lead
-          <select name="lead_id" defaultValue={c.lead_id ?? ''} className={cn(input, 'min-h-9 py-1 text-sm')}>
+          <select name="lead_id" defaultValue={c.lead_id ?? c.suggestie?.id ?? ''} className={cn(input, 'min-h-9 py-1 text-sm')}>
             <option value="">(geen)</option>
             {leads.map((l) => (
               <option key={l.id} value={l.id}>
@@ -127,6 +163,11 @@ function ChatRow({ chat: c, leads, klanten }: { chat: ChatView; leads: Option[];
           {saved && !pending && <span className="text-xs text-[#1E5B27]">Bewaard</span>}
         </div>
       </form>
+      {c.suggestie && (
+        <p className="m-0 text-xs text-[#0A5F6E]">
+          Voorstel: zelfde nummer als lead <strong>{c.suggestie.label}</strong> (al ingevuld; klik Bewaar om te koppelen).
+        </p>
+      )}
       {error && (
         <p role="alert" className="m-0 text-sm text-[#A3470F]">
           {error}
