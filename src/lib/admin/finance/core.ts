@@ -29,7 +29,8 @@ export const isOutCategory = (c: string) => c in OUT_CATEGORIES
 /** Btw op omzet van Belgische klanten. */
 export const VAT_RATE = 0.21
 
-export type Tx = { odoo_id: number; date: string; amount: number; counterparty: string; description: string; category: string; client_id: string | null; manual: boolean }
+/** rule_id: welke eigen regel de indeling bepaalde (null = standaardregel, handmatig of geen). */
+export type Tx = { odoo_id: number; date: string; amount: number; counterparty: string; description: string; category: string; client_id: string | null; manual: boolean; rule_id?: string | null }
 /** field: 'tegenpartij' = enkel de naam van de tegenpartij (voor namen van personen: de omschrijving bevat ook de naam van de kaarthouder). */
 export type Rule = { id?: string; pattern: string; category: string; client_id?: string | null; priority?: number; field?: 'alles' | 'tegenpartij' }
 export type ClientLite = {

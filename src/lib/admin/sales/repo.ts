@@ -51,6 +51,14 @@ export function supabaseLeads(db: SupabaseClient): LeadsRepo {
       check(await db.from('leads').update({ stage: 'lost', lost_reason: reason, lost_note: note }).eq('id', id))
     },
     async removeNotALead(id) {
+      // Geen historiek wissen: calls (met analyse) en verstuurde mails blijven bewaard. Zet de lead dan op lost.
+      const [{ count: callCount }, { count: sentCount }] = await Promise.all([
+        db.from('calls').select('id', { count: 'exact', head: true }).eq('lead_id', id),
+        db.from('mail_drafts').select('id', { count: 'exact', head: true }).eq('lead_id', id).eq('status', 'verstuurd'),
+      ])
+      if (callCount || sentCount)
+        throw new Error('Deze lead heeft calls of verstuurde mails. Verwijderen zou die historiek wissen: zet hem op lost.')
+      check(await db.from('mail_drafts').delete().eq('lead_id', id).eq('status', 'concept'))
       const lead = check(await db.from('leads').select('email').eq('id', id).maybeSingle())
       if (lead?.email) check(await db.from('sales_ignored_emails').upsert({ email: lead.email.toLowerCase() }))
       check(await db.from('leads').delete().eq('id', id))
