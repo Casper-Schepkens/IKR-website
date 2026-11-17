@@ -19,9 +19,9 @@ afterEach(() => {
 
 describe('toegang tot de MCP-server', () => {
   it('juiste sleutel in Authorization, x-api-key of de URL', () => {
-    expect(checkKey(req({ authorization: `Bearer ${KEY}` }))).toEqual({ ok: true, scope: 'sales' })
-    expect(checkKey(req({ 'x-api-key': KEY }))).toEqual({ ok: true, scope: 'sales' })
-    expect(checkKey(req(), KEY)).toEqual({ ok: true, scope: 'sales' })
+    expect(checkKey(req({ authorization: `Bearer ${KEY}` }))).toEqual({ ok: true })
+    expect(checkKey(req({ 'x-api-key': KEY }))).toEqual({ ok: true })
+    expect(checkKey(req(), KEY)).toEqual({ ok: true })
   })
   it('foute, lege of geen sleutel: geweigerd', () => {
     expect(checkKey(req({ authorization: 'Bearer fout' }))).toMatchObject({ ok: false, status: 401 })
@@ -30,13 +30,13 @@ describe('toegang tot de MCP-server', () => {
   })
   it('sleutel wisselen: oude en nieuwe werken allebei', () => {
     process.env.GROKBOT_API_KEY_NEXT = 'b'.repeat(64)
-    expect(checkKey(req({ authorization: `Bearer ${KEY}` }))).toEqual({ ok: true, scope: 'sales' })
-    expect(checkKey(req({ authorization: `Bearer ${'b'.repeat(64)}` }))).toEqual({ ok: true, scope: 'sales' })
+    expect(checkKey(req({ authorization: `Bearer ${KEY}` }))).toEqual({ ok: true })
+    expect(checkKey(req({ authorization: `Bearer ${'b'.repeat(64)}` }))).toEqual({ ok: true })
   })
   it('sleutel in de URL uit te zetten', () => {
     process.env.GROKBOT_ALLOW_URL_KEY = 'false'
     expect(checkKey(req(), KEY)).toMatchObject({ ok: false, reason: 'sleutel in de URL staat uit' })
-    expect(checkKey(req({ authorization: `Bearer ${KEY}` }))).toEqual({ ok: true, scope: 'sales' })
+    expect(checkKey(req({ authorization: `Bearer ${KEY}` }))).toEqual({ ok: true })
   })
   it('zonder sleutel in Vercel: 503, GET: 405, fout: 401 zonder de server op te bouwen', async () => {
     expect((await handleMcp(req({}, 'GET'))).status).toBe(405)

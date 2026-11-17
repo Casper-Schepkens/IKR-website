@@ -189,9 +189,6 @@ export const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Gebruik YYYY-MM-
 
 export const owner = z.enum(OWNERS as [string, ...string[]])
 
-/** Wat een sessie mag: 'sales' = alles (Casper), 'team' = zonder leads, inbox, concepten, calls en cold mails. */
-export type Scope = 'sales' | 'team'
-
 /** Een leesoproep die langer duurt dan dit, komt ook in het log. */
 export const SLOW_TOOL_MS = 10_000
 
@@ -261,4 +258,4 @@ export function makeResolvers(session: AdminSession) {
   return { resolveLead, resolveClient }
 }
 
-export type ToolCtx = { session: AdminSession; tool: ToolFn; scope: Scope } & ReturnType<typeof makeResolvers>
+export type ToolCtx = { session: AdminSession; tool: ToolFn } & ReturnType<typeof makeResolvers>
