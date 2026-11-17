@@ -7,13 +7,13 @@ import { cn } from '@/utilities/ui'
 import { Icon } from './ui'
 import { signOutAction } from '@/app/admin/actions'
 import { saveNavPrefsAction } from '@/app/admin/team-actions'
-import { arrangeNav, type NavPrefs } from '@/lib/admin/team/nav-core'
+import { arrangeNav, hiddenPages, type NavPrefs } from '@/lib/admin/team/nav-core'
 import { badge, NOTIFY_PAGES, total } from '@/lib/admin/notifications/core'
 import { useNotifications } from './useNotifications'
 
 type NavItem = { href: string; label: string; icon: (typeof Icon)[keyof typeof Icon]; exact?: boolean }
 
-/** Menu per persoon: enkel wat bij iemands eigen workflow hoort. */
+/** Menu per persoon: alles mag, maar je kiest in Instellingen welke pagina's erin staan (sales standaard enkel bij Casper). */
 export function Sidebar({
   name,
   email,
@@ -52,17 +52,15 @@ export function Sidebar({
     const key = (Object.keys(NOTIFY_PAGES) as (keyof typeof NOTIFY_PAGES)[]).find((k) => NOTIFY_PAGES[k] === href)
     return key ? counts[key] : undefined
   }
-  const nav: NavItem[] = [
-    // Grok Bot (werkplek) bovenaan, voor iedereen.
+  // Verborgen pagina's komen van de server (Instellingen); volgorde en pins wijzigen hier meteen.
+  const hidden = new Set(hiddenPages(navPrefs, sales))
+  const all: NavItem[] = [
+    // Grok Bot (werkplek) bovenaan.
     { href: '/admin/werkplek', label: 'Grok Bot', icon: Icon.sparkle },
-    ...(sales
-      ? [
-          { href: '/admin/sales/cold-mails', label: 'Cold mails', icon: Icon.chart },
-          { href: '/admin/sales/inbox', label: 'Inbox', icon: Icon.mail },
-          { href: '/admin/sales/calls', label: 'Calls', icon: Icon.phone },
-          { href: '/admin/sales', label: 'Leads', icon: Icon.users, exact: true },
-        ]
-      : []),
+    { href: '/admin/sales/cold-mails', label: 'Cold mails', icon: Icon.chart },
+    { href: '/admin/sales/inbox', label: 'Inbox', icon: Icon.mail },
+    { href: '/admin/sales/calls', label: 'Calls', icon: Icon.phone },
+    { href: '/admin/sales', label: 'Leads', icon: Icon.users, exact: true },
     { href: '/admin/klanten', label: 'Klanten', icon: Icon.board },
     { href: '/admin/financien', label: 'Financiën', icon: Icon.euro },
     // Productie is voor Cédric en Milan; Casper ziet het voorlopig ook (temp).
@@ -72,6 +70,7 @@ export function Sidebar({
     { href: '/admin/sops', label: "SOP's", icon: Icon.book },
     { href: '/admin/instellingen', label: 'Instellingen', icon: Icon.settings },
   ]
+  const nav = all.filter((i) => !hidden.has(i.href))
   const { pinned, rest } = arrangeNav(nav, prefs)
   const save = (next: NavPrefs) => {
     setPrefs(next)
@@ -83,7 +82,7 @@ export function Sidebar({
     const isPinned = prefs.pinned.includes(href)
     const restHrefs = rest.map((i) => i.href)
     // Losmaken: terug onderaan de rest; vastpinnen: onderaan de vastgepinde.
-    save(isPinned ? { pinned: prefs.pinned.filter((h) => h !== href), order: [...restHrefs, href] } : { pinned: [...pinned.map((i) => i.href), href], order: restHrefs.filter((h) => h !== href) })
+    save(isPinned ? { ...prefs, pinned: prefs.pinned.filter((h) => h !== href), order: [...restHrefs, href] } : { ...prefs, pinned: [...pinned.map((i) => i.href), href], order: restHrefs.filter((h) => h !== href) })
   }
   /** Verplaats `href` binnen zijn groep (vastgepind of de rest) naar de plaats van `target`, of met een stap. */
   const move = (href: string, to: string | number) => {

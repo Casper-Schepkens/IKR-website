@@ -74,3 +74,15 @@ export async function saveNavPrefsAction(order: string[], pinned: string[]) {
     return { ok: false as const, error: e instanceof Error ? e.message : 'Bewaren mislukt.' }
   }
 }
+
+/** Instellingen: welke pagina's je in je menu ziet (enkel voor jezelf; openen kan je ze altijd). null = standaard. */
+export async function saveHiddenPagesAction(hidden: string[] | null) {
+  try {
+    const { user } = await requireAdmin()
+    await saveNavPrefs(user.email, { hidden })
+    revalidatePath('/admin', 'layout')
+    return { ok: true as const }
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : 'Bewaren mislukt.' }
+  }
+}

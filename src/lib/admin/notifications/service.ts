@@ -1,5 +1,7 @@
 import 'server-only'
-import { canSeeSales, isSupabaseConfigured } from '../env'
+import { isSalesOwner, isSupabaseConfigured } from '../env'
+import { getNavPrefs } from '../team/nav-prefs'
+import { EMPTY_NAV, showsSales } from '../team/nav-core'
 import { createServiceSupabase } from '../supabase/server'
 import { memoryLeads, supabaseLeads } from '../sales/repo'
 import { demoDrafts, supabaseDrafts } from '../sales/drafts'
@@ -60,17 +62,19 @@ export function cachedNotificationsFor(email: string, opts: { fresh?: boolean } 
 export async function notificationsFor(email: string): Promise<Counts> {
   const r = repos()
   const owner = ownerOf(email)
-  const sales = canSeeSales(email)
   const day = today()
   const now = Date.now()
-  const [cards, sops, todos, weeklies, clients, status] = await Promise.all([
+  // Sales-tellers enkel als iemand sales-pagina's in zijn menu heeft (standaard: Casper).
+  const [cards, sops, todos, weeklies, clients, status, prefs] = await Promise.all([
     tryLoad('werkplek', workspaceRepo().list(email)),
     tryLoad("SOP's", r.sops.list()),
     tryLoad("to-do's", r.weekly.listTodos()),
     tryLoad('weeklies', r.weekly.listWeeklies()),
     tryLoad('klanten', r.clients.list()),
     tryLoad('systeemstatus', systemStatus()),
+    getNavPrefs(email).catch(() => EMPTY_NAV),
   ])
+  const sales = showsSales(prefs, isSalesOwner(email))
   const counts: Counts = {
     werkplek: when(cards, (c) => countWorkspace(c, email)),
     sops: when(sops, (s) => countSopProposals(s)),

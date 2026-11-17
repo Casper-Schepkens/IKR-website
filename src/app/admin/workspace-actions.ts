@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/admin/session'
-import { canSeeSales } from '@/lib/admin/env'
+import { isSalesOwner } from '@/lib/admin/env'
 import { workspaceRepo } from '@/lib/admin/workspace/repo'
 import { askBot, getOwnCard, memberEmail } from '@/lib/admin/workspace/service'
 import { CARD_STATUSES, type CardStatus } from '@/lib/admin/workspace/types'
@@ -29,7 +29,7 @@ export async function giveOrderAction(form: FormData) {
     if (!text) throw new Error('Schrijf wat Grok Bot moet doen.')
     // Casper kan (voorlopig) ook een opdracht op de werkplek van iemand anders zetten.
     const forWho = str(form, 'for')
-    const owner = forWho && canSeeSales(user.email) ? memberEmail(forWho) : user.email
+    const owner = forWho && isSalesOwner(user.email) ? memberEmail(forWho) : user.email
     const firstLine = text.split('\n')[0]
     const card = await workspaceRepo().create({ owner_email: owner, kind: 'opdracht', title: firstLine.length > 120 ? `${firstLine.slice(0, 117)}…` : firstLine, body: text.slice(0, 20000), created_by: user.email, unread: false })
     await askBot({ ...card, messages: [] }, 'opdracht', user.email)

@@ -149,7 +149,7 @@ export async function removeNotALeadAndBackAction(id: string) {
   redirect('/admin/sales')
 }
 
-// ─── Mailconcepten: enkel Casper verstuurt, via deze knop ───────────────
+// ─── Mailconcepten: een mens verstuurt (vanuit de mailbox van Casper), via deze knop ───
 
 export async function updateDraftAction(id: string, form: FormData) {
   return attempt(async () => {

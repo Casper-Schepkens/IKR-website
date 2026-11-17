@@ -2,7 +2,7 @@ import 'server-only'
 import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { connection } from 'next/server'
-import { canSeeSales, isAllowedAdminEmail, isDemoMode, isSupabaseConfigured, SALES_EMAIL } from './env'
+import { isAllowedAdminEmail, isDemoMode, isSupabaseConfigured, SALES_EMAIL } from './env'
 import { createServerSupabase } from './supabase/server'
 import { memoryLeads, supabaseLeads, type LeadsRepo } from './sales/repo'
 import { memoryWeekly, supabaseWeekly, type WeeklyRepo } from './weekly/repo'
@@ -29,7 +29,7 @@ export type AdminSession = {
   sops: SopsRepo
   /** Productieproces per klant (hele team). */
   production: ProductionRepo
-  /** Calls (sales; RLS: enkel Casper). */
+  /** Calls (sales; RLS: elk teamlid). */
   calls: CallsRepo
   drafts: DraftsRepo
   /** Chat met Grok Bot; altijd gefilterd op de eigen user.id. */
@@ -91,9 +91,7 @@ export const requireAdmin = cache(async (): Promise<AdminSession> => {
   }
 })
 
-/** Sales-onderdelen: enkel voor Casper. Anderen gaan terug naar hun eigen startpagina. */
+/** Sales-onderdelen: elk teamlid (de pagina's staan standaard enkel in het menu van Casper). */
 export async function requireSales() {
-  const session = await requireAdmin()
-  if (!canSeeSales(session.user.email)) redirect('/admin')
-  return session
+  return requireAdmin()
 }

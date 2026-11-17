@@ -32,9 +32,12 @@ export function isAllowedAdminEmail(email: string | null | undefined) {
   return (TEAM_EMAILS as readonly string[]).includes(e) || extra.includes(e)
 }
 
-/** Elk teamlid krijgt een eigen dashboard. Sales is enkel voor Casper (ook afgedwongen in de database). */
+/**
+ * Casper doet sales (zijn mailbox, zijn concepten, zijn schrijfstijl). Iedereen van het team mag sales zien en
+ * gebruiken; dit bepaalt enkel standaarden (startpagina, welke pagina's standaard in het menu staan).
+ */
 export const SALES_EMAIL = 'casper@iknowright.be'
 
-export function canSeeSales(email: string | null | undefined) {
+export function isSalesOwner(email: string | null | undefined) {
   return email?.toLowerCase() === SALES_EMAIL
 }

@@ -1,20 +1,18 @@
 import 'server-only'
-import { canSeeSales } from '../env'
 import type { AdminSession } from '../session'
 import { PAGES, type NavTarget } from './targets'
 
-/** Alle doelen voor deze gebruiker (sales enkel voor Casper). */
+/** Alle doelen (ook sales, voor iedereen; ook pagina's die iemand uit zijn menu haalde). */
 export async function navTargets(session: AdminSession): Promise<NavTarget[]> {
-  const sales = canSeeSales(session.user.email)
   const [clients, sops, weeklies, leads] = await Promise.all([
     session.clients.list().catch(() => []),
     session.sops.list().catch(() => []),
     session.weekly.listWeeklies().catch(() => []),
-    sales ? session.leads.list().catch(() => []) : Promise.resolve([]),
+    session.leads.list().catch(() => []),
   ])
   const day = (iso: string) => new Date(iso).toLocaleDateString('nl-BE', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Brussels' })
   return [
-    ...PAGES.filter((p) => !p.sales || sales).map(({ sales: _s, ...p }) => p),
+    ...PAGES.map(({ sales: _s, ...p }) => p),
     ...clients.flatMap((c): NavTarget[] => [
       { label: c.name, sub: 'Klant', href: `/admin/klanten?klant=${c.id}`, kind: 'klant' },
       { label: c.name, sub: 'Productie', href: `/admin/productie?klant=${c.id}`, kind: 'productie' },

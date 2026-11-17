@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/admin/session'
-import { canSeeSales } from '@/lib/admin/env'
 import { monthGrid, shiftMonth } from '@/lib/admin/calendar/core'
 import { loadCalendar } from '@/lib/admin/calendar/service'
 import { Suspense } from 'react'
@@ -17,12 +16,11 @@ function today() {
 
 /** Kalender (hele team): de contact@-agenda gespiegeld, met filters op weekly, calls, draaidagen … Enkel lezen. */
 export default async function CalendarPage({ searchParams }: { searchParams: Promise<{ m?: string }> }) {
-  const { user } = await requireAdmin()
+  await requireAdmin()
   const sp = await searchParams
   const day = today()
   const month = sp.m && /^\d{4}-(0[1-9]|1[0-2])$/.test(sp.m) ? sp.m : day.slice(0, 7)
   const { days } = monthGrid(month)
-  const sales = canSeeSales(user.email)
   const [y, m] = month.split('-').map(Number)
   return (
     <>
@@ -52,13 +50,13 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
           </Card>
         }
       >
-        <MonthItems days={days} month={month} today={day} sales={sales} />
+        <MonthItems days={days} month={month} today={day} />
       </Suspense>
     </>
   )
 }
 
-async function MonthItems({ days, month, today: day, sales }: { days: string[]; month: string; today: string; sales: boolean }) {
+async function MonthItems({ days, month, today: day }: { days: string[]; month: string; today: string }) {
   const res = await loadCalendar(days[0], days.at(-1)!).catch((e: unknown) => ({ status: 'not_connected' as const, reason: e instanceof Error ? e.message : 'Agenda lezen mislukt.' }))
   if (res.status !== 'ok')
     return (
@@ -66,8 +64,7 @@ async function MonthItems({ days, month, today: day, sales }: { days: string[]; 
         <p className="m-0 text-sm text-[#A3470F]">{res.reason}</p>
       </Card>
     )
-  // Calls openen in het dashboard kan enkel Casper (sales); anderen zien ze wel in de kalender.
-  const items = res.items.map((i) => (!sales && i.href?.startsWith('/admin/sales') ? { ...i, href: null } : i))
+  const items = res.items
   return (
     <>
       {res.demo && <p className={cn('m-0 text-sm', muted)}>Demo-agenda (voorbeelddata).</p>}

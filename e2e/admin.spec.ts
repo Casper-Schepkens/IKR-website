@@ -34,6 +34,20 @@ test.describe('dashboard (demomodus)', () => {
     await expect(page).toHaveURL(/fout=/)
     await expect(page.getByText(/e-mailadres klopt niet/)).toBeVisible()
   })
+
+  test('Mijn menu: een pagina verbergen haalt ze uit de zijbalk, openen kan nog', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'zijbalk op desktop')
+    await page.goto('/admin/instellingen')
+    const nav = page.locator('nav')
+    await expect(nav.getByRole('link', { name: 'Cold mails' })).toBeVisible()
+    const box = page.getByRole('checkbox', { name: 'Cold mails' })
+    await box.uncheck()
+    await expect(nav.getByRole('link', { name: 'Cold mails' })).toHaveCount(0)
+    expect((await page.goto('/admin/sales/cold-mails'))?.status()).toBe(200)
+    await page.goto('/admin/instellingen')
+    await page.getByRole('button', { name: 'Terug naar de standaard' }).click()
+    await expect(page.locator('nav').getByRole('link', { name: 'Cold mails' })).toBeVisible()
+  })
 })
 
 test.describe('gsm', () => {
