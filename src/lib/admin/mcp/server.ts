@@ -129,9 +129,11 @@ const fail = (message: string) => ({ content: [{ type: 'text' as const, text: me
 /** Logt in bot_actions; mag nooit een tool laten falen. */
 async function log(tool: string, args: unknown, ok: boolean, error?: string) {
   try {
-    await createServiceSupabase().from('bot_actions').insert({ bot: BY, tool, args: args ?? null, ok, error: error ?? null })
-  } catch {
-    // geen service role (lokaal) of tijdelijk probleem: niet blokkeren
+    const { error: logError } = await createServiceSupabase().from('bot_actions').insert({ bot: BY, tool, args: args ?? null, ok, error: error ?? null })
+    if (logError) throw new Error(logError.message)
+  } catch (e) {
+    // geen service role (lokaal) of tijdelijk probleem: niet blokkeren, wel zichtbaar in de Vercel-logs
+    console.error('[mcp] loggen in bot_actions mislukt', tool, e instanceof Error ? e.message : e)
   }
 }
 

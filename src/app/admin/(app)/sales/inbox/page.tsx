@@ -1,16 +1,15 @@
 import Link from 'next/link'
 import { Suspense } from 'react'
 import type { AdminSession } from '@/lib/admin/session'
-import { after } from 'next/server'
 import { requireSales } from '@/lib/admin/session'
 import { loadInbox } from '@/lib/admin/sales/inbox'
-import { aiEngine, isAiConfigured, runJob } from '@/lib/admin/ai/jobs'
-import { notifyGrok } from '@/lib/admin/ai/notify'
+import { aiEngine, isAiConfigured } from '@/lib/admin/ai/jobs'
 import { buttonClass, Card, Empty, muted, PageHeader, Spinner } from '@/components/admin/ui'
 import { InboxCard } from '@/components/admin/sales/InboxCard'
 import { DraftCard } from '@/components/admin/sales/DraftCard'
 import type { MailDraft } from '@/lib/admin/sales/drafts'
 import { cn } from '@/utilities/ui'
+import { kickJobsLater } from '@/lib/admin/ai/kick'
 
 export const metadata = { title: 'Inbox' }
 export const maxDuration = 120
@@ -69,17 +68,8 @@ async function Inbox({ session, tab, concepts }: { session: AdminSession; tab: '
   }
 
   // Antwoorden klaarzetten na het tonen van de pagina; de pagina ververst zichzelf tot ze klaar zijn.
-  // Grokbot: enkel porren voor taken die net aangemaakt zijn (niet bij elk bezoek opnieuw).
-  if (aiEngine() === 'grokbot' && result.newJobIds.length) {
-    const ids = result.newJobIds
-    after(() => notifyGrok(ids))
-  }
-  if (result.pendingJobIds.length && aiEngine() === 'api' && isAiConfigured()) {
-    const ids = result.pendingJobIds
-    after(async () => {
-      for (const id of ids) await runJob(id)
-    })
-  }
+  // Grokbot: enkel porren voor taken die net aangemaakt zijn (niet bij elk bezoek opnieuw); API: alles wat nog wacht.
+  if (isAiConfigured()) kickJobsLater(aiEngine() === 'api' ? result.pendingJobIds : result.newJobIds)
 
   const items = result.items.filter((i) => i.tab === tab)
   const count = (t: 'nieuw' | 'gemaild') => result.items.filter((i) => i.tab === t).length

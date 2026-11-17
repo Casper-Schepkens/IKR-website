@@ -34,9 +34,13 @@ export function webhookHeaders(secret: string, body: string, now = Date.now()) {
   return headers
 }
 
-/** Stuurt het signaal; probeert opnieuw bij tijdelijke fouten. Geeft true als Grok het aannam. */
-export async function notifyGrok(jobIds: string[], delays = RETRY_DELAYS): Promise<boolean> {
-  if (!jobIds.length || !isGrokWebhookConfigured()) return false
+/**
+ * Stuurt het signaal; probeert opnieuw bij tijdelijke fouten. Geeft true als Grok het aannam, anders
+ * de reden (tekst) waarom niet, of false als er niets te doen was (geen taken of geen webhook ingesteld).
+ */
+export async function notifyGrok(jobIds: string[], delays = RETRY_DELAYS): Promise<true | false | string> {
+  if (!jobIds.length) return false
+  if (!isGrokWebhookConfigured()) return 'GROK_WEBHOOK_URL of GROK_WEBHOOK_SECRET ontbreekt'
   const url = process.env.GROK_WEBHOOK_URL!
   const secret = process.env.GROK_WEBHOOK_SECRET!
   const body = JSON.stringify({
@@ -47,6 +51,7 @@ export async function notifyGrok(jobIds: string[], delays = RETRY_DELAYS): Promi
       'Er staan nieuwe AI-taken klaar in het IKR-dashboard. Haal ze op met ai_taken_open (connector ikr-dashboard) en zet elk resultaat terug met ai_taak_klaarzetten. Verstuur zelf geen mails.',
   })
 
+  let reason = 'geen antwoord'
   for (let attempt = 0; attempt <= delays.length; attempt++) {
     try {
       // Elke poging opnieuw ondertekenen (verse timestamp).
@@ -55,11 +60,13 @@ export async function notifyGrok(jobIds: string[], delays = RETRY_DELAYS): Promi
       const text = await res.text().catch(() => '')
       const retryable = res.status === 429 || res.status >= 500
       console.error(`[grok] webhook ${res.status} (poging ${attempt + 1})`, text.slice(0, 300))
-      if (!retryable) return false
+      reason = `webhook ${res.status}: ${text.slice(0, 200)}`
+      if (!retryable) return reason
     } catch (e) {
       console.error(`[grok] webhook netwerkfout (poging ${attempt + 1})`, e)
+      reason = `netwerkfout: ${e instanceof Error ? e.message : String(e)}`
     }
     if (attempt < delays.length) await wait(delays[attempt])
   }
-  return false
+  return reason
 }

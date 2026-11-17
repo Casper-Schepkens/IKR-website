@@ -58,7 +58,7 @@ const weeklyJob = vi.hoisted(() => ({ queueWeeklySops: vi.fn(async () => 'JW') }
 vi.mock('../sops/weekly', () => weeklyJob)
 const jobs = vi.hoisted(() => ({ enqueue: vi.fn(async () => ({ id: 'J1' })), runJob: vi.fn(), aiEngine: () => 'grokbot', isAiConfigured: () => true }))
 vi.mock('../ai/jobs', () => jobs)
-const notify = vi.hoisted(() => ({ notifyGrok: vi.fn() }))
+const notify = vi.hoisted(() => ({ notifyGrok: vi.fn(async () => true as const) }))
 vi.mock('../ai/notify', () => notify)
 vi.mock('../ai/style-profile', () => ({ styleInstructions: async () => '', saveProfile: vi.fn(), styleKeyFor: () => 'casper', recordFeedback: vi.fn() }))
 

@@ -40,4 +40,9 @@ describe('meldingen: tellers', () => {
     expect(titleWithCount('(5) Klanten | IKR', 2)).toBe('(2) Klanten | IKR')
     expect(titleWithCount('(5) Klanten | IKR', 0)).toBe('Klanten | IKR')
   })
+  it('badge: "?" als een teller niet geladen kon worden, en geen valse 0 in het totaal', () => {
+    expect(badge(null)).toBe('?')
+    expect(badge(0)).toBeNull()
+    expect(total({ inbox: 2, leads: null, calls: 3 })).toBe(5)
+  })
 })
