@@ -14,9 +14,10 @@ export async function enqueueStyleRebuild(key: StyleKey, by: string) {
   const conns = await listConnections()
   const readable = STYLE_SOURCES.filter((m) => hasScopes(conns.find((c) => c.email === m), [SCOPES.gmailRead]))
   if (!readable.length) throw new Error('Nog geen mailbox met leesrechten: koppel casper@ en contact@ (opnieuw) in Instellingen.')
-  const mails = (
-    await Promise.all(readable.map((m) => sentReplies(m, { days: 180, maxThreads: 150, maxReplies: 120 })))
-  )
+  // Eén mailbox na de andere (niet tegelijk): zo blijft Gmail binnen zijn limiet per seconde.
+  const perBox: Awaited<ReturnType<typeof sentReplies>>[] = []
+  for (const m of readable) perBox.push(await sentReplies(m, { days: 180, maxThreads: 150, maxReplies: 120 }))
+  const mails = perBox
     .flat()
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 120)

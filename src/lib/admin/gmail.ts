@@ -27,7 +27,12 @@ type RawMessage = { id: string; threadId: string; internalDate: string; payload:
 
 const API = 'https://gmail.googleapis.com/gmail/v1/users/me'
 
-async function gmail<T>(owner: string, path: string, init?: RequestInit, retry = true): Promise<T> {
+/** Wachttijden bij "te druk" (429 of 403 rate/quota): Gmail vraagt om exponentieel te wachten. */
+export const GMAIL_BACKOFF_MS = [1000, 2000, 4000, 8000]
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+async function gmail<T>(owner: string, path: string, init?: RequestInit, retry = true, attempt = 0): Promise<T> {
   const at = await accessToken(owner)
   const res = await fetch(`${API}${path}`, {
     ...init,
@@ -39,31 +44,41 @@ async function gmail<T>(owner: string, path: string, init?: RequestInit, retry =
     forgetAccessToken(owner)
     return gmail<T>(owner, path, init, false)
   }
-  // Gmail-quotum per seconde: even wachten en één keer opnieuw proberen.
-  if ((res.status === 429 || res.status === 403) && retry) {
+  // Gmail-quotum per seconde: wachten (Retry-After of exponentieel) en opnieuw proberen, tot 4 keer.
+  if ((res.status === 429 || res.status === 403) && attempt < GMAIL_BACKOFF_MS.length) {
     const body = await res.clone().text()
     if (res.status === 429 || /quota|rate/i.test(body)) {
-      await new Promise((r) => setTimeout(r, 2000))
-      return gmail<T>(owner, path, init, false)
+      const after = Number(res.headers.get('retry-after'))
+      await sleep(after > 0 && after <= 30 ? after * 1000 : GMAIL_BACKOFF_MS[attempt])
+      return gmail<T>(owner, path, init, retry, attempt + 1)
     }
   }
   const json = (await res.json()) as T & { error?: { message?: string } }
   if (!res.ok) {
-    if (res.status === 429 || /quota/i.test(json.error?.message ?? ''))
+    if (res.status === 429 || /quota|rate limit/i.test(json.error?.message ?? ''))
       throw new Error('Gmail is even te druk bevraagd. Wacht een minuutje en herlaad de inbox.')
     throw new Error(`Gmail: ${json.error?.message ?? res.status}`)
   }
   return json
 }
 
-/** Voert taken uit met hooguit `n` tegelijk (Gmail laat per seconde maar een beperkt aantal toe). */
-async function limited<T, R>(items: T[], n: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+/**
+ * Voert taken uit met hooguit `n` tegelijk (Gmail laat per seconde maar een beperkt aantal toe). Met `gapMs`
+ * start er hoogstens één taak per `gapMs` milliseconden.
+ */
+async function limited<T, R>(items: T[], n: number, fn: (item: T) => Promise<R>, gapMs = 0): Promise<R[]> {
   const out: R[] = new Array(items.length)
   let next = 0
+  let nextStart = 0
   await Promise.all(
     Array.from({ length: Math.min(n, items.length) }, async () => {
       while (next < items.length) {
         const i = next++
+        if (gapMs) {
+          const wait = nextStart - Date.now()
+          nextStart = Math.max(nextStart, Date.now()) + gapMs
+          if (wait > 0) await sleep(wait)
+        }
         out[i] = await fn(items[i])
       }
     }),
@@ -236,7 +251,7 @@ export async function getThread(owner: string, id: string): Promise<Thread> {
  * anders. Eerste mails van een thread en mails na zijn eigen mail (cold mails en opvolgingen van
  * Apollo) vallen weg.
  */
-export async function sentReplies(owner: string, opts: { days: number; maxThreads: number; maxReplies: number }) {
+export async function sentReplies(owner: string, opts: { days: number; maxThreads: number; maxReplies: number; gapMs?: number }) {
   const ids: string[] = []
   let pageToken: string | undefined
   do {
@@ -249,9 +264,24 @@ export async function sentReplies(owner: string, opts: { days: number; maxThread
     pageToken = page.nextPageToken
   } while (pageToken && ids.length < opts.maxThreads)
 
-  const threads = await limited(ids.slice(0, opts.maxThreads), 4, (id) =>
-    gmail<{ id: string; messages: RawMessage[] }>(owner, `/threads/${id}?format=full`).then((t) => t.messages.map(toMail)),
+  // Een volledige thread kost 10 quota-eenheden (limiet 250/s per mailbox): rustig ophalen, ±8 per seconde.
+  // Lukt één thread niet, dan slaan we die over in plaats van de hele schrijfstijl te laten mislukken.
+  let failed = 0
+  let lastError: unknown = null
+  const threads = await limited(
+    ids.slice(0, opts.maxThreads),
+    2,
+    (id) =>
+      gmail<{ id: string; messages: RawMessage[] }>(owner, `/threads/${id}?format=full`)
+        .then((t) => t.messages.map(toMail))
+        .catch((e) => {
+          failed++
+          lastError = e
+          return [] as Mail[]
+        }),
+    opts.gapMs ?? 120,
   )
+  if (ids.length && failed === Math.min(ids.length, opts.maxThreads)) throw lastError instanceof Error ? lastError : new Error('Gmail: geen enkele thread kon gelezen worden.')
   const me = owner.toLowerCase()
   const replies: { subject: string; date: string; text: string }[] = []
   for (const mails of threads) {
