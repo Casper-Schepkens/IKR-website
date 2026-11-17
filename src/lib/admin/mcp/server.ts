@@ -12,7 +12,7 @@ import { supabaseCalls } from '../calls/repo'
 import { supabaseDrafts } from '../sales/drafts'
 import { supabaseChat } from '../chat/repo'
 import { INSTRUCTIONS } from './instructions'
-import { makeResolvers, makeTool, type Scope, type ToolCtx } from './tool'
+import { makeResolvers, makeTool, type ToolCtx } from './tool'
 import { registerLeadTools } from './tools/leads'
 import { registerInboxTools } from './tools/inbox-drafts'
 import { registerCallTools } from './tools/calls'
@@ -25,12 +25,9 @@ import { registerWorkspaceTools } from './tools/workspace'
 import { registerDriveTeamTools } from './tools/drive-team'
 
 export { validateDraft } from './tool'
-export type { Scope } from './tool'
 
-/** Modules met sales-gegevens (leads, inbox, concepten, calls): enkel in een sessie met bereik 'sales'. */
-const SALES_MODULES = [registerLeadTools, registerInboxTools, registerCallTools]
-/** Modules voor het hele team. Wat daarin toch enkel voor Casper is, kijkt zelf naar ctx.scope. */
-const TEAM_MODULES = [registerJobTools, registerWeeklyTools, registerClientTools, registerProductionTools, registerSopTools, registerWorkspaceTools, registerDriveTeamTools]
+/** Alle tools; het hele team mag alles vragen, ook over sales. */
+const MODULES = [registerLeadTools, registerInboxTools, registerCallTools, registerJobTools, registerWeeklyTools, registerClientTools, registerProductionTools, registerSopTools, registerWorkspaceTools, registerDriveTeamTools]
 
 /** Grokbot werkt als Casper, rechtstreeks op de database (service role). */
 export function botSession(): AdminSession {
@@ -49,13 +46,10 @@ export function botSession(): AdminSession {
   }
 }
 
-/**
- * De MCP-server voor Grokbot. Bereik 'sales' (de sleutel van Casper) krijgt alle tools; bereik 'team'
- * (een aparte sleutel voor de chats van Cédric en Milan) krijgt geen enkele sales-tool.
- */
-export function buildMcpServer(session: AdminSession, scope: Scope = 'sales') {
-  const server = new McpServer({ name: 'ikr-dashboard', version: '1.1.0' }, { instructions: INSTRUCTIONS(scope) })
-  const ctx: ToolCtx = { session, scope, tool: makeTool(server), ...makeResolvers(session) }
-  for (const register of scope === 'sales' ? [...SALES_MODULES, ...TEAM_MODULES] : TEAM_MODULES) register(ctx)
+/** De MCP-server voor Grokbot, met alle tools. */
+export function buildMcpServer(session: AdminSession) {
+  const server = new McpServer({ name: 'ikr-dashboard', version: '1.1.0' }, { instructions: INSTRUCTIONS })
+  const ctx: ToolCtx = { session, tool: makeTool(server), ...makeResolvers(session) }
+  for (const register of MODULES) register(ctx)
   return server
 }

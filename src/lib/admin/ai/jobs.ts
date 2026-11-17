@@ -3,7 +3,6 @@ import Anthropic from '@anthropic-ai/sdk'
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod'
 import type { z } from 'zod'
 import { createServiceSupabase } from '../supabase/server'
-import { SALES_EMAIL, TEAM_EMAILS } from '../env'
 import { must } from '../supabase/must'
 import { IKR_CONTEXT, SALES_MAIL_CONTEXT } from './context'
 import { ensureSignature, SIGNATURE_RULE } from '../sales/signature'
@@ -56,21 +55,9 @@ export function signMailOutput<T extends Record<string, unknown>>(type: string, 
   return fixed as T
 }
 
-/**
- * Voor wie een taak is: 'team' = aangevraagd door Cédric of Milan (hun chat, hun werkplek), 'sales' = de rest
- * (Casper, Fireflies, cron). Met een aparte team-sleutel (GROKBOT_TEAM_API_KEY) handelt een sessie zonder
- * sales-tools de team-taken af.
- */
-export type JobAudience = 'sales' | 'team' | 'all'
-export const TEAM_REQUESTERS = TEAM_EMAILS.filter((e) => e !== SALES_EMAIL)
-export const isTeamJob = (j: Pick<AiJob, 'created_by'>) => TEAM_REQUESTERS.includes((j.created_by ?? '').toLowerCase() as (typeof TEAM_REQUESTERS)[number])
-export const teamScopeConfigured = () => Boolean(process.env.GROKBOT_TEAM_API_KEY)
-
 /** Open taken voor een externe uitvoerder (Grokbot of worker), oudste eerst. */
-export async function openJobs(limit = 10, audience: JobAudience = 'all'): Promise<AiJob[]> {
+export async function openJobs(limit = 10): Promise<AiJob[]> {
   let q = db().from('ai_jobs').select('*').eq('status', 'pending')
-  if (audience === 'team') q = q.in('created_by', [...TEAM_REQUESTERS])
-  if (audience === 'sales') q = q.not('created_by', 'in', `(${TEAM_REQUESTERS.join(',')})`)
   // Taken die via de API lopen, krijgt Grokbot niet te zien.
   if (dataViaApi()) q = q.not('type', 'in', `(${DATA_ONLY_TYPES.join(',')})`)
   const { data, error } = await q.order('created_at').limit(limit)

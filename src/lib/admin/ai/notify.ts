@@ -10,18 +10,8 @@ import { timeout } from '../http'
  * Begint het secret met "whsec_", dan komt er ook een Standard Webhooks-handtekening bij
  * (HMAC-SHA256 over "{id}.{timestamp}.{body}", docs.x.ai/grok/automations/webhooks).
  */
-export type GrokTarget = 'sales' | 'team'
-
-/** Webhook per automation: de team-automation (zonder sales-tools) heeft eigen variabelen, anders dezelfde. */
-function webhookFor(target: GrokTarget) {
-  if (target === 'team' && process.env.GROK_TEAM_WEBHOOK_URL && process.env.GROK_TEAM_WEBHOOK_SECRET)
-    return { url: process.env.GROK_TEAM_WEBHOOK_URL, secret: process.env.GROK_TEAM_WEBHOOK_SECRET }
-  if (process.env.GROK_WEBHOOK_URL && process.env.GROK_WEBHOOK_SECRET) return { url: process.env.GROK_WEBHOOK_URL, secret: process.env.GROK_WEBHOOK_SECRET }
-  return null
-}
-
 export function isGrokWebhookConfigured() {
-  return webhookFor('sales') !== null
+  return Boolean(process.env.GROK_WEBHOOK_URL && process.env.GROK_WEBHOOK_SECRET)
 }
 
 /** Wachttijden tussen pogingen (ms): na een netwerkfout, 429 of 5xx. */
@@ -49,11 +39,11 @@ export function webhookHeaders(secret: string, body: string, now = Date.now()) {
  * Stuurt het signaal; probeert opnieuw bij tijdelijke fouten. Geeft true als Grok het aannam, anders
  * de reden (tekst) waarom niet, of false als er niets te doen was (geen taken of geen webhook ingesteld).
  */
-export async function notifyGrok(jobIds: string[], delays = RETRY_DELAYS, target: GrokTarget = 'sales'): Promise<true | false | string> {
+export async function notifyGrok(jobIds: string[], delays = RETRY_DELAYS): Promise<true | false | string> {
   if (!jobIds.length) return false
-  const hook = webhookFor(target)
-  if (!hook) return 'GROK_WEBHOOK_URL of GROK_WEBHOOK_SECRET ontbreekt'
-  const { url, secret } = hook
+  if (!isGrokWebhookConfigured()) return 'GROK_WEBHOOK_URL of GROK_WEBHOOK_SECRET ontbreekt'
+  const url = process.env.GROK_WEBHOOK_URL!
+  const secret = process.env.GROK_WEBHOOK_SECRET!
   const body = JSON.stringify({
     event: 'ai_jobs_pending',
     count: jobIds.length,

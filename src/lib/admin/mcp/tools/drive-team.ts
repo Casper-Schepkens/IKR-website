@@ -1,5 +1,4 @@
 import 'server-only'
-import { SALES_EMAIL } from '../../env'
 import { z } from 'zod'
 import { listAllConnections, memberName, resolveMember } from '../../team/connections'
 import { calendarEvents, getAttachment, gmailQuery, readMessage, readThread, searchMail } from '../../team/google-read'
@@ -14,13 +13,8 @@ import { MCP_CONTENT, dateStr, owner, type ToolCtx } from '../tool'
 
 /** IKR-Drive, gedeelde agenda en (enkel lezen) mail en agenda van teamleden. */
 export function registerDriveTeamTools(ctx: ToolCtx) {
-  const { tool, scope } = ctx
-  /** Team-sessie: de mailbox en agenda van Casper (sales) zijn hier niet te lezen. */
-  const member_ = async (who: string) => {
-    const m = await resolveMember(who)
-    if (scope === 'team' && m.toLowerCase() === SALES_EMAIL) throw new Error('De mailbox en agenda van Casper zijn in deze sessie niet beschikbaar.')
-    return m
-  }
+  const { tool } = ctx
+  const member_ = resolveMember
   tool(
     'agenda_uitnodigingsadres',
     'Naar welk adres uitnodigingen voor weeklies (en voor Casper ook calls) gaan, per teamlid. Zonder email: toont de huidige adressen. Met email: zet het adres (leeg = standaard) en past komende items aan. Enkel als dat teamlid erom vraagt.',
