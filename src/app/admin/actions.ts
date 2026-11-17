@@ -8,11 +8,9 @@ import { isSupabaseConfigured, SALES_EMAIL } from '@/lib/admin/env'
 import { sendDraft, sendInboxReply } from '@/lib/admin/sales/send'
 import { scheduleAfterSend } from '@/lib/admin/sales/after-send'
 import { updateLeadAfterSend } from '@/lib/admin/sales/follow-up'
-import { aiEngine, dismissJob, enqueue, getJob, isAiConfigured, runJob } from '@/lib/admin/ai/jobs'
-import { notifyGrok } from '@/lib/admin/ai/notify'
+import { dismissJob, enqueue, getJob, isAiConfigured, runJob } from '@/lib/admin/ai/jobs'
 import { recordFeedback, saveProfile, STYLE_KEYS, type StyleKey } from '@/lib/admin/ai/style-profile'
 import { enqueueStyleRebuild } from '@/lib/admin/ai/style'
-import { after } from 'next/server'
 import {
   LOST_REASONS,
   SOURCES,
@@ -22,6 +20,7 @@ import {
   type Source,
   type Stage,
 } from '@/lib/admin/sales/types'
+import { kickJobsLater } from '@/lib/admin/ai/kick'
 
 export type ActionResult<T = void> = { ok: true; data?: T } | { ok: false; error: string }
 
@@ -210,6 +209,24 @@ export async function sendDraftAction(id: string) {
   })
 }
 
+/**
+ * Een verzending die begon maar niet afgerond werd (bv. time-out na Gmail): Casper kijkt in Gmail en
+ * zegt of de mail vertrok. Pas na 2 minuten, zodat een lopende verzending niet gekruist wordt.
+ */
+export async function resolveInterruptedSendAction(id: string, wasSent: boolean) {
+  return attempt(async () => {
+    const { drafts, leads, user } = await requireSales()
+    const d = await drafts.get(id)
+    if (!d || d.status !== 'concept' || !d.sent_at) throw new Error('Dit concept wacht niet op een beslissing.')
+    if (Date.now() - Date.parse(d.sent_at) < 2 * 60_000) throw new Error('De verzending loopt misschien nog. Probeer over twee minuten opnieuw.')
+    if (wasSent) {
+      await drafts.markSent(id, user.email)
+      await updateLeadAfterSend(leads, d)
+    } else await drafts.releaseSend(id)
+    revalidatePath('/admin/sales', 'layout')
+  })
+}
+
 export async function deleteDraftAction(id: string) {
   return attempt(async () => {
     const { drafts } = await requireSales()
@@ -257,8 +274,7 @@ export async function requestRewriteAction(target: 'draft' | 'inbox', targetId: 
         object_id: targetId,
       })
       .catch((e) => console.error('[chat] herschrijf-bericht', e))
-    if (aiEngine() === 'grokbot') after(() => notifyGrok([job.id]))
-    else if (aiEngine() === 'api') after(() => runJob(job.id))
+    kickJobsLater([job.id])
     return { ok: true as const, data: job.id }
   } catch (e) {
     return { ok: false as const, error: e instanceof Error ? e.message : 'Herschrijven mislukt.' }

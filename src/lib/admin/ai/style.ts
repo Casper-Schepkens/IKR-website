@@ -1,11 +1,10 @@
 import 'server-only'
-import { after } from 'next/server'
 import { createServiceSupabase } from '../supabase/server'
 import { hasScopes, listConnections, SCOPES } from '../google'
 import { sentReplies } from '../gmail'
-import { aiEngine, enqueue, runJob } from './jobs'
-import { notifyGrok } from './notify'
+import { enqueue } from './jobs'
 import { getProfiles, STYLE_SOURCES, type StyleKey } from './style-profile'
+import { kickJobsLater } from './kick'
 
 const db = () => createServiceSupabase()
 
@@ -33,7 +32,6 @@ export async function enqueueStyleRebuild(key: StyleKey, by: string) {
     { key, mailbox, mails, feedback: feedback ?? [], current: current ? { guide: current.guide } : null },
     by,
   )
-  if (aiEngine() === 'grokbot') after(() => notifyGrok([job.id]))
-  else if (aiEngine() === 'api') after(() => runJob(job.id))
+  kickJobsLater([job.id])
   return { jobId: job.id, mails: mails.length }
 }

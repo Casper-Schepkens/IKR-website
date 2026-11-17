@@ -1,10 +1,9 @@
 import 'server-only'
-import { after } from 'next/server'
 import { createServiceSupabase } from '../supabase/server'
-import { aiEngine, enqueue, isAiConfigured, runJob } from '../ai/jobs'
-import { notifyGrok } from '../ai/notify'
+import { enqueue, isAiConfigured } from '../ai/jobs'
 import type { AdminSession } from '../session'
 import type { ChatAttachment, ChatMessage, ChatObject } from './repo'
+import { kickJobsLater } from '../ai/kick'
 
 /** Hoe lang "Grok Bot denkt na…" blijft staan zonder antwoord. */
 const THINKING_MAX_MS = 15 * 60_000
@@ -58,8 +57,7 @@ export async function sendChatMessage(session: AdminSession, opts: { text: strin
     },
     session.user.email,
   )
-  if (aiEngine() === 'grokbot') after(() => notifyGrok([job.id]))
-  else if (aiEngine() === 'api') after(() => runJob(job.id))
+  kickJobsLater([job.id])
   return msg
 }
 

@@ -3,7 +3,8 @@ import Anthropic from '@anthropic-ai/sdk'
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod'
 import type { z } from 'zod'
 import { createServiceSupabase } from '../supabase/server'
-import { IKR_CONTEXT } from './context'
+import { must } from '../supabase/must'
+import { IKR_CONTEXT, SALES_MAIL_CONTEXT } from './context'
 import { ensureSignature, SIGNATURE_RULE } from '../sales/signature'
 import { HANDLERS, type JobType } from './handlers'
 import { styleInstructions } from './style-profile'
@@ -35,10 +36,22 @@ export type AiJob = {
 
 export const MODEL = process.env.IKR_AI_MODEL || 'claude-sonnet-5-5'
 
-/** Wie de AI-taken uitvoert. */
-export function aiEngine(): 'api' | 'grokbot' | 'worker' {
+/**
+ * Taken die enkel tekst van buitenaf verwerken (mails van leads, transcripts, documenten) en geen tools
+ * nodig hebben. Ze lopen via de Claude API, die geen tools heeft: een instructie in een mail kan zo
+ * niets laten doen. Standaard UIT (alles blijft bij Grokbot, geen API-credits); enkel aan met
+ * IKR_AI_DATA_ENGINE=api en een ANTHROPIC_API_KEY.
+ */
+export const DATA_ONLY_TYPES: readonly string[] = ['inbox_reply', 'na_verzending', 'call_verwerken', 'weekly_sops', 'contract_afleiden', 'style_profile', 'mail_rewrite']
+
+const dataViaApi = () => process.env.IKR_AI_DATA_ENGINE === 'api' && Boolean(process.env.ANTHROPIC_API_KEY)
+
+/** Wie de AI-taken uitvoert; met een taaktype: wie die soort taak uitvoert. */
+export function aiEngine(type?: string): 'api' | 'grokbot' | 'worker' {
   const e = process.env.IKR_AI_ENGINE
-  return e === 'grokbot' || e === 'worker' ? e : 'api'
+  const base = e === 'grokbot' || e === 'worker' ? e : 'api'
+  if (base !== 'api' && type && DATA_ONLY_TYPES.includes(type) && dataViaApi()) return 'api'
+  return base
 }
 
 export function isAiConfigured() {
@@ -58,7 +71,10 @@ export function signMailOutput<T extends Record<string, unknown>>(type: string, 
 
 /** Open taken voor een externe uitvoerder (Grokbot of worker), oudste eerst. */
 export async function openJobs(limit = 10): Promise<AiJob[]> {
-  const { data, error } = await db().from('ai_jobs').select('*').eq('status', 'pending').order('created_at').limit(limit)
+  let q = db().from('ai_jobs').select('*').eq('status', 'pending')
+  // Taken die via de API lopen, krijgt Grokbot niet te zien.
+  if (dataViaApi()) q = q.not('type', 'in', `(${DATA_ONLY_TYPES.join(',')})`)
+  const { data, error } = await q.order('created_at').limit(limit)
   if (error) throw new Error(error.message)
   return (data ?? []) as AiJob[]
 }
@@ -67,7 +83,8 @@ export async function openJobs(limit = 10): Promise<AiJob[]> {
 export async function completeJob(id: string, output: unknown, engine: string) {
   const job = await getJob(id)
   if (!job) throw new Error('Taak niet gevonden.')
-  if (job.status === 'done' || job.status === 'dismissed') throw new Error('Deze taak is al afgehandeld.')
+  if (job.status === 'done' || job.status === 'dismissed') throw new Error(JOB_ALREADY_HANDLED)
+  if (engine !== 'api' && aiEngine() !== 'api' && aiEngine(job.type) === 'api') throw new Error('Deze taak loopt via de Claude API; er is niets voor jou te doen.')
   const handler = HANDLERS[job.type]
   // Ontbrekende velden (bv. geen telefoonnummer) als leeg beschouwen.
   const shape = (handler.schema as unknown as { shape?: Record<string, unknown> }).shape
@@ -78,17 +95,27 @@ export async function completeJob(id: string, output: unknown, engine: string) {
   const parsed = handler.schema.safeParse(filled)
   if (!parsed.success) throw new Error(`Resultaat klopt niet met de gevraagde vorm: ${parsed.error.message}`)
   const result = signMailOutput(job.type, parsed.data as Record<string, unknown>)
-  const { error } = await db()
+  // Atomair afronden: enkel wie de taak nog open vindt, voert afterDone uit (geen dubbele notities of kaarten).
+  const { data, error } = await db()
     .from('ai_jobs')
     .update({ status: 'done', output: result, engine, model: engine, cost_usd: 0, error: null, finished_at: new Date().toISOString() })
     .eq('id', id)
+    .in('status', OPEN_STATUSES)
+    .select('id')
   if (error) throw new Error(error.message)
+  if (!data?.length) throw new Error(JOB_ALREADY_HANDLED)
   await handler.afterDone?.(job.input, result).catch((e) => console.error('[ai] afterDone', e))
 }
 
+export const JOB_ALREADY_HANDLED = 'Deze taak is al afgehandeld.'
+/** Statussen waarin een taak nog afgerond mag worden. */
+const OPEN_STATUSES = ['pending', 'running', 'error', 'waiting_limit']
+/** Een taak die zo lang op 'running' staat, is achtergelaten (functie gestopt) en mag opnieuw opgepikt worden. */
+export const STALE_RUNNING_MS = 5 * 60_000
+
 /** USD per miljoen tokens (standaardtarief). Cache schrijven = 1,25× input. */
 const PRICES: Record<string, { input: number; output: number; cacheRead: number }> = {
-  'claude-sonnet-5-5': { input: 2, output: 10, cacheRead: 0.2 },
+  'claude-sonnet-5-5': { input: 2, output: 10, cacheRead: 0.1 },
   'claude-opus-5-5': { input: 4, output: 20, cacheRead: 0.2 },
   'claude-haiku-5-5': { input: 0.1, output: 0.5, cacheRead: 0.01 },
 }
@@ -128,16 +155,20 @@ export async function dismissJob(id: string) {
 }
 
 /** Sluit een chat-taak af nadat het antwoord via ai_chat_antwoorden in de chat kwam. */
+/** Geeft false als de taak al afgesloten was (dan staat het antwoord er al: niet nog eens plaatsen). */
 export async function closeChatJob(id: string, userId: string, by: string) {
   const job = await getJob(id)
   if (!job || job.type !== 'chat') throw new Error('Geen chat-taak met dit id.')
   if ((job.input as { user_id?: string }).user_id !== userId) throw new Error('Deze taak hoort bij een andere gebruiker.')
-  if (job.status === 'done' || job.status === 'dismissed') return
-  const { error } = await db()
+  if (job.status === 'done' || job.status === 'dismissed') return false
+  const { data, error } = await db()
     .from('ai_jobs')
     .update({ status: 'done', engine: by, model: by, cost_usd: 0, error: null, finished_at: new Date().toISOString() })
     .eq('id', id)
+    .in('status', OPEN_STATUSES)
+    .select('id')
   if (error) throw new Error(error.message)
+  return Boolean(data?.length)
 }
 
 export async function getJob(id: string): Promise<AiJob | null> {
@@ -149,22 +180,26 @@ export async function getJob(id: string): Promise<AiJob | null> {
 export async function instructionsFor(job: Pick<AiJob, 'type' | 'input'>) {
   const h = HANDLERS[job.type] as { instructions: string; style?: (i: Record<string, unknown>) => 'casper' }
   const style = h.style ? await styleInstructions(h.style(job.input)) : ''
-  // Mailtaken: de ondertekening als laatste, zodat ze voorgaat op het stijlprofiel (dat soms enkel "Casper" leerde).
+  // Mailtaken: de salesregels, het stijlprofiel, en de ondertekening als laatste, zodat ze voorgaat op het profiel.
+  const sales = h.style ? SALES_MAIL_CONTEXT : ''
   const sign = h.style ? `Vaste regel voor de ondertekening (gaat voor op het stijlprofiel): ${SIGNATURE_RULE}` : ''
-  return [IKR_CONTEXT, style, h.instructions, sign].filter(Boolean).join('\n\n')
+  return [IKR_CONTEXT, sales, style, h.instructions, sign].filter(Boolean).join('\n\n')
 }
 
 let client: Anthropic | null = null
 
-/** Voert een taak uit via de Claude API (tenzij een worker dat doet). Faalt nooit hard. */
+/** Voert een taak uit via de Claude API, enkel als dat de engine voor die soort taak is (nooit bij Grokbot of een worker). Faalt nooit hard. */
 export async function runJob(id: string) {
-  if (aiEngine() !== 'api') return
+  const j = await getJob(id)
+  if (!j || aiEngine(j.type) !== 'api') return
   // Enkel een taak die nog wacht oppikken (voorkomt dubbel werk).
+  // Ook een taak die al 5 minuten op 'running' hangt (de vorige run viel weg) mag opnieuw.
+  const stale = new Date(Date.now() - STALE_RUNNING_MS).toISOString()
   const claimed = await db()
     .from('ai_jobs')
     .update({ status: 'running', started_at: new Date().toISOString(), engine: 'api', error: null })
     .eq('id', id)
-    .in('status', ['pending', 'error', 'waiting_limit'])
+    .or(`status.in.(pending,error,waiting_limit),and(status.eq.running,started_at.lt.${stale})`)
     .select('*')
     .maybeSingle()
   const job = claimed.data as AiJob | null
@@ -176,7 +211,8 @@ export async function runJob(id: string) {
     client ??= new Anthropic()
     const res = await client.beta.messages.parse({
       model: MODEL,
-      max_tokens: 4000,
+      // Ruim: het model denkt ook na, en een call-verwerking met bedankmail en analyse is lang.
+      max_tokens: 16_000,
       betas: ['server-side-fallback-2026-07-01'],
       fallbacks: 'default',
       system: [{ type: 'text', text: await instructionsFor(job), cache_control: { type: 'ephemeral' } }],
@@ -193,7 +229,8 @@ export async function runJob(id: string) {
       cacheWrite: res.usage.cache_creation_input_tokens ?? 0,
     }
     const output = signMailOutput(job.type, res.parsed_output as Record<string, unknown>)
-    await db()
+    await must(
+      db()
       .from('ai_jobs')
       .update({
         status: 'done',
@@ -207,10 +244,14 @@ export async function runJob(id: string) {
         finished_at: new Date().toISOString(),
       })
       .eq('id', id)
+      .eq('status', 'running'),
+      'taak afronden',
+    )
     await handler.afterDone?.(job.input, output).catch((e) => console.error('[ai] afterDone', e))
   } catch (e) {
     const limit = e instanceof Anthropic.RateLimitError
-    await db()
+    console.error('[ai] taak mislukt', id, e instanceof Error ? e.message : e)
+    const { error: saveError } = await db()
       .from('ai_jobs')
       .update({
         status: limit ? 'waiting_limit' : 'error',
@@ -218,5 +259,6 @@ export async function runJob(id: string) {
         finished_at: new Date().toISOString(),
       })
       .eq('id', id)
+    if (saveError) console.error('[ai] fout bewaren mislukt (taak blijft op running en wordt na 5 minuten opnieuw opgepikt)', saveError.message)
   }
 }

@@ -1,4 +1,5 @@
 import 'server-only'
+import { clip } from './ai/clip'
 import { isDemoMode, isSupabaseConfigured } from './env'
 import { createServiceSupabase } from './supabase/server'
 
@@ -474,16 +475,16 @@ export async function driveText(owner: string, file: Pick<DriveDoc, 'id' | 'mime
   const exportText = async (id: string) => {
     const res = await fetch(`https://www.googleapis.com/drive/v3/files/${id}/export?mimeType=text/plain`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' })
     if (!res.ok) throw new Error(`Drive export: ${res.status}`)
-    return (await res.text()).slice(0, maxChars)
+    return clip(await res.text(), maxChars)
   }
   if (file.mimeType === DOC || file.mimeType === SLIDES || file.mimeType === 'application/vnd.google-apps.spreadsheet') {
     if (file.mimeType !== 'application/vnd.google-apps.spreadsheet') return exportText(file.id)
     const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}/export?mimeType=text/csv`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' })
-    return res.ok ? (await res.text()).slice(0, maxChars) : null
+    return res.ok ? clip(await res.text(), maxChars) : null
   }
   if (file.mimeType.startsWith('text/') || file.mimeType === 'application/json') {
     const res = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&supportsAllDrives=true`, { headers: { Authorization: `Bearer ${at}` }, cache: 'no-store' })
-    return res.ok ? (await res.text()).slice(0, maxChars) : null
+    return res.ok ? clip(await res.text(), maxChars) : null
   }
   const target = TO_SLIDES.includes(file.mimeType) ? SLIDES : CONVERTIBLE.includes(file.mimeType) ? DOC : null
   if (!target) return null

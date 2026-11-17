@@ -13,6 +13,7 @@ import {
   buildWeeklySubject,
   type WeeklyAnalyticsDigest,
 } from '@/lib/weekly-analytics-email'
+import { cronAuthorized } from '@/lib/admin/cron'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -21,12 +22,7 @@ function unauthorized() {
   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 }
 
-function isAuthorized(request: Request): boolean {
-  const secret = process.env.CRON_SECRET
-  if (!secret) return false
-  const auth = request.headers.get('authorization')
-  return auth === `Bearer ${secret}`
-}
+const isAuthorized = cronAuthorized
 
 function isoDate(d: Date): string {
   return d.toISOString().slice(0, 10)

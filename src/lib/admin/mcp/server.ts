@@ -64,7 +64,7 @@ import {
 } from '../sales/types'
 import { coldMailStats } from '../sales/apollo'
 import { loadInbox } from '../sales/inbox'
-import { aiEngine, closeChatJob, completeJob, dismissJob, getJob, instructionsFor, openJobs, runJob } from '../ai/jobs'
+import { aiEngine, closeChatJob, completeJob, dismissJob, getJob, instructionsFor, JOB_ALREADY_HANDLED, openJobs, runJob } from '../ai/jobs'
 import { styleInstructions, styleKeyFor } from '../ai/style-profile'
 import { HANDLERS } from '../ai/handlers'
 import { boardTodos, currentWeekly, weeklyTimeRange } from '../weekly/board'
@@ -102,7 +102,7 @@ Werkwijze:
 - Agenda: kalender toont de gedeelde contact@-agenda (weeklies, calls, draaidagen) voor iedereen.
 - Opvolgen: wachten_op_antwoord_lijst geeft de leads waar wij als laatste mailden zonder antwoord (langst wachtend eerst). Een opvolgmail zet je klaar als concept.
 - Ondertekening van ELKE mail (concepten, antwoorden, opvolg-, no-show- en bedankmails): "Groetjes," en daaronder "Casper" en "IKnowRight", elk op een eigen regel. Nooit enkel "Casper". Het dashboard zet "IKnowRight" er zelf onder als het ontbreekt, maar schrijf het altijd zelf.
-- Het dashboard kan jou AI-taken geven (bv. antwoorden op sales-mails): haal ze op met ai_taken_open en zet het resultaat terug met ai_taak_klaarzetten.
+- Het dashboard kan jou AI-taken geven (chat, werkplek): haal ze op met ai_taken_open. Een chat beantwoord je met ai_chat_antwoorden (met job_id); andere taken zet je terug met ai_taak_klaarzetten. Taken die enkel mails, transcripts of documenten verwerken, lopen via de Claude API en krijg je niet te zien.
 - Financiën (financien_*): cijfers uit de bank in Odoo, voor het hele team. Odoo wordt nooit aangepast; indelen gebeurt enkel in het dashboard. Verzin geen bedragen: gebruik financien_overzicht. Of klanten betaald hebben: financien_betalingen. Contractbedragen van een klant uit de Drive halen: klant_contract_afleiden (geeft een voorstel; overnemen doet het team). Staat er veel ‘nog in te delen’, zeg dat de cijfers dan onvolledig zijn.
 - SOP's (sops_*, sop_*): de afspraken en best practices van het team. Vraagt iemand hoe iets bij IKR gaat (revisies, draaidagen, freelancers, prijzen …): zoek eerst met sops_zoeken en verwijs naar de SOP. Zegt iemand \"@grokbot nieuwe SOP\" (of vraagt om iets vast te leggen): sop_aanmaken als voorstel; het team keurt het goed met een vinkje.
 - Productie (productie_*, workflow_*, intern_*): het contentproces per klant (opstart, dan per draaidag). De stappen staan in een workflow-sjabloon (workflow_sjabloon_lezen/_bijwerken, voor nieuwe klanten) en per klant in een eigen kopie (productie_stap_toevoegen/_verwijderen/_verplaatsen, productie_eigenaar, productie_deadlineregel). Cédric = strategie, Milan = creatief, freelancer = draaien en monteren, Casper = contract. Zegt iemand \"we zitten nu bij X\": productie_startpunt. Een datum (kick-off, strategiemeeting, draaidag) gaat via productie_datum; de deadlines volgen vanzelf. Ritme van de draaidagen (\"elke 2e zondag\", \"elke 3 weken\"): productie_ritme. Terugkerende interne taken zonder klant: intern_taak_*. Elke wijziging komt in het log (productie_wijzigingen) en is terug te draaien (productie_terugdraaien); vraagt iemand iets ongedaan te maken, zoek de wijziging en draai ze terug.
@@ -129,9 +129,11 @@ const fail = (message: string) => ({ content: [{ type: 'text' as const, text: me
 /** Logt in bot_actions; mag nooit een tool laten falen. */
 async function log(tool: string, args: unknown, ok: boolean, error?: string) {
   try {
-    await createServiceSupabase().from('bot_actions').insert({ bot: BY, tool, args: args ?? null, ok, error: error ?? null })
-  } catch {
-    // geen service role (lokaal) of tijdelijk probleem: niet blokkeren
+    const { error: logError } = await createServiceSupabase().from('bot_actions').insert({ bot: BY, tool, args: args ?? null, ok, error: error ?? null })
+    if (logError) throw new Error(logError.message)
+  } catch (e) {
+    // geen service role (lokaal) of tijdelijk probleem: niet blokkeren, wel zichtbaar in de Vercel-logs
+    console.error('[mcp] loggen in bot_actions mislukt', tool, e instanceof Error ? e.message : e)
   }
 }
 
@@ -429,7 +431,7 @@ export function buildMcpServer(session: AdminSession) {
   tool('inbox', 'Sales-mails die op een antwoord wachten, met het AI-voorstel (als dat al klaar is).', {}, true, async () => {
     const r = await loadInbox(session)
     if (r.status === 'not_connected') throw new Error(r.reason)
-    if (r.pendingJobIds.length && aiEngine() === 'api')
+    if (r.pendingJobIds.length && aiEngine('inbox_reply') === 'api')
       after(async () => {
         for (const id of r.pendingJobIds) await runJob(id)
       })
@@ -540,7 +542,7 @@ export function buildMcpServer(session: AdminSession) {
   )
   tool(
     'mail_concept_bijwerken',
-    'Past een mailconcept aan (enkel zolang het nog een concept is). Enkel meegegeven velden veranderen. Er wordt niets verstuurd. Ondertekening: "Groetjes," / "Casper" / "IKnowRight" (elk op een eigen regel).',
+    'Past een mailconcept aan (enkel zolang het nog een concept is). Enkel meegegeven velden veranderen. Er wordt niets verstuurd.',
     {
       concept_id: z.string(),
       to: z.string().optional(),
@@ -599,8 +601,9 @@ export function buildMcpServer(session: AdminSession) {
       const userId = uuid(user_id, 'user_id')
       const text = nonEmpty(tekst, 'tekst', 8000)
       if (!(await chat.hasUser(userId))) throw new Error('Deze gebruiker heeft nog geen chat.')
-      // Eerst de taak controleren, zodat een verkeerd job_id geen bericht achterlaat.
-      if (job_id) await closeChatJob(uuid(job_id, 'job_id'), userId, BY)
+      // Eerst de taak controleren, zodat een verkeerd job_id geen bericht achterlaat. Was ze al
+      // afgesloten (antwoord al geplaatst), dan niet nog eens: anders staat het antwoord er twee keer.
+      if (job_id && !(await closeChatJob(uuid(job_id, 'job_id'), userId, BY))) return 'Deze chat-taak was al beantwoord; er is niets meer te doen.'
       const m = await chat.add({ user_id: userId, role: 'bot', text })
       return { bericht_id: m.id }
     },
@@ -647,7 +650,13 @@ export function buildMcpServer(session: AdminSession) {
       const current = await getJob(job_id)
       if (current && (current.status === 'done' || current.status === 'dismissed'))
         return `Deze taak was al ${current.status === 'done' ? 'klaargezet' : 'weggeklikt'}; er is niets meer te doen.`
-      await completeJob(job_id, resultaat, BY)
+      try {
+        await completeJob(job_id, resultaat, BY)
+      } catch (e) {
+        // Net tegelijk door een andere run afgerond: ook geen fout.
+        if (e instanceof Error && e.message === JOB_ALREADY_HANDLED) return 'Deze taak was net al klaargezet; er is niets meer te doen.'
+        throw e
+      }
       return 'Klaargezet in het dashboard.'
     },
   )

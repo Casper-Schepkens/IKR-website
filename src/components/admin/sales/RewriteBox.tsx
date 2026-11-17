@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { getAiJobAction, requestRewriteAction } from '@/app/admin/actions'
 import { buttonClass, input, Spinner } from '../ui'
 import { cn } from '@/utilities/ui'
@@ -29,6 +29,13 @@ export function RewriteBox({
   const [jobId, setJobId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pending, start] = useTransition()
+  /** De tekst zoals ze naar de AI ging: is ze intussen veranderd, dan vragen we eerst of het resultaat erover mag. */
+  const sentBody = useRef<string | null>(null)
+  // Laatste versie van current(), zonder dat het pollen bij elke toetsaanslag herstart.
+  const currentRef = useRef(current)
+  useEffect(() => {
+    currentRef.current = current
+  }, [current])
 
   useEffect(() => {
     if (!jobId) return
@@ -37,7 +44,9 @@ export function RewriteBox({
       if (!job) return
       if (job.status === 'done' && job.output) {
         const out = job.output as { subject?: string | null; body?: string }
-        if (out.body) onResult({ subject: out.subject ?? null, body: out.body })
+        const edited = sentBody.current !== null && currentRef.current().body !== sentBody.current
+        if (out.body && (!edited || window.confirm('Je paste de mail aan terwijl ze herschreven werd. De herschreven versie toch overnemen?')))
+          onResult({ subject: out.subject ?? null, body: out.body })
         setInstruction('')
         setJobId(null)
       } else if (job.status === 'error' || job.status === 'waiting_limit') {
@@ -73,6 +82,7 @@ export function RewriteBox({
             const data = new FormData()
             data.set('instruction', instruction)
             data.set('body', c.body)
+            sentBody.current = c.body
             if (c.subject) data.set('subject', c.subject)
             if (c.context) data.set('context', c.context)
             if (c.from) data.set('from', c.from)

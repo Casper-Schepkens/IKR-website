@@ -8,12 +8,13 @@ import { memoryCalls, supabaseCalls } from '../calls/repo'
 import { memoryClients, supabaseClients } from '../clients/repo'
 import { memorySops, supabaseSops } from '../sops/repo'
 import { memoryProduction, supabaseProduction } from '../production/repo'
-import { myInternalItems, myNextSteps, type InternalItem } from '../production/core'
+import { myInternalItems, myNextSteps } from '../production/core'
 import { loadProduction } from '../production/service'
 import { paymentChecks } from '../finance/core'
 import { loadClients as financeClients, loadTxs } from '../finance/store'
 import { workspaceRepo } from '../workspace/repo'
 import { ownerOf } from '../weekly/types'
+import { countProblems, systemStatus } from '../system-status'
 import { countCallsToFinish, countExpiring, countFollowUps, countOverdueTodos, countSopProposals, countWorkspace, type Counts } from './core'
 
 /** Repos met de service role (meldingen worden server-side berekend, per gebruiker gefilterd); lokaal in het geheugen. */
@@ -24,7 +25,17 @@ function repos() {
   return { leads: supabaseLeads(db), drafts: supabaseDrafts(db), weekly: supabaseWeekly(db), calls: supabaseCalls(db), clients: supabaseClients(db), sops: supabaseSops(db), production: supabaseProduction(db), db }
 }
 
-const safe = async <T>(p: Promise<T>, fallback: T) => p.catch(() => fallback)
+/** Een bron die faalt, geeft null (de teller toont dan "?"), nooit een valse 0. De fout komt in de logs. */
+const tryLoad = async <T,>(what: string, p: Promise<T>): Promise<T | null> =>
+  p.catch((e: unknown) => {
+    console.error(`[meldingen] ${what}`, e instanceof Error ? e.message : e)
+    return null
+  })
+/** Tellen enkel als alle bronnen geladen zijn. */
+const when = <A extends unknown[]>(...args: [...{ [K in keyof A]: A[K] | null }, (...v: A) => number]): number | null => {
+  const fn = args.pop() as (...v: A) => number
+  return args.some((a) => a === null) ? null : fn(...(args as unknown as A))
+}
 const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Brussels' }).format(new Date())
 
 /** Tellers voor één teamlid. Een fout in één bron mag de rest niet tegenhouden. */
@@ -34,36 +45,46 @@ export async function notificationsFor(email: string): Promise<Counts> {
   const sales = canSeeSales(email)
   const day = today()
   const now = Date.now()
-  const [cards, sops, todos, weeklies, clients] = await Promise.all([
-    safe(workspaceRepo().list(email), []),
-    safe(r.sops.list(), []),
-    safe(r.weekly.listTodos(), []),
-    safe(r.weekly.listWeeklies(), []),
-    safe(r.clients.list(), []),
+  const [cards, sops, todos, weeklies, clients, status] = await Promise.all([
+    tryLoad('werkplek', workspaceRepo().list(email)),
+    tryLoad("SOP's", r.sops.list()),
+    tryLoad("to-do's", r.weekly.listTodos()),
+    tryLoad('weeklies', r.weekly.listWeeklies()),
+    tryLoad('klanten', r.clients.list()),
+    tryLoad('systeemstatus', systemStatus()),
   ])
   const counts: Counts = {
-    werkplek: countWorkspace(cards, email),
-    sops: countSopProposals(sops),
-    weekly: owner ? countOverdueTodos(todos, weeklies, owner) : 0,
+    werkplek: when(cards, (c) => countWorkspace(c, email)),
+    sops: when(sops, (s) => countSopProposals(s)),
+    weekly: owner ? when(todos, weeklies, (t, w) => countOverdueTodos(t, w, owner)) : 0,
+    instellingen: status ? countProblems(status) : 0,
   }
-  if (owner) {
-    const prod = await safe(loadProduction(r.production, clients.map((c) => ({ id: c.id, name: c.name })), day), { list: [], notStarted: [], internal: [] as InternalItem[], tasks: [], template: null })
-    counts.productie = myNextSteps(prod.list, owner).filter((x) => x.step.overdue).length + myInternalItems(prod.internal, owner).filter((i) => i.overdue).length
-  }
+  if (owner && clients) {
+    const prod = await tryLoad('productie', loadProduction(r.production, clients.map((c) => ({ id: c.id, name: c.name })), day))
+    counts.productie = prod ? myNextSteps(prod.list, owner).filter((x) => x.step.overdue).length + myInternalItems(prod.internal, owner).filter((i) => i.overdue).length : null
+  } else if (owner) counts.productie = null
   if (sales) {
     const [drafts, calls, leads, unlinked, txs, finClients] = await Promise.all([
-      safe(r.drafts.list({ status: 'concept' }), []),
-      safe(r.calls.list(), []),
-      safe(r.leads.list(), []),
-      r.db ? safe(Promise.resolve(r.db.from('call_transcripts').select('fireflies_id', { count: 'exact', head: true }).in('status', ['ongekoppeld', 'fout'])).then((x) => x.count ?? 0), 0) : Promise.resolve(0),
-      safe(loadTxs(), []),
-      safe(financeClients(), []),
+      tryLoad('concepten', r.drafts.list({ status: 'concept' })),
+      tryLoad('calls', r.calls.list()),
+      tryLoad('leads', r.leads.list()),
+      r.db
+        ? tryLoad(
+            'transcripts',
+            Promise.resolve(r.db.from('call_transcripts').select('fireflies_id', { count: 'exact', head: true }).in('status', ['ongekoppeld', 'fout'])).then((x) => {
+              if (x.error) throw new Error(x.error.message)
+              return x.count ?? 0
+            }),
+          )
+        : Promise.resolve(0),
+      tryLoad('transacties', loadTxs()),
+      tryLoad('financiën', financeClients()),
     ])
-    counts.inbox = drafts.length
-    counts.calls = countCallsToFinish(calls, now) + unlinked
-    counts.leads = countFollowUps(leads, day)
-    counts.klanten = countExpiring(clients, day)
-    counts.financien = paymentChecks(txs, finClients, day).filter((c) => c.status === 'achterstallig').length
+    counts.inbox = when(drafts, (d) => d.length)
+    counts.calls = when(calls, unlinked, (c, u) => countCallsToFinish(c, now) + u)
+    counts.leads = when(leads, (l) => countFollowUps(l, day))
+    counts.klanten = when(clients, (c) => countExpiring(c, day))
+    counts.financien = when(txs, finClients, (t, c) => paymentChecks(t, c, day).filter((x) => x.status === 'achterstallig').length)
   }
   return counts
 }

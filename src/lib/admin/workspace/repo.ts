@@ -11,6 +11,8 @@ export interface WorkspaceRepo {
   get(id: string): Promise<CardWithMessages | null>
   create(card: NewCard): Promise<Card>
   update(id: string, patch: CardPatch): Promise<void>
+  /** Beslist over een voorgestelde actie; false als ze niet (meer) op 'voorgesteld' stond (bv. dubbele klik). */
+  decideAction(id: string, approve: boolean): Promise<boolean>
   addMessage(cardId: string, author: string, body: string): Promise<CardMessage>
   remove(id: string): Promise<void>
 }
@@ -46,6 +48,17 @@ function supabaseWorkspace(): WorkspaceRepo {
     async update(id, patch) {
       check(await db.from('bot_cards').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', id))
     },
+    async decideAction(id, approve) {
+      const rows = check(
+        await db
+          .from('bot_cards')
+          .update({ action_status: approve ? 'goedgekeurd' : 'afgewezen', updated_at: new Date().toISOString() })
+          .eq('id', id)
+          .eq('action_status', 'voorgesteld')
+          .select('id'),
+      )
+      return Boolean(rows?.length)
+    },
     async addMessage(cardId, author, body) {
       const m = check(await db.from('bot_card_messages').insert({ card_id: cardId, author, body }).select('*').single()) as CardMessage
       await db.from('bot_cards').update({ updated_at: new Date().toISOString() }).eq('id', cardId)
@@ -79,6 +92,12 @@ function memoryWorkspace(): WorkspaceRepo {
       const c = d.cards.find((x) => x.id === id)
       if (!c) throw new Error('Kaart niet gevonden.')
       Object.assign(c, patch, { updated_at: now() })
+    },
+    async decideAction(id, approve) {
+      const c = d.cards.find((x) => x.id === id && x.action_status === 'voorgesteld')
+      if (!c) return false
+      Object.assign(c, { action_status: approve ? 'goedgekeurd' : 'afgewezen', updated_at: now() })
+      return true
     },
     async addMessage(cardId, author, body) {
       const m: CardMessage = { id: crypto.randomUUID(), card_id: cardId, author, body, created_at: now() }

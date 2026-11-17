@@ -1,11 +1,10 @@
 import 'server-only'
-import { after } from 'next/server'
-import { aiEngine, enqueue, runJob } from '../ai/jobs'
-import { notifyGrok } from '../ai/notify'
+import { enqueue } from '../ai/jobs'
 import { canSeeSales, isSupabaseConfigured, SALES_EMAIL } from '../env'
 import { TEAM } from '../weekly/types'
 import { workspaceRepo } from './repo'
 import { CARD_KINDS, type Card, type CardWithMessages } from './types'
+import { kickJobsLater } from '../ai/kick'
 
 export const BOT = 'grokbot'
 export type BotReason = 'opdracht' | 'antwoord' | 'actie'
@@ -50,11 +49,6 @@ export async function askBot(card: CardWithMessages, reden: BotReason, by: strin
   }
   const job = await enqueue('werkplek', `${card.id}:${Date.now()}`, input as unknown as Record<string, unknown>, by)
   await workspaceRepo().update(card.id, { bot_busy_since: new Date().toISOString() })
-  const kick = () => (aiEngine() === 'grokbot' ? notifyGrok([job.id]).then(() => undefined) : aiEngine() === 'api' ? runJob(job.id) : Promise.resolve())
-  try {
-    after(kick)
-  } catch {
-    void kick()
-  }
+  kickJobsLater([job.id])
   return job
 }

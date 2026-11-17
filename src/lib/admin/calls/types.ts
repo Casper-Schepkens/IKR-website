@@ -21,11 +21,18 @@ export type CallAnalysis = { samenvatting: string; goed: string[]; beter: string
 export const SALES_PPT_URL = 'https://docs.google.com/presentation/d/1iQxatKi2QdE2FopGM4fx9z2erTqKRqSg/edit?usp=sharing'
 /** De sales-ppt van een call: eigen link of de standaard. */
 export const salesPptUrl = (c: Pick<Call, 'sales_ppt_url'>) => c.sales_ppt_url || SALES_PPT_URL
-/** Eigen sales-ppt: enkel https; leeg = terug naar de standaard (null). */
+/** Waar een sales-ppt mag staan (ook subdomeinen, bv. ikr.sharepoint.com). */
+export const PPT_HOSTS = ['docs.google.com', 'drive.google.com', 'canva.com', 'iknowright.be', 'sharepoint.com', 'pitch.com']
+
+/** Eigen sales-ppt: enkel https en van een gekende plek; leeg = terug naar de standaard (null). */
 export function cleanPptUrl(v: string | null | undefined): string | null {
   const t = v?.trim() || ''
   if (!t) return null
   if (!/^https:\/\/[^\s]+$/i.test(t)) throw new Error('De ppt-link moet met https:// beginnen.')
+  // Deze link komt in de bedankmail naar een lead: enkel van gekende plekken (geen link uit een mail of transcript).
+  const host = new URL(t).hostname.toLowerCase()
+  if (!PPT_HOSTS.some((h) => host === h || host.endsWith(`.${h}`)))
+    throw new Error(`De ppt-link moet van ${PPT_HOSTS.join(', ')} komen.`)
   return t.slice(0, 2000)
 }
 

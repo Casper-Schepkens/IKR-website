@@ -114,7 +114,7 @@ export function Sidebar({
           <span className="truncate">{item.label}</span>
           {badge(countFor(item.href)) && (
             <span
-              aria-label={`${countFor(item.href)} wacht${countFor(item.href) === 1 ? '' : 'en'} op je`}
+              aria-label={countFor(item.href) === null ? 'kon niet geteld worden' : `${countFor(item.href)} wacht${countFor(item.href) === 1 ? '' : 'en'} op je`}
               className={cn('ml-auto inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] leading-5 font-bold', active ? 'bg-ikr-navy text-ikr-cream-light' : 'bg-[#EB6834] text-white')}
             >
               {badge(countFor(item.href))}

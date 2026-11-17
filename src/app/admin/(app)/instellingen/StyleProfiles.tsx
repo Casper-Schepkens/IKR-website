@@ -10,7 +10,7 @@ import { cn } from '@/utilities/ui'
 /** Schrijfstijl: profielen die de AI gebruikt bij elke mail. Leesbaar en aanpasbaar door Casper. */
 export async function StyleProfiles() {
   const profiles = await getProfiles()
-  const rewriter = aiEngine() === 'grokbot' ? 'Grokbot' : 'De AI'
+  const rewriter = aiEngine('style_profile') === 'grokbot' ? 'Grokbot' : 'De AI'
   return (
     <Card className="flex flex-col gap-4">
       <div>

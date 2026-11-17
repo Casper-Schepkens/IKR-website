@@ -1,11 +1,11 @@
 import 'server-only'
-import { after } from 'next/server'
-import { enqueue, getJob, runJob, type AiJob } from '../ai/jobs'
+import { enqueue, getJob, type AiJob } from '../ai/jobs'
 import type { ContractAfleiden, ContractAfleidenInput } from '../ai/handlers'
 import { isSupabaseConfigured } from '../env'
 import { findContractDocs } from './contract-docs'
 import { cleanClientInput, type Client, type ClientInput } from './types'
 import type { ClientsRepo } from './repo'
+import { kickJobs, kickJobsLater } from '../ai/kick'
 
 /**
  * "Leid af uit het contract": het dashboard zoekt de contracten van de klant in de IKR-Drive en een
@@ -20,15 +20,9 @@ export async function deriveContract(clients: ClientsRepo, clientId: string, by:
   const input: ContractAfleidenInput = { client: { id: c.id, name: c.name, freelancer: c.freelancer }, docs }
   const job = await enqueue('contract_afleiden', `${c.id}:${Date.now()}`, input as unknown as Record<string, unknown>, by)
   await clients.update(c.id, { contract_job_id: job.id })
-  if (opts.inline) {
-    await runJob(job.id)
-    return job
-  }
-  try {
-    after(() => runJob(job.id))
-  } catch {
-    void runJob(job.id) // buiten een request
-  }
+  // Ook bij de Grokbot-engine pingen (vroeger wachtte deze taak tot een volgende ping, gemiddeld 18 minuten).
+  if (opts.inline) await kickJobs([job.id])
+  else kickJobsLater([job.id])
   return job
 }
 

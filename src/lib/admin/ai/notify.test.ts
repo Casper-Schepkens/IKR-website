@@ -44,20 +44,20 @@ describe('webhook naar Grokbot', () => {
 
   it('stopt na alle pogingen', async () => {
     fetchMock.mockResolvedValue(res(500))
-    expect(await notifyGrok(['j1'], [0, 0])).toBe(false)
+    expect(await notifyGrok(['j1'], [0, 0])).toMatch(/^webhook 500/)
     expect(fetchMock).toHaveBeenCalledTimes(3)
   })
 
   it('probeert niet opnieuw bij 401 (verkeerde sleutel)', async () => {
     fetchMock.mockResolvedValueOnce(res(401))
-    expect(await notifyGrok(['j1'], [0, 0])).toBe(false)
+    expect(await notifyGrok(['j1'], [0, 0])).toMatch(/^webhook 401/)
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
   it('doet niets zonder taken of zonder instellingen', async () => {
     expect(await notifyGrok([], [])).toBe(false)
     delete process.env.GROK_WEBHOOK_URL
-    expect(await notifyGrok(['j1'], [])).toBe(false)
+    expect(await notifyGrok(['j1'], [])).toMatch(/ontbreekt/)
     expect(fetchMock).not.toHaveBeenCalled()
   })
 })

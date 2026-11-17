@@ -56,9 +56,9 @@ const ff = vi.hoisted(() => ({ getTranscript: vi.fn(), findTranscript: vi.fn() }
 vi.mock('../fireflies', async (orig) => ({ ...(await orig<typeof import('../fireflies')>()), getTranscript: ff.getTranscript, findTranscript: ff.findTranscript }))
 const weeklyJob = vi.hoisted(() => ({ queueWeeklySops: vi.fn(async () => 'JW') }))
 vi.mock('../sops/weekly', () => weeklyJob)
-const jobs = vi.hoisted(() => ({ enqueue: vi.fn(async () => ({ id: 'J1' })), runJob: vi.fn(), aiEngine: () => 'grokbot', isAiConfigured: () => true }))
+const jobs = vi.hoisted(() => ({ enqueue: vi.fn(async () => ({ id: 'J1' })), runJob: vi.fn(), getJob: vi.fn(async (id: string) => ({ id, type: 'call_verwerken' })), aiEngine: () => 'grokbot', isAiConfigured: () => true }))
 vi.mock('../ai/jobs', () => jobs)
-const notify = vi.hoisted(() => ({ notifyGrok: vi.fn() }))
+const notify = vi.hoisted(() => ({ notifyGrok: vi.fn(async () => true as const) }))
 vi.mock('../ai/notify', () => notify)
 vi.mock('../ai/style-profile', () => ({ styleInstructions: async () => '', saveProfile: vi.fn(), styleKeyFor: () => 'casper', recordFeedback: vi.fn() }))
 

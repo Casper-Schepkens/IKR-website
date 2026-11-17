@@ -8,6 +8,7 @@ import { cn } from '@/utilities/ui'
 import { canSeeSales } from '@/lib/admin/env'
 import { StyleProfiles } from './StyleProfiles'
 import { MyConnections } from '@/components/admin/team/MyConnections'
+import { SystemStatusCard } from '@/components/admin/SystemStatusCard'
 
 export const metadata = { title: 'Instellingen' }
 
@@ -85,6 +86,9 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         }
       >
         <MyConnections email={user.email} />
+      </Suspense>
+      <Suspense fallback={null}>
+        <SystemStatusCard details={canSeeSales(user.email)} />
       </Suspense>
       {canSeeSales(user.email) && process.env.SUPABASE_SERVICE_ROLE_KEY && <StyleProfiles />}
     </>
