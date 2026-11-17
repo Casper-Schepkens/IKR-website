@@ -14,6 +14,8 @@ import { getNavPrefs } from '@/lib/admin/team/nav-prefs'
 import { EMPTY_NAV, hiddenPages } from '@/lib/admin/team/nav-core'
 
 export const metadata = { title: 'Instellingen' }
+// "Opnieuw opbouwen" (schrijfstijl) leest tot 300 mailthreads rustig na elkaar in: ruim de tijd geven.
+export const maxDuration = 120
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ ok?: string; fout?: string }> }) {
   const { ok, fout } = await searchParams
