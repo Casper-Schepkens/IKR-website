@@ -1,40 +1,41 @@
-# IKR WhatsApp-bridge op fly.io: precies 1 machine (WhatsApp laat één sessie per koppeling toe)
-# met een volume op /data voor de koppeling. Secrets: zie README (fly secrets set …).
-app = "ikr-whatsapp-bridge"
-primary_region = "lhr" # dichtst bij Supabase (eu-west-1, Ierland)
+# fly.toml app configuration file generated for ikr-whatsapp-bridge on 2026-11-17T15:09:28Z
+#
+# See https://docs.fly.io/reference/configuration for information about how to use this file.
+#
+
+app = 'ikr-whatsapp-bridge'
+primary_region = 'lhr'
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = 'Dockerfile'
 
 [deploy]
-  # Nooit twee machines tegelijk (ook niet tijdens een deploy): eerst stoppen, dan starten.
-  strategy = "immediate"
+  strategy = 'immediate'
 
 [env]
-  AUTH_DIR = "/data/auth"
-  PORT = "8080"
-  LOG_LEVEL = "info"
+  AUTH_DIR = '/data/auth'
+  LOG_LEVEL = 'info'
+  PORT = '8080'
 
 [[mounts]]
-  source = "wa_auth"
-  destination = "/data"
-  initial_size = "1gb"
+  source = 'wa_auth'
+  destination = '/data'
+  initial_size = '1gb'
 
 [http_service]
   internal_port = 8080
   force_https = true
-  # Altijd verbonden blijven: niet automatisch stoppen of opstarten.
-  auto_stop_machines = "off"
+  auto_stop_machines = 'off'
   auto_start_machines = false
   min_machines_running = 1
 
   [[http_service.checks]]
-    grace_period = "20s"
-    interval = "30s"
-    method = "GET"
-    path = "/health"
-    timeout = "5s"
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '20s'
+    method = 'GET'
+    path = '/health'
 
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "512mb"
+  size = 'shared-cpu-1x'
+  memory = '512mb'
