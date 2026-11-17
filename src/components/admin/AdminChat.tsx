@@ -212,8 +212,13 @@ export function AdminChat({ initial }: { initial: State }) {
     </form>
   )
 
+  // Schermlezers: kondig aan dat Grok Bot nadenkt en lees een nieuw antwoord voor (kort).
+  const announce = state.thinking ? 'Grok Bot denkt na.' : last?.role === 'bot' ? `Grok Bot: ${last.text.slice(0, 300)}` : ''
   return (
     <>
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {announce}
+      </div>
       <div className="sticky top-0 z-30 -mx-4 -mt-6 flex flex-col gap-1 bg-ikr-cream/95 px-4 pt-3 pb-2 backdrop-blur sm:-mx-9 sm:px-9">
         <div className="flex items-center gap-2">
           <span className="hidden shrink-0 items-center gap-1.5 text-xs font-semibold sm:flex">

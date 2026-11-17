@@ -132,7 +132,7 @@ function TxRow({ tx, clients }: { tx: Tx; clients: { id: string; name: string }[
             </button>
           </span>
         )}
-        {tx.manual && !changed && <span className={cn('text-[11px]', muted)}>handmatig ingedeeld</span>}
+        {tx.manual && !changed && <span className={cn('text-xs', muted)}>handmatig ingedeeld</span>}
         {error && (
           <span role="alert" className="text-xs text-[#A3470F]">
             {error}

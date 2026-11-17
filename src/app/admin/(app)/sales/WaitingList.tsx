@@ -80,7 +80,7 @@ export async function WaitingList({
             <Empty>Niemand wacht op een antwoord van een lead. 🎉</Empty>
           </div>
         ) : (
-          <table className="w-full min-w-[900px] border-collapse text-left text-sm">
+          <table className="ikr-stack w-full min-w-[900px] border-collapse text-left text-sm">
             <thead>
               <tr className={cn('text-xs', muted)}>
                 <th scope="col" className="px-6 py-4 font-semibold">

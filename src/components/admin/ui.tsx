@@ -25,7 +25,7 @@ export function buttonClass(
 }
 
 export const input =
-  'w-full rounded-xl border-0 bg-ikr-cream px-3.5 py-2.5 text-[15px] text-ikr-navy placeholder:text-[#8A8296] focus:outline focus:outline-2 focus:outline-[#0FC1DE]'
+  'w-full rounded-xl border-0 bg-ikr-cream px-3.5 py-2.5 text-[15px] text-ikr-navy placeholder:text-[#69617B] focus:outline focus:outline-2 focus:outline-[#0FC1DE]'
 
 export const label = 'flex flex-col gap-1.5 text-[13px] font-semibold text-[#5E5670]'
 

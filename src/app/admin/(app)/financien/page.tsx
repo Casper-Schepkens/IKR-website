@@ -108,7 +108,7 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
           <Title className="m-0 text-2xl">Per klant</Title>
           <p className={cn('m-0 text-sm', muted)}>Ontvangen volgens de bank; freelancer en boosting volgens het contract (in te vullen bij Klanten).</p>
         </div>
-        <table className="mt-3 w-full min-w-[720px] border-collapse text-left text-sm">
+        <table className="ikr-stack mt-3 w-full min-w-[720px] border-collapse text-left text-sm">
           <thead>
             <tr className={cn('text-xs', muted)}>
               <th scope="col" className="px-6 py-3 font-semibold">Klant</th>
