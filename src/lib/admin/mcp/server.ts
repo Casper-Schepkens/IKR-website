@@ -64,7 +64,7 @@ import {
 } from '../sales/types'
 import { coldMailStats } from '../sales/apollo'
 import { loadInbox } from '../sales/inbox'
-import { aiEngine, closeChatJob, completeJob, dismissJob, getJob, instructionsFor, openJobs, runJob } from '../ai/jobs'
+import { aiEngine, closeChatJob, completeJob, dismissJob, getJob, instructionsFor, JOB_ALREADY_HANDLED, openJobs, runJob } from '../ai/jobs'
 import { styleInstructions, styleKeyFor } from '../ai/style-profile'
 import { HANDLERS } from '../ai/handlers'
 import { boardTodos, currentWeekly, weeklyTimeRange } from '../weekly/board'
@@ -647,7 +647,13 @@ export function buildMcpServer(session: AdminSession) {
       const current = await getJob(job_id)
       if (current && (current.status === 'done' || current.status === 'dismissed'))
         return `Deze taak was al ${current.status === 'done' ? 'klaargezet' : 'weggeklikt'}; er is niets meer te doen.`
-      await completeJob(job_id, resultaat, BY)
+      try {
+        await completeJob(job_id, resultaat, BY)
+      } catch (e) {
+        // Net tegelijk door een andere run afgerond: ook geen fout.
+        if (e instanceof Error && e.message === JOB_ALREADY_HANDLED) return 'Deze taak was net al klaargezet; er is niets meer te doen.'
+        throw e
+      }
       return 'Klaargezet in het dashboard.'
     },
   )

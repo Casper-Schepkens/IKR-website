@@ -54,8 +54,8 @@ export async function decideCardActionAction(id: string, approve: boolean) {
   return attempt(async () => {
     const { user } = await requireAdmin()
     const card = await getOwnCard(id, user.email)
-    if (card.action_status !== 'voorgesteld') throw new Error('Er staat geen actie open.')
-    await workspaceRepo().update(card.id, { action_status: approve ? 'goedgekeurd' : 'afgewezen' })
+    // Atomair: een tweede klik (of tabblad) vindt de actie niet meer op 'voorgesteld' en start geen tweede taak.
+    if (!(await workspaceRepo().decideAction(card.id, approve))) throw new Error('Er staat geen actie open.')
     if (approve) await askBot({ ...card, action_status: 'goedgekeurd' }, 'actie', user.email)
   })
 }

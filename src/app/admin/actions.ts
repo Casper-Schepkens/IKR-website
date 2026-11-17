@@ -210,6 +210,24 @@ export async function sendDraftAction(id: string) {
   })
 }
 
+/**
+ * Een verzending die begon maar niet afgerond werd (bv. time-out na Gmail): Casper kijkt in Gmail en
+ * zegt of de mail vertrok. Pas na 2 minuten, zodat een lopende verzending niet gekruist wordt.
+ */
+export async function resolveInterruptedSendAction(id: string, wasSent: boolean) {
+  return attempt(async () => {
+    const { drafts, leads, user } = await requireSales()
+    const d = await drafts.get(id)
+    if (!d || d.status !== 'concept' || !d.sent_at) throw new Error('Dit concept wacht niet op een beslissing.')
+    if (Date.now() - Date.parse(d.sent_at) < 2 * 60_000) throw new Error('De verzending loopt misschien nog. Probeer over twee minuten opnieuw.')
+    if (wasSent) {
+      await drafts.markSent(id, user.email)
+      await updateLeadAfterSend(leads, d)
+    } else await drafts.releaseSend(id)
+    revalidatePath('/admin/sales', 'layout')
+  })
+}
+
 export async function deleteDraftAction(id: string) {
   return attempt(async () => {
     const { drafts } = await requireSales()

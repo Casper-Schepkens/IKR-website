@@ -169,6 +169,7 @@ async function Concepts({ session, concepts }: { session: AdminSession; concepts
               followUpAction={d.follow_up_action ?? null}
               followUpOn={d.follow_up_on ?? null}
           rewriter={aiEngine() === 'grokbot' ? 'Grokbot' : 'De AI'}
+              sendingSince={d.sent_at}
         />
       ))}
     </>
