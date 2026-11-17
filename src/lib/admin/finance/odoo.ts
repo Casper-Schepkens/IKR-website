@@ -1,4 +1,5 @@
 import 'server-only'
+import { timeout, WRITE_TIMEOUT_MS } from '../http'
 
 /**
  * Odoo 19 (JSON-2 API), enkel LEZEN. Sleutel: ODOO_API_KEY (Bearer), adres: ODOO_URL.
@@ -12,7 +13,7 @@ async function call<T>(model: string, method: 'search_read' | 'read', body: Reco
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.ODOO_API_KEY}`, ...(process.env.ODOO_DB ? { 'X-Odoo-Database': process.env.ODOO_DB } : {}) },
     body: JSON.stringify(body),
-    cache: 'no-store',
+    cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS),
   })
   const json = (await res.json().catch(() => null)) as (T & { message?: string; name?: string }) | null
   if (!res.ok) throw new Error(`Odoo (${res.status}): ${json && 'message' in json ? json.message : 'onbekende fout'}`)

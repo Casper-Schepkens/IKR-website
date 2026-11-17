@@ -7,6 +7,9 @@ import { workspaceRepo } from '@/lib/admin/workspace/repo'
 import { askBot, getOwnCard, memberEmail } from '@/lib/admin/workspace/service'
 import { CARD_STATUSES, type CardStatus } from '@/lib/admin/workspace/types'
 import type { ActionResult } from './actions'
+import { formText } from '@/lib/admin/forms'
+/** Hier altijd een tekst (leeg = ''). */
+const str = (form: FormData, key: string) => formText(form, key) ?? ''
 
 /** Werkplek van Grok Bot: elk teamlid enkel op zijn eigen kaarten (Casper voorlopig op alle). */
 async function attempt(fn: () => Promise<unknown>): Promise<ActionResult> {
@@ -18,11 +21,6 @@ async function attempt(fn: () => Promise<unknown>): Promise<ActionResult> {
     return { ok: false, error: e instanceof Error ? e.message : 'Er ging iets mis.' }
   }
 }
-const str = (form: FormData, key: string) => {
-  const v = form.get(key)
-  return typeof v === 'string' ? v.trim() : ''
-}
-
 /** Opdracht aan Grok Bot: wordt een kaart "Opdracht" en de bot gaat ermee aan de slag. */
 export async function giveOrderAction(form: FormData) {
   return attempt(async () => {

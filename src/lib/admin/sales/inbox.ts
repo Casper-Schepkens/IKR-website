@@ -17,7 +17,7 @@ export type InboxItem = {
 
 export type InboxResult =
   | { status: 'not_connected'; reason: string }
-  | { status: 'ok'; items: InboxItem[]; pendingJobIds: string[]; newJobIds: string[]; capped: boolean }
+  | { status: 'ok'; items: InboxItem[]; pendingJobIds: string[]; newJobIds: string[]; capped: boolean; createdLeads: string[] }
 
 /** Hoeveel recente threads de inbox bekijkt. */
 export const INBOX_THREADS = 25
@@ -48,6 +48,7 @@ export async function loadInbox(session: AdminSession): Promise<InboxResult> {
   })
 
   const items: Omit<InboxItem, 'job'>[] = []
+  const createdLeads: string[] = []
   for (const t of waiting) {
     const last = t.mails[t.mails.length - 1]
     let lead = byEmail.get(last.fromEmail)
@@ -62,7 +63,9 @@ export async function loadInbox(session: AdminSession): Promise<InboxResult> {
           source: isCasper(t.mails[0]) ? 'cold_mail' : 'other',
         })
         byEmail.set(last.fromEmail, lead)
-      } catch {
+        createdLeads.push(`${lead.name} <${lead.email}>`)
+      } catch (e) {
+        console.error('[inbox] lead aanmaken mislukt', last.fromEmail, e instanceof Error ? e.message : e)
         continue
       }
     }
@@ -97,5 +100,5 @@ export async function loadInbox(session: AdminSession): Promise<InboxResult> {
   }
   withJobs.sort((a, b) => b.last.date.localeCompare(a.last.date))
   // Gmail geeft de 25 recentste threads van 30 dagen: zitten we op die grens, dan kan er iets ouder ontbreken.
-  return { status: 'ok', items: withJobs, pendingJobIds, newJobIds, capped: threads.length >= INBOX_THREADS }
+  return { status: 'ok', items: withJobs, pendingJobIds, newJobIds, capped: threads.length >= INBOX_THREADS, createdLeads }
 }

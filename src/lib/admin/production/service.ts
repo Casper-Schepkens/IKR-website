@@ -42,12 +42,14 @@ import {
   type Schedule,
 } from './rules'
 import { ChangeSet, revertChange, TABLES, type ProductionStore, type Row } from './store'
+import { todayBrussels } from '../dates'
 
 export type ProductionRepo = ProductionStore
 type ClientRef = { id: string; name: string }
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 const TIME = /^\d{2}:\d{2}$/
-export const today = () => new Date().toISOString().slice(0, 10)
+/** Vandaag in Brussel (was UTC: tussen middernacht en 1 à 2 uur nog gisteren). */
+export const today = () => todayBrussels()
 
 // ─── Lezen ─────────────────────────────────────────────────
 export type ProductionData = {

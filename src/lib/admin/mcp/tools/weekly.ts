@@ -3,10 +3,10 @@ import { z } from 'zod'
 import { inferKind, PIN_KINDS, safeUrl, sortPins, type Pin } from '../../weekly/pins'
 import { fmtDate, isoDay } from '../../format'
 import { boardTodos, currentWeekly, weeklyTimeRange } from '../../weekly/board'
-import { scheduleWeekly } from '../../weekly/schedule'
+import { concludeAndSchedule, scheduleWeekly } from '../../weekly/schedule'
 import { TEAM } from '../../weekly/types'
 
-import { BY, dateStr, owner, type ToolCtx } from '../tool'
+import { BY, dateStr, owner, uuid, type ToolCtx } from '../tool'
 
 /** Weekly, to-do's en prikbord (hele team). */
 export function registerWeeklyTools(ctx: ToolCtx) {
@@ -51,10 +51,12 @@ export function registerWeeklyTools(ctx: ToolCtx) {
     return 'To-do aangemaakt.'
   })
   tool('todo_bijwerken', 'Titel, persoon of soort van een to-do aanpassen.', { todo_id: z.string(), titel: z.string().optional(), voor: owner.optional(), soort: z.enum(['weekly', 'long']).optional() }, false, async ({ todo_id, titel, voor, soort }) => {
+    uuid(todo_id, 'todo_id')
     await weekly.updateTodo(todo_id, Object.fromEntries(Object.entries({ title: titel, owner: voor, kind: soort }).filter(([, v]) => v !== undefined)))
     return 'Bijgewerkt.'
   })
   tool('todo_af', 'To-do afvinken (af = true) of terug openzetten (af = false).', { todo_id: z.string(), af: z.boolean() }, false, async ({ todo_id, af }) => {
+    uuid(todo_id, 'todo_id')
     await weekly.setDone(todo_id, af ? BY : null)
     return af ? 'Afgevinkt.' : 'Terug open.'
   })
@@ -64,15 +66,18 @@ export function registerWeeklyTools(ctx: ToolCtx) {
     { todo_id: z.string(), afgewerkt: z.boolean() },
     false,
     async ({ todo_id, afgewerkt }) => {
+    uuid(todo_id, 'todo_id')
       await weekly.setChecked(todo_id, afgewerkt)
       return afgewerkt ? 'Aangevinkt als afgewerkt.' : 'Vinkje weg.'
     },
   )
   tool('todo_notitie', 'Notitie bij een to-do toevoegen.', { todo_id: z.string(), notitie: z.string() }, false, async ({ todo_id, notitie }) => {
+    uuid(todo_id, 'todo_id')
     await weekly.addNote(todo_id, notitie, BY)
     return 'Notitie toegevoegd.'
   })
   tool('todo_doorschuiven', 'To-do doorschuiven naar de volgende weekly.', { todo_id: z.string() }, false, async ({ todo_id }) => {
+    uuid(todo_id, 'todo_id')
     await weekly.push(todo_id)
     return 'Doorgeschoven.'
   })
@@ -123,10 +128,12 @@ export function registerWeeklyTools(ctx: ToolCtx) {
     return 'Kaartje verwijderd.'
   })
   tool('todo_doorschuiven_annuleren', 'Doorschuiven ongedaan maken (bv. per ongeluk doorgeschoven), zolang de volgende weekly nog niet ingepland is.', { todo_id: z.string() }, false, async ({ todo_id }) => {
+    uuid(todo_id, 'todo_id')
     await weekly.unpush(todo_id)
     return 'Doorschuiven geannuleerd.'
   })
   tool('todo_verwijderen', 'To-do definitief verwijderen.', { todo_id: z.string() }, false, async ({ todo_id }) => {
+    uuid(todo_id, 'todo_id')
     await weekly.deleteTodo(todo_id)
     return 'Verwijderd.'
   })
@@ -137,11 +144,7 @@ export function registerWeeklyTools(ctx: ToolCtx) {
     return { id: w.id, ingepland: `${datum} ${uur}`, modus }
   })
   tool('weekly_afsluiten', 'Een weekly afsluiten en meteen de volgende inplannen (live: met einduur; online: altijd 1 uur).', { weekly_id: z.string(), datum: dateStr, uur: z.string().regex(/^\d{2}:\d{2}$/), einduur: z.string().regex(/^\d{2}:\d{2}$/).optional().describe('verplicht bij live, genegeerd bij online'), modus: z.enum(['live', 'online']) }, false, async ({ weekly_id, datum, uur, einduur, modus }) => {
-    const w = await weekly.getWeekly(weekly_id)
-    if (!w || w.status === 'concluded') throw new Error('Deze weekly bestaat niet of is al afgesloten.')
-    const next = await scheduleWeekly(weekly, BY, { date: datum, time: uur, endTime: einduur ?? null, mode: modus })
-    await weekly.assignPending(next.id)
-    await weekly.updateWeekly(weekly_id, { status: 'concluded', concluded_at: new Date().toISOString() })
+    await concludeAndSchedule(weekly, BY, uuid(weekly_id, 'weekly_id'), { date: datum, time: uur, endTime: einduur ?? null, mode: modus })
     return { afgesloten: weekly_id, volgende: `${datum} ${uur}`, modus }
   })
 }

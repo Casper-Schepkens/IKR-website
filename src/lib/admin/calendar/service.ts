@@ -4,10 +4,10 @@ import { isSupabaseConfigured } from '../env'
 import { createServiceSupabase } from '../supabase/server'
 import { CONTACT_EMAIL } from '../weekly/types'
 import { classify, dayIn, type CalItem } from './core'
+import { addDays, todayBrussels } from '../dates'
 
 export type CalendarResult = { status: 'ok'; items: CalItem[]; demo?: boolean } | { status: 'not_connected'; reason: string }
 
-const addDays = (day: string, n: number) => new Date(Date.parse(`${day}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10)
 
 /** Items van de contact@-agenda tussen twee dagen (inclusief), met een link naar het dashboard waar we ze herkennen. */
 export async function loadCalendar(fromDay: string, toDay: string): Promise<CalendarResult> {
@@ -47,7 +47,7 @@ async function dashboardLinks() {
 
 /** Demomodus (lokaal zonder Supabase): voorbeelden rond vandaag. */
 function demoItems(fromDay: string, toDay: string): CalItem[] {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayBrussels()
   const at = (dayOffset: number, time: string, minutes: number) => {
     const day = addDays(today, dayOffset)
     const start = new Date(`${day}T${time}:00+01:00`).toISOString()

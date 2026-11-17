@@ -1,5 +1,6 @@
 import 'server-only'
 import { teamAccessToken, type CalendarInfo } from './connections'
+import { timeout } from '../http'
 
 /**
  * Enkel LEZEN uit de mailbox en agenda's van een teamlid. Alleen GET-oproepen: niets versturen,
@@ -10,7 +11,7 @@ const GMAIL = 'https://gmail.googleapis.com/gmail/v1/users/me'
 const CAL = 'https://www.googleapis.com/calendar/v3'
 
 async function get<T>(token: string, url: string): Promise<T> {
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store', signal: timeout() })
   const json = (await res.json().catch(() => ({}))) as T & { error?: { message?: string } }
   if (!res.ok) throw new Error(`Google: ${json.error?.message ?? res.status}`)
   return json

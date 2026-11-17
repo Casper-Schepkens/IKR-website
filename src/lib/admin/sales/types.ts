@@ -65,3 +65,35 @@ export type Lead = {
 
 export type LeadInput = Pick<Lead, 'name' | 'company' | 'email' | 'phone' | 'source'> &
   Partial<Pick<Lead, 'next_action' | 'follow_up_on' | 'notes'>>
+
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const blank = (v: string | null | undefined) => (typeof v === 'string' && v.trim() ? v.trim() : null)
+
+/**
+ * Eén controle voor een nieuwe of aangepaste lead, voor het dashboard en voor Grok Bot (MCP): zelfde
+ * regels voor naam, e-mail, datum en bron. `defaultSource` verschilt: het formulier kiest 'other',
+ * Grok Bot 'cold_mail' (die maakt leads vooral uit antwoorden op cold mails).
+ */
+export function cleanLeadInput(
+  raw: { name?: string | null; company?: string | null; email?: string | null; phone?: string | null; source?: string | null; next_action?: string | null; follow_up_on?: string | null; notes?: string | null },
+  defaultSource: Source,
+): LeadInput {
+  const name = blank(raw.name)
+  if (!name) throw new Error('Naam is verplicht.')
+  if (name.length > 200) throw new Error('Naam is te lang (max 200 tekens).')
+  const email = blank(raw.email)?.toLowerCase() ?? null
+  if (email && !EMAIL.test(email)) throw new Error(`Dat e-mailadres klopt niet: "${email}".`)
+  const follow = blank(raw.follow_up_on)
+  if (follow && (!/^\d{4}-\d{2}-\d{2}$/.test(follow) || Number.isNaN(Date.parse(`${follow}T00:00:00Z`)))) throw new Error('Opvolgdatum: gebruik YYYY-MM-DD.')
+  const source = raw.source && (SOURCES as readonly string[]).includes(raw.source) ? (raw.source as Source) : defaultSource
+  return {
+    name,
+    company: blank(raw.company),
+    email,
+    phone: blank(raw.phone),
+    source,
+    ...(raw.next_action !== undefined ? { next_action: blank(raw.next_action) } : {}),
+    ...(raw.follow_up_on !== undefined ? { follow_up_on: follow } : {}),
+    ...(raw.notes !== undefined ? { notes: blank(raw.notes) } : {}),
+  }
+}

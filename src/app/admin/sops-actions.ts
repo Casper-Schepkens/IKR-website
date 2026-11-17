@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/admin/session'
 import { cleanSopInput, SOP_STATUSES, type SopStatus } from '@/lib/admin/sops/types'
 import type { ActionResult } from './actions'
+import { formRaw as str } from '@/lib/admin/forms'
 
 /** SOP's: iedereen van het team mag altijd toevoegen, aanpassen, goedkeuren en verwijderen. */
 async function attempt(fn: () => Promise<void>): Promise<ActionResult> {
@@ -16,11 +17,6 @@ async function attempt(fn: () => Promise<void>): Promise<ActionResult> {
     return { ok: false, error: e instanceof Error ? e.message : 'Er ging iets mis.' }
   }
 }
-const str = (form: FormData, key: string) => {
-  const v = form.get(key)
-  return typeof v === 'string' ? v : null
-}
-
 export async function createSopAction(form: FormData) {
   return attempt(async () => {
     const { sops, user } = await requireAdmin()

@@ -53,10 +53,14 @@ export function registerCallTools(ctx: ToolCtx) {
     { status: z.enum(CALL_STATUSES).optional().describe('standaard: gepland'), soort: z.enum(['setter', 'sales']).optional(), lead_id: z.string().optional() },
     true,
     async ({ status = 'gepland', soort, lead_id }) => {
-      await syncCallsFromCalendar(callDeps).catch(() => undefined)
+      const waarschuwing = await syncCallsFromCalendar(callDeps).then(
+        () => null,
+        (e: unknown) => `De agenda kon niet nagekeken worden (${e instanceof Error ? e.message : String(e)}): nieuwe calls kunnen ontbreken.`,
+      )
       const list = (await calls.list(lead_id ? { leadId: uuid(lead_id, 'lead_id') } : {})).filter((c) => c.status === status && (!soort || c.kind === soort))
       const known = new Map((await leads.list()).map((l) => [l.id, l]))
-      return Promise.all(list.slice(0, 50).map((c) => callView(c, known)))
+      const views = await Promise.all(list.slice(0, 50).map((c) => callView(c, known)))
+      return waarschuwing ? { waarschuwing, calls: views } : views
     },
   )
   tool('call_context_lezen', '"Context van Grok Bot" van een call lezen (markdown, apart van Caspers notitie), met wie en wanneer laatst bijgewerkt.', { call_id: z.string() }, true, async ({ call_id }) => {

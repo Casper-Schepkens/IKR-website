@@ -87,7 +87,9 @@ export async function handleFirefliesEvent(meetingId: string, clientRef: string 
   const call = matchCall(t, calls, leads, clientRef)
   if (!call) {
     // Weeklies: het transcript zelf gaat via de dagelijkse cron naar de Drive; hier enkel SOP-voorstellen.
-    if (clientRef?.startsWith('weekly:') || /weekly/i.test(t.title)) {
+    // Enkel een echte weekly (opname met weekly-referentie of de Meet van een gekende weekly), niet elke
+    // meeting met "weekly" in de titel (bv. een klantmeeting).
+    if (clientRef?.startsWith('weekly:') || (await isWeeklyMeet(t.meetingLink))) {
       if (clientRef?.startsWith('weekly:')) await revokeWeeklyRecordingLink(clientRef.slice('weekly:'.length)).catch(() => undefined)
       const job = await queueWeeklySops({ id: t.id, title: t.title, date: t.date, text: t.text, url: t.firefliesUrl }).catch((e) => {
         console.error('[sops] weekly', e)
@@ -169,6 +171,14 @@ export async function processTranscript(callId: string, t: FirefliesTranscript, 
   await kickJobs([job.id])
 }
 
+/** Is dit de Meet van een weekly in het dashboard? */
+async function isWeeklyMeet(link: string | null) {
+  const code = meetCode(link)
+  if (!code) return false
+  const { data } = await createServiceSupabase().from('weeklies').select('meet_url').not('meet_url', 'is', null).order('starts_at', { ascending: false }).limit(50)
+  return (data ?? []).some((w) => meetCode(w.meet_url as string) === code)
+}
+
 /** Opname van een weekly: de tijdelijke publieke link intrekken zodra Fireflies het transcript heeft. */
 async function revokeWeeklyRecordingLink(weeklyId: string) {
   const db = createServiceSupabase()
@@ -195,6 +205,22 @@ export async function catchUpCallTranscripts(deps: Deps = serviceDeps(), now = D
       Date.parse(c.starts_at) > now - 14 * 86_400_000,
   )
   const results: { call: string; result: string }[] = []
+  // Transcripts die eerder op "fout" bleven staan (ook setter-opnames zonder Meet): opnieuw proberen, laatste 7 dagen.
+  const { data: failed } = await createServiceSupabase()
+    .from('call_transcripts')
+    .select('fireflies_id, call_id')
+    .eq('status', 'fout')
+    .gte('updated_at', new Date(now - 7 * 86_400_000).toISOString())
+    .limit(10)
+  for (const f of (failed ?? []) as { fireflies_id: string; call_id: string | null }[]) {
+    if (f.fireflies_id.startsWith('geen-transcript:')) continue
+    try {
+      const r = await handleFirefliesEvent(f.fireflies_id, f.call_id, deps)
+      results.push({ call: f.call_id ?? '-', result: r.status })
+    } catch (e) {
+      results.push({ call: f.call_id ?? '-', result: e instanceof Error ? e.message : 'mislukt' })
+    }
+  }
   for (const c of todo) {
     try {
       const start = Date.parse(c.starts_at)

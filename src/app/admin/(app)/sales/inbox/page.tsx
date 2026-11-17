@@ -83,6 +83,12 @@ async function Inbox({ session, tab, concepts }: { session: AdminSession; tab: '
         </p>
       )}
       <Tabs active={tab} counts={{ nieuw: count('nieuw'), gemaild: count('gemaild'), concepten: concepts }} />
+      {result.createdLeads.length > 0 && (
+        <p className="m-0 rounded-2xl bg-[#DDF2DF] p-4 text-sm text-[#1E5B27]">
+          Nieuwe {result.createdLeads.length === 1 ? 'lead' : 'leads'} uit de inbox: {result.createdLeads.join(', ')}. Geen lead? Open de fiche en kies
+          &quot;Geen lead&quot;.
+        </p>
+      )}
       {result.capped && (
         <p className={cn('m-0 text-sm', muted)}>
           De inbox bekijkt de {INBOX_THREADS} recentste threads van de laatste 30 dagen. Mis je een oudere mail, kijk dan in Gmail.

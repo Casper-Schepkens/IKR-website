@@ -183,10 +183,14 @@ export function registerClientTools(ctx: ToolCtx) {
     { klant: z.string().optional().describe('naam of id; leeg = alle klanten') },
     true,
     async ({ klant }) => {
-      await syncFinance().catch(() => undefined)
+      // Mislukt Odoo, dan rekenen we met de laatst gekende cijfers: zeg dat erbij.
+      const waarschuwing = await syncFinance().then(
+        () => null,
+        (e: unknown) => `Odoo kon niet bijgewerkt worden (${e instanceof Error ? e.message : String(e)}): cijfers van de vorige keer.`,
+      )
       const [txs, cl] = await Promise.all([loadTxs(), loadClients()])
       const checks = paymentChecks(txs, cl, isoDay(new Date()))
-      if (!klant) return { klanten: checks, zonder_check: cl.filter((c) => !c.monthly_fee || !c.contract_start).map((c) => c.name) }
+      if (!klant) return { klanten: checks, zonder_check: cl.filter((c) => !c.monthly_fee || !c.contract_start).map((c) => c.name), ...(waarschuwing ? { waarschuwing } : {}) }
       const c = await resolveClient(klant)
       return checks.find((x) => x.client_id === c.id) ?? `${c.name}: geen maandbedrag of contractstart ingevuld.`
     },

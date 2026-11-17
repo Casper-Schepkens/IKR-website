@@ -22,6 +22,34 @@ export async function scheduleWeekly(
 }
 
 /**
+ * Een weekly afsluiten en meteen de volgende inplannen (dashboard en Grok Bot gebruiken dit allebei).
+ * Eerst de invoer nakijken, dan afsluiten, dan pas de volgende maken: mislukt dat laatste, dan wordt het
+ * afsluiten teruggedraaid. Vroeger kon een fout op het einde twee open weeklies achterlaten.
+ */
+export async function concludeAndSchedule(
+  repo: WeeklyRepo,
+  by: string,
+  weeklyId: string,
+  input: { date: string | null; time: string | null; endTime?: string | null; mode: string | null },
+) {
+  const w = await repo.getWeekly(weeklyId)
+  if (!w || w.status === 'concluded') throw new Error('Deze weekly bestaat niet of is al afgesloten.')
+  const mode = input.mode as WeeklyMode | null
+  if (!input.date || !input.time || (mode !== 'live' && mode !== 'online')) throw new Error('Kies een datum, een uur en live of online.')
+  weeklyTimes(input.date, input.time, mode, input.endTime ?? null) // gooit bij een ongeldig uur, vóór er iets verandert
+  const before = { status: w.status, concluded_at: w.concluded_at ?? null } // kopie: de repo kan hetzelfde object aanpassen
+  await repo.updateWeekly(weeklyId, { status: 'concluded', concluded_at: new Date().toISOString() })
+  try {
+    const next = await scheduleWeekly(repo, by, input)
+    await repo.assignPending(next.id)
+    return next
+  } catch (e) {
+    await repo.updateWeekly(weeklyId, before).catch(() => undefined)
+    throw e
+  }
+}
+
+/**
  * Start en einde. Online: altijd ONLINE_MINUTES (het einduur wordt genegeerd).
  * Live: een einduur is verplicht en moet na het startuur liggen (zelfde dag).
  */
