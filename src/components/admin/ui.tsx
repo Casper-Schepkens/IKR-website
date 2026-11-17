@@ -255,6 +255,11 @@ export const Icon = {
       <path d="M17 6.5A7 7 0 1 0 17 17.5M4 10h9M4 14h9" />
     </Svg>
   ),
+  chat: (p: IconProps) => (
+    <Svg {...p}>
+      <path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4.2A8 8 0 1 1 20 12z" />
+    </Svg>
+  ),
   phone: (p: IconProps) => (
     <Svg {...p}>
       <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" />

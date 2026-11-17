@@ -21,7 +21,7 @@ describe("pagina's in het menu", () => {
   it('standaard: Casper ziet sales, de anderen niet', () => {
     expect(hiddenPages({ hidden: null }, true)).toEqual([])
     expect(hiddenPages({ hidden: null }, false)).toEqual(SALES_PAGES)
-    expect(SALES_PAGES).toEqual(['/admin/sales/cold-mails', '/admin/sales/inbox', '/admin/sales/calls', '/admin/sales'])
+    expect(SALES_PAGES).toEqual(['/admin/sales/cold-mails', '/admin/sales/inbox', '/admin/sales/calls', '/admin/sales', '/admin/whatsapp'])
     expect(showsSales({ hidden: null }, false)).toBe(false)
   })
   it("eigen keuze gaat voor: iemand kan sales aanzetten, Casper kan pagina's verbergen", () => {

@@ -12,6 +12,7 @@ export const MENU_PAGES = [
   { href: '/admin/sales/inbox', label: 'Inbox', sales: true },
   { href: '/admin/sales/calls', label: 'Calls', sales: true },
   { href: '/admin/sales', label: 'Leads', sales: true },
+  { href: '/admin/whatsapp', label: 'WhatsApp', sales: true },
   { href: '/admin/klanten', label: 'Klanten' },
   { href: '/admin/financien', label: 'Financiën' },
   { href: '/admin/productie', label: 'Productie' },

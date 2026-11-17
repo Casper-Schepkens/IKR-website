@@ -1,0 +1,40 @@
+# IKR WhatsApp-bridge op fly.io: precies 1 machine (WhatsApp laat één sessie per koppeling toe)
+# met een volume op /data voor de koppeling. Secrets: zie README (fly secrets set …).
+app = "ikr-whatsapp-bridge"
+primary_region = "lhr" # dichtst bij Supabase (eu-west-1, Ierland)
+
+[build]
+  dockerfile = "Dockerfile"
+
+[deploy]
+  # Nooit twee machines tegelijk (ook niet tijdens een deploy): eerst stoppen, dan starten.
+  strategy = "immediate"
+
+[env]
+  AUTH_DIR = "/data/auth"
+  PORT = "8080"
+  LOG_LEVEL = "info"
+
+[[mounts]]
+  source = "wa_auth"
+  destination = "/data"
+  initial_size = "1gb"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # Altijd verbonden blijven: niet automatisch stoppen of opstarten.
+  auto_stop_machines = "off"
+  auto_start_machines = false
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "20s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
