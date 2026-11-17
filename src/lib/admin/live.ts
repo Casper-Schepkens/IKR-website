@@ -43,12 +43,36 @@ export function shouldRefreshForChat(prev: ChatSnap, next: ChatSnap) {
   return prev.thinking && !next.thinking
 }
 
+/** Het pad van de pagina, gezet door de proxy voor de admin-layout (die het zelf niet kent). */
+export const PATH_HEADER = 'x-ikr-path'
+
 /** Tabellen waarvan een wijziging de open pagina laat verversen (in de supabase_realtime-publicatie). */
-export const LIVE_TABLES = ['bot_actions', 'ai_jobs', 'leads', 'mail_drafts', 'weeklies', 'weekly_todos', 'weekly_todo_notes', 'weekly_pins', 'clients', 'calls', 'finance_transactions', 'finance_rules', 'sops', 'production', 'production_cycles', 'production_steps', 'production_client_steps', 'production_template_steps', 'production_internal_tasks', 'production_internal_done', 'production_changes', 'bot_cards', 'bot_card_messages'] as const
+export const LIVE_TABLES = ['leads', 'mail_drafts', 'weeklies', 'weekly_todos', 'weekly_todo_notes', 'weekly_pins', 'clients', 'calls', 'finance_transactions', 'finance_rules', 'sops', 'production', 'production_cycles', 'production_steps', 'production_client_steps', 'production_template_steps', 'production_internal_tasks', 'production_internal_done', 'production_changes', 'bot_cards', 'bot_card_messages'] as const
+export type LiveTable = (typeof LIVE_TABLES)[number]
+
+const PRODUCTION_TABLES: LiveTable[] = ['clients', 'production', 'production_cycles', 'production_steps', 'production_client_steps', 'production_template_steps', 'production_internal_tasks', 'production_internal_done', 'production_changes']
+
+/**
+ * Welke tabellen een pagina toont. Een wijziging elders (bv. het log van Grok Bot of een to-do terwijl je
+ * op Financiën zit) herlaadt de pagina niet meer: elke herlading kost de layout en de pagina opnieuw.
+ * bot_actions en ai_jobs staan nergens: de chat en de inbox volgen hun eigen taak.
+ */
+export function tablesFor(pathname: string): LiveTable[] {
+  if (pathname.startsWith('/admin/sales/calls')) return ['calls', 'leads', 'mail_drafts']
+  if (pathname.startsWith('/admin/sales/inbox')) return ['mail_drafts', 'leads']
+  if (pathname === '/admin/sales' || pathname.startsWith('/admin/sales/')) return ['leads', 'mail_drafts', 'calls']
+  if (pathname === '/admin/klanten') return ['clients', 'finance_transactions']
+  if (pathname === '/admin/financien') return ['finance_transactions', 'finance_rules', 'clients']
+  if (pathname === '/admin/sops') return ['sops']
+  if (pathname === '/admin/productie') return PRODUCTION_TABLES
+  if (pathname === '/admin/werkplek') return ['bot_cards', 'bot_card_messages']
+  if (pathname === '/admin/weekly' || pathname.startsWith('/admin/weekly/')) return ['weeklies', 'weekly_todos', 'weekly_todo_notes', 'weekly_pins', 'sops']
+  return []
+}
 
 /** Pagina's waarvan de AI de getoonde data kan wijzigen. */
 export function isLivePath(pathname: string) {
-  return (
+  return tablesFor(pathname).length > 0 && (
     pathname === '/admin/sales' ||
     pathname.startsWith('/admin/sales/') ||
     pathname === '/admin/klanten' ||

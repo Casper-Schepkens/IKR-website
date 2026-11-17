@@ -15,9 +15,9 @@ const TABLES = ['bot_cards', 'bot_card_messages', 'sops', 'weekly_todos', 'mail_
 export function useNotifications(): Counts {
   const [counts, setCounts] = useState<Counts>({})
   const pathname = usePathname()
-  const load = useCallback(async () => {
+  const load = useCallback(async (fresh = false) => {
     try {
-      const res = await fetch('/api/meldingen', { cache: 'no-store' })
+      const res = await fetch(fresh ? '/api/meldingen?vers=1' : '/api/meldingen', { cache: 'no-store' })
       if (res.ok && res.headers.get('content-type')?.includes('json')) setCounts((await res.json()) as Counts)
     } catch {
       // offline of even niet bereikbaar: volgende ronde opnieuw
@@ -34,7 +34,7 @@ export function useNotifications(): Counts {
     const t = window.setInterval(() => {
       if (!document.hidden) void load()
     }, POLL_MS)
-    const onEvent = () => void load()
+    const onEvent = () => void load(true)
     window.addEventListener('ikr:meldingen', onEvent)
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -45,7 +45,7 @@ export function useNotifications(): Counts {
       for (const table of TABLES)
         channel.on('postgres_changes', { event: '*', schema: 'public', table }, () => {
           clearTimeout(timer)
-          timer = setTimeout(() => void load(), 600)
+          timer = setTimeout(() => void load(true), 600)
         })
       channel.subscribe()
     }

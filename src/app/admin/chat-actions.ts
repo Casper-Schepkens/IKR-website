@@ -1,7 +1,7 @@
 'use server'
 
 import { requireAdmin } from '@/lib/admin/session'
-import { chatState, sendChatMessage, type ChatState } from '@/lib/admin/chat/service'
+import { chatState, chatUpdate, sendChatMessage, type ChatState } from '@/lib/admin/chat/service'
 import type { ChatAttachment } from '@/lib/admin/chat/repo'
 import { assertDashboardUpload, shareWithDomain, startDriveUpload } from '@/lib/admin/google'
 import { CONTACT_EMAIL } from '@/lib/admin/weekly/types'
@@ -20,10 +20,11 @@ export async function sendChatAction(text: string, page: string, attachments: Ch
   }
 }
 
-/** Geschiedenis + of Grok Bot nog nadenkt (de chat ververst hiermee). */
-export async function getChatAction(): Promise<Result<ChatState>> {
+/** Geschiedenis + of Grok Bot nog nadenkt. Met `since`: enkel de nieuwe berichten (de chat ververst hiermee). */
+export async function getChatAction(since?: string): Promise<Result<ChatState>> {
   try {
     const session = await requireAdmin()
+    if (since && !Number.isNaN(Date.parse(since))) return { ok: true, data: await chatUpdate(session, since) }
     return { ok: true, data: await chatState(session) }
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Laden mislukt.' }

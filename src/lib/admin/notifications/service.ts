@@ -38,6 +38,23 @@ const when = <A extends unknown[]>(...args: [...{ [K in keyof A]: A[K] | null },
 }
 const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Brussels' }).format(new Date())
 
+/**
+ * Tellers kort bewaren per gebruiker (per serverinstantie): de zijbalk vraagt ze elke 30 s en bij elke
+ * navigatie op, en elke telling kost 11 tot 17 queries. Een Realtime-wijziging vraagt ze vers op.
+ */
+const CACHE_MS = 20_000
+const cache = (globalThis as unknown as { __ikrCounts?: Map<string, { at: number; value: Promise<Counts> }> }).__ikrCounts ??= new Map()
+
+export function cachedNotificationsFor(email: string, opts: { fresh?: boolean } = {}): Promise<Counts> {
+  const key = email.toLowerCase()
+  const hit = cache.get(key)
+  if (!opts.fresh && hit && Date.now() - hit.at < CACHE_MS) return hit.value
+  const value = notificationsFor(key)
+  cache.set(key, { at: Date.now(), value })
+  value.catch(() => cache.delete(key))
+  return value
+}
+
 /** Tellers voor één teamlid. Een fout in één bron mag de rest niet tegenhouden. */
 export async function notificationsFor(email: string): Promise<Counts> {
   const r = repos()

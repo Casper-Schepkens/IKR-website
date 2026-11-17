@@ -189,6 +189,9 @@ export const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Gebruik YYYY-MM-
 
 export const owner = z.enum(OWNERS as [string, ...string[]])
 
+/** Een leesoproep die langer duurt dan dit, komt ook in het log. */
+export const SLOW_TOOL_MS = 10_000
+
 export function makeTool(server: McpServer) {
   /**
    * Registreert een tool. Schrijf-tools en fouten worden altijd gelogd in bot_actions; met
@@ -208,15 +211,18 @@ export function makeTool(server: McpServer) {
       { description, inputSchema: shape, annotations: { readOnlyHint: readOnly } },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (async (args: any) => {
+        const started = Date.now()
         try {
           const out = await fn(args)
-          if (!readOnly) await log(name, args, true)
-          else if (opts.logReads) await log(name, { ...args, alleen_lezen: true }, true)
+          // Duur mee in het log, zodat te zien is welke tool traag is (17 oproepen liepen tot de limiet van 120 s).
+          const duur_ms = Date.now() - started
+          if (!readOnly) await log(name, { ...args, duur_ms }, true)
+          else if (opts.logReads || duur_ms > SLOW_TOOL_MS) await log(name, { ...args, alleen_lezen: true, duur_ms }, true)
           if (out && typeof out === 'object' && MCP_CONTENT in out) return { content: (out as Record<string, unknown>)[MCP_CONTENT] }
           return text(out)
         } catch (e) {
           const msg = e instanceof Error ? e.message : 'Mislukt.'
-          await log(name, args, false, msg)
+          await log(name, { ...args, duur_ms: Date.now() - started }, false, msg)
           return fail(msg)
         }
       }) as never,

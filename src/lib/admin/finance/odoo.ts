@@ -21,12 +21,12 @@ async function call<T>(model: string, method: 'search_read' | 'read', body: Reco
 
 export type BankLine = { id: number; date: string; amount: number; counterparty: string; description: string }
 
-/** Alle banktransacties (account.bank.statement.line). */
-export async function bankLines(): Promise<BankLine[]> {
+/** Banktransacties (account.bank.statement.line); met `since` (YYYY-MM-DD) enkel vanaf die datum. */
+export async function bankLines(since?: string): Promise<BankLine[]> {
   const rows = await call<{ id: number; date: string; amount: number; payment_ref: string | false; partner_id: [number, string] | false; partner_name: string | false }[]>(
     'account.bank.statement.line',
     'search_read',
-    { domain: [], fields: ['date', 'amount', 'payment_ref', 'partner_id', 'partner_name'], order: 'date asc' },
+    { domain: since ? [['date', '>=', since]] : [], fields: ['date', 'amount', 'payment_ref', 'partner_id', 'partner_name'], order: 'date asc' },
   )
   return rows.map((r) => ({ id: r.id, date: r.date, amount: r.amount, counterparty: (r.partner_id && r.partner_id[1]) || r.partner_name || '', description: r.payment_ref || '' }))
 }

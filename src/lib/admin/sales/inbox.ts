@@ -17,7 +17,10 @@ export type InboxItem = {
 
 export type InboxResult =
   | { status: 'not_connected'; reason: string }
-  | { status: 'ok'; items: InboxItem[]; pendingJobIds: string[]; newJobIds: string[] }
+  | { status: 'ok'; items: InboxItem[]; pendingJobIds: string[]; newJobIds: string[]; capped: boolean }
+
+/** Hoeveel recente threads de inbox bekijkt. */
+export const INBOX_THREADS = 25
 
 const isCasper = (m: Mail) => m.fromEmail === SALES_EMAIL
 const isInternal = (m: Mail) => m.fromEmail.endsWith('@iknowright.be')
@@ -35,7 +38,7 @@ export async function loadInbox(session: AdminSession): Promise<InboxResult> {
   if (!hasScopes(conn, [SCOPES.gmailRead, SCOPES.gmailSend]))
     return { status: 'not_connected', reason: 'Gmail is nog niet gekoppeld: klik in Instellingen op "Connect Gmail".' }
 
-  const [threads, [leads, ignored]] = await Promise.all([recentThreads(SALES_EMAIL), others])
+  const [threads, [leads, ignored]] = await Promise.all([recentThreads(SALES_EMAIL, INBOX_THREADS), others])
   const byEmail = new Map(leads.filter((l) => l.email).map((l) => [l.email!.toLowerCase(), l]))
 
   const waiting = threads.filter((t) => {
@@ -93,5 +96,6 @@ export async function loadInbox(session: AdminSession): Promise<InboxResult> {
     withJobs.push({ ...i, job })
   }
   withJobs.sort((a, b) => b.last.date.localeCompare(a.last.date))
-  return { status: 'ok', items: withJobs, pendingJobIds, newJobIds }
+  // Gmail geeft de 25 recentste threads van 30 dagen: zitten we op die grens, dan kan er iets ouder ontbreken.
+  return { status: 'ok', items: withJobs, pendingJobIds, newJobIds, capped: threads.length >= INBOX_THREADS }
 }

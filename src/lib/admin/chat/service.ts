@@ -83,3 +83,9 @@ export async function chatState(session: AdminSession, limit = 60): Promise<Chat
   const [messages, thinking] = await Promise.all([session.chat.list(session.user.id, limit), isThinking(session)])
   return { messages, thinking }
 }
+
+/** Enkel wat nieuw is sinds `since` (voor het verversen van de open chat). */
+export async function chatUpdate(session: AdminSession, since: string): Promise<ChatState> {
+  const [messages, thinking] = await Promise.all([session.chat.listSince(session.user.id, since), isThinking(session)])
+  return { messages, thinking }
+}

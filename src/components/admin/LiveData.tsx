@@ -3,13 +3,13 @@
 import { startTransition, useEffect, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { adminLiveStamp } from '@/app/admin/live-actions'
-import { isLivePath, LIVE_TABLES } from '@/lib/admin/live'
+import { isLivePath, tablesFor } from '@/lib/admin/live'
 import { createBrowserSupabase } from '@/lib/admin/supabase/browser'
 
 /** Wacht even zodat een reeks wijzigingen (bv. 3 concepten na elkaar) één verversing geeft. */
 const DEBOUNCE_MS = 400
 /** Reserve als Realtime niet verbonden is (of lokaal zonder Supabase): de lichte stempel pollen. */
-const FALLBACK_POLL_MS = 3000
+const FALLBACK_POLL_MS = 15_000
 
 /**
  * Op sales- en weekly-pagina's: als Grok Bot, een AI-taak of een collega data wijzigt, de pagina
@@ -63,10 +63,8 @@ export function LiveData({ stamp: rendered }: { stamp: string | null }) {
     let wasUp = false
     const channel = supabase?.channel(`admin-live-${pathname}`)
     if (supabase && channel) {
-      for (const table of LIVE_TABLES)
-        channel.on('postgres_changes', { event: '*', schema: 'public', table }, (payload) => {
-          // Grok Bot die enkel iets leest (bv. de mail van een teamlid) verandert niets op het scherm.
-          if (table === 'bot_actions' && (payload.new as { args?: { alleen_lezen?: boolean } })?.args?.alleen_lezen) return
+      for (const table of tablesFor(pathname))
+        channel.on('postgres_changes', { event: '*', schema: 'public', table }, () => {
           refresh()
         })
       channel.subscribe((status) => {

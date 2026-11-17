@@ -20,13 +20,13 @@ export async function kickJobs(ids: string[]) {
   try {
     const engine = aiEngine()
     if (engine === 'api') {
-      for (const id of ids) await runJob(id)
+      await runLimited(ids)
       return
     }
     // Taken zonder tools (tekst van buitenaf) via de API; de rest naar Grokbot of de worker.
     const jobs = await Promise.all(ids.map((id) => getJob(id)))
     const viaApi = jobs.filter((j) => j && aiEngine(j.type) === 'api').map((j) => j!.id)
-    for (const id of viaApi) await runJob(id)
+    await runLimited(viaApi)
     const rest = ids.filter((id) => !viaApi.includes(id))
     if (engine === 'worker' || !rest.length) return
     const reason = await notifyGrok(rest)
@@ -36,6 +36,16 @@ export async function kickJobs(ids: string[]) {
   } catch (e) {
     console.error('[ai] taken starten mislukt', e)
   }
+}
+
+/** Taken via de API met hoogstens 3 tegelijk (na elkaar duurde een inbox met 10 nieuwe mails 10 keer zo lang). */
+async function runLimited(ids: string[], n = 3) {
+  let next = 0
+  await Promise.all(
+    Array.from({ length: Math.min(n, ids.length) }, async () => {
+      while (next < ids.length) await runJob(ids[next++])
+    }),
+  )
 }
 
 /** Zelfde als kickJobs, maar na het antwoord van de request (of meteen buiten een request, bv. in tests). */

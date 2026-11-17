@@ -68,7 +68,8 @@ async function edge(db: SupabaseClient, table: string, column: string) {
 }
 
 async function digest(db: SupabaseClient, table: string, columns: string[]) {
-  const { data, error } = await db.from(table).select(columns.join(',')).limit(1000)
+  // Vaste volgorde: boven 1.000 rijen anders telkens een andere selectie (en dus een valse wijziging).
+  const { data, error } = await db.from(table).select(columns.join(',')).order('id').limit(1000)
   if (error) return 'na'
   const rows = (data ?? []) as unknown as Record<string, unknown>[]
   const text = rows

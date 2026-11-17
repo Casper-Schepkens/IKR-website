@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import type { AdminSession } from '@/lib/admin/session'
 import { requireSales } from '@/lib/admin/session'
-import { loadInbox } from '@/lib/admin/sales/inbox'
+import { INBOX_THREADS, loadInbox } from '@/lib/admin/sales/inbox'
 import { aiEngine, isAiConfigured } from '@/lib/admin/ai/jobs'
 import { buttonClass, Card, Empty, muted, PageHeader, Spinner } from '@/components/admin/ui'
 import { InboxCard } from '@/components/admin/sales/InboxCard'
@@ -83,6 +83,11 @@ async function Inbox({ session, tab, concepts }: { session: AdminSession; tab: '
         </p>
       )}
       <Tabs active={tab} counts={{ nieuw: count('nieuw'), gemaild: count('gemaild'), concepten: concepts }} />
+      {result.capped && (
+        <p className={cn('m-0 text-sm', muted)}>
+          De inbox bekijkt de {INBOX_THREADS} recentste threads van de laatste 30 dagen. Mis je een oudere mail, kijk dan in Gmail.
+        </p>
+      )}
       {!items.length && (
         <Card>
           <Empty>Niets dat op een antwoord wacht.</Empty>
