@@ -251,7 +251,11 @@ export async function getThread(owner: string, id: string): Promise<Thread> {
  * anders. Eerste mails van een thread en mails na zijn eigen mail (cold mails en opvolgingen van
  * Apollo) vallen weg.
  */
-export async function sentReplies(owner: string, opts: { days: number; maxThreads: number; maxReplies: number; gapMs?: number }) {
+/**
+ * Antwoorden die `owner` verstuurde (een mail van hem direct na een mail van iemand anders). `deadline`
+ * (tijdstip in ms): daarna geen nieuwe threads meer ophalen, we gaan verder met wat er al is.
+ */
+export async function sentReplies(owner: string, opts: { days: number; maxThreads: number; maxReplies: number; gapMs?: number; concurrency?: number; deadline?: number }) {
   const ids: string[] = []
   let pageToken: string | undefined
   do {
@@ -262,26 +266,32 @@ export async function sentReplies(owner: string, opts: { days: number; maxThread
     )
     ids.push(...(page.threads ?? []).map((t) => t.id))
     pageToken = page.nextPageToken
-  } while (pageToken && ids.length < opts.maxThreads)
+  } while (pageToken && ids.length < opts.maxThreads && !(opts.deadline && Date.now() > opts.deadline))
 
-  // Een volledige thread kost 10 quota-eenheden (limiet 250/s per mailbox): rustig ophalen, ±8 per seconde.
+  // Een volledige thread kost 10 quota-eenheden (limiet 250/s per mailbox): hoogstens ±10 per seconde.
   // Lukt één thread niet, dan slaan we die over in plaats van de hele schrijfstijl te laten mislukken.
   let failed = 0
+  let skipped = 0
   let lastError: unknown = null
   const threads = await limited(
     ids.slice(0, opts.maxThreads),
-    2,
-    (id) =>
-      gmail<{ id: string; messages: RawMessage[] }>(owner, `/threads/${id}?format=full`)
+    opts.concurrency ?? 4,
+    (id) => {
+      if (opts.deadline && Date.now() > opts.deadline) {
+        skipped++
+        return Promise.resolve([] as Mail[])
+      }
+      return gmail<{ id: string; messages: RawMessage[] }>(owner, `/threads/${id}?format=full`)
         .then((t) => t.messages.map(toMail))
         .catch((e) => {
           failed++
           lastError = e
           return [] as Mail[]
-        }),
-    opts.gapMs ?? 120,
+        })
+    },
+    opts.gapMs ?? 100,
   )
-  if (ids.length && failed === Math.min(ids.length, opts.maxThreads)) throw lastError instanceof Error ? lastError : new Error('Gmail: geen enkele thread kon gelezen worden.')
+  if (ids.length && failed > 0 && failed + skipped === Math.min(ids.length, opts.maxThreads)) throw lastError instanceof Error ? lastError : new Error('Gmail: geen enkele thread kon gelezen worden.')
   const me = owner.toLowerCase()
   const replies: { subject: string; date: string; text: string }[] = []
   for (const mails of threads) {

@@ -8,15 +8,21 @@ import { kickJobsLater } from './kick'
 
 const db = () => createServiceSupabase()
 
+/** Hoe lang het inlezen van de mails mag duren (de functie heeft 120 s). */
+export const READ_BUDGET_MS = 75_000
+
 /** Zet een taak klaar om het profiel opnieuw op te bouwen (Grokbot of de API voert ze uit). */
 export async function enqueueStyleRebuild(key: StyleKey, by: string) {
   // Alle bronnen die gekoppeld zijn met leesrechten; samen max. 120 antwoorden, nieuwste eerst.
   const conns = await listConnections()
   const readable = STYLE_SOURCES.filter((m) => hasScopes(conns.find((c) => c.email === m), [SCOPES.gmailRead]))
   if (!readable.length) throw new Error('Nog geen mailbox met leesrechten: koppel casper@ en contact@ (opnieuw) in Instellingen.')
-  // Eén mailbox na de andere (niet tegelijk): zo blijft Gmail binnen zijn limiet per seconde.
+  // Eén mailbox na de andere (niet tegelijk): zo blijft Gmail binnen zijn limiet per seconde. Samen hoogstens
+  // READ_BUDGET_MS lezen: grote threads (bijlagen) duren tot een seconde, en de oproep mag niet tegen de
+  // tijdslimiet van de functie (120 s) lopen. Wat na het budget niet gelezen is, slaan we over.
+  const deadline = Date.now() + READ_BUDGET_MS
   const perBox: Awaited<ReturnType<typeof sentReplies>>[] = []
-  for (const m of readable) perBox.push(await sentReplies(m, { days: 180, maxThreads: 150, maxReplies: 120 }))
+  for (const m of readable) perBox.push(await sentReplies(m, { days: 180, maxThreads: 80, maxReplies: 120, deadline }))
   const mails = perBox
     .flat()
     .sort((a, b) => b.date.localeCompare(a.date))
