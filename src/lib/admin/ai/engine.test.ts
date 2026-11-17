@@ -14,20 +14,20 @@ afterEach(() => {
 })
 
 describe('welke engine', () => {
-  it('Grokbot-engine met API-sleutel: tekst van buitenaf via de API, chat en werkplek bij Grokbot', () => {
+  it('Grokbot-engine: standaard alles bij Grokbot, ook met een API-sleutel (geen API-credits)', () => {
     process.env.IKR_AI_ENGINE = 'grokbot'
+    process.env.ANTHROPIC_API_KEY = 'x'
+    for (const t of ['inbox_reply', 'chat', 'werkplek']) expect(aiEngine(t)).toBe('grokbot')
+    expect(aiEngine()).toBe('grokbot')
+  })
+  it('enkel met IKR_AI_DATA_ENGINE=api én een sleutel: tekst van buitenaf via de API', () => {
+    process.env.IKR_AI_ENGINE = 'grokbot'
+    process.env.IKR_AI_DATA_ENGINE = 'api'
+    expect(aiEngine('inbox_reply')).toBe('grokbot')
     process.env.ANTHROPIC_API_KEY = 'x'
     for (const t of ['inbox_reply', 'na_verzending', 'call_verwerken', 'weekly_sops', 'contract_afleiden', 'style_profile', 'mail_rewrite']) expect(aiEngine(t)).toBe('api')
     expect(aiEngine('chat')).toBe('grokbot')
     expect(aiEngine('werkplek')).toBe('grokbot')
-    expect(aiEngine()).toBe('grokbot')
-  })
-  it('zonder API-sleutel of met IKR_AI_DATA_ENGINE=grokbot: alles bij Grokbot zoals vroeger', () => {
-    process.env.IKR_AI_ENGINE = 'grokbot'
-    expect(aiEngine('inbox_reply')).toBe('grokbot')
-    process.env.ANTHROPIC_API_KEY = 'x'
-    process.env.IKR_AI_DATA_ENGINE = 'grokbot'
-    expect(aiEngine('inbox_reply')).toBe('grokbot')
   })
 })
 
