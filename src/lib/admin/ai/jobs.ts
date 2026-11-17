@@ -194,15 +194,10 @@ export async function instructionsFor(job: Pick<AiJob, 'type' | 'input'>) {
 
 let client: Anthropic | null = null
 
-/**
- * Voert een taak uit via de Claude API (tenzij een worker of Grokbot dat doet). Faalt nooit hard.
- * force: ook bij een andere engine (vangnet als Grok onbereikbaar is).
- */
-export async function runJob(id: string, opts: { force?: boolean } = {}) {
-  if (!opts.force) {
-    const j = await getJob(id)
-    if (!j || aiEngine(j.type) !== 'api') return
-  }
+/** Voert een taak uit via de Claude API, enkel als dat de engine voor die soort taak is (nooit bij Grokbot of een worker). Faalt nooit hard. */
+export async function runJob(id: string) {
+  const j = await getJob(id)
+  if (!j || aiEngine(j.type) !== 'api') return
   // Enkel een taak die nog wacht oppikken (voorkomt dubbel werk).
   // Ook een taak die al 5 minuten op 'running' hangt (de vorige run viel weg) mag opnieuw.
   const stale = new Date(Date.now() - STALE_RUNNING_MS).toISOString()
