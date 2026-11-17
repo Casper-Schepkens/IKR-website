@@ -5,6 +5,21 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
+/** Content-Security-Policy voor /admin: enkel eigen code, Supabase (ook Realtime) en de Google-upload. */
+const ADMIN_CSP = [
+  "default-src 'self'",
+  // Next zet inline scripts (hydration); zonder nonce-opzet is 'unsafe-inline' nodig. Lokaal ook 'unsafe-eval'.
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'production' ? '' : " 'unsafe-eval'"}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data:",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.googleapis.com https://*.googleusercontent.com",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+].join('; ')
+
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['192.168.129.11'],
   images: {
@@ -22,6 +37,9 @@ const nextConfig: NextConfig = {
           { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
           { key: 'Referrer-Policy', value: 'no-referrer' },
           { key: 'X-Frame-Options', value: 'DENY' },
+          // Eerst enkel melden (Report-Only): blokkeert niets. Na een week zonder meldingen in de console
+          // de header hernoemen naar Content-Security-Policy.
+          { key: 'Content-Security-Policy-Report-Only', value: ADMIN_CSP },
         ],
       },
     ]

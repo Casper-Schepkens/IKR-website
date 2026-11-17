@@ -3,7 +3,7 @@
 import { requireAdmin } from '@/lib/admin/session'
 import { chatState, sendChatMessage, type ChatState } from '@/lib/admin/chat/service'
 import type { ChatAttachment } from '@/lib/admin/chat/repo'
-import { shareWithDomain, startDriveUpload } from '@/lib/admin/google'
+import { assertDashboardUpload, shareWithDomain, startDriveUpload } from '@/lib/admin/google'
 import { CONTACT_EMAIL } from '@/lib/admin/weekly/types'
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string }
@@ -57,6 +57,7 @@ export async function finishChatUploadAction(fileId: string): Promise<Result<str
   try {
     await requireAdmin()
     if (!FILE_ID.test(fileId)) throw new Error('Ongeldig bestand.')
+    await assertDashboardUpload(CONTACT_EMAIL, fileId, 'IKR Dashboard – Chat')
     return { ok: true, data: await shareWithDomain(CONTACT_EMAIL, fileId, 'iknowright.be') }
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Delen mislukt.' }

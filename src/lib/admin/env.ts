@@ -10,17 +10,26 @@ export function isSupabaseConfigured() {
   return Boolean(supabaseUrl() && supabaseAnonKey())
 }
 
-/** Alleen lokaal zonder Supabase (of expliciet met IKR_ADMIN_DEMO=true): data in het geheugen om te testen. */
+/**
+ * Alleen lokaal zonder Supabase (of expliciet met IKR_ADMIN_DEMO=true): data in het geheugen om te testen.
+ * Nooit op Vercel: demomodus heeft geen login, en een preview zonder Supabase-variabelen zou dan open staan.
+ */
 export function isDemoMode() {
   if (isSupabaseConfigured()) return false
+  if (process.env.VERCEL) return false
   return process.env.NODE_ENV !== 'production' || process.env.IKR_ADMIN_DEMO === 'true'
 }
 
-/** Het IKR-team: iedereen met een @iknowright.be-adres kan inloggen. */
 export const ADMIN_DOMAIN = 'iknowright.be'
 
+/** Wie in /admin mag: het team. Extra adressen (bv. een stagiair) via IKR_EXTRA_ADMIN_EMAILS, komma-gescheiden. */
+export const TEAM_EMAILS = ['casper@iknowright.be', 'cedric@iknowright.be', 'milan@iknowright.be'] as const
+
 export function isAllowedAdminEmail(email: string | null | undefined) {
-  return Boolean(email && email.toLowerCase().endsWith(`@${ADMIN_DOMAIN}`))
+  const e = email?.trim().toLowerCase()
+  if (!e) return false
+  const extra = (process.env.IKR_EXTRA_ADMIN_EMAILS ?? '').split(',').map((x) => x.trim().toLowerCase()).filter(Boolean)
+  return (TEAM_EMAILS as readonly string[]).includes(e) || extra.includes(e)
 }
 
 /** Elk teamlid krijgt een eigen dashboard. Sales is enkel voor Casper (ook afgedwongen in de database). */

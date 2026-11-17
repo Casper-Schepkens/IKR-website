@@ -1,5 +1,6 @@
 import 'server-only'
 import { clip } from './ai/clip'
+import { decryptSecret, encryptSecret, tokenKeyProblem } from './crypto'
 import { isDemoMode, isSupabaseConfigured } from './env'
 import { createServiceSupabase } from './supabase/server'
 
@@ -119,6 +120,15 @@ export async function exchangeCode(code: string, redirectUri: string) {
 
 export type Connection = { email: string; scopes: string; connected_at: string }
 
+/**
+ * Refresh tokens van contact@ en casper@ worden versleuteld bewaard (zelfde sleutel als Mijn koppelingen,
+ * IKR_TOKEN_KEY). Zonder sleutel blijft het zoals vroeger; oude onversleutelde tokens blijven leesbaar.
+ */
+const isTokenKeyReady = () => tokenKeyProblem() === null
+const isSealed = (v: string) => v.startsWith('v1.')
+const sealToken = (plain: string) => (isTokenKeyReady() ? encryptSecret(plain) : plain)
+const openToken = (stored: string) => (isSealed(stored) ? decryptSecret(stored) : stored)
+
 const g = globalThis as unknown as { __ikrGoogle?: Map<string, Connection & { refresh_token: string }> }
 const memory = () => (g.__ikrGoogle ??= new Map())
 const googleInMemory = () => !isSupabaseConfigured() && isDemoMode()
@@ -131,7 +141,7 @@ export async function saveConnection(email: string, refreshToken: string, scopes
   }
   const { error } = await createServiceSupabase()
     .from('google_connections')
-    .upsert({ email, refresh_token: refreshToken, scopes, connected_by: by, connected_at: new Date().toISOString() })
+    .upsert({ email, refresh_token: sealToken(refreshToken), scopes, connected_by: by, connected_at: new Date().toISOString() })
   if (error) throw new Error(error.message)
 }
 
@@ -171,7 +181,10 @@ export async function accessToken(email: string): Promise<string> {
       .maybeSingle()
     if (!data) throw new Error(`${email} is nog niet gekoppeld (Instellingen).`)
     try {
-      const t = await token({ refresh_token: data.refresh_token, grant_type: 'refresh_token' })
+      const t = await token({ refresh_token: openToken(data.refresh_token), grant_type: 'refresh_token' })
+      // Oude koppeling met een onversleuteld token: meteen versleuteld terugschrijven.
+      if (!isSealed(data.refresh_token) && isTokenKeyReady())
+        void createServiceSupabase().from('google_connections').update({ refresh_token: sealToken(data.refresh_token) }).eq('email', email).eq('refresh_token', data.refresh_token).then(() => undefined, () => undefined)
       const expiresIn = (t as { expires_in?: number }).expires_in ?? 3600
       entry.until = Date.now() + Math.min(TOKEN_TTL_MS, (expiresIn - 300) * 1000)
       return t.access_token
@@ -565,6 +578,25 @@ export type DriveFileInfo = { id: string; name: string; mimeType: string; webVie
 export async function driveFileInfo(owner: string, fileId: string): Promise<DriveFileInfo> {
   const at = await accessToken(owner)
   return driveGet<DriveFileInfo>(at, `files/${encodeURIComponent(fileId)}?fields=id,name,mimeType,webViewLink,parents,size`)
+}
+
+/** Mappen waarin het dashboard zelf uploadt (via startDriveUpload). */
+export const UPLOAD_FOLDERS = ['IKR Dashboard – Chat', 'IKR Dashboard – Prikbord', 'IKR Dashboard – Weeklies', 'IKR Dashboard – Calls'] as const
+export type UploadFolder = (typeof UPLOAD_FOLDERS)[number]
+
+/**
+ * Een file-id uit de browser mag enkel gedeeld (of tijdelijk publiek gemaakt) worden als het een bestand
+ * is dat net via het dashboard in de juiste map geüpload werd. Anders kan iemand eender welk bestand uit
+ * de Drive van contact@ delen.
+ */
+export async function assertDashboardUpload(owner: string, fileId: string, folder: UploadFolder, maxAgeMs = 6 * 3600_000) {
+  if (!/^[\w-]{10,}$/.test(fileId)) throw new Error('Ongeldig bestand.')
+  const at = await accessToken(owner)
+  const f = await driveGet<{ parents?: string[]; createdTime?: string }>(at, `files/${encodeURIComponent(fileId)}?fields=parents,createdTime`).catch(() => null)
+  if (!f) throw new Error('Bestand niet gevonden.')
+  if (!f.createdTime || Date.now() - Date.parse(f.createdTime) > maxAgeMs) throw new Error('Dit bestand werd niet net via het dashboard geüpload.')
+  const parents = await Promise.all((f.parents ?? []).map((p) => driveGet<{ name: string }>(at, `files/${encodeURIComponent(p)}?fields=name`).catch(() => null)))
+  if (!parents.some((p) => p?.name === folder)) throw new Error('Dit bestand staat niet in de uploadmap van het dashboard.')
 }
 
 /** Verplaatst een bestand naar een andere map (Drive van `owner`). Geeft de link terug. */

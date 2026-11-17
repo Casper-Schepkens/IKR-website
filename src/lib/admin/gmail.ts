@@ -200,6 +200,9 @@ export async function sendMail(
     references?: string | null
   },
 ) {
+  // Geen regeleinden in headers: anders kan een veld (bv. In-Reply-To uit een concept) een extra Bcc toevoegen.
+  for (const [field, v] of Object.entries({ to: opts.to, cc: opts.cc?.join(', '), subject: opts.subject, inReplyTo: opts.inReplyTo, references: opts.references, threadId: opts.threadId }))
+    if (typeof v === 'string' && /[\r\n]/.test(v)) throw new Error(`Ongeldige ${field}: bevat een regeleinde.`)
   const headers = [
     `To: ${opts.to}`,
     ...(opts.cc?.length ? [`Cc: ${opts.cc.join(', ')}`] : []),

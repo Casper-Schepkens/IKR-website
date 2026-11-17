@@ -117,9 +117,9 @@ describe('mailconcepten via MCP', () => {
   })
 
   it('verstuurt concepten altijd vanaf casper@ (contact@ kan niet meer)', async () => {
-    const r = await call('mail_concept_aanmaken', { lead_id: leadId, to: 'jan@peeters.be', subject: 'Hoi', body: 'Gewone tekst', van: 'contact@iknowright.be', formaat: 'text', thread_id: 't123', in_reply_to: '<abc@mail>' })
+    const r = await call('mail_concept_aanmaken', { lead_id: leadId, to: 'jan@peeters.be', subject: 'Hoi', body: 'Gewone tekst', van: 'contact@iknowright.be', formaat: 'text', thread_id: '18c2f1a9b0d3e4f5', in_reply_to: '<abc@mail>' })
     expect(r.isError).toBe(false)
-    expect(store[0]).toMatchObject({ from_email: 'casper@iknowright.be', is_html: false, thread_id: 't123', in_reply_to: '<abc@mail>', original_body: 'Gewone tekst' })
+    expect(store[0]).toMatchObject({ from_email: 'casper@iknowright.be', is_html: false, thread_id: '18c2f1a9b0d3e4f5', in_reply_to: '<abc@mail>', original_body: 'Gewone tekst' })
   })
 
   it('weigert een ongeldig e-mailadres en logt de fout', async () => {
@@ -215,11 +215,11 @@ describe('chat met Grok Bot via MCP', () => {
   })
 
   it('mail_concepten_lijst geeft open concepten met lead, thread en tekst', async () => {
-    await call('mail_concept_aanmaken', { lead_id: leadId, to: 'jan@peeters.be', subject: 'Hoi', body: 'Tekst', thread_id: 't1' })
+    await call('mail_concept_aanmaken', { lead_id: leadId, to: 'jan@peeters.be', subject: 'Hoi', body: 'Tekst', thread_id: '18c2f1a9b0d3e4f6' })
     const r = await call('mail_concepten_lijst', {})
     const list = r.json as unknown as { lead: string; thread_id: string; body: string; concept_id: string }[]
     expect(list).toHaveLength(1)
-    expect(list[0]).toMatchObject({ lead: 'Jan Peeters', thread_id: 't1', body: 'Tekst' })
+    expect(list[0]).toMatchObject({ lead: 'Jan Peeters', thread_id: '18c2f1a9b0d3e4f6', body: 'Tekst' })
   })
 })
 

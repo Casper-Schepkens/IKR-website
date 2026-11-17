@@ -19,6 +19,28 @@ function same(a: string, b: string) {
 }
 
 /**
+ * Geldige sleutels: GROKBOT_API_KEY en, tijdens het wisselen van sleutel, GROKBOT_API_KEY_NEXT.
+ * Zo kan je een nieuwe sleutel in Grok zetten voor je de oude weghaalt.
+ */
+export function validKeys() {
+  return [process.env.GROKBOT_API_KEY, process.env.GROKBOT_API_KEY_NEXT].filter((k): k is string => Boolean(k))
+}
+
+/** De sleutel in de URL (/api/mcp/<sleutel>) komt in logs terecht; uit te zetten met GROKBOT_ALLOW_URL_KEY=false. */
+export const urlKeyAllowed = () => process.env.GROKBOT_ALLOW_URL_KEY !== 'false'
+
+/** Zoekt de meegegeven sleutel; null = geweigerd (met de reden voor de logs, nooit de sleutel zelf). */
+export function checkKey(req: Request, pathKey?: string): { ok: true } | { ok: false; status: number; reason: string } {
+  const keys = validKeys()
+  if (!keys.length) return { ok: false, status: 503, reason: 'GROKBOT_API_KEY ontbreekt' }
+  if (pathKey !== undefined && !urlKeyAllowed()) return { ok: false, status: 401, reason: 'sleutel in de URL staat uit' }
+  const auth = req.headers.get('authorization') ?? ''
+  const given = pathKey ?? req.headers.get('x-api-key') ?? (auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : '')
+  if (!given) return { ok: false, status: 401, reason: 'geen sleutel' }
+  return keys.some((k) => same(given, k)) ? { ok: true } : { ok: false, status: 401, reason: 'verkeerde sleutel' }
+}
+
+/**
  * Grokbot via MCP (Streamable HTTP, stateless). Sleutel via `Authorization: Bearer …`, `x-api-key`,
  * of als laatste stuk van de URL (/api/mcp/<sleutel>) voor apps die geen headers kunnen instellen.
  */
@@ -26,12 +48,14 @@ export async function handleMcp(req: Request, pathKey?: string) {
   // Stateless: geen aparte SSE-stroom. Zonder dit houdt een client (bv. Cursor) een GET open tot de time-out (2 min).
   if (req.method === 'GET') return new Response(null, { status: 405, headers: { Allow: 'POST, DELETE' } })
   const demo = !isSupabaseConfigured() && isDemoMode()
-  const expected = process.env.GROKBOT_API_KEY
   if (!demo) {
-    if (!expected) return new Response('GROKBOT_API_KEY ontbreekt', { status: 503 })
-    const auth = req.headers.get('authorization') ?? ''
-    const given = pathKey ?? req.headers.get('x-api-key') ?? (auth.toLowerCase().startsWith('bearer ') ? auth.slice(7).trim() : '')
-    if (!given || !same(given, expected)) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
+    const check = checkKey(req, pathKey)
+    if (!check.ok) {
+      // Mislukte pogingen zichtbaar in de Vercel-logs (zonder de sleutel).
+      console.warn(`[mcp] geweigerd: ${check.reason} (${pathKey !== undefined ? 'URL' : 'header'})`)
+      if (check.status === 503) return new Response('GROKBOT_API_KEY ontbreekt', { status: 503 })
+      return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
+    }
   }
 
   const session = demo

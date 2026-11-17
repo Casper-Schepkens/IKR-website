@@ -175,6 +175,18 @@ function nonEmpty(v: string, field: string, max: number) {
   return t
 }
 const optional = (v: string | undefined) => (v === undefined ? undefined : v.trim() || null)
+/** Message-ID zoals in een mailheader: <iets@domein>. Geen spaties of regeleinden (anders header-injectie). */
+function messageId(v: string | undefined) {
+  const t = optional(v)
+  if (t && !/^<[^<>\s]+@[^<>\s]+>$/.test(t)) throw new Error('in_reply_to moet een Message-ID zijn, bv. <abc@mail.gmail.com>.')
+  return t
+}
+/** Gmail-thread-id: hexadecimaal. */
+function threadId(v: string | undefined) {
+  const t = optional(v)
+  if (t && !/^[0-9a-f]{8,32}$/i.test(t)) throw new Error('thread_id is geen geldig Gmail-thread-id.')
+  return t
+}
 
 type DraftArgs = {
   lead_id: string
@@ -201,8 +213,8 @@ export function validateDraft(a: DraftArgs) {
     subject: nonEmpty(a.subject, 'subject', 300),
     body,
     is_html: a.formaat ? a.formaat === 'html' : HTML.test(body),
-    thread_id: optional(a.thread_id) ?? null,
-    in_reply_to: optional(a.in_reply_to) ?? null,
+    thread_id: threadId(a.thread_id) ?? null,
+    in_reply_to: messageId(a.in_reply_to) ?? null,
     context: a.context === undefined ? null : contextText(a.context),
     follow_up_action: followUpAction(a.volgende_actie) ?? null,
     follow_up_on: followUpOn(a.opvolgen_op) ?? null,
@@ -240,8 +252,8 @@ function validateDraftPatch(a: Partial<DraftArgs>) {
     subject: a.subject === undefined ? undefined : nonEmpty(a.subject, 'subject', 300),
     body,
     is_html: a.formaat ? a.formaat === 'html' : body !== undefined ? HTML.test(body) : undefined,
-    thread_id: optional(a.thread_id),
-    in_reply_to: optional(a.in_reply_to),
+    thread_id: threadId(a.thread_id),
+    in_reply_to: messageId(a.in_reply_to),
     context: a.context === undefined ? undefined : contextText(a.context),
     follow_up_action: followUpAction(a.volgende_actie),
     follow_up_on: followUpOn(a.opvolgen_op),

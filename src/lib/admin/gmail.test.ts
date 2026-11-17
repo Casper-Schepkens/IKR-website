@@ -17,3 +17,10 @@ describe('isAutoReply', () => {
     expect(isAutoReply(headers({ Subject: 'Re: afwezigheid personeel en TikTok' }))).toBe(false)
   })
 })
+
+describe('headers van uitgaande mail', () => {
+  it('weigert een regeleinde in een header (geen verborgen Bcc)', async () => {
+    const { sendMail } = await import('./gmail')
+    await expect(sendMail('casper@iknowright.be', { to: 'jan@x.be', subject: 'Hoi', body: 'x', inReplyTo: '<a@b>\r\nBcc: spion@x.be' })).rejects.toThrow(/regeleinde/)
+  })
+})
