@@ -185,3 +185,39 @@ export async function checkConnection(member: string, kind: TeamKind) {
     return 'opnieuw_koppelen' as const
   }
 }
+
+export type MailboxRead = { at: string; tool: string; what: string }
+
+const READ_LABEL: Record<string, string> = {
+  teamlid_mail_zoeken: 'zocht in je mail',
+  teamlid_mail_lezen: 'las een mail',
+  teamlid_bijlage_ophalen: 'haalde een bijlage op',
+  teamlid_agenda_events: 'las je agenda',
+}
+
+/**
+ * Wanneer Grok Bot de mail of agenda van dit teamlid las (uit bot_actions, enkel de eigen rijen).
+ * Zo ziet elk teamlid zelf wat er met zijn koppeling gebeurde, niet enkel Casper.
+ */
+export async function mailboxReads(member: string, limit = 10): Promise<MailboxRead[]> {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return []
+  const email = member.toLowerCase()
+  const t = TEAM.find((m) => m.email === email)
+  // De tools loggen het teamlid zoals Grok het noemde: naam, key of e-mail.
+  const refs = [email, email.split('@')[0], t?.key, t?.name.toLowerCase()].filter((x): x is string => Boolean(x))
+  const { data, error } = await db()
+    .from('bot_actions')
+    .select('created_at, tool, args')
+    .in('tool', Object.keys(READ_LABEL))
+    .order('created_at', { ascending: false })
+    .limit(200)
+  if (error) throw new Error(error.message)
+  return (data ?? [])
+    .filter((r) => refs.includes(String((r.args as { teamlid?: string } | null)?.teamlid ?? '').trim().toLowerCase().replace(/^@/, '')))
+    .slice(0, limit)
+    .map((r) => {
+      const a = (r.args ?? {}) as { zoekterm?: string; van?: string; tot?: string }
+      const extra = r.tool === 'teamlid_mail_zoeken' && a.zoekterm ? ` ("${a.zoekterm}")` : r.tool === 'teamlid_agenda_events' && a.van ? ` (${a.van} tot ${a.tot})` : ''
+      return { at: r.created_at, tool: r.tool, what: `${READ_LABEL[r.tool] ?? r.tool}${extra}` }
+    })
+}

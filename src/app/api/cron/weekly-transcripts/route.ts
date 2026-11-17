@@ -8,6 +8,7 @@ import { isoDay } from '@/lib/admin/format'
 import { queueWeeklySops } from '@/lib/admin/sops/weekly'
 import { catchUpCallTranscripts } from '@/lib/admin/calls/transcripts'
 import { cronAuthorized, finishCron, isProblem } from '@/lib/admin/cron'
+import { purgeOldLogContent } from '@/lib/admin/retention'
 
 export const maxDuration = 60
 
@@ -19,8 +20,10 @@ export async function GET(request: Request) {
   if (!cronAuthorized(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   // Veiligheidsnet calls: een setter-opname die voor Fireflies tijdelijk via een link deelbaar was, na 24 uur
   // altijd weer afsluiten (normaal gebeurt dat al zodra het transcript binnen is).
+  // Logs: na 90 dagen de inhoud weghalen (rijen blijven).
+  const purged = await purgeOldLogContent().catch((e: unknown) => `fout: ${e instanceof Error ? e.message : String(e)}`)
   const revoked = await revokeOldRecordingLinks().catch((e: unknown) => `fout: ${e instanceof Error ? e.message : String(e)}`)
-  if (!isFirefliesConfigured()) return finishCron('weekly_transcripts', { revoked }, ['FIREFLIES_API_KEY ontbreekt', ...(isProblem(revoked) ? [`links intrekken: ${revoked}`] : [])])
+  if (!isFirefliesConfigured()) return finishCron('weekly_transcripts', { revoked, purged }, ['FIREFLIES_API_KEY ontbreekt', ...(isProblem(revoked) ? [`links intrekken: ${revoked}`] : []), ...(isProblem(purged) ? [`logs opruimen: ${purged}`] : [])])
   // Vangnet calls: voorbije sales- en settercalls met Meet maar zonder transcript (webhook gemist).
   const calls = await catchUpCallTranscripts().catch((e: unknown) => [{ call: '-', result: `fout: ${e instanceof Error ? e.message : String(e)}` }])
 
@@ -60,10 +63,11 @@ export async function GET(request: Request) {
   const fine = /^(transcript opgeslagen|nog geen transcript|geen transcript|gekoppeld|verwerkt|weekly_verwerkt|ongekoppeld|al_bezig|genegeerd)$/
   const problems = [
     ...(isProblem(revoked) ? [`links intrekken: ${revoked}`] : []),
+    ...(isProblem(purged) ? [`logs opruimen: ${purged}`] : []),
     ...results.filter((r) => !fine.test(r.result)).map((r) => `weekly ${r.weekly}: ${r.result}`),
     ...calls.filter((c) => !fine.test(c.result)).map((c) => `call ${c.call}: ${c.result}`),
   ]
-  return finishCron('weekly_transcripts', { revoked, checked: todo.length, results, calls }, problems)
+  return finishCron('weekly_transcripts', { revoked, purged, checked: todo.length, results, calls }, problems)
 }
 
 async function revokeOldRecordingLinks() {

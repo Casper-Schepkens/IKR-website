@@ -2,6 +2,7 @@ import 'server-only'
 import { createServiceSupabase } from '../supabase/server'
 import { enqueue, isAiConfigured } from '../ai/jobs'
 import type { AdminSession } from '../session'
+import { clip } from '../ai/clip'
 import type { ChatAttachment, ChatMessage, ChatObject } from './repo'
 import { kickJobsLater } from '../ai/kick'
 
@@ -40,7 +41,8 @@ export async function sendChatMessage(session: AdminSession, opts: { text: strin
   }
   if (!isAiConfigured()) throw new Error('Er is geen AI ingesteld (IKR_AI_ENGINE of ANTHROPIC_API_KEY).')
 
-  const history = (await session.chat.list(session.user.id, 21)).filter((m) => m.id !== msg.id).slice(-20)
+  // Laatste 8 berichten, elk hoogstens 1.000 tekens: genoeg voor "doe hetzelfde", zonder 18.000 tekens per taak.
+  const history = (await session.chat.list(session.user.id, 9)).filter((m) => m.id !== msg.id).slice(-8)
   const job = await enqueue(
     'chat',
     `chat:${msg.id}`,
@@ -53,7 +55,7 @@ export async function sendChatMessage(session: AdminSession, opts: { text: strin
       message: text,
       // Bijlagen: Grok Bot analyseert ze altijd (drive_bestand_lezen) en doet wat gevraagd wordt.
       attachments,
-      history: history.map((m) => ({ role: m.role, text: m.text, created_at: m.created_at, object_type: m.object_type, object_id: m.object_id, bijlagen: m.attachments?.map((a) => `${a.name} (${a.file_id})`) ?? undefined })),
+      history: history.map((m) => ({ role: m.role, text: clip(m.text, 1000), created_at: m.created_at, object_type: m.object_type, object_id: m.object_id, bijlagen: m.attachments?.map((a) => `${a.name} (${a.file_id})`) ?? undefined })),
     },
     session.user.email,
   )

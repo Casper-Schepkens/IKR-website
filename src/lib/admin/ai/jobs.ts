@@ -30,6 +30,7 @@ export type AiJob = {
   cache_read_tokens: number | null
   cache_write_tokens: number | null
   cost_usd: number | null
+  created_by?: string | null
   created_at: string
   finished_at: string | null
 }
