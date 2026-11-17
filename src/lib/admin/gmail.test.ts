@@ -73,3 +73,15 @@ describe('Gmail te druk', () => {
     vi.useRealTimers()
   })
 })
+
+describe('tijdsbudget', () => {
+  it('na de deadline geen threads meer ophalen; wat er al is, telt', async () => {
+    const { sentReplies } = await import('./gmail')
+    const fetchMock = vi.fn(async (url: string) => new Response(JSON.stringify(url.includes('/threads?') ? { threads: [{ id: 'a' }, { id: 'b' }] } : { id: 'a', messages: [] }), { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+    const replies = await sentReplies('casper@iknowright.be', { days: 180, maxThreads: 10, maxReplies: 10, gapMs: 0, deadline: Date.now() - 1 })
+    expect(replies).toEqual([])
+    expect(fetchMock.mock.calls.filter(([u]) => String(u).includes('/threads/'))).toHaveLength(0)
+    vi.unstubAllGlobals()
+  })
+})
