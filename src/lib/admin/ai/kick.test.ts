@@ -36,7 +36,8 @@ describe('Grok onbereikbaar', () => {
     expect(db.current.tables.bot_cards[0].bot_busy_since).toBeNull()
   })
 
-  it('taak zonder tools en geen API-sleutel: blijft open voor later', async () => {
+  it('andere taak: blijft open voor Grok, ook met een API-sleutel (nooit via de Claude API)', async () => {
+    process.env.ANTHROPIC_API_KEY = 'x'
     db.current = fakeSupabase({ ai_jobs: [job('J3', 'contract_afleiden', {})] })
     notify.notifyGrok.mockResolvedValue('webhook 500')
     await kickJobs(['J3'])
