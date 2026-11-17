@@ -189,9 +189,6 @@ export const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Gebruik YYYY-MM-
 
 export const owner = z.enum(OWNERS as [string, ...string[]])
 
-/** Wat een sessie mag: 'sales' = alles (Casper), 'team' = zonder leads, inbox, concepten, calls en cold mails. */
-export type Scope = 'sales' | 'team'
-
 export function makeTool(server: McpServer) {
   /**
    * Registreert een tool. Schrijf-tools en fouten worden altijd gelogd in bot_actions; met
@@ -255,4 +252,4 @@ export function makeResolvers(session: AdminSession) {
   return { resolveLead, resolveClient }
 }
 
-export type ToolCtx = { session: AdminSession; tool: ToolFn; scope: Scope } & ReturnType<typeof makeResolvers>
+export type ToolCtx = { session: AdminSession; tool: ToolFn } & ReturnType<typeof makeResolvers>
