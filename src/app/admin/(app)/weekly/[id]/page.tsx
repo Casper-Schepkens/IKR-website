@@ -87,8 +87,14 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
         )
       )}
 
-      <TodoBoard todos={todos} weeklies={weeklies} me={user.email} meeting />
-      {prod && <ProductionOnWeekly byOwner={prod.byOwner} until={prod.until} planned={prod.planned} today={todayBrussels()} me={ownerOf(user.email)} />}
+      <TodoBoard
+        todos={todos}
+        weeklies={weeklies}
+        me={user.email}
+        meeting
+        productionCounts={prod ? Object.fromEntries(Object.entries(prod.byOwner).map(([k, v]) => [k, v.length])) : undefined}
+        production={prod && <ProductionOnWeekly byOwner={prod.byOwner} until={prod.until} planned={prod.planned} today={todayBrussels()} me={ownerOf(user.email)} />}
+      />
 
       {w.status !== 'concluded' && (
         <>

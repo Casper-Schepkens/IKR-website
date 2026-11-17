@@ -9,8 +9,25 @@ function WeekLabel({ children }: { children: React.ReactNode }) {
   return <span className={cn('-mt-1 text-xs font-bold tracking-wide uppercase', muted)}>{children}</span>
 }
 
-/** To-do's per persoon (deze week | lijn | volgende week) en de lange to-do's. */
-export function TodoBoard({ todos, weeklies, me, meeting = false }: { todos: Todo[]; weeklies: Weekly[]; me: string; meeting?: boolean }) {
+/**
+ * To-do's per persoon (deze week | lijn | volgende week), dan "Uit Productie" (als meegegeven) en de lange to-do's.
+ * productionCounts: per teamlid het aantal items uit Productie; > 0 = waarschuwing onder de naam.
+ */
+export function TodoBoard({
+  todos,
+  weeklies,
+  me,
+  meeting = false,
+  production,
+  productionCounts,
+}: {
+  todos: Todo[]
+  weeklies: Weekly[]
+  me: string
+  meeting?: boolean
+  production?: React.ReactNode
+  productionCounts?: Partial<Record<string, number>>
+}) {
   const { byOwner, long } = boardTodos(todos, weeklies)
   const concluded = new Set(weeklies.filter((w) => w.status === 'concluded').map((w) => w.id))
   const overdue = (t: Todo) => Boolean(t.weekly_id && concluded.has(t.weekly_id))
@@ -25,7 +42,14 @@ export function TodoBoard({ todos, weeklies, me, meeting = false }: { todos: Tod
           const card = (t: Todo) => <TodoCard key={t.id} todo={t} overdue={overdue(t)} me={me} meeting={inMeeting(t)} />
           return (
             <Card key={p.key} className="flex flex-col gap-3 p-4">
-              <Title className="m-0 text-2xl">{p.name}</Title>
+              <div className="flex flex-col gap-1.5">
+                <Title className="m-0 text-2xl">{p.name}</Title>
+                {(productionCounts?.[p.key] ?? 0) > 0 && (
+                  <p role="note" className="m-0 rounded-xl bg-[#FCE3D2] px-3 py-1.5 text-sm font-semibold text-[#8A3A0C]">
+                    Check zeker de productie to do&apos;s hieronder!
+                  </p>
+                )}
+              </div>
               {current && <WeekLabel>Deze week · weekly {fmtDate(current.starts_at, { weekday: 'short', day: 'numeric', month: 'short' })}</WeekLabel>}
               {thisWeek.length ? thisWeek.map(card) : <Empty>Geen to-do&apos;s.</Empty>}
               {current && (
@@ -47,6 +71,7 @@ export function TodoBoard({ todos, weeklies, me, meeting = false }: { todos: Tod
           )
         })}
       </div>
+      {production}
       <Card className="flex flex-col gap-3 p-4">
         <div>
           <Title className="m-0 text-2xl">Lange to-do&apos;s</Title>
