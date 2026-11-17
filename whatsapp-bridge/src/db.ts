@@ -16,11 +16,11 @@ export function supabaseBridgeDb(url: string, serviceKey: string): BridgeDb {
       const rows = check(await db.from('whatsapp_chats').select('jid').eq('actief', true), 'actieve chats') ?? []
       return new Set(rows.map((r) => r.jid as string))
     },
-    async lastActivity() {
-      const out = new Map<string, string>()
+    async knownChats() {
+      const out = new Map<string, string | null>()
       for (let from = 0; ; from += 1000) {
-        const rows = check(await db.from('whatsapp_chats').select('jid, laatst_actief').not('laatst_actief', 'is', null).range(from, from + 999), 'laatste activiteit') ?? []
-        for (const r of rows) out.set(r.jid as string, new Date(r.laatst_actief as string).toISOString())
+        const rows = check(await db.from('whatsapp_chats').select('jid, laatst_actief').order('jid').range(from, from + 999), 'bekende chats') ?? []
+        for (const r of rows) out.set(r.jid as string, r.laatst_actief ? new Date(r.laatst_actief as string).toISOString() : null)
         if (rows.length < 1000) return out
       }
     },

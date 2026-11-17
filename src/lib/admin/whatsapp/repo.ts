@@ -8,7 +8,14 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 export type WaChat = {
   jid: string
   naam: string | null
+  /** Naam die het team zelf gaf (gaat voor op de naam uit WhatsApp). */
+  naam_eigen: string | null
+  /** Nummer bij een anoniem id (@lid), als WhatsApp het meegaf. */
+  telefoon: string | null
   is_groep: boolean
+  /** Groep met Casper, Milan én Cédric (meestal een klantgroep). */
+  hele_team: boolean
+  deelnemers: number | null
   lead_id: string | null
   klant_id: string | null
   actief: boolean
@@ -23,7 +30,7 @@ export type WaBericht = {
   tijdstip: string
   afzender: string | null
 }
-export type WaChatPatch = Partial<Pick<WaChat, 'lead_id' | 'klant_id' | 'actief'>>
+export type WaChatPatch = Partial<Pick<WaChat, 'lead_id' | 'klant_id' | 'actief' | 'naam_eigen'>>
 
 export interface WhatsappRepo {
   /** Alle gedetecteerde chats, laatst actief eerst. */
@@ -34,7 +41,7 @@ export interface WhatsappRepo {
   messages(jids: string[], limit: number): Promise<WaBericht[]>
 }
 
-const CHAT_COLS = 'jid, naam, is_groep, lead_id, klant_id, actief, laatst_actief'
+const CHAT_COLS = 'jid, naam, naam_eigen, telefoon, is_groep, hele_team, deelnemers, lead_id, klant_id, actief, laatst_actief'
 
 export function supabaseWhatsapp(db: SupabaseClient): WhatsappRepo {
   const check = <T>(r: { data: T; error: { message: string } | null }) => {
@@ -72,9 +79,10 @@ const ago = (min: number) => new Date(Date.now() - min * 60_000).toISOString()
 function demo(): Mem {
   return {
     chats: [
-      { jid: '120363000000000001@g.us', naam: 'IKR × Bakkerij Peeters', is_groep: true, lead_id: null, klant_id: null, actief: false, laatst_actief: ago(15) },
-      { jid: '32470000001@s.whatsapp.net', naam: 'Jan Peeters', is_groep: false, lead_id: null, klant_id: null, actief: false, laatst_actief: ago(90) },
-      { jid: '32470000002@s.whatsapp.net', naam: 'Mama', is_groep: false, lead_id: null, klant_id: null, actief: false, laatst_actief: ago(240) },
+      { jid: '120363000000000001@g.us', naam: 'IKR × Bakkerij Peeters', naam_eigen: null, telefoon: null, is_groep: true, hele_team: true, deelnemers: 5, lead_id: null, klant_id: null, actief: false, laatst_actief: ago(15) },
+      { jid: '32470000001@s.whatsapp.net', naam: null, naam_eigen: null, telefoon: null, is_groep: false, hele_team: false, deelnemers: null, lead_id: null, klant_id: null, actief: false, laatst_actief: ago(90) },
+      { jid: '78821256634402@lid', naam: null, naam_eigen: null, telefoon: null, is_groep: false, hele_team: false, deelnemers: null, lead_id: null, klant_id: null, actief: false, laatst_actief: ago(300) },
+      { jid: '32470000002@s.whatsapp.net', naam: 'Mama', naam_eigen: null, telefoon: null, is_groep: false, hele_team: false, deelnemers: null, lead_id: null, klant_id: null, actief: false, laatst_actief: ago(240) },
     ],
     // Enkel zichtbaar als de chat actief staat (zoals in het echt: de bridge bewaart enkel actieve chats).
     berichten: [
@@ -108,9 +116,24 @@ export function memoryWhatsapp(): WhatsappRepo {
   }
 }
 
-/** Zichtbare naam van een chat: de naam, anders het nummer. */
-export function chatLabel(c: Pick<WaChat, 'jid' | 'naam'>) {
-  if (c.naam) return c.naam
+/** Telefoonnummer van een chat (+32…): uit de jid, of het meegegeven nummer bij een anoniem id. */
+export function chatPhone(c: Pick<WaChat, 'jid'> & Partial<Pick<WaChat, 'telefoon'>>) {
   const m = c.jid.match(/^(\d+)(?::\d+)?@s\.whatsapp\.net$/)
-  return m ? `+${m[1]}` : c.jid.split('@')[0]
+  return m ? `+${m[1]}` : (c.telefoon ?? null)
+}
+
+/** Zichtbare naam: eigen naam, dan de naam uit WhatsApp, dan het nummer. */
+export function chatLabel(c: Pick<WaChat, 'jid' | 'naam'> & Partial<Pick<WaChat, 'naam_eigen' | 'telefoon' | 'is_groep'>>) {
+  if (c.naam_eigen) return c.naam_eigen
+  if (c.naam) return c.naam
+  const phone = chatPhone(c)
+  if (phone) return phone
+  return c.jid.endsWith('@g.us') || c.is_groep ? 'Groep zonder naam' : 'Contact zonder naam of nummer'
+}
+
+/** Vergelijkbare vorm van een Belgisch/internationaal nummer (enkel cijfers, 0… → 32…). */
+export function phoneKey(v: string | null | undefined) {
+  const d = (v ?? '').replace(/[^\d+]/g, '').replace(/^\+/, '').replace(/^00/, '')
+  if (!d) return null
+  return d.startsWith('0') ? `32${d.slice(1)}` : d
 }

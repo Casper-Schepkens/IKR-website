@@ -21,7 +21,12 @@ export async function saveWhatsappChatAction(jid: string, form: FormData): Promi
     await linkChat(
       repo,
       jid,
-      { lead_id: idOrNull(form.get('lead_id'), 'Lead'), klant_id: idOrNull(form.get('klant_id'), 'Klant'), actief: form.get('actief') === 'on' },
+      {
+        lead_id: idOrNull(form.get('lead_id'), 'Lead'),
+        klant_id: idOrNull(form.get('klant_id'), 'Klant'),
+        actief: form.get('actief') === 'on',
+        ...(form.has('naam_eigen') ? { naam_eigen: String(form.get('naam_eigen') ?? '') } : {}),
+      },
       {
         lead: async (id) => Boolean(await session.leads.get(id)),
         klant: async (id) => (await session.clients.list()).some((c) => c.id === id),

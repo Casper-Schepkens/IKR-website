@@ -29,6 +29,15 @@ Oudere berichten van een chat die je later actief zet, komen niet vanzelf binnen
 - Of: zet de chats eerst actief en koppel de bridge daarna opnieuw (eventueel met
   `VOLLEDIGE_HISTORIEK=true`); de historiek-sync bij het koppelen bewaart dan die chats.
 
+## Namen
+
+- Groepsnamen haalt de bridge zelf op bij het verbinden en elke 6 uur (een leesvraag aan WhatsApp; verstuurt niets).
+- Namen van personen komen uit je adresboek (gaat voor) of uit hun WhatsApp-naam, en worden bewaard in
+  `/data/namen.json`, zodat ze een herstart overleven. WhatsApp stuurt het adresboek maar één keer: bij
+  het koppelen. Ontbreken er namen na een update, koppel dan één keer opnieuw.
+- Chats met een anoniem id (`@lid`) krijgen het echte nummer zodra WhatsApp het meegeeft.
+- In het dashboard kan je elke chat ook zelf een naam geven.
+
 ## Deployen op fly.io
 
 Eén machine (WhatsApp laat één sessie per koppeling toe) met een volume op `/data` voor de koppeling.
@@ -59,6 +68,7 @@ fly scale count 1
 | `PORT` | nee | standaard `8080` |
 | `HISTORIEK_OPVRAGEN` | nee | `true` = oudere berichten opvragen bij het activeren van een chat (standaard uit) |
 | `VOLLEDIGE_HISTORIEK` | nee | `true` = volledige historiek-sync bij het koppelen (standaard uit) |
+| `TEAM_NUMMERS` | nee | nummers van de andere teamleden, komma-gescheiden (bv. `+32470…,+32471…`): groepen waar het hele team in zit, komen bovenaan in het dashboard |
 | `LOG_LEVEL` | nee | standaard `info` |
 
 ### Routes
