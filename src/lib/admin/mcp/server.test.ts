@@ -49,6 +49,7 @@ beforeEach(async () => {
   ;(globalThis as { __ikrLeads?: unknown }).__ikrLeads = []
   ;(globalThis as { __ikrProdStore?: unknown }).__ikrProdStore = undefined
   ;(globalThis as { __ikrClients?: unknown }).__ikrClients = []
+  ;(globalThis as { __ikrWeekly?: unknown }).__ikrWeekly = undefined
   store = []
   chatStore = []
   session = {
@@ -442,5 +443,53 @@ describe('productie via MCP (data-gedreven)', () => {
     const klant = (await call('productie_klant', { klant: 'albert' })).json as { stappen_van_deze_klant: { per_draaidag: { stap: string }[] } }
     expect(klant.stappen_van_deze_klant.per_draaidag.map((x) => x.stap)).toContain('revisie')
     expect((await call('intern_taak_verwijderen', { taak: 'facturen' })).isError).toBe(false)
+  })
+})
+
+describe('weekly ↔ productie', () => {
+  type Item = { soort: string; klant: string | null; stap?: string; titel: string; deadline: string | null; te_laat: boolean }
+  type Overzicht = { productie_tot_en_met: string; productie: Record<string, Item[]>; todos: Record<string, unknown[]>; volgende_weekly: { id: string } | null }
+  it('weekly_overzicht: per persoon "productie" tot de volgende weekly + te laat; afsluiten maakt geen to-do’s', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-17T09:00:00Z')) // dinsdag
+    try {
+      await session.clients.create({ name: 'Chez Albert', freelancer: null, contract_end: null, contract_indefinite: true }, 'test')
+      await session.clients.create({ name: 'Tempus', freelancer: null, contract_end: null, contract_indefinite: true }, 'test')
+      await call('productie_starten', { klant: 'albert', getekend: '2026-11-02' }) // opstartstappen tegen 9/11: te laat
+      await call('productie_startpunt', { klant: 'tempus', stap: 'montage', draaidag: 1 })
+      await call('productie_datum', { klant: 'tempus', soort: 'draaidag', datum: '2026-11-20', draaidag: 1 }) // montage tegen 27/11
+      await call('intern_taak_toevoegen', { titel: 'Facturen nakijken', eigenaar: 'casper', planning: 'elke vrijdag' }) // 20/11
+      expect((await call('weekly_inplannen', { datum: '2026-11-24', uur: '10:00', einduur: '11:00', modus: 'live' })).isError).toBe(false)
+
+      const raw = await call('weekly_overzicht', {})
+      if (!raw.json) throw new Error(raw.text)
+      let o = raw.json as unknown as Overzicht
+      expect(o.productie_tot_en_met).toBe('2026-11-24')
+      expect(o.productie.Casper).toEqual([
+        { soort: 'stap', klant: 'Chez Albert', stap: 'contract', titel: 'Getekend contract in de groep en in de Drive', draaidag: null, deadline: '2026-11-09', te_laat: true },
+        expect.objectContaining({ soort: 'intern', klant: null, titel: 'Facturen nakijken', deadline: '2026-11-20', te_laat: false }),
+      ])
+      expect(o.productie.Cedric.map((i) => i.stap)).toEqual(expect.arrayContaining(['groep', 'kickoff_plannen']))
+      // Montage (freelancer → Milan) valt pas op 27/11, na de weekly van 24/11.
+      expect(o.productie.Milan.map((i) => i.stap)).toEqual(['freelancer'])
+
+      // Afsluiten: geen to-do's uit Productie, de stappen blijven staan (nu tot de volgende weekly van 1/12).
+      const weeklyId = o.volgende_weekly!.id
+      expect((await call('weekly_afsluiten', { weekly_id: weeklyId, datum: '2026-12-01', uur: '10:00', einduur: '11:00', modus: 'live' })).isError).toBe(false)
+      o = (await call('weekly_overzicht', {})).json as unknown as Overzicht
+      expect(Object.values(o.todos).flat()).toEqual([])
+      expect(o.productie_tot_en_met).toBe('2026-12-01')
+      expect(o.productie.Milan.map((i) => i.stap)).toEqual(['freelancer', 'montage'])
+      expect(o.productie.Casper.map((i) => i.stap ?? i.titel)).toContain('contract')
+
+      // Afvinken in Productie: weg uit de weekly en in het productie-wijzigingslog.
+      await call('productie_stap', { klant: 'albert', stap: 'contract', af: true })
+      o = (await call('weekly_overzicht', {})).json as unknown as Overzicht
+      expect(o.productie.Casper.map((i) => i.stap ?? i.titel)).not.toContain('contract')
+      const log = (await call('productie_wijzigingen', { klant: 'albert', aantal: 1 })).json as { wat: string }[]
+      expect(log[0].wat).toBe('Chez Albert: "Getekend contract in de groep en in de Drive" af')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

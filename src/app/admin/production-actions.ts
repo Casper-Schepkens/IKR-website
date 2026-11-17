@@ -32,6 +32,8 @@ async function attempt(fn: () => Promise<unknown>): Promise<ActionResult> {
     await fn()
     revalidatePath('/admin/productie')
     revalidatePath('/admin/kalender')
+    // "Uit Productie" op de weekly en de meetingpagina.
+    revalidatePath('/admin/weekly', 'layout')
     return { ok: true }
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Er ging iets mis.' }

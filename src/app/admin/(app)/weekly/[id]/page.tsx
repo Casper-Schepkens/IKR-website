@@ -15,15 +15,19 @@ import { PlanWeeklyForm } from '@/components/admin/weekly/PlanWeeklyForm'
 import { concludeWeeklyAction, finishWeeklyRecordingAction, startWeeklyRecordingAction } from '../../../weekly-actions'
 import { RecordButton } from '@/components/admin/RecordButton'
 import { FirefliesCheck } from '@/components/admin/weekly/FirefliesCheck'
+import { ProductionOnWeekly } from '@/components/admin/weekly/ProductionOnWeekly'
+import { today as todayBrussels, weeklyProduction } from '@/lib/admin/production/service'
 import { cn } from '@/utilities/ui'
 
 export const metadata = { title: 'Weekly' }
 
 export default async function MeetingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { weekly, user, sops } = await requireAdmin()
-  const [w, weeklies, todos, pins, allSops] = await Promise.all([weekly.getWeekly(id), weekly.listWeeklies(), weekly.listTodos(), weekly.listPins().catch(() => []), sops.list().catch(() => [])])
+  const { weekly, user, sops, clients, production } = await requireAdmin()
+  const [w, weeklies, todos, pins, allSops, clientList] = await Promise.all([weekly.getWeekly(id), weekly.listWeeklies(), weekly.listTodos(), weekly.listPins().catch(() => []), sops.list().catch(() => []), clients.list().catch(() => [])])
   if (!w) notFound()
+  // Tijdens de meeting ook "Uit Productie" overlopen (tot en met de dag van deze weekly + te laat).
+  const prod = w.status === 'concluded' ? null : await weeklyProduction(production, clientList.map((c) => ({ id: c.id, name: c.name })), w).catch(() => null)
 
   const nextDefault = new Date(new Date(w.starts_at).getTime() + 7 * 86_400_000)
 
@@ -84,6 +88,7 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
       )}
 
       <TodoBoard todos={todos} weeklies={weeklies} me={user.email} meeting />
+      {prod && <ProductionOnWeekly byOwner={prod.byOwner} until={prod.until} planned={prod.planned} today={todayBrussels()} me={ownerOf(user.email)} />}
 
       {w.status !== 'concluded' && (
         <>

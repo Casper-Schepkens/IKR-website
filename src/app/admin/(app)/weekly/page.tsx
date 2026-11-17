@@ -11,13 +11,15 @@ import { Prikbord } from '@/components/admin/weekly/Prikbord'
 import { SopProposals } from '@/components/admin/sops/SopProposals'
 import { PlanWeeklyForm } from '@/components/admin/weekly/PlanWeeklyForm'
 import { planWeeklyAction, startWeeklyAction } from '../../weekly-actions'
+import { ProductionOnWeekly } from '@/components/admin/weekly/ProductionOnWeekly'
+import { today as todayBrussels, weeklyProduction } from '@/lib/admin/production/service'
 import { cn } from '@/utilities/ui'
 
 export const metadata = { title: 'Weekly' }
 
 export default async function WeeklyPage() {
-  const { weekly, user, sops } = await requireAdmin()
-  const [weeklies, todos, pins, allSops] = await Promise.all([weekly.listWeeklies(), weekly.listTodos(), weekly.listPins().catch(() => []), sops.list().catch(() => [])])
+  const { weekly, user, sops, clients, production } = await requireAdmin()
+  const [weeklies, todos, pins, allSops, clientList] = await Promise.all([weekly.listWeeklies(), weekly.listTodos(), weekly.listPins().catch(() => []), sops.list().catch(() => []), clients.list().catch(() => [])])
   const next = currentWeekly(weeklies)
 
   // Meeting bezig: alles gebeurt op de meetingpagina. Hier niets aanpassen (zo werkt niemand per ongeluk
@@ -45,6 +47,9 @@ export default async function WeeklyPage() {
         </Card>
       </>
     )
+
+  // Uit Productie: berekend (geen to-do's), tot en met de dag van de volgende weekly.
+  const prod = await weeklyProduction(production, clientList.map((c) => ({ id: c.id, name: c.name })), next).catch(() => null)
 
   return (
     <>
@@ -103,6 +108,8 @@ export default async function WeeklyPage() {
       </Card>
 
       <TodoBoard todos={todos} weeklies={weeklies} me={user.email} />
+
+      {prod && <ProductionOnWeekly byOwner={prod.byOwner} until={prod.until} planned={prod.planned} today={todayBrussels()} me={ownerOf(user.email)} />}
     </>
   )
 }
