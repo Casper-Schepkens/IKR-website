@@ -41,11 +41,12 @@ export const MODEL = process.env.IKR_AI_MODEL || 'claude-sonnet-5-5'
 /**
  * Taken die enkel tekst van buitenaf verwerken (mails van leads, transcripts, documenten) en geen tools
  * nodig hebben. Ze lopen via de Claude API, die geen tools heeft: een instructie in een mail kan zo
- * niets laten doen. Uitzetten met IKR_AI_DATA_ENGINE=grokbot.
+ * niets laten doen. Standaard UIT (alles blijft bij Grokbot, geen API-credits); enkel aan met
+ * IKR_AI_DATA_ENGINE=api en een ANTHROPIC_API_KEY.
  */
 export const DATA_ONLY_TYPES: readonly string[] = ['inbox_reply', 'na_verzending', 'call_verwerken', 'weekly_sops', 'contract_afleiden', 'style_profile', 'mail_rewrite']
 
-const dataViaApi = () => Boolean(process.env.ANTHROPIC_API_KEY) && process.env.IKR_AI_DATA_ENGINE !== 'grokbot'
+const dataViaApi = () => process.env.IKR_AI_DATA_ENGINE === 'api' && Boolean(process.env.ANTHROPIC_API_KEY)
 
 /** Wie de AI-taken uitvoert; met een taaktype: wie die soort taak uitvoert. */
 export function aiEngine(type?: string): 'api' | 'grokbot' | 'worker' {
@@ -201,15 +202,10 @@ export async function instructionsFor(job: Pick<AiJob, 'type' | 'input'>) {
 
 let client: Anthropic | null = null
 
-/**
- * Voert een taak uit via de Claude API (tenzij een worker of Grokbot dat doet). Faalt nooit hard.
- * force: ook bij een andere engine (vangnet als Grok onbereikbaar is).
- */
-export async function runJob(id: string, opts: { force?: boolean } = {}) {
-  if (!opts.force) {
-    const j = await getJob(id)
-    if (!j || aiEngine(j.type) !== 'api') return
-  }
+/** Voert een taak uit via de Claude API, enkel als dat de engine voor die soort taak is (nooit bij Grokbot of een worker). Faalt nooit hard. */
+export async function runJob(id: string) {
+  const j = await getJob(id)
+  if (!j || aiEngine(j.type) !== 'api') return
   // Enkel een taak die nog wacht oppikken (voorkomt dubbel werk).
   // Ook een taak die al 5 minuten op 'running' hangt (de vorige run viel weg) mag opnieuw.
   const stale = new Date(Date.now() - STALE_RUNNING_MS).toISOString()
