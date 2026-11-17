@@ -486,7 +486,7 @@ describe('weekly ↔ productie', () => {
       await call('productie_stap', { klant: 'albert', stap: 'contract', af: true })
       o = (await call('weekly_overzicht', {})).json as unknown as Overzicht
       expect(o.productie.Casper.map((i) => i.stap ?? i.titel)).not.toContain('contract')
-      const log = (await call('productie_wijzigingen', { klant: 'albert', aantal: 1 })).json as { wat: string }[]
+      const log = (await call('productie_wijzigingen', { klant: 'albert', aantal: 1 })).json as unknown as { wat: string }[]
       expect(log[0].wat).toBe('Chez Albert: "Getekend contract in de groep en in de Drive" af')
     } finally {
       vi.useRealTimers()
