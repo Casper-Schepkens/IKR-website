@@ -1,5 +1,4 @@
 import 'server-only'
-import { SALES_EMAIL } from '../../env'
 import { z } from 'zod'
 import { safeUrl } from '../../weekly/pins'
 import { TEAM } from '../../weekly/types'
@@ -12,12 +11,10 @@ import { owner, type ToolCtx } from '../tool'
 
 /** Werkplek (pagina Grok Bot) en meldingen. */
 export function registerWorkspaceTools(ctx: ToolCtx) {
-  const { tool, scope } = ctx
-  // Team-sessie: de werkplek van Casper kan sales bevatten, dus die is hier niet zichtbaar.
-  const visible = (ownerEmail: string) => scope === 'sales' || ownerEmail.toLowerCase() !== SALES_EMAIL
+  const { tool } = ctx
   const getCard = async (id: string) => {
     const c = await workspaceRepo().get(id)
-    if (!c || !visible(c.owner_email)) throw new Error('Kaart niet gevonden.')
+    if (!c) throw new Error('Kaart niet gevonden.')
     return c
   }
   // ─── Werkplek (pagina Grok Bot) ─────────────────────────
@@ -40,14 +37,14 @@ export function registerWorkspaceTools(ctx: ToolCtx) {
     { teamlid: owner.optional(), status: z.enum(['open', 'besproken', 'archief', 'alle']).optional().describe('standaard open') },
     true,
     async ({ teamlid, status = 'open' }) =>
-      (await workspaceRepo().list(teamlid ? memberEmail(teamlid) : null)).filter((c) => visible(c.owner_email) && (status === 'alle' || c.status === status)).map((c) => cardView(c)),
+      (await workspaceRepo().list(teamlid ? memberEmail(teamlid) : null)).filter((c) => status === 'alle' || c.status === status).map((c) => cardView(c)),
   )
   tool('werkplek_kaart', 'Eén kaart met de volledige tekst en het hele draadje.', { kaart_id: z.string() }, true, async ({ kaart_id }) => {
     return cardView(await getCard(kaart_id), true)
   })
   tool(
     'werkplek_kaart_aanmaken',
-    `Iets klaarzetten op de werkplek van een teamlid (enkel die persoon ziet het). Soorten: ${Object.entries(CARD_KINDS).map(([k, v]) => `${k} (${v})`).join(', ')}. Wil je iets doen waarvoor je toestemming vraagt, geef dan actie (korte knoptekst, bv. "Opvolgmail klaarzetten") en actie_uitleg: het teamlid klikt "Doe maar" of "Nee"; daarna krijg je een AI-taak om het uit te voeren. Nooit iets versturen. Sales enkel voor casper.`,
+    `Iets klaarzetten op de werkplek van een teamlid (enkel die persoon ziet het). Soorten: ${Object.entries(CARD_KINDS).map(([k, v]) => `${k} (${v})`).join(', ')}. Wil je iets doen waarvoor je toestemming vraagt, geef dan actie (korte knoptekst, bv. "Opvolgmail klaarzetten") en actie_uitleg: het teamlid klikt "Doe maar" of "Nee"; daarna krijg je een AI-taak om het uit te voeren. Nooit iets versturen.`,
     { voor: owner, soort: z.enum(Object.keys(CARD_KINDS) as [string, ...string[]]), titel: z.string(), tekst: z.string(), link: z.string().optional(), actie: z.string().optional(), actie_uitleg: z.string().optional() },
     false,
     async ({ voor, soort, titel, tekst, link, actie, actie_uitleg }) => {
@@ -92,7 +89,7 @@ export function registerWorkspaceTools(ctx: ToolCtx) {
     { teamlid: owner.optional() },
     true,
     async ({ teamlid }) => {
-      const people = (teamlid ? TEAM.filter((t) => t.key === teamlid) : TEAM).filter((t) => scope === 'sales' || t.email !== SALES_EMAIL)
+      const people = (teamlid ? TEAM.filter((t) => t.key === teamlid) : TEAM)
       return Object.fromEntries(await Promise.all(people.map(async (t) => [t.name, await notificationsFor(t.email)] as const)))
     },
   )
