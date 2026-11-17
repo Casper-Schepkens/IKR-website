@@ -81,6 +81,9 @@ describe('ritme en interne planning', () => {
     expect(currentOccurrence(fri, '2026-11-01', new Set(['2026-11-20']), '2026-11-23')).toBe('2026-11-27')
     // Gestart na de laatste vrijdag: de volgende.
     expect(currentOccurrence(fri, '2026-11-22', new Set(), '2026-11-23')).toBe('2026-11-27')
+    // Vooraf afgevinkt (dinsdag 17/11 de vrijdag van 20/11): de vrijdag erna.
+    expect(currentOccurrence(fri, '2026-11-17', new Set(['2026-11-20']), '2026-11-17')).toBe('2026-11-27')
+    expect(currentOccurrence({ kind: 'monthly', nth: -1, weekday: 1 }, '2026-11-01', new Set(['2026-11-30']), '2026-11-17')).toBe('2026-12-28')
     // Op de dag zelf.
     expect(currentOccurrence(fri, '2026-11-01', new Set(), '2026-11-20')).toBe('2026-11-20')
     expect(currentOccurrence({ kind: 'monthly', nth: -1, weekday: 1 }, '2026-11-01', new Set(), '2026-11-16')).toBe('2026-11-30')

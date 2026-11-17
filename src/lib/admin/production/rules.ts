@@ -130,7 +130,11 @@ export function nextShootDate(rhythm: Rhythm, previous: string | null, today: st
 export function currentOccurrence(s: Schedule, startOn: string, done: Set<string>, today: string): string {
   const last = s.kind === 'weekly' ? addDays(today, -((weekdayOf(today) - s.weekday + 7) % 7)) : monthdayOnOrBefore(today, s.nth, s.weekday)
   if (last && last >= startOn && !done.has(last)) return last
-  return s.kind === 'weekly' ? addDays(today, ((s.weekday - weekdayOf(today) + 7) % 7) || 7) : monthdayFrom(today, s.nth, s.weekday, true)
+  // De eerstvolgende keer na vandaag die nog niet afgevinkt is (vooraf afvinken schuift door).
+  const after = (day: string) => (s.kind === 'weekly' ? addDays(day, ((s.weekday - weekdayOf(day) + 7) % 7) || 7) : monthdayFrom(day, s.nth, s.weekday, true))
+  let next = after(today)
+  for (let i = 0; i < 60 && done.has(next); i++) next = after(next)
+  return next
 }
 
 // ─── Labels ────────────────────────────────────────────────

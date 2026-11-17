@@ -322,3 +322,24 @@ export function toStepDef<T extends Record<string, unknown>>(r: T): StepDef & T 
 }
 
 export { addDays }
+
+// ─── Productie op de weekly ─────────────────────────────
+export type WeeklyProductionItem =
+  | { kind: 'step'; clientId: string; clientName: string; step: Step; due_on: string | null; overdue: boolean }
+  | { kind: 'intern'; item: InternalItem; due_on: string; overdue: boolean }
+
+/**
+ * "Uit Productie" op de weekly, voor één teamlid: wat nu aan de beurt is (zelfde logica als de
+ * volgende stappen: eigen stappen, Milan volgt de freelancer op, Cédric de klant) plus de interne
+ * taken, met een deadline op of vóór de dag van de volgende weekly, of te laat. Berekend, geen kopie.
+ */
+export function weeklyProductionItems(list: ClientProduction[], internal: InternalItem[], who: TeamMember, until: string): WeeklyProductionItem[] {
+  const due = (d: string | null, overdue: boolean) => overdue || Boolean(d && d <= until)
+  const steps: WeeklyProductionItem[] = myNextSteps(list, who)
+    .filter(({ step }) => due(step.due_on, step.overdue))
+    .map(({ client, step }) => ({ kind: 'step', clientId: client.client_id, clientName: client.name, step, due_on: step.due_on, overdue: step.overdue }))
+  const tasks: WeeklyProductionItem[] = myInternalItems(internal, who)
+    .filter((i) => due(i.due_on, i.overdue))
+    .map((item) => ({ kind: 'intern', item, due_on: item.due_on, overdue: item.overdue }))
+  return [...steps, ...tasks].sort((a, b) => (a.due_on ?? '9999').localeCompare(b.due_on ?? '9999'))
+}

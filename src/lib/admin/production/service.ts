@@ -24,8 +24,12 @@ import {
   type Template,
   type TemplateStep,
   type Who,
+  type WeeklyProductionItem,
+  weeklyProductionItems,
 } from './core'
+import { isoDay } from '../format'
 import {
+  addDays,
   cleanRhythm,
   cleanSchedule,
   isDate,
@@ -114,6 +118,17 @@ export async function loadProduction(repo: ProductionRepo, clients: ClientRef[],
     template = null
   }
   return { list, notStarted: clients.filter((c) => !started.has(c.id)), internal: internalItems(d.tasks, d.done, day), tasks: d.tasks, template }
+}
+
+/**
+ * "Uit Productie" voor de weekly, per teamlid: tot en met de dag van de volgende weekly (of de komende
+ * 7 dagen als er nog geen gepland is), plus alles wat te laat is. Telkens berekend uit Productie.
+ */
+export async function weeklyProduction(repo: ProductionRepo, clients: ClientRef[], next: { starts_at: string } | null, day = today()) {
+  const { list, internal } = await loadProduction(repo, clients, day)
+  const until = next ? isoDay(new Date(next.starts_at)) : addDays(day, 7)
+  const members: TeamMember[] = ['casper', 'cedric', 'milan']
+  return { until, planned: Boolean(next), byOwner: Object.fromEntries(members.map((m) => [m, weeklyProductionItems(list, internal, m, until)])) as Record<TeamMember, WeeklyProductionItem[]> }
 }
 
 export async function getClientProduction(repo: ProductionRepo, client: ClientRef) {

@@ -5,13 +5,15 @@ import { fmtDate, isoDay } from '../../format'
 import { boardTodos, currentWeekly, weeklyTimeRange } from '../../weekly/board'
 import { concludeAndSchedule, scheduleWeekly } from '../../weekly/schedule'
 import { TEAM } from '../../weekly/types'
+import { weeklyProduction } from '../../production/service'
+import type { TeamMember, WeeklyProductionItem } from '../../production/core'
 
 import { BY, dateStr, owner, uuid, type ToolCtx } from '../tool'
 
 /** Weekly, to-do's en prikbord (hele team). */
 export function registerWeeklyTools(ctx: ToolCtx) {
   const { tool, session } = ctx
-  const { weekly } = session
+  const { weekly, clients, production } = session
   // ─── Weekly ───────────────────────────────────────────────
   const todoView = (t: Awaited<ReturnType<typeof weekly.listTodos>>[number]) => ({
     id: t.id,
@@ -23,18 +25,31 @@ export function registerWeeklyTools(ctx: ToolCtx) {
     doorgeschoven: t.pushed_count,
     notities: t.notes.map((n) => n.body),
   })
-  tool('weekly_overzicht', 'Volgende weekly en alle to-do’s (open + sinds de vorige weekly afgevinkt), per persoon en lange to-do’s.', {}, true, async () => {
-    const [ws, todos] = await Promise.all([weekly.listWeeklies(), weekly.listTodos()])
-    const next = currentWeekly(ws)
-    const { byOwner, long } = boardTodos(todos, ws)
-    return {
-      volgende_weekly: next
-        ? { id: next.id, wanneer: `${fmtDate(next.starts_at, { weekday: 'long', day: 'numeric', month: 'long' })} ${weeklyTimeRange(next)}`, modus: next.mode, status: next.status, meet: next.meet_url }
-        : null,
-      todos: Object.fromEntries(TEAM.map((p) => [p.name, byOwner('weekly', p.key).map(todoView)])),
-      lange_todos: long.map(todoView),
-    }
-  })
+  const prodItemView = (i: WeeklyProductionItem) =>
+    i.kind === 'step'
+      ? { soort: 'stap', klant: i.clientName, stap: i.step.key, titel: i.step.title, draaidag: i.step.cycle?.no ?? null, deadline: i.due_on, te_laat: i.overdue }
+      : { soort: 'intern', klant: null, taak_id: i.item.task.id, titel: i.item.task.title, deadline: i.due_on, te_laat: i.overdue }
+  tool(
+    'weekly_overzicht',
+    'Volgende weekly en alle to-do’s (open + sinds de vorige weekly afgevinkt), per persoon en lange to-do’s. Plus per persoon "productie": productiestappen (Milan volgt de freelancer op, Cédric de klant) en interne taken met een deadline tot en met de dag van de volgende weekly, of te laat. Die zijn berekend uit Productie (geen to-do’s); afvinken via productie_stap of intern_taak_bijwerken.',
+    {},
+    true,
+    async () => {
+      const [ws, todos, clientList] = await Promise.all([weekly.listWeeklies(), weekly.listTodos(), clients.list()])
+      const next = currentWeekly(ws)
+      const { byOwner, long } = boardTodos(todos, ws)
+      const prod = await weeklyProduction(production, clientList.map((c) => ({ id: c.id, name: c.name })), next)
+      return {
+        volgende_weekly: next
+          ? { id: next.id, wanneer: `${fmtDate(next.starts_at, { weekday: 'long', day: 'numeric', month: 'long' })} ${weeklyTimeRange(next)}`, modus: next.mode, status: next.status, meet: next.meet_url }
+          : null,
+        todos: Object.fromEntries(TEAM.map((p) => [p.name, byOwner('weekly', p.key).map(todoView)])),
+        lange_todos: long.map(todoView),
+        productie_tot_en_met: prod.until,
+        productie: Object.fromEntries(TEAM.map((p) => [p.name, (prod.byOwner[p.key as TeamMember] ?? []).map(prodItemView)])),
+      }
+    },
+  )
   tool('vorige_weeklies', 'Afgesloten weeklies met hun to-do’s en de link naar opname of transcript.', { aantal: z.number().int().min(1).max(20).optional() }, true, async ({ aantal = 5 }) => {
     const [ws, todos] = await Promise.all([weekly.listWeeklies(), weekly.listTodos()])
     return ws
@@ -143,7 +158,7 @@ export function registerWeeklyTools(ctx: ToolCtx) {
     await weekly.assignPending(w.id)
     return { id: w.id, ingepland: `${datum} ${uur}`, modus }
   })
-  tool('weekly_afsluiten', 'Een weekly afsluiten en meteen de volgende inplannen (live: met einduur; online: altijd 1 uur).', { weekly_id: z.string(), datum: dateStr, uur: z.string().regex(/^\d{2}:\d{2}$/), einduur: z.string().regex(/^\d{2}:\d{2}$/).optional().describe('verplicht bij live, genegeerd bij online'), modus: z.enum(['live', 'online']) }, false, async ({ weekly_id, datum, uur, einduur, modus }) => {
+  tool('weekly_afsluiten', 'Een weekly afsluiten en meteen de volgende inplannen (live: met einduur; online: altijd 1 uur). Open productiestappen blijven gewoon in Productie staan: er worden geen to-do’s van gemaakt.', { weekly_id: z.string(), datum: dateStr, uur: z.string().regex(/^\d{2}:\d{2}$/), einduur: z.string().regex(/^\d{2}:\d{2}$/).optional().describe('verplicht bij live, genegeerd bij online'), modus: z.enum(['live', 'online']) }, false, async ({ weekly_id, datum, uur, einduur, modus }) => {
     await concludeAndSchedule(weekly, BY, uuid(weekly_id, 'weekly_id'), { date: datum, time: uur, endTime: einduur ?? null, mode: modus })
     return { afgesloten: weekly_id, volgende: `${datum} ${uur}`, modus }
   })
