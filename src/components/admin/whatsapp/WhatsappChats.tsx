@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { saveWhatsappChatAction } from '@/app/admin/whatsapp-actions'
+import { ImportHistory } from './ImportHistory'
 import { buttonClass, Card, Empty, input, muted, Pill, Spinner, Title } from '../ui'
 import { cn } from '@/utilities/ui'
 
@@ -20,6 +21,7 @@ export type ChatView = {
   suggestie: { id: string; label: string } | null
   lead_id: string | null
   klant_id: string | null
+  intern: boolean
   actief: boolean
   laatst_actief: string | null
   berichten: { id: string; richting: 'in' | 'uit'; tekst: string | null; media_type: string | null; tijdstip: string; afzender: string | null }[]
@@ -31,7 +33,7 @@ const when = (iso: string | null) =>
 const MEDIA: Record<string, string> = { image: 'foto', video: 'video', audio: 'spraakbericht', document: 'document', sticker: 'sticker', location: 'locatie', contact: 'contact', poll: 'poll', other: 'bericht' }
 
 /** Gedetecteerde WhatsApp-chats koppelen aan een lead of klant en actief zetten. */
-export function WhatsappChats({ chats, leads, klanten }: { chats: ChatView[]; leads: Option[]; klanten: Option[] }) {
+export function WhatsappChats({ chats, leads, klanten, me }: { chats: ChatView[]; leads: Option[]; klanten: Option[]; me: string }) {
   const [q, setQ] = useState('')
   const match = (c: ChatView) => !q.trim() || `${c.label} ${c.naamWhatsapp ?? ''} ${c.telefoon ?? ''} ${c.jid}`.toLowerCase().includes(q.trim().toLowerCase())
   const active = chats.filter((c) => c.actief && match(c))
@@ -51,7 +53,7 @@ export function WhatsappChats({ chats, leads, klanten }: { chats: ChatView[]; le
         {active.length ? (
           <ul className="m-0 flex list-none flex-col p-0">
             {active.map((c) => (
-              <ChatRow key={c.jid} chat={c} leads={leads} klanten={klanten} />
+              <ChatRow key={c.jid} chat={c} leads={leads} klanten={klanten} me={me} />
             ))}
           </ul>
         ) : (
@@ -67,7 +69,7 @@ export function WhatsappChats({ chats, leads, klanten }: { chats: ChatView[]; le
             <p className={cn('m-0 text-xs', muted)}>Casper, Milan en Cédric zitten erin: meestal een klantgroep. Koppel ze aan de klant.</p>
             <ul className="m-0 flex list-none flex-col p-0">
               {team.map((c) => (
-                <ChatRow key={c.jid} chat={c} leads={leads} klanten={klanten} />
+                <ChatRow key={c.jid} chat={c} leads={leads} klanten={klanten} me={me} />
               ))}
             </ul>
           </section>
@@ -75,7 +77,7 @@ export function WhatsappChats({ chats, leads, klanten }: { chats: ChatView[]; le
         {other.length ? (
           <ul className="m-0 flex list-none flex-col p-0">
             {other.slice(0, 200).map((c) => (
-              <ChatRow key={c.jid} chat={c} leads={leads} klanten={klanten} />
+              <ChatRow key={c.jid} chat={c} leads={leads} klanten={klanten} me={me} />
             ))}
           </ul>
         ) : (
@@ -87,7 +89,7 @@ export function WhatsappChats({ chats, leads, klanten }: { chats: ChatView[]; le
   )
 }
 
-function ChatRow({ chat: c, leads, klanten }: { chat: ChatView; leads: Option[]; klanten: Option[] }) {
+function ChatRow({ chat: c, leads, klanten, me }: { chat: ChatView; leads: Option[]; klanten: Option[]; me: string }) {
   const [pending, start] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
@@ -114,6 +116,7 @@ function ChatRow({ chat: c, leads, klanten }: { chat: ChatView; leads: Option[];
             <span className="flex flex-wrap items-center gap-1.5">
               Naam {c.groep && <Pill tone="light">groep{c.deelnemers ? ` · ${c.deelnemers}` : ''}</Pill>}
               {c.heleTeam && <Pill tone="teal">hele team</Pill>}
+              {c.intern && <Pill tone="purple">intern</Pill>}
             </span>
             <input
               name="naam_eigen"
@@ -152,10 +155,16 @@ function ChatRow({ chat: c, leads, klanten }: { chat: ChatView; leads: Option[];
             ))}
           </select>
         </label>
-        <label className="flex min-h-9 items-center gap-2 text-sm font-semibold">
-          <input type="checkbox" name="actief" defaultChecked={c.actief} className="size-4 accent-ikr-navy" />
-          Actief
-        </label>
+        <div className="flex flex-col gap-1">
+          <label className="flex items-center gap-2 text-xs font-semibold" title="Interne chat (bv. de teamgroep): zonder lead of klant">
+            <input type="checkbox" name="intern" defaultChecked={c.intern} className="size-4 accent-ikr-navy" />
+            Intern (IKR-team)
+          </label>
+          <label className="flex items-center gap-2 text-sm font-semibold">
+            <input type="checkbox" name="actief" defaultChecked={c.actief} className="size-4 accent-ikr-navy" />
+            Actief
+          </label>
+        </div>
         <div className="flex items-center gap-2">
           <button type="submit" disabled={pending} className={buttonClass('navy', true)}>
             {pending && <Spinner />} Bewaar
@@ -173,13 +182,14 @@ function ChatRow({ chat: c, leads, klanten }: { chat: ChatView; leads: Option[];
           {error}
         </p>
       )}
+      {(c.lead_id || c.klant_id || c.intern) && <ImportHistory jid={c.jid} label={c.label} me={me} />}
       {c.actief && (
         <details className="rounded-xl bg-white/50 px-3 py-2">
           <summary className="cursor-pointer text-sm font-semibold">Laatste berichten ({c.berichten.length})</summary>
           {c.berichten.length ? (
             <ul className="m-0 mt-2 flex list-none flex-col gap-1.5 p-0 text-sm">
               {c.berichten.map((b) => (
-                <li key={b.id} className={cn('max-w-[85%] rounded-xl px-3 py-1.5', b.richting === 'uit' ? 'self-end bg-[#DDF2DF]' : 'self-start bg-ikr-cream')}>
+                <li key={b.id} className={cn('max-w-[85%] rounded-xl px-3 py-1.5 whitespace-pre-line', b.richting === 'uit' ? 'self-end bg-[#DDF2DF]' : 'self-start bg-ikr-cream')}>
                   <span className={cn('block text-[11px]', muted)}>
                     {b.richting === 'uit' ? 'IKR' : (b.afzender ?? c.label)} · {when(b.tijdstip)}
                   </span>

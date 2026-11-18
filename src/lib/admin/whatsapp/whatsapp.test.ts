@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { chatLabel, memoryWhatsapp, phoneKey } from './repo'
-import { conversationFor, linkChat, suggestLead } from './service'
+import { conversationFor, importHistory, linkChat, recentAll, suggestLead } from './service'
+import { parseExport, toImportRows } from './export'
 
 const LEAD = '11111111-1111-4111-8111-111111111111'
 const KLANT = '22222222-2222-4222-8222-222222222222'
@@ -61,5 +62,47 @@ describe('WhatsApp koppelen', () => {
     expect(suggestLead({ jid: '78821256634402@lid', telefoon: null }, leads)).toBeNull()
     // Twee leads met hetzelfde nummer: geen voorstel.
     expect(suggestLead({ jid: '32475788230@s.whatsapp.net', telefoon: null }, [...leads, { id: 'c', phone: '+32475788230' }])).toBeNull()
+  })
+})
+
+describe('intern en historiek importeren', () => {
+  const TEAM = '120363000000000001@g.us'
+  const exportTxt = ['[15/11/2026, 09:00:00] Casper: Goeiemorgen team', '[15/11/2026, 09:01:00] Milan: Briefing Chez Albert staat klaar', '[16/11/2026, 10:00:00] Cédric: Top'].join('\n')
+  it('intern = actief zonder lead of klant; gesprek via intern', async () => {
+    const repo = memoryWhatsapp()
+    await linkChat(repo, MAMA, { intern: true, actief: true }, exists)
+    expect(await repo.chat(MAMA)).toMatchObject({ intern: true, actief: true })
+    expect((await conversationFor(repo, { intern: true }, 10)).chats.map((c) => c.jid)).toEqual([MAMA])
+  })
+  it('import: enkel gekoppelde chats, geen dubbels, ongeldige rijen geweigerd', async () => {
+    const repo = memoryWhatsapp()
+    const rows = toImportRows(parseExport(exportTxt), 'Casper')
+    await expect(importHistory(repo, MAMA, rows)).rejects.toThrow(/Koppel de chat eerst/)
+    await linkChat(repo, TEAM, { intern: true, actief: true }, exists)
+    expect(await importHistory(repo, TEAM, rows)).toEqual({ nieuw: 3, overgeslagen: 0 })
+    expect(await importHistory(repo, TEAM, rows)).toEqual({ nieuw: 0, overgeslagen: 3 })
+    await expect(importHistory(repo, TEAM, [{ id: 'hack', richting: 'in', tijdstip: 'x' }])).rejects.toThrow(/Ongeldig bericht/)
+    const c = await conversationFor(repo, { intern: true }, 100)
+    expect(c.berichten.filter((b) => b.id.startsWith('imp-')).map((b) => [b.richting, b.afzender])).toEqual([
+      ['uit', 'Casper'],
+      ['in', 'Milan'],
+      ['in', 'Cédric'],
+    ])
+  })
+  it('import stopt waar de bridge begon (anders dubbel)', async () => {
+    const repo = memoryWhatsapp()
+    await linkChat(repo, TEAM, { klant_id: KLANT }, exists)
+    // De demo-chat heeft al bridge-berichten van de laatste uren; een export die tot nu loopt, overlapt.
+    const now = new Date()
+    const local = (d: Date) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Brussels', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).format(d).replace(',', ',')
+    const txt = [`[${local(new Date(now.getTime() - 3 * 86_400_000))}] Jan Peeters: Oud bericht`, `[${local(now)}] Jan Peeters: Zit al in de bridge`].join('\n')
+    const res = await importHistory(repo, TEAM, toImportRows(parseExport(txt), null))
+    expect(res).toEqual({ nieuw: 1, overgeslagen: 1 })
+  })
+  it('nieuwe berichten in alle actieve chats sinds een tijdstip', async () => {
+    const repo = memoryWhatsapp()
+    await linkChat(repo, TEAM, { klant_id: KLANT, actief: true }, exists)
+    const r = await recentAll(repo, new Date(Date.now() - 50 * 60_000).toISOString(), 100)
+    expect(r.map((x) => [x.chat.jid, x.berichten.map((b) => b.id)])).toEqual([[TEAM, ['d2', 'd3']]])
   })
 })
