@@ -18,6 +18,8 @@ export type WaChat = {
   deelnemers: number | null
   lead_id: string | null
   klant_id: string | null
+  /** Interne chat (bv. de teamgroep van IKR), zonder lead of klant. */
+  intern: boolean
   actief: boolean
   laatst_actief: string | null
 }
@@ -30,7 +32,8 @@ export type WaBericht = {
   tijdstip: string
   afzender: string | null
 }
-export type WaChatPatch = Partial<Pick<WaChat, 'lead_id' | 'klant_id' | 'actief' | 'naam_eigen'>>
+export type WaImportRow = Omit<WaBericht, 'jid'>
+export type WaChatPatch = Partial<Pick<WaChat, 'lead_id' | 'klant_id' | 'intern' | 'actief' | 'naam_eigen'>>
 
 export interface WhatsappRepo {
   /** Alle gedetecteerde chats, laatst actief eerst. */
@@ -39,9 +42,16 @@ export interface WhatsappRepo {
   updateChat(jid: string, patch: WaChatPatch): Promise<void>
   /** De laatste `limit` berichten van deze chats, nieuwste eerst. */
   messages(jids: string[], limit: number): Promise<WaBericht[]>
+  /** Berichten van deze chats sinds een tijdstip, oudste eerst (hooguit `limit`). */
+  messagesSince(jids: string[], since: string, limit: number): Promise<WaBericht[]>
+  /** Tijdstip van het oudste bericht dat de bridge zelf bewaarde (import stopt daar, tegen dubbels). */
+  oldestBridgeMessage(jid: string): Promise<string | null>
+  /** Berichten uit een export bewaren; dubbele (zelfde id) negeren. Geeft het aantal nieuwe. */
+  importMessages(jid: string, rows: WaImportRow[]): Promise<number>
 }
 
-const CHAT_COLS = 'jid, naam, naam_eigen, telefoon, is_groep, hele_team, deelnemers, lead_id, klant_id, actief, laatst_actief'
+const CHAT_COLS = 'jid, naam, naam_eigen, telefoon, is_groep, hele_team, deelnemers, lead_id, klant_id, intern, actief, laatst_actief'
+const MSG_COLS = 'jid, id, richting, tekst, media_type, tijdstip, afzender'
 
 export function supabaseWhatsapp(db: SupabaseClient): WhatsappRepo {
   const check = <T>(r: { data: T; error: { message: string } | null }) => {
@@ -66,8 +76,21 @@ export function supabaseWhatsapp(db: SupabaseClient): WhatsappRepo {
     async messages(jids, limit) {
       if (!jids.length) return []
       return (check(
-        await db.from('whatsapp_berichten').select('jid, id, richting, tekst, media_type, tijdstip, afzender').in('jid', jids).order('tijdstip', { ascending: false }).limit(limit),
+        await db.from('whatsapp_berichten').select(MSG_COLS).in('jid', jids).order('tijdstip', { ascending: false }).limit(limit),
       ) ?? []) as WaBericht[]
+    },
+    async messagesSince(jids, since, limit) {
+      if (!jids.length) return []
+      return (check(await db.from('whatsapp_berichten').select(MSG_COLS).in('jid', jids).gt('tijdstip', since).order('tijdstip', { ascending: true }).limit(limit)) ?? []) as WaBericht[]
+    },
+    async oldestBridgeMessage(jid) {
+      const r = check(await db.from('whatsapp_berichten').select('tijdstip').eq('jid', jid).eq('bron', 'bridge').order('tijdstip', { ascending: true }).limit(1)) as { tijdstip: string }[] | null
+      return r?.[0]?.tijdstip ?? null
+    },
+    async importMessages(jid, rows) {
+      if (!rows.length) return 0
+      const r = check(await db.from('whatsapp_berichten').upsert(rows.map((x) => ({ ...x, jid, bron: 'import' })), { onConflict: 'jid,id', ignoreDuplicates: true }).select('id')) as { id: string }[] | null
+      return r?.length ?? 0
     },
   }
 }
@@ -79,10 +102,10 @@ const ago = (min: number) => new Date(Date.now() - min * 60_000).toISOString()
 function demo(): Mem {
   return {
     chats: [
-      { jid: '120363000000000001@g.us', naam: 'IKR × Bakkerij Peeters', naam_eigen: null, telefoon: null, is_groep: true, hele_team: true, deelnemers: 5, lead_id: null, klant_id: null, actief: false, laatst_actief: ago(15) },
-      { jid: '32470000001@s.whatsapp.net', naam: null, naam_eigen: null, telefoon: null, is_groep: false, hele_team: false, deelnemers: null, lead_id: null, klant_id: null, actief: false, laatst_actief: ago(90) },
-      { jid: '78821256634402@lid', naam: null, naam_eigen: null, telefoon: null, is_groep: false, hele_team: false, deelnemers: null, lead_id: null, klant_id: null, actief: false, laatst_actief: ago(300) },
-      { jid: '32470000002@s.whatsapp.net', naam: 'Mama', naam_eigen: null, telefoon: null, is_groep: false, hele_team: false, deelnemers: null, lead_id: null, klant_id: null, actief: false, laatst_actief: ago(240) },
+      { jid: '120363000000000001@g.us', naam: 'IKR × Bakkerij Peeters', naam_eigen: null, telefoon: null, is_groep: true, hele_team: true, deelnemers: 5, lead_id: null, klant_id: null, intern: false, actief: false, laatst_actief: ago(15) },
+      { jid: '32470000001@s.whatsapp.net', naam: null, naam_eigen: null, telefoon: null, is_groep: false, hele_team: false, deelnemers: null, lead_id: null, klant_id: null, intern: false, actief: false, laatst_actief: ago(90) },
+      { jid: '78821256634402@lid', naam: null, naam_eigen: null, telefoon: null, is_groep: false, hele_team: false, deelnemers: null, lead_id: null, klant_id: null, intern: false, actief: false, laatst_actief: ago(300) },
+      { jid: '32470000002@s.whatsapp.net', naam: 'Mama', naam_eigen: null, telefoon: null, is_groep: false, hele_team: false, deelnemers: null, lead_id: null, klant_id: null, intern: false, actief: false, laatst_actief: ago(240) },
     ],
     // Enkel zichtbaar als de chat actief staat (zoals in het echt: de bridge bewaart enkel actieve chats).
     berichten: [
@@ -105,6 +128,25 @@ export function memoryWhatsapp(): WhatsappRepo {
     async updateChat(jid, patch) {
       const c = m.chats.find((x) => x.jid === jid)
       if (c) Object.assign(c, patch)
+    },
+    async messagesSince(jids, since, limit) {
+      return m.berichten
+        .filter((b) => jids.includes(b.jid) && b.tijdstip > since)
+        .sort((a, b) => a.tijdstip.localeCompare(b.tijdstip))
+        .slice(0, limit)
+        .map((b) => ({ ...b }))
+    },
+    async oldestBridgeMessage(jid) {
+      return m.berichten.filter((b) => b.jid === jid && !b.id.startsWith('imp-')).map((b) => b.tijdstip).sort()[0] ?? null
+    },
+    async importMessages(jid, rows) {
+      let n = 0
+      for (const r of rows)
+        if (!m.berichten.some((b) => b.jid === jid && b.id === r.id)) {
+          m.berichten.push({ ...r, jid })
+          n++
+        }
+      return n
     },
     async messages(jids, limit) {
       return m.berichten

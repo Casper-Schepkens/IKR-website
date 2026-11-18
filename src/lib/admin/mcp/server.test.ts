@@ -499,7 +499,7 @@ describe('whatsapp via MCP (read-only)', () => {
   it('whatsapp_gesprekken geeft de laatste berichten van gekoppelde, actieve chats; geen enkele tool verstuurt', async () => {
     const names = (await client.listTools()).tools.map((t) => t.name)
     expect(names).toContain('whatsapp_gesprekken')
-    expect(names.filter((n) => /whatsapp/.test(n))).toEqual(['whatsapp_gesprekken'])
+    expect(names.filter((n) => /whatsapp/.test(n)).sort()).toEqual(['whatsapp_gesprekken', 'whatsapp_nieuw'])
     const klant = await session.clients.create({ name: 'Bakkerij Peeters', freelancer: null, contract_end: null, contract_indefinite: true }, 'test')
     let r = await call('whatsapp_gesprekken', { klant_id: klant.id })
     expect(r.json).toMatchObject({ chats: [], berichten: [] })
@@ -513,6 +513,14 @@ describe('whatsapp via MCP (read-only)', () => {
       expect.objectContaining({ van: 'IKR', tekst: 'Top, dinsdag 9u! Briefing volgt morgen.' }),
       expect.objectContaining({ van: 'Jan Peeters', tekst: null, media: 'image' }),
     ])
+    // Nieuwe berichten in alle actieve chats (werkplek-rondes).
+    const nieuw = (await call('whatsapp_nieuw', { sinds: new Date(Date.now() - 2 * 3_600_000).toISOString() })).json as { chats: { chat: string; voor: string; berichten: unknown[] }[] }
+    expect(nieuw.chats).toEqual([expect.objectContaining({ chat: 'IKR × Bakkerij Peeters', voor: 'klant Bakkerij Peeters' })])
+    expect(nieuw.chats[0].berichten).toHaveLength(3)
+    // Interne teamgroep.
+    await memoryWhatsapp().updateChat('32470000002@s.whatsapp.net', { intern: true, actief: true })
+    const intern = (await call('whatsapp_gesprekken', { intern: true })).json as { voor: string; chats: { naam: string }[] }
+    expect(intern).toMatchObject({ voor: 'de interne chats (IKR-team)', chats: [{ naam: 'Mama' }] })
     expect((await call('whatsapp_gesprekken', {})).isError).toBe(true)
     expect((await call('whatsapp_gesprekken', { lead_id: leadId, klant_id: klant.id })).isError).toBe(true)
   })

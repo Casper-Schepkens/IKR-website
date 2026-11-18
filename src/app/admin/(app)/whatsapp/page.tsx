@@ -27,10 +27,11 @@ export default async function WhatsappPage() {
     heleTeam: c.hele_team,
     deelnemers: c.deelnemers,
     suggestie: (() => {
-      const l = c.lead_id || c.klant_id ? null : suggestLead(c, leads)
+      const l = c.lead_id || c.klant_id || c.intern ? null : suggestLead(c, leads)
       return l ? { id: l.id, label: l.company ? `${l.name} (${l.company})` : l.name } : null
     })(),
     lead_id: c.lead_id,
+    intern: c.intern,
     klant_id: c.klant_id,
     actief: c.actief,
     laatst_actief: c.laatst_actief,
@@ -55,6 +56,7 @@ export default async function WhatsappPage() {
       ) : (
         <WhatsappChats
           chats={view}
+          me={session.user.name}
           leads={leads.map((l) => ({ id: l.id, label: l.company ? `${l.name} (${l.company})` : l.name })).sort((a, b) => a.label.localeCompare(b.label))}
           klanten={clients.map((c) => ({ id: c.id, label: c.name })).sort((a, b) => a.label.localeCompare(b.label))}
         />
