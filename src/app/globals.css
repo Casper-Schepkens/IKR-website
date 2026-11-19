@@ -6,7 +6,7 @@
   --font-display: var(--font-roboto-condensed);
   --font-sans: var(--font-inter);
 
-  --color-ikr-cream: #F0EBE0;
+  --color-ikr-cream: #EFECCE;
   --color-ikr-cream-light: #FFF8F1;
   --color-ikr-navy: #201737;
   --color-ikr-navy-text: #211636;
@@ -14,7 +14,7 @@
 }
 
 :root {
-  --ikr-cream: #F0EBE0;
+  --ikr-cream: #EFECCE;
   --ikr-cream-light: #FFF8F1;
   --ikr-navy: #201737;
   --ikr-navy-text: #211636;

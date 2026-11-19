@@ -1,3 +1,13 @@
+/* Dashboard houdt de oude cream; de publieke site gebruikt de logo-achtergrond (#EFECCE). */
+.ikr-admin {
+  --ikr-cream: #F0EBE0;
+  --color-ikr-cream: #F0EBE0;
+}
+html:has(.ikr-admin),
+body:has(.ikr-admin) {
+  background-color: #F0EBE0;
+}
+
 /* Directe klikfeedback in /admin: elke klik is meteen zichtbaar, ook als de actie nog loopt. */
 
 .ikr-admin :is(a, button, select) {

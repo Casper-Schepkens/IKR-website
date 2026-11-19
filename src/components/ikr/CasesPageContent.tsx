@@ -273,7 +273,7 @@ function CaseLogoCard({
         textDecoration: 'none',
         backgroundColor: ikr.creamLight,
         backgroundImage:
-          'radial-gradient(ellipse 80% 55% at 50% 38%, rgba(15,193,222,0.16) 0%, transparent 70%), linear-gradient(165deg, #FFF8F1 0%, #F0EBE0 58%, rgba(32,23,55,0.05) 100%)',
+          'radial-gradient(ellipse 80% 55% at 50% 38%, rgba(15,193,222,0.16) 0%, transparent 70%), linear-gradient(165deg, #FFF8F1 0%, #EFECCE 58%, rgba(32,23,55,0.05) 100%)',
         boxShadow: hovered
           ? 'inset 0 0 0 1.5px rgba(32,23,55,0.18), 0 16px 36px rgba(32,23,55,0.14)'
           : 'inset 0 0 0 1.5px rgba(32,23,55,0.12), 0 8px 24px rgba(32,23,55,0.06)',
