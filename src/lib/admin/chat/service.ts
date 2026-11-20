@@ -19,7 +19,7 @@ export function objectFromPage(page: string | null | undefined): ChatObject | nu
  * Bewaart het bericht en maakt een AI-taak 'chat' (met het bericht, de pagina en de laatste 20
  * berichten van deze gebruiker). Daarna wordt Grok Bot gepingd (of loopt de API).
  */
-export async function sendChatMessage(session: AdminSession, opts: { text: string; page: string | null; object?: ChatObject | null; attachments?: ChatAttachment[] }) {
+export async function sendChatMessage(session: AdminSession, opts: { text: string; page: string | null; object?: ChatObject | null; attachments?: ChatAttachment[]; via?: 'spraak' }) {
   const attachments = opts.attachments ?? []
   const text = opts.text.trim() || (attachments.length ? `📎 ${attachments.map((a) => a.name).join(', ')}` : '')
   if (!text) throw new Error('Typ eerst een bericht.')
@@ -33,6 +33,7 @@ export async function sendChatMessage(session: AdminSession, opts: { text: strin
     object_type: object?.type ?? null,
     object_id: object?.id ?? null,
     attachments: attachments.length ? attachments : null,
+    ...(opts.via ? { via: opts.via } : {}),
   })
 
   if (session.mode === 'demo') {

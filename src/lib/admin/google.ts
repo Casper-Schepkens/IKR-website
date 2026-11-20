@@ -505,12 +505,16 @@ export async function removeFilePermission(owner: string, fileId: string, permis
 // ─── Drive lezen (IKR-Drive, bv. contracten) ────────────────────────────────
 export type DriveDoc = { id: string; name: string; mimeType: string; modifiedTime: string; webViewLink: string }
 
-/** Zoekt bestanden in de Drive van `owner` (ook gedeelde drives), nieuwste eerst. `q` = Drive-zoekopdracht. */
+/**
+ * Zoekt bestanden in de Drive van `owner` (ook gedeelde drives), nieuwste eerst. `q` = Drive-zoekopdracht.
+ * Met `fullText contains` sorteert Drive niet (orderBy is dan niet toegelaten): dan op relevantie.
+ */
 export async function driveSearch(owner: string, q: string, limit = 10): Promise<DriveDoc[]> {
   const at = await accessToken(owner)
+  const order = /fullText contains/.test(q) ? '' : '&orderBy=modifiedTime desc'
   const r = await driveGet<{ files?: DriveDoc[] }>(
     at,
-    `files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,modifiedTime,webViewLink)&orderBy=modifiedTime desc&includeItemsFromAllDrives=true&corpora=allDrives&pageSize=${limit}`,
+    `files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,modifiedTime,webViewLink)${order}&includeItemsFromAllDrives=true&corpora=allDrives&pageSize=${limit}`,
   )
   return r.files ?? []
 }

@@ -9,6 +9,8 @@ import type { ChatAttachment, ChatMessage } from '@/lib/admin/chat/repo'
 import { chatContentKey, chatSnap, isNearBottom, refreshSoon, shouldRefreshForChat } from '@/lib/admin/live'
 import { Icon, muted, Spinner } from './ui'
 import { cn } from '@/utilities/ui'
+import { useVoice } from './voice/useVoice'
+import { MicButton, VoiceStrip } from './voice/VoiceControls'
 
 type State = { messages: ChatMessage[]; thinking: boolean }
 
@@ -76,6 +78,29 @@ export function AdminChat({ initial }: { initial: State }) {
       return fresh.length || cur.thinking !== res.data.thinking ? { messages: [...cur.messages, ...fresh], thinking: res.data.thinking } : cur
     })
   }, [])
+
+  // Spraakbot: live praten (microfoon links van de verstuurknop). Getypte berichten blijven naar Grok Bot gaan.
+  const voice = useVoice({
+    pathname,
+    onChatChanged: () => void refresh(),
+    onDataChanged: () => refreshSoon(() => startTransition(() => router.refresh())),
+    onNavigate: async (wat) => {
+      const target = bestTarget(await loadNavTargets(), wat)
+      if (!target) return null
+      router.push(target.href)
+      return target.label
+    },
+  })
+  // Antwoord van Grok Bot binnen terwijl het gesprek loopt: de spraakbot vertelt het.
+  const seenIds = useRef(new Set(initial.messages.map((m) => m.id)))
+  const { grokbotAnswered } = voice
+  useEffect(() => {
+    for (const m of state.messages) {
+      if (seenIds.current.has(m.id)) continue
+      seenIds.current.add(m.id)
+      if (m.role === 'bot' && m.via !== 'spraak') grokbotAnswered(m.text, m.created_at)
+    }
+  }, [state.messages, grokbotAnswered])
 
   // Live bijwerken: elke 3 s zolang Grok Bot nadenkt, anders elke 15 s zolang het paneel open is.
   useEffect(() => {
@@ -214,6 +239,7 @@ export function AdminChat({ initial }: { initial: State }) {
           big ? 'min-h-12' : 'min-h-11',
         )}
       />
+      <MicButton status={voice.status} onStart={() => void voice.start()} onStop={() => voice.stop()} />
       <button
         type="submit"
         disabled={pending || uploading > 0 || (!text.trim() && !files.length)}
@@ -261,6 +287,19 @@ export function AdminChat({ initial }: { initial: State }) {
               </span>
             ))}
           </div>
+        )}
+        {!open && (
+          <VoiceStrip
+          status={voice.status}
+          busyTool={voice.busyTool}
+          pending={voice.pending}
+          spend={voice.spend}
+          waitingGrokbot={voice.waitingGrokbot}
+          error={voice.error}
+          onDecide={(id, b) => void voice.decide(id, b)}
+          onStop={() => voice.stop()}
+          onClearError={voice.clearError}
+        />
         )}
         {(busy || unseenReply || error) && !open && (
           <div className="flex min-w-0 items-center gap-2 px-1 text-xs">
@@ -315,6 +354,7 @@ export function AdminChat({ initial }: { initial: State }) {
                         m.role === 'user' ? 'bg-ikr-navy text-ikr-cream-light' : 'bg-ikr-cream-light text-ikr-navy',
                       )}
                     >
+                      {m.via === 'spraak' && <span aria-label="Gesproken" className="mr-1">🎙</span>}
                       {m.text}
                       {m.attachments?.length ? (
                         <span className="mt-1 flex flex-col gap-0.5">
@@ -354,6 +394,17 @@ export function AdminChat({ initial }: { initial: State }) {
                 {error}
               </span>
             )}
+            <VoiceStrip
+              status={voice.status}
+              busyTool={voice.busyTool}
+              pending={voice.pending}
+              spend={voice.spend}
+              waitingGrokbot={voice.waitingGrokbot}
+              error={voice.error}
+              onDecide={(id, b) => void voice.decide(id, b)}
+              onStop={() => voice.stop()}
+              onClearError={voice.clearError}
+            />
             {input(true)}
           </section>
         </div>
