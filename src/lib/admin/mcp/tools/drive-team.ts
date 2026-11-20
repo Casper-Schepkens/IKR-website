@@ -43,6 +43,7 @@ export function registerDriveTeamTools(ctx: ToolCtx) {
     },
   )
   // ─── Drive (IKR-Drive van contact@): bijlagen uit de chat lezen en op de juiste plek zetten ──
+  const driveKind = (mime: string) => (mime === 'application/vnd.google-apps.folder' ? 'map' : mime.replace('application/vnd.google-apps.', 'google-').replace(/^application\//, ''))
   const driveId = (v: string) => {
     if (!/^[\w-]{10,}$/.test(v.trim())) throw new Error('Ongeldig Drive-id.')
     return v.trim()
@@ -60,6 +61,21 @@ export function registerDriveTeamTools(ctx: ToolCtx) {
   tool('drive_mappen_zoeken', 'Mappen in de IKR-Drive zoeken op naam (bv. de map van een klant of lead).', { naam: z.string() }, true, async ({ naam }) => {
     const q = `name contains '${escDriveQuery(naam.trim())}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`
     return (await driveSearch(IKR_DRIVE, q, 15)).map((f) => ({ map_id: f.id, naam: f.name, link: f.webViewLink, gewijzigd: f.modifiedTime.slice(0, 10) }))
+  })
+  tool(
+    'drive_zoeken',
+    'Bestanden (en mappen) in de IKR-Drive zoeken op naam en op de tekst erin (Docs, PDF, Word, Sheets, …), bv. "contract Tempus" of "offerte". Geeft file_id; lees een bestand daarna met drive_bestand_lezen.',
+    { zoekterm: z.string().min(2).max(200), alleen_naam: z.boolean().optional(), max: z.number().int().min(1).max(30).optional() },
+    true,
+    async ({ zoekterm, alleen_naam, max = 15 }) => {
+      const t = escDriveQuery(zoekterm.trim())
+      const q = `(${alleen_naam ? '' : `fullText contains '${t}' or `}name contains '${t}') and trashed = false`
+      return (await driveSearch(IKR_DRIVE, q, max)).map((f) => ({ file_id: f.id, naam: f.name, soort: driveKind(f.mimeType), link: f.webViewLink, gewijzigd: f.modifiedTime.slice(0, 10) }))
+    },
+  )
+  tool('drive_map_inhoud', 'Wat er in een map van de IKR-Drive zit (bestanden en submappen, nieuwste eerst). Map-id via drive_mappen_zoeken of drive_zoeken.', { map_id: z.string(), max: z.number().int().min(1).max(100).optional() }, true, async ({ map_id, max = 50 }) => {
+    const q = `'${driveId(map_id)}' in parents and trashed = false`
+    return (await driveSearch(IKR_DRIVE, q, max)).map((f) => ({ id: f.id, naam: f.name, soort: driveKind(f.mimeType), link: f.webViewLink, gewijzigd: f.modifiedTime.slice(0, 10) }))
   })
   tool('drive_map_maken', 'Een mappenpad in de IKR-Drive opzoeken of aanmaken (bv. ["Sales", "Leads", "Tomeco"]); bestaande mappen worden hergebruikt.', { pad: z.array(z.string().min(1)).min(1).max(6) }, false, async ({ pad }) => {
     const id = await ensureDrivePath(IKR_DRIVE, pad.map((p) => p.trim()))
