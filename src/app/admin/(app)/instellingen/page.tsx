@@ -10,6 +10,7 @@ import { StyleProfiles } from './StyleProfiles'
 import { MyConnections } from '@/components/admin/team/MyConnections'
 import { SystemStatusCard } from '@/components/admin/SystemStatusCard'
 import { MenuPages } from '@/components/admin/team/MenuPages'
+import { VoiceSettings } from '@/components/admin/voice/VoiceSettings'
 import { getNavPrefs } from '@/lib/admin/team/nav-prefs'
 import { EMPTY_NAV, hiddenPages } from '@/lib/admin/team/nav-core'
 
@@ -94,6 +95,17 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         <MyConnections email={user.email} />
       </Suspense>
       <MenuPages hidden={hiddenPages(navPrefs, salesOwner)} salesOwner={salesOwner} />
+      {process.env.SUPABASE_SERVICE_ROLE_KEY && (
+        <Suspense
+          fallback={
+            <Card className="flex items-center gap-2 text-sm font-semibold">
+              <Spinner /> Spraakbot laden…
+            </Card>
+          }
+        >
+          <VoiceSettings />
+        </Suspense>
+      )}
       <Suspense fallback={null}>
         <SystemStatusCard details={isSalesOwner(user.email)} />
       </Suspense>

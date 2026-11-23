@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
-/** Content-Security-Policy voor /admin: enkel eigen code, Supabase (ook Realtime) en de Google-upload. */
+/** Content-Security-Policy voor /admin: enkel eigen code, Supabase (ook Realtime), de Google-upload en OpenAI (spraakbot). */
 const ADMIN_CSP = [
   "default-src 'self'",
   // Next zet inline scripts (hydration); zonder nonce-opzet is 'unsafe-inline' nodig. Lokaal ook 'unsafe-eval'.
@@ -13,7 +13,7 @@ const ADMIN_CSP = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.googleapis.com https://*.googleusercontent.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.googleapis.com https://*.googleusercontent.com https://api.openai.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

@@ -19,11 +19,13 @@ export type ChatMessage = {
   object_id: string | null
   actions: ChatAction[] | null
   attachments?: ChatAttachment[] | null
+  /** 'spraak' = uit een gesprek met de spraakbot (🎙 in de chat). */
+  via?: 'spraak' | null
   created_at: string
 }
 
 export type NewChatMessage = Pick<ChatMessage, 'user_id' | 'role' | 'text'> &
-  Partial<Pick<ChatMessage, 'page' | 'object_type' | 'object_id' | 'actions' | 'attachments'>>
+  Partial<Pick<ChatMessage, 'page' | 'object_type' | 'object_id' | 'actions' | 'attachments' | 'via' | 'created_at'>>
 
 export interface ChatRepo {
   /** Laatste `limit` berichten van één gebruiker, oudste eerst. */
