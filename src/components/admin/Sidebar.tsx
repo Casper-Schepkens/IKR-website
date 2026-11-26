@@ -10,6 +10,7 @@ import { saveNavPrefsAction } from '@/app/admin/team-actions'
 import { arrangeNav, hiddenPages, type NavPrefs } from '@/lib/admin/team/nav-core'
 import { badge, NOTIFY_PAGES, total } from '@/lib/admin/notifications/core'
 import { useNotifications } from './useNotifications'
+import { RecordingIndicator } from './recorder/RecordingIndicator'
 
 type NavItem = { href: string; label: string; icon: (typeof Icon)[keyof typeof Icon]; exact?: boolean }
 
@@ -160,35 +161,38 @@ export function Sidebar({
         open && 'max-h-dvh gap-5 overflow-y-auto pb-5',
       )}
     >
-      <div className="flex items-center gap-2.5 px-2.5">
-        <Link
-          href="/admin"
-          className="font-display text-[34px] leading-none font-black tracking-[-0.03em] text-ikr-cream-light no-underline"
-        >
-          IKR.
-        </Link>
-        <span className="rounded-full bg-ikr-cyan px-2.5 py-1 text-xs font-semibold text-ikr-navy">
-          {sales ? 'SALES' : 'ADMIN'}
-        </span>
-        {demo && (
-          <span className="rounded-full bg-[#FFF0C2] px-2.5 py-1 text-xs font-semibold text-[#6B5300]">
-            DEMO
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2.5 px-2.5">
+          <Link
+            href="/admin"
+            className="font-display text-[34px] leading-none font-black tracking-[-0.03em] text-ikr-cream-light no-underline"
+          >
+            IKR.
+          </Link>
+          <span className="rounded-full bg-ikr-cyan px-2.5 py-1 text-xs font-semibold text-ikr-navy">
+            {sales ? 'SALES' : 'ADMIN'}
           </span>
-        )}
-        <button
-          type="button"
-          onClick={() => setOpen(!open)}
-          aria-expanded={open}
-          aria-controls="admin-menu"
-          className="ml-auto flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold text-ikr-cream-light ring-1 ring-white/20 hover:bg-white/10 lg:hidden"
-        >
-          {open ? 'Sluiten' : 'Menu'}
-          {!open && badge(waiting) && (
-            <span aria-label={`${waiting} wacht${waiting === 1 ? '' : 'en'} op je`} className="inline-flex min-w-5 items-center justify-center rounded-full bg-[#C2410C] px-1.5 text-[11px] leading-5 font-bold text-white">
-              {badge(waiting)}
+          {demo && (
+            <span className="rounded-full bg-[#FFF0C2] px-2.5 py-1 text-xs font-semibold text-[#6B5300]">
+              DEMO
             </span>
           )}
-        </button>
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            aria-expanded={open}
+            aria-controls="admin-menu"
+            className="ml-auto flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold text-ikr-cream-light ring-1 ring-white/20 hover:bg-white/10 lg:hidden"
+          >
+            {open ? 'Sluiten' : 'Menu'}
+            {!open && badge(waiting) && (
+              <span aria-label={`${waiting} wacht${waiting === 1 ? '' : 'en'} op je`} className="inline-flex min-w-5 items-center justify-center rounded-full bg-[#C2410C] px-1.5 text-[11px] leading-5 font-bold text-white">
+                {badge(waiting)}
+              </span>
+            )}
+          </button>
+        </div>
+        <RecordingIndicator />
       </div>
       {/* Menu: scrollt als het niet past; naam en afmelden blijven onderaan staan. */}
       <div id="admin-menu" className={cn('flex-col gap-2 lg:-mx-1 lg:flex lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-1', open ? 'flex' : 'hidden')}>

@@ -181,6 +181,7 @@ export function CallCard({ call: c, lead, overdue }: { call: Call; lead: CallLea
             </div>
           ) : (
             <RecordButton
+              target={{ key: `call:${c.id}`, href: '/admin/sales/calls', label: `Call ${lead?.company ?? lead?.name ?? ''}`.trim() }}
               startUpload={(mime, origin) => startCallRecordingAction(c.id, mime, origin)}
               finish={(fileId) => finishCallRecordingAction(c.id, fileId)}
               existingUrl={c.recording_url}

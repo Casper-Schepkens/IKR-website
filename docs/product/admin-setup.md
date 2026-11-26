@@ -28,6 +28,7 @@ de workflow staat, geen extra features.
   - "Meeting starten", "Conclude meeting" (plant de volgende in) en "Vorige weeklies".
 - **Instellingen** (`/admin/instellingen`): "Connect calendar" per persoon en voor contact@iknowright.be.
 - Live weeklies: Record-knop; de opname gaat naar de Drive van contact@ (map "IKR Dashboard – Weeklies"), gedeeld met iknowright.be.
+  De opname loopt door als je naar een andere pagina klikt; zolang ze loopt staat er een rode REC-pill linksboven in de sidebar (klik = terug) en "Recording" bij de titel van de weekly. Enkel het tabblad sluiten of herladen stopt ze (de browser waarschuwt dan).
 - Online weeklies: check om de 30 s of de Fireflies-bot in de Meet zit, met knop "Fireflies toevoegen".
   Elke ochtend (06:00 UTC, `/api/cron/weekly-transcripts`) gaat het transcript als Google Doc naar de
   Drive van contact@ en komt de link bij de weekly.
