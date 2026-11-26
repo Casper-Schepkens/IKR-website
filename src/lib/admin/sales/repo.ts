@@ -10,6 +10,8 @@ export interface LeadsRepo {
   /** Enkel de meegegeven velden aanpassen. */
   patch(id: string, input: Partial<LeadInput>): Promise<void>
   setStage(id: string, stage: Stage): Promise<void>
+  /** Teamlid dat de lead opvolgt (e-mail), of null. */
+  setOwner(id: string, owner: string | null): Promise<void>
   markLost(id: string, reason: LostReason, note: string | null): Promise<void>
   /** Geen lead: verwijderen en het adres onthouden, zodat de inbox er geen nieuwe lead van maakt. */
   removeNotALead(id: string): Promise<void>
@@ -46,6 +48,9 @@ export function supabaseLeads(db: SupabaseClient): LeadsRepo {
     },
     async setStage(id, stage) {
       check(await db.from('leads').update({ stage, lost_reason: null, lost_note: null }).eq('id', id))
+    },
+    async setOwner(id, owner) {
+      check(await db.from('leads').update({ owner }).eq('id', id))
     },
     async markLost(id, reason, note) {
       check(await db.from('leads').update({ stage: 'lost', lost_reason: reason, lost_note: note }).eq('id', id))
@@ -118,6 +123,9 @@ export function memoryLeads(): LeadsRepo {
     async setStage(id, stage) {
       const l = find(id)
       Object.assign(l, { stage, lost_reason: null, lost_note: null, updated_at: now(), stage_changed_at: now() })
+    },
+    async setOwner(id, owner) {
+      Object.assign(find(id), { owner, updated_at: now() })
     },
     async markLost(id, reason, note) {
       const l = find(id)
