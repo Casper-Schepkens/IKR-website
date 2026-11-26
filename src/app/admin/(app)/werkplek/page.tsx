@@ -23,23 +23,23 @@ export default async function WorkspacePage({ searchParams }: { searchParams: Pr
   const names = Object.fromEntries(TEAM.map((t) => [t.email, t.name]))
   const waiting = cards.filter((c) => c.status === 'open' && (c.action_status === 'voorgesteld' || (c.unread && c.owner_email === user.email))).length
   return (
-    <div data-fill-height className="flex flex-col gap-7 lg:min-h-0 lg:flex-1">
-        <PageHeader eyebrow={waiting ? `${waiting} wacht${waiting > 1 ? 'en' : ''} op je` : 'Werkplek'} title={other ? `Grok Bot · ${other.name} (temp)` : 'Grok Bot'}>
-          {admin && (
-            <nav aria-label="Werkplek van" className="flex flex-wrap gap-1.5">
-              {TEAM.map((t) => {
-                const mine = t.email === user.email
-                const active = mine ? !other : other?.key === t.key
-                return (
-                  <Link key={t.key} href={mine ? '/admin/werkplek' : `/admin/werkplek?voor=${t.key}`} aria-current={active ? 'page' : undefined} className={buttonClass(active ? 'navy' : 'light', true)}>
-                    {mine ? 'Mijn werkplek' : `${t.name} (temp)`}
-                  </Link>
-                )
-              })}
-            </nav>
-          )}
-        </PageHeader>
-        <WorkspaceView cards={cards} names={names} me={user.email} ownerName={owner?.name ?? ''} canOrderFor={other ? other.key : null} />
-    </div>
+    <>
+      <PageHeader eyebrow={waiting ? `${waiting} wacht${waiting > 1 ? 'en' : ''} op je` : 'Werkplek'} title={other ? `Grok Bot · ${other.name} (temp)` : 'Grok Bot'}>
+        {admin && (
+          <nav aria-label="Werkplek van" className="flex flex-wrap gap-1.5">
+            {TEAM.map((t) => {
+              const mine = t.email === user.email
+              const active = mine ? !other : other?.key === t.key
+              return (
+                <Link key={t.key} href={mine ? '/admin/werkplek' : `/admin/werkplek?voor=${t.key}`} aria-current={active ? 'page' : undefined} className={buttonClass(active ? 'navy' : 'light', true)}>
+                  {mine ? 'Mijn werkplek' : `${t.name} (temp)`}
+                </Link>
+              )
+            })}
+          </nav>
+        )}
+      </PageHeader>
+      <WorkspaceView cards={cards} names={names} me={user.email} ownerName={owner?.name ?? ''} canOrderFor={other ? other.key : null} />
+    </>
   )
 }
