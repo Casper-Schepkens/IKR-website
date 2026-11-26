@@ -14,6 +14,7 @@ import { NewTodoForm } from '@/components/admin/weekly/NewTodoForm'
 import { PlanWeeklyForm } from '@/components/admin/weekly/PlanWeeklyForm'
 import { concludeWeeklyAction, finishWeeklyRecordingAction, startWeeklyRecordingAction } from '../../../weekly-actions'
 import { RecordButton } from '@/components/admin/RecordButton'
+import { RecordingPill } from '@/components/admin/recorder/RecordingIndicator'
 import { FirefliesCheck } from '@/components/admin/weekly/FirefliesCheck'
 import { ProductionOnWeekly } from '@/components/admin/weekly/ProductionOnWeekly'
 import { today as todayBrussels, weeklyProduction } from '@/lib/admin/production/service'
@@ -44,6 +45,7 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
         title="Weekly"
       >
         <Pill tone={w.mode === 'online' ? 'teal' : 'purple'}>{w.mode === 'online' ? 'Online' : 'Live'}</Pill>
+        <RecordingPill recKey={`weekly:${w.id}`} />
       </PageHeader>
 
       {w.status === 'concluded' ? (
@@ -57,6 +59,7 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
         <Card className="flex flex-wrap items-center gap-4">
           <span className="text-sm font-semibold">Live: neem de meeting op</span>
           <RecordButton
+            target={{ key: `weekly:${w.id}`, href: `/admin/weekly/${w.id}`, label: `Weekly ${fmtDate(w.starts_at, { day: 'numeric', month: 'short' })}` }}
             startUpload={startWeeklyRecordingAction.bind(null, w.id)}
             finish={finishWeeklyRecordingAction.bind(null, w.id)}
             existingUrl={w.recording_url}
