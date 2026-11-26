@@ -169,11 +169,19 @@ export async function teamAccessToken(member: string, kind: TeamKind): Promise<{
     return { token: t.accessToken, conn }
   } catch (e) {
     if (isRevoked(e)) {
+      // Intussen opnieuw gekoppeld (ander refresh token)? Dan was dit een oude koppeling: de nieuwe niet als kapot markeren.
+      const now = await getRow(member, kind).catch(() => null)
+      if (now && now.refresh_token_enc !== r.refresh_token_enc) return teamAccessToken(member, kind)
       await setStatus(r.member_email, kind, 'opnieuw_koppelen', e instanceof Error ? e.message : String(e))
       throw new Error(`De ${kind === 'mail' ? 'mail' : 'agenda'}-koppeling van ${who} is verlopen of ingetrokken: ${who} moet opnieuw koppelen.`)
     }
     throw e
   }
+}
+
+/** Gecachet access token vergeten (bv. na een 401 van Google: ingetrokken door opnieuw koppelen). */
+export function forgetTeamToken(member: string, kind: TeamKind) {
+  tokenCache().delete(keyOf(member, kind))
 }
 
 /** Dashboard: controleert of een koppeling nog werkt (zet anders "opnieuw koppelen"). */

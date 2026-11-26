@@ -1,7 +1,7 @@
 import 'server-only'
-import { accessToken, isGoogleConfigured, listConnections } from '@/lib/admin/google'
+import { accessToken, forgetAccessToken, isGoogleConfigured, listConnections } from '@/lib/admin/google'
 import { timeout } from '@/lib/admin/http'
-import { teamAccessToken } from '@/lib/admin/team/connections'
+import { forgetTeamToken, teamAccessToken } from '@/lib/admin/team/connections'
 import { inviteAddresses } from '@/lib/admin/team/invites'
 import { CONTACT_EMAIL, ownerOf } from '@/lib/admin/weekly/types'
 import { agendaCalendarFor, type BusySource } from './core'
@@ -29,6 +29,23 @@ type RawEvent = {
   attendees?: { email?: string; self?: boolean; responseStatus?: string }[]
 }
 
+/** Google weigerde het access token (bv. ingetrokken na opnieuw koppelen): token vergeten en één keer opnieuw. */
+export class AuthExpired extends Error {
+  constructor() {
+    super('Google weigerde de toegang tot de agenda. Probeer opnieuw; blijft het, koppel de agenda dan opnieuw.')
+  }
+}
+
+async function retryOn401<T>(fn: () => Promise<T>, forget: () => void): Promise<T> {
+  try {
+    return await fn()
+  } catch (e) {
+    if (!(e instanceof AuthExpired)) throw e
+    forget()
+    return fn()
+  }
+}
+
 /** Events uit één Google-agenda, als bezette blokken. "Vrij" (transparent) en geannuleerd tellen niet. */
 export async function readGoogleBusy(token: string, calendarId: string, from: Date, to: Date, keep: (e: RawEvent) => boolean = () => true): Promise<Busy[]> {
   const out: Busy[] = []
@@ -38,6 +55,7 @@ export async function readGoogleBusy(token: string, calendarId: string, from: Da
     if (pageToken) p.set('pageToken', pageToken)
     const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${p}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store', signal: timeout() })
     const json = (await res.json().catch(() => ({}))) as { items?: RawEvent[]; nextPageToken?: string; error?: { message?: string } }
+    if (res.status === 401) throw new AuthExpired()
     if (!res.ok) throw new Error(`Agenda lezen mislukt: ${json.error?.message ?? res.status}`)
     for (const e of json.items ?? []) {
       if (e.status === 'cancelled' || e.transparency === 'transparent' || !keep(e)) continue
@@ -68,8 +86,10 @@ export const PROVIDERS: Record<string, BusyProvider> = {
       const owner = ownerOf(source.member_email)
       const invites = await inviteAddresses()
       const mine = new Set([source.member_email, owner ? invites[owner] : null].filter((x): x is string => Boolean(x)).map((x) => x.toLowerCase()))
-      const token = await accessToken(CONTACT_EMAIL)
-      return readGoogleBusy(token, 'primary', from, to, (e) => (e.attendees ?? []).some((a) => a.email && mine.has(a.email.toLowerCase())))
+      return retryOn401(
+        async () => readGoogleBusy(await accessToken(CONTACT_EMAIL), 'primary', from, to, (e) => (e.attendees ?? []).some((a) => a.email && mine.has(a.email.toLowerCase()))),
+        () => forgetAccessToken(CONTACT_EMAIL),
+      )
     },
   },
   /** De eigen agenda-koppeling (Mijn koppelingen): mag ook een persoonlijk Google-account zijn. */
@@ -78,12 +98,17 @@ export const PROVIDERS: Record<string, BusyProvider> = {
     description:
       'De agenda van je uitnodigingsadres (waar ook de weeklies en calls naartoe gaan), via je agenda-koppeling in Instellingen → Mijn koppelingen. Mag een persoonlijke Google-agenda zijn. Enkel vrij/bezet wordt gelezen.',
     async read(source, from, to) {
-      const { token, conn } = await teamAccessToken(source.member_email, 'agenda')
       const owner = ownerOf(source.member_email)
       const target = owner ? (await inviteAddresses())[owner] : source.member_email
-      // Altijd de agenda van het uitnodigingsadres; extra agenda's enkel als ze uitdrukkelijk in de bron staan.
-      const ids = [...new Set([agendaCalendarFor(conn, target), ...source.calendar_ids])]
-      return (await Promise.all(ids.map((id) => readGoogleBusy(token, id, from, to)))).flat()
+      return retryOn401(
+        async () => {
+          const { token, conn } = await teamAccessToken(source.member_email, 'agenda')
+          // Altijd de agenda van het uitnodigingsadres; extra agenda's enkel als ze uitdrukkelijk in de bron staan.
+          const ids = [...new Set([agendaCalendarFor(conn, target), ...source.calendar_ids])]
+          return (await Promise.all(ids.map((id) => readGoogleBusy(token, id, from, to)))).flat()
+        },
+        () => forgetTeamToken(source.member_email, 'agenda'),
+      )
     },
   },
 }
