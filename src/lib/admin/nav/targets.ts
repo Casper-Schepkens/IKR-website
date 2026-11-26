@@ -7,6 +7,7 @@ export const PAGES: (NavTarget & { sales?: boolean })[] = [
   { label: 'Cold mails', sub: 'Pagina', href: '/admin/sales/cold-mails', kind: 'pagina', keywords: 'apollo sequences', sales: true },
   { label: 'Inbox', sub: 'Pagina', href: '/admin/sales/inbox', kind: 'pagina', keywords: 'mails antwoorden concepten', sales: true },
   { label: 'Calls', sub: 'Pagina', href: '/admin/sales/calls', kind: 'pagina', keywords: 'sales setter call', sales: true },
+  { label: 'Boekingen', sub: 'Pagina', href: '/admin/boekingen', kind: 'pagina', keywords: 'boek boekingspagina beschikbaarheid weekuren kennismakingscall calendly' },
   { label: 'WhatsApp', sub: 'Pagina', href: '/admin/whatsapp', kind: 'pagina', keywords: 'whatsapp chats gesprekken berichten koppelen', sales: true },
   { label: 'Leads', sub: 'Pagina', href: '/admin/sales', kind: 'pagina', keywords: 'sales funnel', sales: true },
   { label: 'Wachten op antwoord', sub: 'Pagina', href: '/admin/sales/inbox?tab=wachten', kind: 'pagina', keywords: 'opvolgen', sales: true },

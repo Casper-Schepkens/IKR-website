@@ -58,6 +58,8 @@ export type Lead = {
   /** 'YYYY-MM-DD' */
   follow_up_on: string | null
   notes: string | null
+  /** Teamlid dat de lead opvolgt (e-mail); gezet bij een boeking via /boek. */
+  owner?: string | null
   stage_changed_at: string
   created_at: string
   updated_at: string
