@@ -1,4 +1,5 @@
-import { requireAdmin } from '@/lib/admin/session'
+import { canSeeCredentials, requireAdmin, requireCoreTeam } from '@/lib/admin/session'
+import type { ClientCredential } from '@/lib/admin/credentials/types'
 import { contractTone, daysLeft } from '@/lib/admin/clients/types'
 import { isoDay } from '@/lib/admin/format'
 import { Card, Empty, muted, PageHeader, Title } from '@/components/admin/ui'
@@ -13,8 +14,10 @@ export const metadata = { title: 'Klanten' }
 
 /** Overzicht van alle klanten: freelancer en wanneer het contract afloopt (eerst aflopend bovenaan). Klik voor bedragen en contract. */
 export default async function ClientsPage() {
-  const { clients } = await requireAdmin()
+  const { clients, user } = await requireAdmin()
   const list = await clients.list()
+  // Inloggegevens (zonder wachtwoorden): enkel voor Casper, Cédric en Milan.
+  const credentials = canSeeCredentials(user) ? await loadCredentials() : null
   // Voorstellen uit "Leid af uit het contract" (enkel waar er een taak loopt of klaarstaat).
   const proposals = await loadProposals(list).catch(() => new Map())
   const today = isoDay(new Date())
@@ -44,7 +47,7 @@ export default async function ClientsPage() {
             </thead>
             <tbody>
               {list.map((c) => (
-                <ClientRow key={c.id} client={c} days={daysLeft(c, today)} proposal={proposals.get(c.id) ?? null} />
+                <ClientRow key={c.id} client={c} days={daysLeft(c, today)} proposal={proposals.get(c.id) ?? null} credentials={credentials ? (credentials.get(c.id) ?? []) : null} />
               ))}
             </tbody>
           </table>
@@ -59,4 +62,17 @@ export default async function ClientsPage() {
       </Card>
     </>
   )
+}
+
+/** Alle logins per klant, zonder wachtwoorden. Lukt het niet (bv. migratie nog niet toegepast), dan geen sectie. */
+async function loadCredentials(): Promise<Map<string, ClientCredential[]> | null> {
+  try {
+    const { credentials } = await requireCoreTeam()
+    const byClient = new Map<string, ClientCredential[]>()
+    for (const c of await credentials.list()) byClient.set(c.client_id, [...(byClient.get(c.client_id) ?? []), c])
+    return byClient
+  } catch (e) {
+    console.error('[klanten] inloggegevens laden', e instanceof Error ? e.message : 'onbekende fout')
+    return null
+  }
 }

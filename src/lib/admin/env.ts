@@ -32,6 +32,12 @@ export function isAllowedAdminEmail(email: string | null | undefined) {
   return (TEAM_EMAILS as readonly string[]).includes(e) || extra.includes(e)
 }
 
+/** Het vaste team (Casper, Cédric, Milan), zonder extra admins: enkel zij zien de inloggegevens van klanten. */
+export function isCoreTeamEmail(email: string | null | undefined) {
+  const e = email?.trim().toLowerCase()
+  return Boolean(e) && (TEAM_EMAILS as readonly string[]).includes(e!)
+}
+
 /**
  * Casper doet sales (zijn mailbox, zijn concepten, zijn schrijfstijl). Iedereen van het team mag sales zien en
  * gebruiken; dit bepaalt enkel standaarden (startpagina, welke pagina's standaard in het menu staan).
