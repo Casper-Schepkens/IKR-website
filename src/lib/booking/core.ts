@@ -198,3 +198,18 @@ export function cleanPriority(raw: unknown, known: string[]): string[] {
   const out = [...new Set(list.filter((x) => known.includes(x)))]
   return [...out, ...known.filter((k) => !out.includes(k))]
 }
+
+/**
+ * Welke agenda we lezen voor vrij/bezet: altijd die van het uitnodigingsadres (waar ook de weeklies en
+ * calls naartoe gaan; bij Casper zijn persoonlijke agenda). De agenda-koppeling moet die agenda kunnen
+ * zien: ofwel is het hetzelfde Google-account, ofwel staat die agenda in de lijst van het account.
+ */
+export function agendaCalendarFor(conn: { google_email: string; calendars: { id: string }[] }, inviteAddress: string): string {
+  const target = inviteAddress.toLowerCase()
+  if (conn.google_email.toLowerCase() === target) return 'primary'
+  const shared = conn.calendars.find((c) => c.id.toLowerCase() === target)
+  if (shared) return shared.id
+  throw new Error(
+    `Je agenda-koppeling is van ${conn.google_email}, maar je uitnodigingen (weeklies, calls) gaan naar ${inviteAddress}. Koppel in Instellingen → Mijn koppelingen de agenda van ${inviteAddress}.`,
+  )
+}
