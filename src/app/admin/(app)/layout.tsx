@@ -31,7 +31,8 @@ export default async function AdminAppLayout({ children }: { children: React.Rea
     <RecorderProvider>
       <div className="flex min-h-dvh flex-col lg:flex-row">
         <Sidebar name={user.name} email={user.email} demo={mode === 'demo'} sales={isSalesOwner(user.email)} navPrefs={navPrefs} />
-        <main className="flex min-w-0 flex-1 flex-col gap-7 px-4 pt-6 pb-14 sm:px-9">
+        {/* Pagina's met data-fill-height (bv. de werkplek) vullen vanaf lg exact het venster: de pagina scrollt dan niet, hun kolommen wel. */}
+        <main className="flex min-w-0 flex-1 flex-col gap-7 px-4 pt-6 pb-14 sm:px-9 lg:has-[[data-fill-height]]:h-dvh lg:has-[[data-fill-height]]:pb-6">
           <AdminChat initial={chat} />
           <LiveData stamp={stamp} />
           <CommandPalette />
