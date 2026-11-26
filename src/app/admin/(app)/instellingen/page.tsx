@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import { cookies } from 'next/headers'
 import { requireAdmin } from '@/lib/admin/session'
 import { isGoogleConfigured, listConnections } from '@/lib/admin/google'
 import { CONTACT_EMAIL, TEAM } from '@/lib/admin/weekly/types'
@@ -10,6 +11,8 @@ import { StyleProfiles } from './StyleProfiles'
 import { MyConnections } from '@/components/admin/team/MyConnections'
 import { SystemStatusCard } from '@/components/admin/SystemStatusCard'
 import { MenuPages } from '@/components/admin/team/MenuPages'
+import { ThemeSettings } from '@/components/admin/team/ThemeSettings'
+import { parseTheme, THEME_COOKIE } from '@/lib/admin/theme'
 import { VoiceSettings } from '@/components/admin/voice/VoiceSettings'
 import { getNavPrefs } from '@/lib/admin/team/nav-prefs'
 import { EMPTY_NAV, hiddenPages } from '@/lib/admin/team/nav-core'
@@ -23,6 +26,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const { user } = await requireAdmin()
   const [connections, navPrefs] = await Promise.all([listConnections(), getNavPrefs(user.email).catch(() => EMPTY_NAV)])
   const salesOwner = isSalesOwner(user.email)
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value)
   const status = (email: string) => connections.find((c) => c.email === email)
   const rows = [
     ...TEAM.map((t) => ({
@@ -94,6 +98,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       >
         <MyConnections email={user.email} />
       </Suspense>
+      <ThemeSettings initial={theme} />
       <MenuPages hidden={hiddenPages(navPrefs, salesOwner)} salesOwner={salesOwner} />
       {process.env.SUPABASE_SERVICE_ROLE_KEY && (
         <Suspense

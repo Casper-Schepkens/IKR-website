@@ -11,8 +11,6 @@ import { arrangeNav, hiddenPages, type NavPrefs } from '@/lib/admin/team/nav-cor
 import { badge, NOTIFY_PAGES, total } from '@/lib/admin/notifications/core'
 import { useNotifications } from './useNotifications'
 import { RecordingIndicator } from './recorder/RecordingIndicator'
-import { ThemeToggle } from './ThemeToggle'
-import type { AdminTheme } from '@/lib/admin/theme'
 
 type NavItem = { href: string; label: string; icon: (typeof Icon)[keyof typeof Icon]; exact?: boolean }
 
@@ -23,14 +21,12 @@ export function Sidebar({
   demo,
   sales,
   navPrefs,
-  theme,
 }: {
   name: string
   email: string
   demo: boolean
   sales: boolean
   navPrefs: NavPrefs
-  theme: AdminTheme
 }) {
   const pathname = usePathname()
   // Eigen volgorde en vastgepinde items (bewaard per persoon); meteen tonen, op de achtergrond bewaren.
@@ -224,7 +220,6 @@ export function Sidebar({
             <span className="truncate text-xs text-[#B9B2C9]">{email}</span>
           </div>
         </div>
-        <ThemeToggle initial={theme} />
         {!demo && (
           <form action={signOutAction}>
             <button type="submit" className="text-xs text-[#B9B2C9] underline hover:text-ikr-cream-light">

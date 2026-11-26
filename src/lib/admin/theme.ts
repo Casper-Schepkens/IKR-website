@@ -7,6 +7,3 @@ export function parseTheme(value: string | undefined | null): AdminTheme {
   return value === 'light' || value === 'dark' ? value : 'system'
 }
 
-export function nextTheme(t: AdminTheme): AdminTheme {
-  return THEMES[(THEMES.indexOf(t) + 1) % THEMES.length]
-}
