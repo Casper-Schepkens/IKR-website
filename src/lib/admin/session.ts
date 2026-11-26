@@ -2,7 +2,7 @@ import 'server-only'
 import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { connection } from 'next/server'
-import { isAllowedAdminEmail, isDemoMode, isSupabaseConfigured, SALES_EMAIL } from './env'
+import { isAllowedAdminEmail, isCoreTeamEmail, isDemoMode, isSupabaseConfigured, SALES_EMAIL } from './env'
 import { createServerSupabase } from './supabase/server'
 import { memoryLeads, supabaseLeads, type LeadsRepo } from './sales/repo'
 import { memoryWeekly, supabaseWeekly, type WeeklyRepo } from './weekly/repo'
@@ -14,6 +14,7 @@ import { memoryProduction, supabaseProduction, type ProductionRepo } from './pro
 import { demoDrafts, supabaseDrafts, type DraftsRepo } from './sales/drafts'
 import { demoChat, supabaseChat, type ChatRepo } from './chat/repo'
 import { createServiceSupabase } from './supabase/server'
+import { memoryCredentials, supabaseCredentials, type CredentialsRepo } from './credentials/repo'
 
 export type AdminUser = { id: string; email: string; name: string }
 
@@ -99,4 +100,19 @@ export const requireAdmin = cache(async (): Promise<AdminSession> => {
 /** Sales-onderdelen: elk teamlid (de pagina's staan standaard enkel in het menu van Casper). */
 export async function requireSales() {
   return requireAdmin()
+}
+
+/** Mag deze gebruiker de inloggegevens van klanten zien? Enkel het vaste team (Casper, Cédric, Milan). */
+export const canSeeCredentials = (user: AdminUser) => isCoreTeamEmail(user.email)
+
+/**
+ * Inloggegevens van klanten: enkel het vaste team. Bewust niet in AdminSession, zodat de MCP-tools en Grok Bot
+ * (die met een AdminSession werken) er nooit bij kunnen. In Supabase met de sessie van de gebruiker zelf (RLS
+ * is_core_team()), nooit met de service role.
+ */
+export async function requireCoreTeam(): Promise<{ user: AdminUser; credentials: CredentialsRepo }> {
+  const { user, mode } = await requireAdmin()
+  if (!canSeeCredentials(user)) throw new Error('Enkel Casper, Cédric en Milan kunnen inloggegevens van klanten zien.')
+  if (mode === 'demo') return { user, credentials: memoryCredentials() }
+  return { user, credentials: supabaseCredentials(await createServerSupabase()) }
 }

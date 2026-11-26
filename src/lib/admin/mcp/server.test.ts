@@ -573,3 +573,23 @@ describe('whatsapp via MCP (read-only)', () => {
     expect((await call('whatsapp_gesprekken', { lead_id: leadId, klant_id: klant.id })).isError).toBe(true)
   })
 })
+
+describe('inloggegevens van klanten via MCP', () => {
+  it('geen tool voor inloggegevens, en klanten_lijst geeft ze niet terug', async () => {
+    vi.stubEnv('IKR_CREDENTIALS_KEY', 'MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=')
+    ;(globalThis as { __ikrCredentials?: unknown }).__ikrCredentials = []
+    const { memoryCredentials } = await import('../credentials/repo')
+    const klant = await session.clients.create({ name: 'Bakkerij Login', freelancer: null, contract_end: null, contract_indefinite: false }, 'casper@iknowright.be')
+    await memoryCredentials().create(klant.id, { platform: 'TikTok', username: 'geheime-gebruiker', password: 'Zeer-Geheim-42', note: '2FA via Milan' }, 'casper@iknowright.be')
+
+    const tools = (await client.listTools()).tools
+    expect(tools.filter((t) => /inlog|wachtwoord|password|credential|login/i.test(`${t.name} ${t.description}`)).map((t) => t.name)).toEqual([])
+    // De sessie van de bot heeft geen toegang tot de inloggegevens.
+    expect(Object.keys(session)).not.toContain('credentials')
+
+    const r = await call('klanten_lijst', {})
+    expect(r.text).toContain('Bakkerij Login')
+    expect(r.text).not.toMatch(/Zeer-Geheim-42|geheime-gebruiker|password|wachtwoord|c1\./i)
+    vi.unstubAllEnvs()
+  })
+})
