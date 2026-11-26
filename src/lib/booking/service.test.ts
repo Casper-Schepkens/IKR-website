@@ -286,7 +286,8 @@ describe('agenda van het uitnodigingsadres', () => {
     // Cédric: koppeling en uitnodigingsadres zijn hetzelfde account.
     expect(agendaCalendarFor({ google_email: 'cedric@iknowright.be', calendars: [] }, 'cedric@iknowright.be')).toBe('primary')
     // Casper: uitnodigingen gaan naar tandloosispam; een koppeling met casper@ zonder die agenda is niet goed.
-    expect(() => agendaCalendarFor({ google_email: 'casper@iknowright.be', calendars: [{ id: 'casper@iknowright.be' }] }, 'tandloosispam@gmail.com')).toThrow(/tandloosispam@gmail\.com/)
+    // Niet in de lijst: toch rechtstreeks proberen (gedeeld maar verborgen of niet geabonneerd).
+    expect(agendaCalendarFor({ google_email: 'casper@iknowright.be', calendars: [{ id: 'casper@iknowright.be' }] }, 'tandloosispam@gmail.com')).toBe('tandloosispam@gmail.com')
     // ...met tandloosispam zelf gekoppeld, of gedeeld met casper@: wel goed.
     expect(agendaCalendarFor({ google_email: 'tandloosispam@gmail.com', calendars: [] }, 'tandloosispam@gmail.com')).toBe('primary')
     expect(agendaCalendarFor({ google_email: 'casper@iknowright.be', calendars: [{ id: 'tandloosispam@gmail.com' }] }, 'tandloosispam@gmail.com')).toBe('tandloosispam@gmail.com')
