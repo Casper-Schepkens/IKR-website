@@ -459,14 +459,17 @@ export async function ensureDrivePath(owner: string, path: string[]): Promise<st
   return parent!
 }
 
-/** Tekst als Google Doc in een map (ook in een gedeelde drive); geeft de link terug. */
-export async function createDocInFolder(owner: string, folderId: string, name: string, text: string) {
+/**
+ * Tekst als Google Doc in een map (ook in een gedeelde drive); geeft de link terug.
+ * Met `source: 'text/markdown'` zet Drive markdown om naar opmaak (koppen, lijsten, klikbare links).
+ */
+export async function createDocInFolder(owner: string, folderId: string, name: string, text: string, source: 'text/plain' | 'text/markdown' = 'text/plain') {
   const at = await accessToken(owner)
   const boundary = `ikr${crypto.randomUUID()}`
   const meta = JSON.stringify({ name, parents: [folderId], mimeType: 'application/vnd.google-apps.document' })
   const body =
     `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n` +
-    `--${boundary}\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n${text}\r\n--${boundary}--`
+    `--${boundary}\r\nContent-Type: ${source}; charset=UTF-8\r\n\r\n${text}\r\n--${boundary}--`
   const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true&fields=id,webViewLink', {
     method: 'POST',
     headers: { Authorization: `Bearer ${at}`, 'Content-Type': `multipart/related; boundary=${boundary}` },
@@ -474,7 +477,7 @@ export async function createDocInFolder(owner: string, folderId: string, name: s
     cache: 'no-store', signal: timeout(WRITE_TIMEOUT_MS),
   })
   const json = (await res.json()) as { id?: string; webViewLink?: string; error?: { message?: string } }
-  if (!json.id) throw new Error(`Transcript in de Drive zetten mislukt: ${json.error?.message ?? res.status}`)
+  if (!json.id) throw new Error(`Doc in de Drive zetten mislukt: ${json.error?.message ?? res.status}`)
   return json.webViewLink ?? `https://docs.google.com/document/d/${json.id}/edit`
 }
 

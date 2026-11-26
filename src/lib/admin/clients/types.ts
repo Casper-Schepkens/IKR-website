@@ -19,12 +19,40 @@ export type Client = {
   /** Link naar het contract in de Drive en de laatste "leid af uit het contract"-taak. */
   contract_url?: string | null
   contract_job_id?: string | null
+  /** Klantfiche (voor Grok Bot): doel van de content, niche, doelgroep, wat er beschikbaar is (locatie, producten, mensen). */
+  content_goal?: string | null
+  niche?: string | null
+  audience?: string | null
+  available?: string | null
+  /** Map van de klant in de IKR-Drive (id). */
+  drive_folder_id?: string | null
   created_by: string | null
   created_at: string
   updated_at: string
 }
 export type ClientInput = Pick<Client, 'name' | 'freelancer' | 'contract_end' | 'contract_indefinite'> &
-  Partial<Pick<Client, 'contract_start' | 'monthly_fee' | 'freelancer_cost' | 'boosting_budget' | 'bank_name' | 'contract_url' | 'contract_job_id'>>
+  Partial<Pick<Client, 'contract_start' | 'monthly_fee' | 'freelancer_cost' | 'boosting_budget' | 'bank_name' | 'contract_url' | 'contract_job_id' | ClientFicheField>>
+
+export const CLIENT_FICHE_FIELDS = ['content_goal', 'niche', 'audience', 'available', 'drive_folder_id'] as const
+export type ClientFicheField = (typeof CLIENT_FICHE_FIELDS)[number]
+
+/** Velden van de klantfiche opkuisen (leeg = wissen, niet meegegeven = ongemoeid). */
+export function cleanClientFiche(raw: Partial<Record<ClientFicheField, string | null>>): Partial<Record<ClientFicheField, string | null>> {
+  const out: Partial<Record<ClientFicheField, string | null>> = {}
+  const max: Record<ClientFicheField, number> = { content_goal: 2000, niche: 500, audience: 2000, available: 2000, drive_folder_id: 200 }
+  for (const k of CLIENT_FICHE_FIELDS) {
+    const v = raw[k]
+    if (v === undefined) continue
+    let t = v?.trim() || null
+    if (t && k === 'drive_folder_id') {
+      // Ook een Drive-link aanvaarden: https://drive.google.com/drive/folders/<id>
+      t = t.match(/folders\/([\w-]{10,})/)?.[1] ?? t
+      if (!/^[\w-]{10,}$/.test(t)) throw new Error('Drive-map: geef het map-id of de link naar de map.')
+    }
+    out[k] = t ? t.slice(0, max[k]) : null
+  }
+  return out
+}
 
 /** Hoeveel dagen het contract nog loopt (negatief = verlopen), of null zonder einddatum of bij onbepaalde duur. */
 export const daysLeft = (c: Pick<Client, 'contract_end'> & { contract_indefinite?: boolean }, today: string) =>

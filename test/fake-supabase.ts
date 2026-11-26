@@ -6,7 +6,13 @@
 type Row = Record<string, unknown>
 type Filter = (r: Row) => boolean
 
-export function fakeSupabase(seed: Record<string, Row[]> = {}) {
+/**
+ * Optioneel, zoals in de echte database: standaardwaarden per tabel (bv. status 'pending') en unieke
+ * sleutels (bv. ai_jobs (type, ref)); een insert die een unieke sleutel schendt geeft een fout.
+ */
+export type FakeOptions = { defaults?: Record<string, Row>; unique?: Record<string, string[][]> }
+
+export function fakeSupabase(seed: Record<string, Row[]> = {}, opts: FakeOptions = {}) {
   const tables: Record<string, Row[]> = Object.fromEntries(Object.entries(seed).map(([k, v]) => [k, v.map((r) => ({ ...r }))]))
   const table = (name: string) => (tables[name] ??= [])
 
@@ -123,7 +129,9 @@ export function fakeSupabase(seed: Record<string, Row[]> = {}) {
       if (op === 'insert' || op === 'upsert') {
         const list = (Array.isArray(payload) ? payload : [payload]) as Row[]
         for (const p of list) {
-          const row = { id: crypto.randomUUID(), created_at: new Date().toISOString(), ...p }
+          const row: Row = { id: crypto.randomUUID(), created_at: new Date().toISOString(), ...opts.defaults?.[name], ...p }
+          const clash = op === 'insert' && (opts.unique?.[name] ?? []).find((cols) => cols.every((c) => row[c] != null) && rows.some((r) => cols.every((c) => r[c] === row[c])))
+          if (clash) return { data: null, error: { message: `duplicate key value violates unique constraint (${clash.join(', ')})` } }
           const key = op === 'upsert' ? Object.keys(p).find((k) => k === 'id' || k === 'key' || k === 'email') : undefined
           const existing = key ? rows.find((r) => r[key] === p[key]) : undefined
           if (existing) Object.assign(existing, p)

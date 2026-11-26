@@ -19,15 +19,12 @@ export async function kickJobs(ids: string[]) {
   if (!ids.length) return
   try {
     const engine = aiEngine()
-    if (engine === 'api') {
-      await runLimited(ids)
-      return
-    }
     // Taken zonder tools (tekst van buitenaf) via de API; de rest naar Grokbot of de worker.
+    // Ook met engine 'api' gaan taken die tools nodig hebben (ideeendoc) naar Grokbot.
     const jobs = await Promise.all(ids.map((id) => getJob(id)))
     const viaApi = jobs.filter((j) => j && aiEngine(j.type) === 'api').map((j) => j!.id)
     await runLimited(viaApi)
-    const rest = ids.filter((id) => !viaApi.includes(id))
+    const rest = jobs.filter((j) => j && !viaApi.includes(j.id)).map((j) => j!.id)
     if (engine === 'worker' || !rest.length) return
     const reason = await notifyGrok(rest)
     if (reason === true) return

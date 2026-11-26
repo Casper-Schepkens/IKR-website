@@ -51,4 +51,14 @@ describe('Grok onbereikbaar', () => {
     expect(db.current.tables.ai_jobs[0].status).toBe('pending')
     expect(db.current.tables.bot_actions ?? []).toHaveLength(0)
   })
+
+  it('ideeendoc gaat ook met engine api naar Grok Bot (de API heeft geen Drive-tools)', async () => {
+    delete process.env.IKR_AI_ENGINE
+    process.env.ANTHROPIC_API_KEY = 'x'
+    db.current = fakeSupabase({ ai_jobs: [job('J5', 'ideeendoc', {})] })
+    notify.notifyGrok.mockReset().mockResolvedValue(true)
+    await kickJobs(['J5'])
+    expect(notify.notifyGrok).toHaveBeenCalledWith(['J5'])
+    expect(db.current.tables.ai_jobs[0].status).toBe('pending')
+  })
 })
