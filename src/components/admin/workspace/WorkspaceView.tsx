@@ -70,7 +70,7 @@ export function WorkspaceView({ cards, names, me, ownerName, canOrderFor }: { ca
             </button>
           ))}
         </div>
-        <div className="lg:sticky lg:top-24 lg:self-start">{sel ? <CardDetail key={sel.id} card={sel} names={names} me={me} /> : <p className={cn('m-0 hidden text-sm lg:block', muted)}>Kies een kaart om ze te openen en verder te praten.</p>}</div>
+        <div>{sel ? <CardDetail key={sel.id} card={sel} names={names} me={me} /> : <p className={cn('m-0 hidden text-sm lg:block', muted)}>Kies een kaart om ze te openen en verder te praten.</p>}</div>
       </div>
     </>
   )
