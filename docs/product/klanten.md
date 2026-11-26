@@ -21,6 +21,22 @@
   als verlopen). Voorbeeld Tempus: onbepaalde duur vanaf 1/11/2026 met 2 maanden opzeg (start en opzeg
   worden nog niet bijgehouden; kandidaat-velden voor de klantfiche).
 
+## Inloggegevens (26 nov 2026)
+Op elk klantprofiel een sectie **Inloggegevens**: per login platform (TikTok, Instagram, Meta Business,
+...), gebruikersnaam/e-mail, wachtwoord, notitie (bv. "2FA via Milans gsm") en laatst gewijzigd door/op.
+Meerdere logins per klant. Wachtwoord standaard gemaskeerd met **Toon** (verbergt zichzelf na 30 s) en
+**Kopieer**; toevoegen, aanpassen (leeg wachtwoordveld = ongewijzigd) en verwijderen met bevestiging.
+
+- Tabel `klant_inloggegevens` (migratie `20261126000300`), `on delete cascade` met de klant.
+- **Enkel Casper, Cédric en Milan** (RLS `is_core_team()`: vast team én actief in `team_members`; ook
+  niet voor extra admins via `IKR_EXTRA_ADMIN_EMAILS`). Andere gebruikers zien de sectie niet.
+- **Versleuteld** in de app (AES-256-GCM, sleutel `IKR_CREDENTIALS_KEY`, rij-id als AAD); de database
+  weigert alles wat niet versleuteld is. De lijst haalt het wachtwoord niet op; enkel "Toon"/"Kopieer"
+  vraagt er één op bij de server.
+- **Niet voor Grok Bot / MCP**: geen tool, en `klanten_lijst` e.d. geven niets van de logins terug.
+- Instellen: `IKR_CREDENTIALS_KEY` = `openssl rand -base64 32` in Vercel (Production + Preview,
+  Sensitive). Sleutel kwijt of gewijzigd = bewaarde wachtwoorden onleesbaar (opnieuw invullen).
+
 ## Context uit eerder werk
 - In v1 (PR #29, gewist op 2 nov) stonden contracten in Supabase, bijgewerkt uit de Drive:
   Tempus (nieuw contract vanaf 1/11/2026), Chez Albert (€1.500/mnd), Wasbar en Lilalou (concept),

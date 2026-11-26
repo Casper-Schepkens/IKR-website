@@ -9,6 +9,8 @@ import { fmtDate } from '@/lib/admin/format'
 import { FormAction } from '../FormAction'
 import { buttonClass, muted, Pill, Spinner } from '../ui'
 import { ClientFields } from './ClientFields'
+import { ClientCredentials } from './ClientCredentials'
+import type { ClientCredential } from '@/lib/admin/credentials/types'
 import { cn } from '@/utilities/ui'
 
 const RED = 'bg-adm-red-bg text-adm-red'
@@ -30,7 +32,18 @@ function DaysPill({ days }: { days: number | null }) {
  * Eén klant: in de lijst enkel freelancer, contract en hoe lang nog. Klikken toont alle gegevens
  * (bedragen, contract) met aanpassen, verwijderen en "Leid af uit het contract".
  */
-export function ClientRow({ client: c, days, proposal }: { client: Client; days: number | null; proposal: ContractProposal | null }) {
+export function ClientRow({
+  client: c,
+  days,
+  proposal,
+  credentials,
+}: {
+  client: Client
+  days: number | null
+  proposal: ContractProposal | null
+  /** null = deze gebruiker mag geen inloggegevens zien (geen sectie). */
+  credentials: ClientCredential[] | null
+}) {
   // "Ga naar klant X" (?klant=id): openklappen en ernaartoe scrollen.
   const focus = useSearchParams().get('klant') === c.id
   const rowRef = useRef<HTMLTableRowElement>(null)
@@ -76,7 +89,7 @@ export function ClientRow({ client: c, days, proposal }: { client: Client; days:
       {open && (
         <tr id={detailId} className="bg-adm-soft/50">
           <td colSpan={4} className="px-6 pt-1 pb-5">
-            <ClientDetail client={c} proposal={proposal} />
+            <ClientDetail client={c} proposal={proposal} credentials={credentials} />
           </td>
         </tr>
       )}
@@ -94,7 +107,7 @@ function Fact({ label, value, hint }: { label: string; value: React.ReactNode; h
   )
 }
 
-function ClientDetail({ client: c, proposal }: { client: Client; proposal: ContractProposal | null }) {
+function ClientDetail({ client: c, proposal, credentials }: { client: Client; proposal: ContractProposal | null; credentials: ClientCredential[] | null }) {
   const [editing, setEditing] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [pending, start] = useTransition()
@@ -145,6 +158,8 @@ function ClientDetail({ client: c, proposal }: { client: Client; proposal: Contr
       </div>
 
       <ProposalPanel client={c} proposal={proposal} pending={pending} run={run} />
+
+      {credentials && <ClientCredentials clientId={c.id} clientName={c.name} credentials={credentials} />}
 
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" disabled={pending || busy} onClick={() => run(() => deriveContractAction(c.id))} className={buttonClass('navy', true)}>

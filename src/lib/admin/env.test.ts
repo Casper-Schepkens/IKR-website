@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { isAllowedAdminEmail, isDemoMode } from './env'
+import { isAllowedAdminEmail, isCoreTeamEmail, isDemoMode } from './env'
 
 afterEach(() => {
   delete process.env.IKR_EXTRA_ADMIN_EMAILS
@@ -19,6 +19,14 @@ describe('wie mag in /admin', () => {
   it('extra adressen via IKR_EXTRA_ADMIN_EMAILS', () => {
     process.env.IKR_EXTRA_ADMIN_EMAILS = 'stagiair@iknowright.be, x@y.be'
     expect(isAllowedAdminEmail('stagiair@iknowright.be')).toBe(true)
+  })
+  it('inloggegevens van klanten: enkel het vaste team, ook niet de extra adressen', () => {
+    process.env.IKR_EXTRA_ADMIN_EMAILS = 'stagiair@iknowright.be'
+    expect(isCoreTeamEmail('Milan@iknowright.be')).toBe(true)
+    expect(isCoreTeamEmail('cedric@iknowright.be')).toBe(true)
+    expect(isCoreTeamEmail('stagiair@iknowright.be')).toBe(false)
+    expect(isCoreTeamEmail('freelancer@gmail.com')).toBe(false)
+    expect(isCoreTeamEmail(null)).toBe(false)
   })
   it('demomodus nooit op Vercel', () => {
     process.env.IKR_ADMIN_DEMO = 'true'

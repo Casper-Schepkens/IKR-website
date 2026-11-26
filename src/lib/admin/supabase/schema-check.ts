@@ -11,6 +11,7 @@ import type { Client } from '../clients/types'
 import type { Freelancer, Score } from '../freelancers/types'
 import type { Card, CardStatus } from '../workspace/types'
 import type { AiJob } from '../ai/jobs'
+import type { ClientCredential } from '../credentials/types'
 
 /** Exact gelijk (beide richtingen). */
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false
@@ -26,6 +27,7 @@ export const schemaChecks = [
   ok<KnownColumns<Freelancer, Columns<'freelancers'>>>(true),
   ok<KnownColumns<Card, Columns<'bot_cards'>>>(true),
   ok<KnownColumns<AiJob, Columns<'ai_jobs'>>>(true),
+  ok<KnownColumns<ClientCredential, Columns<'klant_inloggegevens'>>>(true),
   ok<Same<Stage, CheckValues<'leads.stage'>>>(true),
   ok<Same<Source, CheckValues<'leads.source'>>>(true),
   ok<Same<LostReason, CheckValues<'leads.lost_reason'>>>(true),
