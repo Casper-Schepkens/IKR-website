@@ -207,3 +207,27 @@ export function groupByDay(slots: Pick<Slot, 'start'>[]) {
   }
   return [...days.entries()].map(([day, starts]) => ({ day, starts }))
 }
+
+/**
+ * Agenda-afspraken die in de beschikbaarheid van een teamlid vallen (tussen nu en de horizon). Die
+ * momenten verdwijnen vanzelf van /boek als vrij/bezet aan staat; dit lijstje maakt het zichtbaar
+ * (bv. "woensdag 13:00-15:00 staat open in je weekuren, maar je agenda zegt bezet").
+ * Geeft enkel het overlappende deel terug, samengevoegd.
+ */
+export function availabilityConflicts(m: Pick<MemberAvailability, 'weekly' | 'exceptions'>, calendarBusy: Busy[], o: Pick<SlotOptions, 'now' | 'horizonDays'>): Busy[] {
+  const { first, last } = bookableDays(o.now, o.horizonDays)
+  const nowMs = o.now.getTime()
+  const out: Range[] = []
+  for (let day = first; day <= last; day = addDays(day, 1)) {
+    for (const [a, b] of dayWindows(day, m.weekly, m.exceptions)) {
+      const ws = Math.max(localToUtc(day, a), nowMs)
+      const we = localToUtc(day, b)
+      for (const x of calendarBusy) {
+        const s = Math.max(ws, x.start)
+        const e = Math.min(we, x.end)
+        if (e > s) out.push([s, e])
+      }
+    }
+  }
+  return merge(out).map(([start, end]) => ({ start, end }))
+}

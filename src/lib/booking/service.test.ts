@@ -85,7 +85,7 @@ describe('publieke slots', () => {
 
   it('vrij/bezet uit de agenda telt enkel als het aan staat', async () => {
     await setHours(CASPER)
-    await store.setSource(CASPER, 'team_agenda', true)
+    await store.saveMember(CASPER, { use_busy: false })
     const busy = async () => [{ start: localToUtc('2026-12-03', 600), end: localToUtc('2026-12-03', 720) }]
     expect((await publicSlots(deps({ readBusy: busy }))).days[0].day).toBe('2026-12-03')
     await store.saveMember(CASPER, { use_busy: true })
@@ -96,11 +96,40 @@ describe('publieke slots', () => {
   it('kan een agenda niet gelezen worden, dan telt dat teamlid even niet mee (en de fout wordt bewaard)', async () => {
     await setHours(CASPER)
     await setHours(MILAN, '14:00', '15:00')
-    await store.setSource(CASPER, 'team_agenda', true)
-    await store.saveMember(CASPER, { use_busy: true })
+    await store.saveMember(MILAN, { use_busy: false })
     const a = await loadAvailability(deps({ readBusy: async () => Promise.reject(new Error('verlopen')) }))
     expect(a.members.map((m) => m.email)).toEqual([MILAN])
     expect((await store.loadConfig()).members.find((m) => m.member_email === CASPER)?.busy_error).toBe('verlopen')
+  })
+})
+
+describe('vrij/bezet standaard aan en strikt', () => {
+  it('Cédric vergat woensdag 13:00-15:00 te schrappen, maar het staat in zijn agenda: daar kan geen lead boeken', async () => {
+    await store.saveWeekly(CEDRIC, [{ weekday: 3, start: '13:00', end: '17:00' }])
+    const busy = async () => [{ start: localToUtc('2026-12-09', 780), end: localToUtc('2026-12-09', 900) }]
+    const d = deps({ readBusy: busy })
+    const day = (await publicSlots(d)).days.find((x) => x.day === '2026-12-09')!
+    expect(day.starts.map((s) => fmtTime(s))[0]).toBe('15:00')
+    await expect(bookSlot(d, form({ start: new Date(localToUtc('2026-12-09', 810)).toISOString() }), { ipHash: null })).rejects.toMatchObject({ code: 'taken' })
+  })
+  it('geen agenda aangevinkt of geen koppeling: geen boekingen (liever geen lead dan een dubbele afspraak)', async () => {
+    await setHours(CEDRIC)
+    await store.setSource(CEDRIC, 'contact_agenda', false)
+    await store.setSource(CEDRIC, 'team_agenda', false)
+    expect((await publicSlots(deps())).days).toEqual([])
+    await store.setSource(CEDRIC, 'team_agenda', true)
+    clearBusyCache()
+    expect((await publicSlots(deps({ readBusy: async () => Promise.reject(new Error('Cedric heeft nog geen agenda gekoppeld')) }))).days).toEqual([])
+  })
+  it('agenda-check en weekmail tonen de botsing', async () => {
+    const { agendaCheck, weeklyCheckMail } = await import('./check')
+    await store.saveWeekly(CEDRIC, [{ weekday: 3, start: '13:00', end: '17:00' }])
+    const r = (await agendaCheck(deps({ readBusy: async () => [{ start: localToUtc('2026-12-09', 780), end: localToUtc('2026-12-09', 900) }] }), { member: CEDRIC, fresh: true }))[0]
+    expect(r.conflicts.length).toBe(1)
+    const mail = weeklyCheckMail(r, 21)
+    expect(mail.to).toBe(CEDRIC)
+    expect(mail.subject).toBe('Check je beschikbaarheid op /boek')
+    expect(mail.text).toContain('woensdag 9 december 13:00–15:00')
   })
 })
 

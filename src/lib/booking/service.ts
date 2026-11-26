@@ -47,6 +47,30 @@ const defaultReadBusy = (_member: string, sources: BusySource[], from: Date, to:
 /** Of een teamlid meedoet: actief en ergens beschikbaarheid ingesteld. */
 const takesBookings = (m: BookingMember) => m.active && (m.weekly.length > 0 || m.exceptions.some((e) => e.kind === 'add'))
 
+/**
+ * Bezet volgens de agenda's van één teamlid (met cache). Staat vrij/bezet aan, dan is het strikt:
+ * geen leesbare agenda = { ok: false } en dat teamlid krijgt geen boekingen.
+ */
+export async function memberCalendarBusy(deps: BookingDeps, m: BookingMember, from: Date, to: Date, fresh: boolean): Promise<{ ok: true; busy: Busy[] } | { ok: false; error: string }> {
+  if (!m.use_busy) return { ok: true, busy: [] }
+  const sources = m.sources.filter((s) => s.active)
+  const fail = async (error: string) => {
+    if (m.busy_error !== error) await deps.store.setBusyStatus(m.member_email, error).catch(() => undefined)
+    return { ok: false as const, error }
+  }
+  if (!sources.length) return fail('Vrij/bezet staat aan, maar er is geen agenda aangevinkt.')
+  const hit = busyCache().get(m.member_email)
+  if (!fresh && hit && hit.until > Date.now()) return { ok: true, busy: hit.busy }
+  try {
+    const busy = await (deps.readBusy ?? defaultReadBusy)(m.member_email, sources, from, to)
+    busyCache().set(m.member_email, { until: Date.now() + BUSY_TTL_MS, busy })
+    if (m.busy_error) await deps.store.setBusyStatus(m.member_email, null).catch(() => undefined)
+    return { ok: true, busy }
+  } catch (e) {
+    return fail(e instanceof Error ? e.message : String(e))
+  }
+}
+
 export type Availability = { config: BookingConfig; members: MemberAvailability[]; options: SlotOptions; busyErrors: Record<string, string> }
 
 /**
@@ -68,30 +92,16 @@ export async function loadAvailability(deps: BookingDeps, opts: { fresh?: boolea
   const from = new Date(now.getTime() - 3_600_000)
   const to = new Date(`${addDays(last, 2)}T00:00:00Z`)
   const dbBusy = await deps.store.dbBusy(from, to)
-  const readBusy = deps.readBusy ?? defaultReadBusy
   const busyErrors: Record<string, string> = {}
   const members: MemberAvailability[] = []
   await Promise.all(
     config.members.filter(takesBookings).map(async (m) => {
-      let calendarBusy: Busy[] = []
-      const sources = m.sources.filter((s) => s.active)
-      if (m.use_busy && sources.length) {
-        const key = m.member_email
-        const hit = busyCache().get(key)
-        if (!opts.fresh && hit && hit.until > Date.now()) calendarBusy = hit.busy
-        else {
-          try {
-            calendarBusy = await readBusy(m.member_email, sources, from, to)
-            busyCache().set(key, { until: Date.now() + BUSY_TTL_MS, busy: calendarBusy })
-            if (m.busy_error) await deps.store.setBusyStatus(m.member_email, null).catch(() => undefined)
-          } catch (e) {
-            const msg = e instanceof Error ? e.message : String(e)
-            busyErrors[m.member_email] = msg
-            if (m.busy_error !== msg) await deps.store.setBusyStatus(m.member_email, msg).catch(() => undefined)
-            return
-          }
-        }
+      const cal = await memberCalendarBusy(deps, m, from, to, Boolean(opts.fresh))
+      if (!cal.ok) {
+        busyErrors[m.member_email] = cal.error
+        return
       }
+      const calendarBusy = cal.busy
       members.push({
         email: m.member_email,
         weekly: m.weekly,

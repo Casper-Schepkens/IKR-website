@@ -7,6 +7,7 @@ export const CRONS = [
   { key: 'weekly_transcripts', label: 'Transcripts en opnames (dagelijks 07:00)', everyHours: 24 },
   { key: 'style_profiles', label: 'Schrijfstijlprofiel (maandag 06:30)', everyHours: 24 * 7 },
   { key: 'ideeendocs', label: 'Ideeëndoc na een draaidag (dagelijks 07:15)', everyHours: 24 },
+  { key: 'boekingen_check', label: 'Agenda-check voor /boek (maandag 07:45)', everyHours: 24 * 7 },
 ] as const
 
 export type CronStatus = { key: string; label: string; lastRun: string | null; ok: boolean | null; error: string | null; late: boolean }

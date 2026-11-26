@@ -163,3 +163,23 @@ describe('toewijzing: Casper > Cédric > Milan', () => {
     expect(candidatesFor(new Date(at('2026-12-03', '10:05')).toISOString(), [member(CASPER, { weekly: block })], opts())).toEqual([])
   })
 })
+
+describe('agenda-check: weekuren tegenover de agenda', () => {
+  it('Cedric heeft woensdag 13:00-15:00 iets in zijn agenda, binnen zijn weekuren: dat wordt gemeld en geen slot', async () => {
+    const { availabilityConflicts } = await import('./slots')
+    const weekly = [{ weekday: 3 as const, start: '13:00', end: '17:00' }]
+    const busy = [{ start: at('2026-12-09', '13:00'), end: at('2026-12-09', '15:00') }, { start: at('2026-12-09', '18:00'), end: at('2026-12-09', '19:00') }]
+    const c = availabilityConflicts({ weekly, exceptions: [] }, busy, opts())
+    expect(c.map((x) => [isoDay(new Date(x.start)), fmtTime(new Date(x.start)), fmtTime(new Date(x.end))])).toEqual([['2026-12-09', '13:00', '15:00']])
+    const starts = times(memberStartsOnDay('2026-12-09', member(CEDRIC, { weekly, busy }), opts()))
+    expect(starts[0]).toBe('15:00')
+    expect(starts.some((t) => t < '15:00')).toBe(false)
+  })
+  it('een afspraak die deels in het blok valt: enkel dat deel', async () => {
+    const { availabilityConflicts } = await import('./slots')
+    const weekly = [{ weekday: 4 as const, start: '10:00', end: '12:00' }]
+    const c = availabilityConflicts({ weekly, exceptions: [] }, [{ start: at('2026-12-03', '09:00'), end: at('2026-12-03', '10:30') }], opts())
+    expect(c.map((x) => fmtTime(new Date(x.end)))).toEqual(['10:30'])
+    expect(c.map((x) => fmtTime(new Date(x.start)))).toEqual(['10:00'])
+  })
+})

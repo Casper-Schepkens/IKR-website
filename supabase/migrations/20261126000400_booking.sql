@@ -42,8 +42,9 @@ create table if not exists public.booking_members (
   active boolean not null default true,
   -- Leeg = het IKR-adres van het teamlid.
   notify_email text check (notify_email is null or notify_email ~ '^[^\s@]+@[^\s@]+\.[^\s@]+$'),
-  -- Vrij/bezet lezen uit de gekoppelde agenda's (booking_busy_sources).
-  use_busy boolean not null default false,
+  -- Vrij/bezet lezen uit de gekoppelde agenda's (booking_busy_sources). Standaard aan en strikt: is de
+  -- agenda niet leesbaar, dan krijgt dit teamlid geen boekingen (liever geen lead dan een dubbele afspraak).
+  use_busy boolean not null default true,
   busy_error text,
   busy_checked_at timestamptz,
   updated_at timestamptz not null default now()
@@ -99,6 +100,11 @@ create table if not exists public.booking_busy_sources (
   created_at timestamptz not null default now(),
   unique (member_email, provider, account_email)
 );
+
+-- Standaard: de contact-agenda (weeklies, calls) en de eigen agenda-koppeling van elk teamlid.
+insert into public.booking_busy_sources (member_email, provider)
+select m.email, p.provider from public.team_members m cross join (values ('contact_agenda'), ('team_agenda')) as p(provider)
+on conflict do nothing;
 
 -- De boekingen zelf. De exclusion constraint maakt het onmogelijk dat twee bevestigde boekingen van
 -- hetzelfde teamlid overlappen, ook bij gelijktijdige requests.

@@ -6,6 +6,7 @@ import { serverBookingDeps } from '@/lib/booking/deps'
 import { loadAvailability } from '@/lib/booking/service'
 import { PROVIDERS } from '@/lib/booking/busy'
 import { computeSlots } from '@/lib/booking/slots'
+import { agendaCheck, conflictText } from '@/lib/booking/check'
 import { Card, Empty, muted, PageHeader, Pill, Title, buttonClass } from '@/components/admin/ui'
 import { GeneralSettings, MemberSettings, WeekExceptions, WeeklyHoursEditor } from '@/components/admin/booking/BookingEditors'
 import { cn } from '@/utilities/ui'
@@ -33,6 +34,8 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
   const { lid } = await searchParams
   const [availability, upcoming] = await Promise.all([loadAvailability(deps), deps.store.listBookings({ from: new Date(clock() - 86_400_000).toISOString(), limit: 50 })])
   const { config } = availability
+  // Na loadAvailability: de agenda's zitten in de cache, dus dit leest Google niet opnieuw.
+  const checks = await agendaCheck(deps)
   const members = config.members
   const selected = members.find((m) => m.member_email === lid?.toLowerCase()) ?? members.find((m) => m.member_email === user.email.toLowerCase()) ?? members[0]
   const today = todayBrussels()
@@ -95,6 +98,13 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
           >
             {m.name}
             {m.member_email === user.email.toLowerCase() && ' (jij)'}
+            {(() => {
+              const c = checks.find((x) => x.member === m.member_email)
+              if (!c?.active || !c.hasHours) return null
+              if (c.error) return <span title="Agenda niet leesbaar: geen boekingen">⚠️</span>
+              if (c.conflicts.length) return <span title={`${c.conflicts.length} botsing(en) met de agenda`}>· {c.conflicts.length}</span>
+              return null
+            })()}
           </Link>
         ))}
       </nav>
@@ -126,12 +136,41 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
                 status: selected.use_busy && selected.sources.some((s) => s.provider === id && s.active) && selected.busy_error?.startsWith(p.label) ? selected.busy_error : null,
               }))}
             />
-            {selected.use_busy && availability.busyErrors[selected.member_email] && (
-              <p className="m-0 rounded-2xl bg-adm-warn-bg p-3 text-sm text-adm-warn-strong">
-                De agenda kon niet gelezen worden, dus {selected.name} krijgt nu geen boekingen: {availability.busyErrors[selected.member_email]}
-              </p>
-            )}
           </Card>
+          {(() => {
+            const c = checks.find((x) => x.member === selected.member_email)
+            if (!c) return null
+            return (
+              <Card className="flex flex-col gap-3 xl:col-span-2">
+                <Title className="m-0 text-2xl">Agenda-check · {selected.name}</Title>
+                {!c.useBusy ? (
+                  <p className="m-0 rounded-2xl bg-adm-warn-bg p-3 text-sm text-adm-warn-strong">
+                    Vrij/bezet staat uit: een afspraak in de agenda houdt een lead nu niet tegen. Zet het aan bij &quot;Meldingen en agenda&quot;.
+                  </p>
+                ) : c.error ? (
+                  <p className="m-0 rounded-2xl bg-adm-warn-bg p-3 text-sm text-adm-warn-strong">
+                    De agenda kon niet gelezen worden, dus {selected.name} krijgt nu geen boekingen: {c.error}
+                  </p>
+                ) : !c.conflicts.length ? (
+                  <p className="m-0 text-sm text-adm-green">Agenda gelezen: niets in de agenda botst met de weekuren van de komende {config.settings.horizon_days} dagen.</p>
+                ) : (
+                  <>
+                    <p className={cn('m-0 text-sm', muted)}>
+                      Deze stukken van de weekuren staan bezet in de agenda. Ze verschijnen niet op /boek. Klopt het schema niet meer, pas dan de weekuren of een uitzondering aan.
+                    </p>
+                    <ul className="m-0 flex list-none flex-col gap-1 p-0 text-sm">
+                      {c.conflicts.map((x) => (
+                        <li key={x.start} className="capitalize">
+                          {conflictText(x)}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+                <p className={cn('m-0 text-xs', muted)}>Elke maandag krijgt iedereen deze check ook per mail.</p>
+              </Card>
+            )
+          })()}
           <Card className="flex flex-col gap-3">
             <Title className="m-0 text-2xl">Zo staat {selected.name} op /boek</Title>
             <p className={cn('m-0 text-sm', muted)}>Momenten die naar {selected.name} gaan (wie hoger in de volgorde staat, gaat voor). De lead ziet enkel &quot;IKnowRight&quot;.</p>
