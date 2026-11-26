@@ -47,9 +47,8 @@ export function WorkspaceView({ cards, names, me, ownerName, canOrderFor }: { ca
           </button>
         ))}
       </div>
-      {/* Vanaf lg vult dit de rest van het venster en scrollen beide kolommen apart; daaronder gewoon paginascroll. */}
-      <div className="grid gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:grid-rows-[minmax(0,1fr)]">
-        <div className="flex flex-col gap-2 lg:-m-1 lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:p-1">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
+        <div className="flex flex-col gap-2">
           {!list.length && <Empty>{tab === 'open' ? 'Niets open. Grok Bot zet hier zelf dingen klaar (2 à 3 keer per dag), of geef hem hierboven een opdracht.' : 'Leeg.'}</Empty>}
           {list.map((c) => (
             <button
@@ -71,7 +70,7 @@ export function WorkspaceView({ cards, names, me, ownerName, canOrderFor }: { ca
             </button>
           ))}
         </div>
-        <div className="lg:flex lg:min-h-0 lg:flex-col">{sel ? <CardDetail key={sel.id} card={sel} names={names} me={me} /> : <p className={cn('m-0 hidden text-sm lg:block', muted)}>Kies een kaart om ze te openen en verder te praten.</p>}</div>
+        <div>{sel ? <CardDetail key={sel.id} card={sel} names={names} me={me} /> : <p className={cn('m-0 hidden text-sm lg:block', muted)}>Kies een kaart om ze te openen en verder te praten.</p>}</div>
       </div>
     </>
   )
@@ -117,76 +116,61 @@ function CardDetail({ card: c, names, me }: { card: CardWithMessages; names: Rec
   const { pending, error, run } = useRun()
   const [confirm, setConfirm] = useState(false)
   const ref = useRef<HTMLFormElement>(null)
-  const scroller = useRef<HTMLDivElement>(null)
-  const count = c.messages.length + (isBusy(c) ? 1 : 0)
-  const seen = useRef(count)
   const unread = c.unread && c.owner_email === me
   useEffect(() => {
     if (unread) void markCardReadAction(c.id).then(refreshNotifications)
   }, [unread, c.id])
-  // Nieuw bericht in het draadje: naar beneden scrollen (binnen de kolom vanaf lg, anders de pagina).
-  useEffect(() => {
-    const grew = count > seen.current
-    seen.current = count
-    if (!grew) return
-    const el = scroller.current
-    if (el && el.scrollHeight > el.clientHeight) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
-    else ref.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-  }, [count])
   const name = (a: string) => (a === 'grokbot' ? 'Grok Bot' : (names[a] ?? a.split('@')[0]))
   return (
-    <Card className="flex flex-col gap-3 lg:max-h-full lg:min-h-0">
-      {/* Kop, voorstel en draadje scrollen vanaf lg binnen de kaart; invoerveld en knoppen blijven onderaan zichtbaar. */}
-      <div ref={scroller} className="-mx-2 flex flex-col gap-3 px-2 lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <Pill tone={KIND_TONE[c.kind]}>{CARD_KINDS[c.kind]}</Pill>
-          <span className={cn('text-xs', muted)}>
-            {name(c.created_by)} · {when(c.created_at)}
-          </span>
-        </div>
-        <Title className="m-0 text-2xl">{c.title}</Title>
-        {c.body && <p className="m-0 text-sm leading-relaxed whitespace-pre-line">{c.body}</p>}
-        {c.link && (
-          <a href={c.link} target="_blank" rel="noreferrer" className="text-sm font-semibold underline">
-            Open link
-          </a>
-        )}
-
-        {c.action_label && (
-          <div className={cn('flex flex-col gap-2 rounded-2xl p-3', c.action_status === 'voorgesteld' ? 'bg-adm-yellow-bg' : 'bg-adm-soft')}>
-            <p className="m-0 text-sm font-bold">Voorstel: {c.action_label}</p>
-            {c.action_detail && <p className="m-0 text-sm whitespace-pre-line">{c.action_detail}</p>}
-            {c.action_status === 'voorgesteld' ? (
-              <div className="flex gap-2">
-                <button type="button" disabled={pending} onClick={() => run(() => decideCardActionAction(c.id, true))} className={buttonClass('navy', true)}>
-                  Doe maar
-                </button>
-                <button type="button" disabled={pending} onClick={() => run(() => decideCardActionAction(c.id, false))} className={buttonClass('soft', true)}>
-                  Nee
-                </button>
-              </div>
-            ) : (
-              <p className={cn('m-0 text-xs', muted)}>{c.action_status === 'goedgekeurd' ? 'Goedgekeurd: Grok Bot is ermee bezig.' : c.action_status === 'uitgevoerd' ? 'Klaargezet door Grok Bot.' : 'Afgewezen.'}</p>
-            )}
-          </div>
-        )}
-
-        <ol className="m-0 flex list-none flex-col gap-2 p-0" aria-label="Draadje">
-          {c.messages.map((m) => (
-            <li key={m.id} className={cn('flex flex-col rounded-2xl px-3 py-2 text-sm', m.author === 'grokbot' ? 'mr-6 bg-adm-soft' : 'ml-6 bg-adm-teal-bg')}>
-              <span className={cn('text-[11px] font-semibold', muted)}>
-                {name(m.author)} · {when(m.created_at)}
-              </span>
-              <span className="whitespace-pre-line">{m.body}</span>
-            </li>
-          ))}
-          {isBusy(c) && <li className={cn('mr-6 rounded-2xl bg-adm-soft px-3 py-2 text-sm', muted)}>Grok Bot denkt na…</li>}
-        </ol>
+    <Card className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Pill tone={KIND_TONE[c.kind]}>{CARD_KINDS[c.kind]}</Pill>
+        <span className={cn('text-xs', muted)}>
+          {name(c.created_by)} · {when(c.created_at)}
+        </span>
       </div>
+      <Title className="m-0 text-2xl">{c.title}</Title>
+      {c.body && <p className="m-0 text-sm leading-relaxed whitespace-pre-line">{c.body}</p>}
+      {c.link && (
+        <a href={c.link} target="_blank" rel="noreferrer" className="text-sm font-semibold underline">
+          Open link
+        </a>
+      )}
+
+      {c.action_label && (
+        <div className={cn('flex flex-col gap-2 rounded-2xl p-3', c.action_status === 'voorgesteld' ? 'bg-adm-yellow-bg' : 'bg-adm-soft')}>
+          <p className="m-0 text-sm font-bold">Voorstel: {c.action_label}</p>
+          {c.action_detail && <p className="m-0 text-sm whitespace-pre-line">{c.action_detail}</p>}
+          {c.action_status === 'voorgesteld' ? (
+            <div className="flex gap-2">
+              <button type="button" disabled={pending} onClick={() => run(() => decideCardActionAction(c.id, true))} className={buttonClass('navy', true)}>
+                Doe maar
+              </button>
+              <button type="button" disabled={pending} onClick={() => run(() => decideCardActionAction(c.id, false))} className={buttonClass('soft', true)}>
+                Nee
+              </button>
+            </div>
+          ) : (
+            <p className={cn('m-0 text-xs', muted)}>{c.action_status === 'goedgekeurd' ? 'Goedgekeurd: Grok Bot is ermee bezig.' : c.action_status === 'uitgevoerd' ? 'Klaargezet door Grok Bot.' : 'Afgewezen.'}</p>
+          )}
+        </div>
+      )}
+
+      <ol className="m-0 flex list-none flex-col gap-2 p-0" aria-label="Draadje">
+        {c.messages.map((m) => (
+          <li key={m.id} className={cn('flex flex-col rounded-2xl px-3 py-2 text-sm', m.author === 'grokbot' ? 'mr-6 bg-adm-soft' : 'ml-6 bg-adm-teal-bg')}>
+            <span className={cn('text-[11px] font-semibold', muted)}>
+              {name(m.author)} · {when(m.created_at)}
+            </span>
+            <span className="whitespace-pre-line">{m.body}</span>
+          </li>
+        ))}
+        {isBusy(c) && <li className={cn('mr-6 rounded-2xl bg-adm-soft px-3 py-2 text-sm', muted)}>Grok Bot denkt na…</li>}
+      </ol>
 
       <form
         ref={ref}
-        className="flex shrink-0 items-end gap-2"
+        className="flex items-end gap-2"
         onSubmit={(e) => {
           e.preventDefault()
           const data = new FormData(e.currentTarget)
@@ -199,7 +183,7 @@ function CardDetail({ card: c, names, me }: { card: CardWithMessages; names: Rec
         </button>
       </form>
 
-      <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-t border-adm-line pt-3">
+      <div className="flex flex-wrap items-center gap-1.5 border-t border-adm-line pt-3">
         {(['open', 'besproken', 'archief'] as CardStatus[])
           .filter((s) => s !== c.status)
           .map((s) => (
