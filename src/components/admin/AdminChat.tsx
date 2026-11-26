@@ -215,7 +215,7 @@ export function AdminChat({ initial }: { initial: State }) {
         htmlFor={big ? 'chat-panel-file' : 'chat-bar-file'}
         title="Bestand toevoegen (komt in de IKR-Drive)"
         aria-label="Bestand toevoegen"
-        className="ikr-btn flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-ikr-cream-light text-ikr-navy hover:bg-white"
+        className="ikr-btn flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-adm-card text-adm-fg hover:bg-adm-raised"
       >
         {uploading ? <Spinner /> : <span aria-hidden="true">📎</span>}
       </label>
@@ -235,7 +235,7 @@ export function AdminChat({ initial }: { initial: State }) {
         }}
         placeholder="Vraag iets aan Grok Bot…"
         className={cn(
-          'min-w-0 flex-1 resize-none rounded-2xl border-0 bg-ikr-cream-light px-4 py-2.5 text-sm text-ikr-navy outline-none focus-visible:ring-2 focus-visible:ring-ikr-cyan',
+          'min-w-0 flex-1 resize-none rounded-2xl border-0 bg-adm-card px-4 py-2.5 text-sm text-adm-fg outline-none focus-visible:ring-2 focus-visible:ring-ikr-cyan',
           big ? 'min-h-12' : 'min-h-11',
         )}
       />
@@ -245,7 +245,7 @@ export function AdminChat({ initial }: { initial: State }) {
         disabled={pending || uploading > 0 || (!text.trim() && !files.length)}
         data-pending={pending}
         aria-label="Versturen"
-        className="ikr-btn flex size-11 shrink-0 items-center justify-center rounded-full bg-ikr-navy text-ikr-cream-light disabled:opacity-60"
+        className="ikr-btn flex size-11 shrink-0 items-center justify-center rounded-full bg-adm-inverse text-ikr-cream-light disabled:opacity-60"
       >
         {pending ? <Spinner /> : <span aria-hidden="true">↑</span>}
       </button>
@@ -259,7 +259,7 @@ export function AdminChat({ initial }: { initial: State }) {
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {announce}
       </div>
-      <div className="sticky top-0 z-30 -mx-4 -mt-6 flex flex-col gap-1 bg-ikr-cream/95 px-4 pt-3 pb-2 backdrop-blur sm:-mx-9 sm:px-9">
+      <div className="sticky top-0 z-30 -mx-4 -mt-6 flex flex-col gap-1 bg-adm-page/95 px-4 pt-3 pb-2 backdrop-blur sm:-mx-9 sm:px-9">
         <div className="flex items-center gap-2">
           <span className="hidden shrink-0 items-center gap-1.5 text-xs font-semibold sm:flex">
             <Icon.sparkle size={14} /> Grok Bot
@@ -270,7 +270,7 @@ export function AdminChat({ initial }: { initial: State }) {
             onClick={openPanel}
             aria-label="Chat uitklappen"
             title="Chat uitklappen"
-            className="ikr-btn relative flex size-11 shrink-0 items-center justify-center rounded-full bg-ikr-cream-light text-ikr-navy hover:bg-white"
+            className="ikr-btn relative flex size-11 shrink-0 items-center justify-center rounded-full bg-adm-card text-adm-fg hover:bg-adm-raised"
           >
             <span aria-hidden="true" className="text-lg leading-none">⤢</span>
             {unseenReply && <span className="absolute top-1.5 right-1.5 size-2.5 rounded-full bg-ikr-cyan" aria-label="Nieuw antwoord" />}
@@ -279,7 +279,7 @@ export function AdminChat({ initial }: { initial: State }) {
         {files.length > 0 && (
           <div className="flex flex-wrap gap-1.5 px-1" aria-label="Bijlagen">
             {files.map((f) => (
-              <span key={f.file_id} className="inline-flex items-center gap-1 rounded-full bg-ikr-cream-light px-2.5 py-1 text-xs font-semibold">
+              <span key={f.file_id} className="inline-flex items-center gap-1 rounded-full bg-adm-card px-2.5 py-1 text-xs font-semibold">
                 📎 {f.name}
                 <button type="button" onClick={() => setFiles((cur) => cur.filter((x) => x.file_id !== f.file_id))} aria-label={`Bijlage ${f.name} weghalen`} className="ml-0.5 opacity-60 hover:opacity-100">
                   ✕
@@ -313,7 +313,7 @@ export function AdminChat({ initial }: { initial: State }) {
               </button>
             ) : null}
             {error && (
-              <span role="alert" className="text-[#A3470F]">
+              <span role="alert" className="text-adm-warn">
                 {error}
               </span>
             )}
@@ -322,13 +322,13 @@ export function AdminChat({ initial }: { initial: State }) {
       </div>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-ikr-navy/30" onClick={closePanel}>
+        <div className="fixed inset-0 z-50 flex justify-end bg-adm-fg/30" onClick={closePanel}>
           <section
             role="dialog"
             aria-modal="true"
             aria-label="Chat met Grok Bot"
             onClick={(e) => e.stopPropagation()}
-            className="flex h-full w-full flex-col gap-3 bg-ikr-cream p-4 shadow-xl sm:w-[460px]"
+            className="flex h-full w-full flex-col gap-3 bg-adm-soft p-4 shadow-xl sm:w-[460px]"
           >
             <header className="flex items-center gap-2">
               <Icon.sparkle size={16} />
@@ -338,7 +338,7 @@ export function AdminChat({ initial }: { initial: State }) {
                 type="button"
                 onClick={closePanel}
                 aria-label="Sluiten"
-                className="ikr-btn ml-auto flex size-9 items-center justify-center rounded-full bg-ikr-cream-light"
+                className="ikr-btn ml-auto flex size-9 items-center justify-center rounded-full bg-adm-card"
               >
                 <Icon.close size={16} />
               </button>
@@ -351,7 +351,7 @@ export function AdminChat({ initial }: { initial: State }) {
                     <div
                       className={cn(
                         'max-w-[85%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed whitespace-pre-line',
-                        m.role === 'user' ? 'bg-ikr-navy text-ikr-cream-light' : 'bg-ikr-cream-light text-ikr-navy',
+                        m.role === 'user' ? 'bg-adm-inverse text-ikr-cream-light' : 'bg-adm-card text-adm-fg',
                       )}
                     >
                       {m.via === 'spraak' && <span aria-label="Gesproken" className="mr-1">🎙</span>}
@@ -374,7 +374,7 @@ export function AdminChat({ initial }: { initial: State }) {
                   </div>
                 ))}
                 {state.thinking && (
-                  <div className="flex items-center gap-2 self-start rounded-2xl bg-ikr-cream-light px-3.5 py-2 text-sm font-semibold">
+                  <div className="flex items-center gap-2 self-start rounded-2xl bg-adm-card px-3.5 py-2 text-sm font-semibold">
                     <Spinner /> Grok Bot denkt na…
                   </div>
                 )}
@@ -383,14 +383,14 @@ export function AdminChat({ initial }: { initial: State }) {
                 <button
                   type="button"
                   onClick={jumpToBottom}
-                  className="absolute bottom-2 left-1/2 z-10 -translate-x-1/2 rounded-full bg-ikr-navy px-3 py-1.5 text-xs font-semibold text-ikr-cream-light shadow-md"
+                  className="absolute bottom-2 left-1/2 z-10 -translate-x-1/2 rounded-full bg-adm-inverse px-3 py-1.5 text-xs font-semibold text-ikr-cream-light shadow-md"
                 >
                   Nieuw bericht ↓
                 </button>
               )}
             </div>
             {error && (
-              <span role="alert" className="text-sm text-[#A3470F]">
+              <span role="alert" className="text-sm text-adm-warn">
                 {error}
               </span>
             )}

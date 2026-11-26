@@ -16,26 +16,26 @@ export async function SystemStatusCard({ details }: { details: boolean }) {
         Wat het dashboard zelf doet, buiten de pagina’s om. Loopt hier iets mis, dan krijgt Instellingen een bolletje.
       </p>
       {s.crons.map((c) => (
-        <div key={c.key} className="flex flex-wrap items-center gap-3 border-t border-[#E6DFD2] py-3">
+        <div key={c.key} className="flex flex-wrap items-center gap-3 border-t border-adm-line py-3">
           <div className="flex flex-[1_1_240px] flex-col">
             <span className="font-semibold">{c.label}</span>
             <span className={cn('text-xs', muted)}>{c.lastRun ? `Laatst: ${when(c.lastRun)}` : 'Nog nooit gelopen sinds deze versie'}</span>
-            {details && c.ok === false && c.error && <span className="text-xs text-[#A3470F]">{c.error}</span>}
+            {details && c.ok === false && c.error && <span className="text-xs text-adm-warn">{c.error}</span>}
           </div>
           {c.ok === false ? <Pill tone="orange">Mislukt</Pill> : c.late ? <Pill tone="orange">Te laat</Pill> : <Pill tone="green">In orde</Pill>}
         </div>
       ))}
-      <div className="flex flex-wrap items-center gap-3 border-t border-[#E6DFD2] py-3">
+      <div className="flex flex-wrap items-center gap-3 border-t border-adm-line py-3">
         <div className="flex flex-[1_1_240px] flex-col">
           <span className="font-semibold">Grok Bot bereikbaar</span>
           <span className={cn('text-xs', muted)}>
             {s.grokFailures.length ? `${s.grokFailures.length}× niet bereikt in de laatste 24 uur, laatst ${when(s.grokFailures[0].at)}` : 'Geen problemen in de laatste 24 uur'}
           </span>
-          {details && s.grokFailures[0]?.error && <span className="text-xs text-[#A3470F]">{s.grokFailures[0].error}</span>}
+          {details && s.grokFailures[0]?.error && <span className="text-xs text-adm-warn">{s.grokFailures[0].error}</span>}
         </div>
         {s.grokFailures.length ? <Pill tone="orange">Probleem</Pill> : <Pill tone="green">In orde</Pill>}
       </div>
-      <div className="flex flex-wrap items-center gap-3 border-t border-[#E6DFD2] py-3">
+      <div className="flex flex-wrap items-center gap-3 border-t border-adm-line py-3">
         <div className="flex flex-[1_1_240px] flex-col">
           <span className="font-semibold">AI-taken</span>
           <span className={cn('text-xs', muted)}>{s.failedJobs ? `${s.failedJobs} mislukt in de laatste 24 uur` : 'Geen mislukte taken in de laatste 24 uur'}</span>

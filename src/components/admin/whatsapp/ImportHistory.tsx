@@ -62,7 +62,7 @@ export function ImportHistory({ jid, label, me }: { jid: string; label: string; 
 
   if (!open)
     return (
-      <button type="button" onClick={() => setOpen(true)} className={cn('self-start text-xs font-semibold text-[#0B7F93] underline')}>
+      <button type="button" onClick={() => setOpen(true)} className={cn('self-start text-xs font-semibold text-adm-teal underline')}>
         Historiek importeren
       </button>
     )
@@ -70,7 +70,7 @@ export function ImportHistory({ jid, label, me }: { jid: string; label: string; 
   const first = parsed?.messages[0]
   const last = parsed?.messages.at(-1)
   return (
-    <div className="flex flex-col gap-2 rounded-xl bg-white/60 p-3 text-sm">
+    <div className="flex flex-col gap-2 rounded-xl bg-adm-raised/60 p-3 text-sm">
       <p className={cn('m-0 text-xs', muted)}>
         In WhatsApp: open de chat → naam bovenaan (of ⋮ → Meer) → <strong>Chat exporteren</strong> → <strong>Zonder media</strong>. Upload hier het bestand (.txt of .zip). Het wordt in je
         browser gelezen; enkel de tekst gaat naar het dashboard. Opnieuw importeren geeft geen dubbels.
@@ -112,9 +112,9 @@ export function ImportHistory({ jid, label, me }: { jid: string; label: string; 
           </div>
         </div>
       )}
-      {progress && <p className="m-0 text-xs text-[#1E5B27]">{progress}</p>}
+      {progress && <p className="m-0 text-xs text-adm-green">{progress}</p>}
       {error && (
-        <p role="alert" className="m-0 text-xs text-[#A3470F]">
+        <p role="alert" className="m-0 text-xs text-adm-warn">
           {error}
         </p>
       )}

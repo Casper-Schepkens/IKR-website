@@ -5,10 +5,10 @@ import { cn } from '@/utilities/ui'
 
 /** Kleuren van Milans systeem: rood, oranje, groen en een eigen kleur (paars) voor zekerheid. */
 export const SCORE_CLASS: Record<Score, string> = {
-  rood: 'bg-[#F8D3D0] text-[#8E1B12]',
-  oranje: 'bg-[#FCE3D2] text-[#8A3A0C]',
-  groen: 'bg-[#DDF2DF] text-[#1E5B27]',
-  zekerheid: 'bg-[#E4E0F0] text-[#3B2E63]',
+  rood: 'bg-adm-red-bg text-adm-red',
+  oranje: 'bg-adm-warn-bg text-adm-warn',
+  groen: 'bg-adm-green-bg text-adm-green',
+  zekerheid: 'bg-adm-violet-bg text-adm-violet',
 }
 const DOT: Record<Score, string> = { rood: 'bg-[#C0261A]', oranje: 'bg-[#E0701F]', groen: 'bg-[#2E8B3A]', zekerheid: 'bg-[#5B3FA8]' }
 
@@ -38,7 +38,7 @@ export function ScoreOptions() {
 /** Uitleg bij de kleuren (boven de tabel). */
 export function ScoreLegend() {
   return (
-    <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-2 p-0 text-xs text-[#5E5670]">
+    <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-2 p-0 text-xs text-adm-muted">
       {SCORES.map((s) => (
         <li key={s} className="flex items-start gap-2">
           <ScorePill score={s} className="shrink-0" />

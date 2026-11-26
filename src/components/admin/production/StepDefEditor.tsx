@@ -67,7 +67,7 @@ function DefRow({ clientId, def: d, index, count }: { clientId: string | null; d
   const { pending, error, run } = useRun()
   const [edit, setEdit] = useState(false)
   return (
-    <li className="flex flex-col gap-1.5 border-t border-[#E6DFD2] py-2 first:border-t-0">
+    <li className="flex flex-col gap-1.5 border-t border-adm-line py-2 first:border-t-0">
       <div className="flex flex-wrap items-center gap-2">
         <span className={cn('w-5 text-right text-xs', muted)}>{index + 1}.</span>
         <span className="min-w-0 flex-1 text-sm">
@@ -141,7 +141,7 @@ function DefRow({ clientId, def: d, index, count }: { clientId: string | null; d
         </form>
       )}
       {error && (
-        <p role="alert" className="m-0 ml-7 text-xs text-[#A3470F]">
+        <p role="alert" className="m-0 ml-7 text-xs text-adm-warn">
           {error}
         </p>
       )}
@@ -160,7 +160,7 @@ function AddStep({ clientId, phase, list }: { clientId: string | null; phase: Ph
     )
   return (
     <form
-      className="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] items-end gap-2 rounded-xl bg-white/60 p-2"
+      className="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] items-end gap-2 rounded-xl bg-adm-raised/60 p-2"
       onSubmit={(e) => {
         e.preventDefault()
         const f = e.currentTarget
@@ -203,7 +203,7 @@ function AddStep({ clientId, phase, list }: { clientId: string | null; phase: Ph
         </button>
         {pending && <Spinner />}
         {error && (
-          <span role="alert" className="text-xs text-[#A3470F]">
+          <span role="alert" className="text-xs text-adm-warn">
             {error}
           </span>
         )}

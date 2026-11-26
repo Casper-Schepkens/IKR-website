@@ -25,7 +25,7 @@ export default async function FreelancersPage() {
         eyebrow={`${list.length} ${list.length === 1 ? 'freelancer' : 'freelancers'}${proven ? ` · ${proven} bewezen (groen of zekerheid)` : ''}`}
         title="Freelancers"
       >
-        <a href="#nieuwe-freelancer" className="ikr-btn inline-flex min-h-11 items-center justify-center rounded-full bg-ikr-navy px-[18px] text-sm font-semibold text-ikr-cream-light no-underline hover:bg-[#2c2247]">
+        <a href="#nieuwe-freelancer" className="ikr-btn inline-flex min-h-11 items-center justify-center rounded-full bg-adm-inverse px-[18px] text-sm font-semibold text-ikr-cream-light no-underline hover:bg-adm-inverse-hover">
           Nieuwe freelancer
         </a>
       </PageHeader>

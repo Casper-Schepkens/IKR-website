@@ -68,7 +68,7 @@ export function CommandPalette() {
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-[#1E1530]/50 px-4 pt-[12vh]" onMouseDown={() => setOpen(false)}>
-      <div role="dialog" aria-modal="true" aria-label="Ga naar" className="w-full max-w-xl overflow-hidden rounded-2xl bg-ikr-cream-light shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-label="Ga naar" className="w-full max-w-xl overflow-hidden rounded-2xl bg-adm-card shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
         <input
           ref={inputRef}
           value={q}
@@ -90,10 +90,10 @@ export function CommandPalette() {
           }}
           placeholder="Ga naar… (klant, pagina, lead, SOP)"
           aria-label="Ga naar"
-          className="w-full border-0 border-b border-[#E6DFD2] bg-transparent px-5 py-4 text-lg text-ikr-navy outline-none placeholder:text-[#69617B]"
+          className="w-full border-0 border-b border-adm-line bg-transparent px-5 py-4 text-lg text-adm-fg outline-none placeholder:text-adm-faint"
         />
         <ul role="listbox" aria-label="Resultaten" className="m-0 max-h-[50vh] list-none overflow-y-auto p-2">
-          {error && <li className="px-3 py-2 text-sm text-[#A3470F]">{error}</li>}
+          {error && <li className="px-3 py-2 text-sm text-adm-warn">{error}</li>}
           {!error && !hits.length && <li className={cn('px-3 py-2 text-sm', muted)}>{targets.length ? 'Niets gevonden.' : 'Laden…'}</li>}
           {hits.map((t, i) => (
             <li key={t.href} role="option" aria-selected={i === sel}>
@@ -101,7 +101,7 @@ export function CommandPalette() {
                 type="button"
                 onMouseEnter={() => setSel(i)}
                 onClick={() => go(t)}
-                className={cn('flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left', i === sel && 'bg-ikr-cream')}
+                className={cn('flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left', i === sel && 'bg-adm-soft')}
               >
                 <span className="truncate font-semibold">{t.label}</span>
                 <span className={cn('shrink-0 text-xs', muted)}>{t.sub}</span>
@@ -109,7 +109,7 @@ export function CommandPalette() {
             </li>
           ))}
         </ul>
-        <p className={cn('m-0 border-t border-[#E6DFD2] px-5 py-2 text-xs', muted)}>↑↓ kiezen · Enter openen · Esc sluiten · ook in de chat: &quot;ga naar …&quot; of &quot;zet de pagina van … open&quot;</p>
+        <p className={cn('m-0 border-t border-adm-line px-5 py-2 text-xs', muted)}>↑↓ kiezen · Enter openen · Esc sluiten · ook in de chat: &quot;ga naar …&quot; of &quot;zet de pagina van … open&quot;</p>
       </div>
     </div>
   )

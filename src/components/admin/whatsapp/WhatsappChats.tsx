@@ -45,7 +45,7 @@ export function WhatsappChats({ chats, leads, klanten, me }: { chats: ChatView[]
     <>
       <label className="flex max-w-md flex-col gap-1 text-xs font-semibold">
         Zoeken
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Naam of nummer" className={cn(input, "bg-white")} />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Naam of nummer" className={cn(input, "bg-adm-raised")} />
       </label>
       <Card className="flex flex-col gap-2">
         <Title className="m-0 text-2xl">Actief ({active.length})</Title>
@@ -64,7 +64,7 @@ export function WhatsappChats({ chats, leads, klanten, me }: { chats: ChatView[]
         <Title className="m-0 text-2xl">Gedetecteerd ({rest.length})</Title>
         <p className={cn('m-0 text-sm', muted)}>Van deze chats staat enkel de naam en het laatste tijdstip hier, nooit de inhoud.</p>
         {team.length > 0 && (
-          <section aria-label="Groepen met het hele team" className="flex flex-col gap-1 rounded-2xl bg-[#D3F3F9]/40 p-3">
+          <section aria-label="Groepen met het hele team" className="flex flex-col gap-1 rounded-2xl bg-adm-teal-bg/40 p-3">
             <h3 className="m-0 text-sm font-bold tracking-wide uppercase">Groepen met het hele team ({team.length})</h3>
             <p className={cn('m-0 text-xs', muted)}>Casper, Milan en Cédric zitten erin: meestal een klantgroep. Koppel ze aan de klant.</p>
             <ul className="m-0 flex list-none flex-col p-0">
@@ -95,7 +95,7 @@ function ChatRow({ chat: c, leads, klanten, me }: { chat: ChatView; leads: Optio
   const [saved, setSaved] = useState(false)
   const router = useRouter()
   return (
-    <li className="flex flex-col gap-2 border-t border-[#E6DFD2] py-3 first:border-t-0">
+    <li className="flex flex-col gap-2 border-t border-adm-line py-3 first:border-t-0">
       <form
         className="grid grid-cols-1 items-end gap-2 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto]"
         onSubmit={(e) => {
@@ -157,11 +157,11 @@ function ChatRow({ chat: c, leads, klanten, me }: { chat: ChatView; leads: Optio
         </label>
         <div className="flex flex-col gap-1">
           <label className="flex items-center gap-2 text-xs font-semibold" title="Interne chat (bv. de teamgroep): zonder lead of klant">
-            <input type="checkbox" name="intern" defaultChecked={c.intern} className="size-4 accent-ikr-navy" />
+            <input type="checkbox" name="intern" defaultChecked={c.intern} className="size-4 accent-adm-fg" />
             Intern (IKR-team)
           </label>
           <label className="flex items-center gap-2 text-sm font-semibold">
-            <input type="checkbox" name="actief" defaultChecked={c.actief} className="size-4 accent-ikr-navy" />
+            <input type="checkbox" name="actief" defaultChecked={c.actief} className="size-4 accent-adm-fg" />
             Actief
           </label>
         </div>
@@ -169,27 +169,27 @@ function ChatRow({ chat: c, leads, klanten, me }: { chat: ChatView; leads: Optio
           <button type="submit" disabled={pending} className={buttonClass('navy', true)}>
             {pending && <Spinner />} Bewaar
           </button>
-          {saved && !pending && <span className="text-xs text-[#1E5B27]">Bewaard</span>}
+          {saved && !pending && <span className="text-xs text-adm-green">Bewaard</span>}
         </div>
       </form>
       {c.suggestie && (
-        <p className="m-0 text-xs text-[#0A5F6E]">
+        <p className="m-0 text-xs text-adm-teal">
           Voorstel: zelfde nummer als lead <strong>{c.suggestie.label}</strong> (al ingevuld; klik Bewaar om te koppelen).
         </p>
       )}
       {error && (
-        <p role="alert" className="m-0 text-sm text-[#A3470F]">
+        <p role="alert" className="m-0 text-sm text-adm-warn">
           {error}
         </p>
       )}
       {(c.lead_id || c.klant_id || c.intern) && <ImportHistory jid={c.jid} label={c.label} me={me} />}
       {c.actief && (
-        <details className="rounded-xl bg-white/50 px-3 py-2">
+        <details className="rounded-xl bg-adm-raised/50 px-3 py-2">
           <summary className="cursor-pointer text-sm font-semibold">Laatste berichten ({c.berichten.length})</summary>
           {c.berichten.length ? (
             <ul className="m-0 mt-2 flex list-none flex-col gap-1.5 p-0 text-sm">
               {c.berichten.map((b) => (
-                <li key={b.id} className={cn('max-w-[85%] rounded-xl px-3 py-1.5 whitespace-pre-line', b.richting === 'uit' ? 'self-end bg-[#DDF2DF]' : 'self-start bg-ikr-cream')}>
+                <li key={b.id} className={cn('max-w-[85%] rounded-xl px-3 py-1.5 whitespace-pre-line', b.richting === 'uit' ? 'self-end bg-adm-green-bg' : 'self-start bg-adm-soft')}>
                   <span className={cn('block text-[11px]', muted)}>
                     {b.richting === 'uit' ? 'IKR' : (b.afzender ?? c.label)} · {when(b.tijdstip)}
                   </span>

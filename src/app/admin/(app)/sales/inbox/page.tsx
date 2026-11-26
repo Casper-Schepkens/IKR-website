@@ -45,7 +45,7 @@ async function Inbox({ session, tab, concepts }: { session: AdminSession; tab: '
       <>
         <PageHeader title="Inbox" />
         <Card>
-          <p role="alert" className="m-0 text-[#A3470F]">
+          <p role="alert" className="m-0 text-adm-warn">
             {e instanceof Error ? e.message : 'De inbox kon niet geladen worden.'}
           </p>
         </Card>
@@ -78,13 +78,13 @@ async function Inbox({ session, tab, concepts }: { session: AdminSession; tab: '
     <>
       <PageHeader eyebrow={`${result.items.length} sales-mails wachten op een antwoord`} title="Inbox" />
       {!isAiConfigured() && (
-        <p className="m-0 rounded-2xl bg-[#FCE3D2] p-4 text-sm text-[#6E2E09]">
+        <p className="m-0 rounded-2xl bg-adm-warn-bg p-4 text-sm text-adm-warn-strong">
           ANTHROPIC_API_KEY ontbreekt in Vercel: er worden nog geen antwoorden klaargezet.
         </p>
       )}
       <Tabs active={tab} counts={{ nieuw: count('nieuw'), gemaild: count('gemaild'), concepten: concepts }} />
       {result.createdLeads.length > 0 && (
-        <p className="m-0 rounded-2xl bg-[#DDF2DF] p-4 text-sm text-[#1E5B27]">
+        <p className="m-0 rounded-2xl bg-adm-green-bg p-4 text-sm text-adm-green">
           Nieuwe {result.createdLeads.length === 1 ? 'lead' : 'leads'} uit de inbox: {result.createdLeads.join(', ')}. Geen lead? Open de fiche en kies
           &quot;Geen lead&quot;.
         </p>

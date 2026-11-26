@@ -45,7 +45,7 @@ export function TodoBoard({
               <div className="flex flex-col gap-1.5">
                 <Title className="m-0 text-2xl">{p.name}</Title>
                 {(productionCounts?.[p.key] ?? 0) > 0 && (
-                  <p role="note" className="m-0 rounded-xl bg-[#FCE3D2] px-3 py-1.5 text-sm font-semibold text-[#8A3A0C]">
+                  <p role="note" className="m-0 rounded-xl bg-adm-warn-bg px-3 py-1.5 text-sm font-semibold text-adm-warn">
                     Check zeker de productie to do&apos;s hieronder!
                   </p>
                 )}
@@ -56,9 +56,9 @@ export function TodoBoard({
                 <>
                   {/* Duidelijke lijn: hieronder staat wat al voor de weekly daarna is. */}
                   <div role="separator" aria-label="Volgende week" className="mt-2 flex items-center gap-2">
-                    <span className="h-[3px] flex-1 rounded-full bg-ikr-navy" />
-                    <span className="text-xs font-black tracking-wide text-ikr-navy uppercase">Volgende week</span>
-                    <span className="h-[3px] flex-1 rounded-full bg-ikr-navy" />
+                    <span className="h-[3px] flex-1 rounded-full bg-adm-fg" />
+                    <span className="text-xs font-black tracking-wide text-adm-fg uppercase">Volgende week</span>
+                    <span className="h-[3px] flex-1 rounded-full bg-adm-fg" />
                   </div>
                   {nextWeek.length ? (
                     <div className="flex flex-col gap-3 opacity-90">{nextWeek.map(card)}</div>

@@ -5,7 +5,80 @@
 }
 html:has(.ikr-admin),
 body:has(.ikr-admin) {
-  background-color: #F0EBE0;
+  background-color: var(--color-adm-page);
+}
+
+/*
+ * Dark mode (palet "Midnight Navy"). Standaard volgt het dashboard het systeem; de knop in de zijbalk
+ * zet data-theme="light" of "dark" op .ikr-admin (bewaard in de cookie ikr-admin-theme).
+ * De tokens staan op <html> zodat ook pop-ups buiten .ikr-admin meekleuren.
+ * Dezelfde waarden staan twee keer: één keer voor het systeem, één keer voor een expliciete keuze.
+ */
+@media (prefers-color-scheme: dark) {
+  html:has(.ikr-admin:not([data-theme='light'])) {
+    color-scheme: dark;
+    --color-adm-page: #120D22;
+    --color-adm-soft: #271E45;
+    --color-adm-soft-hover: #32285A;
+    --color-adm-card: #1C1533;
+    --color-adm-raised: #271E45;
+    --color-adm-fg: #F3EFE0;
+    --color-adm-muted: #A59FBA;
+    --color-adm-faint: #8C85A3;
+    --color-adm-line: #2F2650;
+    --color-adm-line-strong: #43386E;
+    --color-adm-inverse: #362B5A;
+    --color-adm-inverse-hover: #43376B;
+    --color-adm-side: #0B0816;
+    --color-adm-warn: #F5A66E;
+    --color-adm-warn-strong: #F8BC8E;
+    --color-adm-warn-bg: #3B2414;
+    --color-adm-red: #F49B93;
+    --color-adm-red-bg: #3D1A1A;
+    --color-adm-green: #80D290;
+    --color-adm-green-bg: #142E1C;
+    --color-adm-teal: #4FD3EA;
+    --color-adm-teal-bg: #0F3340;
+    --color-adm-yellow: #F2D27A;
+    --color-adm-yellow-bg: #3A3010;
+    --color-adm-violet: #C9BEF0;
+    --color-adm-violet-bg: #2A2148;
+    --color-adm-ring: #6A5BA8;
+    --color-adm-chart-in: #22C7E3;
+    --color-adm-chart-out: #F07A47;
+  }
+}
+html:has(.ikr-admin[data-theme='dark']) {
+  color-scheme: dark;
+  --color-adm-page: #120D22;
+  --color-adm-soft: #271E45;
+  --color-adm-soft-hover: #32285A;
+  --color-adm-card: #1C1533;
+  --color-adm-raised: #271E45;
+  --color-adm-fg: #F3EFE0;
+  --color-adm-muted: #A59FBA;
+  --color-adm-faint: #8C85A3;
+  --color-adm-line: #2F2650;
+  --color-adm-line-strong: #43386E;
+  --color-adm-inverse: #362B5A;
+  --color-adm-inverse-hover: #43376B;
+  --color-adm-side: #0B0816;
+  --color-adm-warn: #F5A66E;
+  --color-adm-warn-strong: #F8BC8E;
+  --color-adm-warn-bg: #3B2414;
+  --color-adm-red: #F49B93;
+  --color-adm-red-bg: #3D1A1A;
+  --color-adm-green: #80D290;
+  --color-adm-green-bg: #142E1C;
+  --color-adm-teal: #4FD3EA;
+  --color-adm-teal-bg: #0F3340;
+  --color-adm-yellow: #F2D27A;
+  --color-adm-yellow-bg: #3A3010;
+  --color-adm-violet: #C9BEF0;
+  --color-adm-violet-bg: #2A2148;
+  --color-adm-ring: #6A5BA8;
+  --color-adm-chart-in: #22C7E3;
+  --color-adm-chart-out: #F07A47;
 }
 
 /* Directe klikfeedback in /admin: elke klik is meteen zichtbaar, ook als de actie nog loopt. */
@@ -40,7 +113,7 @@ body:has(.ikr-admin) {
 
 /* 3. Links die laden (menu, tabs, kaarten, tekstlinks) */
 .ikr-admin a[data-pending='true']:not(.ikr-btn) {
-  color: #0b7f93 !important;
+  color: var(--color-adm-teal) !important;
   cursor: progress;
 }
 .ikr-admin .ikr-nav[data-pending='true'] {
@@ -48,7 +121,7 @@ body:has(.ikr-admin) {
   color: #fff8f1 !important;
 }
 .ikr-admin .ikr-card-link[data-pending='true'] {
-  box-shadow: inset 0 0 0 2px #0b7f93 !important;
+  box-shadow: inset 0 0 0 2px var(--color-adm-teal) !important;
 }
 
 @keyframes ikr-spin {
@@ -102,7 +175,7 @@ body:has(.ikr-admin) {
 
 /* Toegankelijkheid: plaatshoudertekst leesbaar (min. 4,5:1 op crème), ook in velden met eigen klassen. */
 .ikr-admin ::placeholder {
-  color: #69617b;
+  color: var(--color-adm-faint);
   opacity: 1;
 }
 
@@ -150,7 +223,7 @@ body:has(.ikr-admin) {
     content: attr(data-label);
     display: block;
     font-size: 0.75rem;
-    color: #5e5670;
+    color: var(--color-adm-muted);
   }
   .ikr-admin table.ikr-stack .ikr-stack-hide {
     display: none;

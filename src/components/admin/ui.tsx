@@ -3,14 +3,14 @@ import { cn } from '@/utilities/ui'
 
 /** Gedeelde stijlen voor /admin, afgestemd op de IKR-huisstijl (crème, navy, cyaan). */
 
-export const muted = 'text-[#5E5670]'
+export const muted = 'text-adm-muted'
 
 export const btn = {
   base: 'ikr-btn inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full px-[18px] text-sm font-semibold disabled:cursor-not-allowed [&:disabled:not([data-pending=true])]:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0FC1DE]',
   cyan: 'bg-ikr-cyan text-ikr-navy hover:bg-[#3dd0e8]',
-  navy: 'bg-ikr-navy text-ikr-cream-light hover:bg-[#2c2247]',
-  soft: 'bg-ikr-cream text-ikr-navy hover:bg-[#e6dfd2]',
-  light: 'bg-ikr-cream-light text-ikr-navy hover:bg-white',
+  navy: 'bg-adm-inverse text-ikr-cream-light hover:bg-adm-inverse-hover',
+  soft: 'bg-adm-soft text-adm-fg hover:bg-adm-soft-hover',
+  light: 'bg-adm-card text-adm-fg hover:bg-adm-raised',
   ghostDark:
     'bg-transparent text-ikr-cream-light shadow-[inset_0_0_0_1.5px_#5E5670] hover:bg-white/5',
   small: 'min-h-10 px-4',
@@ -25,9 +25,9 @@ export function buttonClass(
 }
 
 export const input =
-  'w-full rounded-xl border-0 bg-ikr-cream px-3.5 py-2.5 text-[15px] text-ikr-navy placeholder:text-[#69617B] focus:outline focus:outline-2 focus:outline-[#0FC1DE]'
+  'w-full rounded-xl border-0 bg-adm-soft px-3.5 py-2.5 text-[15px] text-adm-fg placeholder:text-adm-faint focus:outline focus:outline-2 focus:outline-[#0FC1DE]'
 
-export const label = 'flex flex-col gap-1.5 text-[13px] font-semibold text-[#5E5670]'
+export const label = 'flex flex-col gap-1.5 text-[13px] font-semibold text-adm-muted'
 
 export function Card({
   children,
@@ -42,7 +42,7 @@ export function Card({
     <div
       className={cn(
         'rounded-3xl p-6',
-        dark ? 'bg-ikr-navy text-ikr-cream-light' : 'bg-ikr-cream-light',
+        dark ? 'bg-adm-inverse text-ikr-cream-light' : 'bg-adm-card',
         className,
       )}
     >
@@ -90,15 +90,15 @@ export function PageHeader({
 }
 
 const tones = {
-  neutral: 'bg-ikr-cream text-[#5E5670]',
-  light: 'bg-ikr-cream-light text-[#5E5670]',
+  neutral: 'bg-adm-soft text-adm-muted',
+  light: 'bg-adm-card text-adm-muted',
   cyan: 'bg-ikr-cyan text-ikr-navy',
-  teal: 'bg-[#D3F3F9] text-[#0A5F6E]',
-  green: 'bg-[#DDF2DF] text-[#1E5B27]',
-  orange: 'bg-[#FCE3D2] text-[#8A3A0C]',
-  yellow: 'bg-[#FFF0C2] text-[#6B5300]',
-  purple: 'bg-[#E4E0F0] text-[#3B2E63]',
-  navy: 'bg-ikr-navy text-ikr-cream-light',
+  teal: 'bg-adm-teal-bg text-adm-teal',
+  green: 'bg-adm-green-bg text-adm-green',
+  orange: 'bg-adm-warn-bg text-adm-warn',
+  yellow: 'bg-adm-yellow-bg text-adm-yellow',
+  purple: 'bg-adm-violet-bg text-adm-violet',
+  navy: 'bg-adm-inverse text-ikr-cream-light',
 }
 export type Tone = keyof typeof tones
 
@@ -136,7 +136,7 @@ export function Stat({
   noteTone?: 'up' | 'down' | 'muted'
 }) {
   return (
-    <div className="flex flex-col gap-1.5 rounded-[20px] bg-ikr-cream-light p-5">
+    <div className="flex flex-col gap-1.5 rounded-[20px] bg-adm-card p-5">
       <span className={cn('text-[13px] font-medium', muted)}>{l}</span>
       <span className="font-display text-[44px] leading-none font-black tracking-[-0.03em]">
         {value}
@@ -145,8 +145,8 @@ export function Stat({
         <span
           className={cn(
             'text-[13px]',
-            noteTone === 'up' && 'font-semibold text-[#0B7F93]',
-            noteTone === 'down' && 'font-semibold text-[#A3470F]',
+            noteTone === 'up' && 'font-semibold text-adm-teal',
+            noteTone === 'down' && 'font-semibold text-adm-warn',
             (!noteTone || noteTone === 'muted') && muted,
           )}
         >
@@ -163,7 +163,7 @@ export function Spinner() {
 }
 
 export function Empty({ children }: { children: ReactNode }) {
-  return <p className={cn('m-0 rounded-2xl bg-ikr-cream p-4 text-sm', muted)}>{children}</p>
+  return <p className={cn('m-0 rounded-2xl bg-adm-soft p-4 text-sm', muted)}>{children}</p>
 }
 
 // ─── Iconen (stroke, currentColor) ───────────────────────────

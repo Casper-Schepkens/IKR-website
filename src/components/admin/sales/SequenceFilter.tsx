@@ -45,7 +45,7 @@ export function SequenceFilter({ sequences, inactive, ids }: { sequences: { id: 
         })}
       </div>
       <label className={cn('flex items-center gap-2 text-xs', muted)}>
-        <input type="checkbox" checked={sel.inactive} onChange={(e) => go({ inactive: e.target.checked, ids: e.target.checked ? sel.ids : sel.ids.filter((id) => sequences.find((s) => s.id === id)?.active) })} className="accent-ikr-navy" />
+        <input type="checkbox" checked={sel.inactive} onChange={(e) => go({ inactive: e.target.checked, ids: e.target.checked ? sel.ids : sel.ids.filter((id) => sequences.find((s) => s.id === id)?.active) })} className="accent-adm-fg" />
         Ook inactieve sequences tonen
       </label>
     </div>

@@ -45,7 +45,7 @@ export function ScheduleSend({
 
   return (
     <form
-      className="flex w-full flex-col gap-3 rounded-2xl bg-ikr-cream p-3"
+      className="flex w-full flex-col gap-3 rounded-2xl bg-adm-soft p-3"
       onSubmit={(e) => {
         e.preventDefault()
         const data = new FormData(e.currentTarget)
@@ -85,7 +85,7 @@ export function ScheduleSend({
         </label>
       </div>
       <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" name="invite" className="size-4 accent-ikr-navy" /> Lead ook uitnodigen via de agenda
+        <input type="checkbox" name="invite" className="size-4 accent-adm-fg" /> Lead ook uitnodigen via de agenda
       </label>
       <div className="flex flex-wrap items-center gap-2">
         <button type="submit" disabled={pending || !body.trim()} data-pending={pending} className={buttonClass('navy')}>
@@ -96,7 +96,7 @@ export function ScheduleSend({
         </button>
       </div>
       {error && (
-        <p role="alert" className="m-0 text-sm text-[#A3470F]">
+        <p role="alert" className="m-0 text-sm text-adm-warn">
           {error}
         </p>
       )}

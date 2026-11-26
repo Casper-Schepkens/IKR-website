@@ -8,7 +8,7 @@ import { cn } from '@/utilities/ui'
 export type WaitingSort = 'lang' | 'kort'
 
 const TONE = { green: 'green', orange: 'orange', red: 'red' } as const
-const RED = 'bg-[#F8D3D0] text-[#8E1B12]'
+const RED = 'bg-adm-red-bg text-adm-red'
 
 const href = (sort: WaitingSort, extra = '') =>
   `/admin/sales?weergave=wachten${sort === 'kort' ? '&sorteer=kort' : ''}${extra}`
@@ -29,7 +29,7 @@ export async function WaitingList({
   } catch (e) {
     return (
       <Card>
-        <p role="alert" className="m-0 text-[#A3470F]">
+        <p role="alert" className="m-0 text-adm-warn">
           {e instanceof Error ? e.message : 'De lijst kon niet geladen worden.'}
         </p>
       </Card>
@@ -70,7 +70,7 @@ export async function WaitingList({
         </Link>
       </div>
       {result.warning && (
-        <p role="alert" className="m-0 rounded-2xl bg-[#FCE3D2] p-3 text-sm text-[#6E2E09]">
+        <p role="alert" className="m-0 rounded-2xl bg-adm-warn-bg p-3 text-sm text-adm-warn-strong">
           {result.warning}
         </p>
       )}
@@ -99,7 +99,7 @@ export async function WaitingList({
                 >
                   <Link
                     href={href(sort === 'lang' ? 'kort' : 'lang')}
-                    className="text-inherit no-underline hover:text-ikr-navy"
+                    className="text-inherit no-underline hover:text-adm-fg"
                   >
                     Dagen sinds contact {sort === 'lang' ? '↓' : '↑'}
                   </Link>
@@ -112,12 +112,12 @@ export async function WaitingList({
                 return (
                   <tr
                     key={r.lead_id}
-                    className="border-t border-[#E6DFD2] align-top hover:bg-ikr-cream/60"
+                    className="border-t border-adm-line align-top hover:bg-adm-soft/60"
                   >
                     <td className="px-6 py-3">
                       <Link
                         href={`/admin/sales/leads/${r.lead_id}`}
-                        className="font-bold text-ikr-navy no-underline hover:text-[#0B7F93]"
+                        className="font-bold text-adm-fg no-underline hover:text-adm-teal"
                       >
                         {r.lead.company ?? r.lead.name}
                       </Link>

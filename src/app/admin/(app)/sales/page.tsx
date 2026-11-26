@@ -70,7 +70,7 @@ export default async function LeadsPage({
         <Card>
           <Title className="mb-4 text-2xl">Nieuwe lead</Title>
           {fout && (
-            <p role="alert" className="m-0 mb-4 rounded-2xl bg-[#FCE3D2] p-3 text-sm text-[#6E2E09]">
+            <p role="alert" className="m-0 mb-4 rounded-2xl bg-adm-warn-bg p-3 text-sm text-adm-warn-strong">
               {fout}
             </p>
           )}
@@ -117,7 +117,7 @@ export default async function LeadsPage({
           {OPEN_STAGES.concat('won').map((s, i) => (
             <li key={s} className="flex items-center gap-2">
               {i > 0 && <span aria-hidden="true" className={muted}>→</span>}
-              <span className="flex items-baseline gap-1.5 rounded-xl bg-ikr-cream px-3 py-2">
+              <span className="flex items-baseline gap-1.5 rounded-xl bg-adm-soft px-3 py-2">
                 <span className="font-display text-2xl leading-none font-black">
                   {all.filter((l) => l.stage === s).length}
                 </span>
@@ -126,11 +126,11 @@ export default async function LeadsPage({
             </li>
           ))}
           <li className="flex items-center gap-2 sm:ml-auto">
-            <span className="flex items-baseline gap-1.5 rounded-xl bg-[#FCE3D2] px-3 py-2">
+            <span className="flex items-baseline gap-1.5 rounded-xl bg-adm-warn-bg px-3 py-2">
               <span className="font-display text-2xl leading-none font-black">
                 {all.filter((l) => l.stage === 'lost').length}
               </span>
-              <span className="text-xs text-[#8A3A0C]">Lost</span>
+              <span className="text-xs text-adm-warn">Lost</span>
             </span>
           </li>
         </ol>
@@ -183,9 +183,9 @@ export default async function LeadsPage({
                 {rows.map((l) => {
                   const due = l.follow_up_on ? daysBetween(today, l.follow_up_on) : null
                   return (
-                    <tr key={l.id} className="border-t border-[#E6DFD2] hover:bg-ikr-cream/60">
+                    <tr key={l.id} className="border-t border-adm-line hover:bg-adm-soft/60">
                       <td className="px-6 py-3">
-                        <Link href={`/admin/sales/leads/${l.id}`} className="font-bold text-ikr-navy no-underline hover:text-[#0B7F93]">
+                        <Link href={`/admin/sales/leads/${l.id}`} className="font-bold text-adm-fg no-underline hover:text-adm-teal">
                           {l.name}
                         </Link>
                         {l.company && <div className={cn('text-xs', muted)}>{l.company}</div>}

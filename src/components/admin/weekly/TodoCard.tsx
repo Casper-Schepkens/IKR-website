@@ -46,7 +46,7 @@ export function TodoCard({ todo, overdue, showOwner, me, meeting = false }: { to
     })
 
   return (
-    <div className={cn('flex flex-col gap-2 rounded-2xl bg-ikr-cream-light p-3.5', done && 'opacity-60', checked && 'bg-[#E4E1DB] text-[#6F6A76]')}>
+    <div className={cn('flex flex-col gap-2 rounded-2xl bg-adm-card p-3.5', done && 'opacity-60', checked && 'bg-adm-soft text-adm-faint')}>
       <div className="group flex items-start gap-1.5">
         {editTitle ? (
           <input
@@ -92,7 +92,7 @@ export function TodoCard({ todo, overdue, showOwner, me, meeting = false }: { to
               onClick={() => setEditTitle(true)}
               aria-label={`Titel aanpassen: ${todo.title}`}
               title="Titel aanpassen"
-              className="mt-0.5 shrink-0 rounded-full p-1 text-[#5E5670] opacity-0 transition-opacity group-hover:opacity-100 hover:bg-ikr-cream hover:text-ikr-navy focus-visible:opacity-100 [@media(hover:none)]:opacity-60"
+              className="mt-0.5 shrink-0 rounded-full p-1 text-adm-muted opacity-0 transition-opacity group-hover:opacity-100 hover:bg-adm-soft hover:text-adm-fg focus-visible:opacity-100 [@media(hover:none)]:opacity-60"
             >
               <Icon.pencil size={14} />
             </button>
@@ -137,7 +137,7 @@ export function TodoCard({ todo, overdue, showOwner, me, meeting = false }: { to
             onFocus={(e) => e.currentTarget.setSelectionRange(e.currentTarget.value.length, e.currentTarget.value.length)}
             className={cn(input, 'min-h-9 flex-1 resize-y py-2 text-sm')}
           />
-          <button type="submit" disabled={pending} data-pending={pending} className={cn(small, 'bg-ikr-navy text-ikr-cream-light')}>
+          <button type="submit" disabled={pending} data-pending={pending} className={cn(small, 'bg-adm-inverse text-ikr-cream-light')}>
             Bewaar
           </button>
         </form>
@@ -148,13 +148,13 @@ export function TodoCard({ todo, overdue, showOwner, me, meeting = false }: { to
           disabled={pending}
           data-pending={pending}
           onClick={() => run(() => setTodoDoneAction(todo.id, !done))}
-          className={cn(small, done ? 'bg-ikr-cream text-ikr-navy' : 'bg-ikr-cyan text-ikr-navy')}
+          className={cn(small, done ? 'bg-adm-soft text-adm-fg' : 'bg-ikr-cyan text-ikr-navy')}
         >
           {done ? 'Toch niet af' : 'Done'}
         </button>
         {!done && (
           <>
-            <button type="button" disabled={pending} onClick={() => setNoteOpen((v) => !v)} className={cn(small, 'bg-ikr-cream text-ikr-navy')}>
+            <button type="button" disabled={pending} onClick={() => setNoteOpen((v) => !v)} className={cn(small, 'bg-adm-soft text-adm-fg')}>
               {own ? 'Notitie aanpassen' : 'Notitie'}
             </button>
             {todo.kind === 'weekly' &&
@@ -165,7 +165,7 @@ export function TodoCard({ todo, overdue, showOwner, me, meeting = false }: { to
                   disabled={pending}
                   data-pending={pending}
                   onClick={() => run(() => unpushTodoAction(todo.id))}
-                  className={cn(small, 'bg-[#FFF0C2] text-[#6B5300]')}
+                  className={cn(small, 'bg-adm-yellow-bg text-adm-yellow')}
                 >
                   Doorschuiven annuleren
                 </button>
@@ -175,7 +175,7 @@ export function TodoCard({ todo, overdue, showOwner, me, meeting = false }: { to
                   disabled={pending}
                   data-pending={pending}
                   onClick={() => run(() => pushTodoAction(todo.id))}
-                  className={cn(small, 'bg-ikr-cream text-ikr-navy')}
+                  className={cn(small, 'bg-adm-soft text-adm-fg')}
                 >
                   Schuif door
                 </button>
@@ -192,12 +192,12 @@ export function TodoCard({ todo, overdue, showOwner, me, meeting = false }: { to
                 >
                   Ja, verwijder
                 </button>
-                <button type="button" disabled={pending} onClick={() => setConfirmDelete(false)} className={cn(small, 'bg-ikr-cream text-ikr-navy')}>
+                <button type="button" disabled={pending} onClick={() => setConfirmDelete(false)} className={cn(small, 'bg-adm-soft text-adm-fg')}>
                   Annuleer
                 </button>
               </>
             ) : (
-              <button type="button" disabled={pending} onClick={() => setConfirmDelete(true)} className={cn(small, 'bg-[#F8D3D0] text-[#8E1B12]')}>
+              <button type="button" disabled={pending} onClick={() => setConfirmDelete(true)} className={cn(small, 'bg-adm-red-bg text-adm-red')}>
                 Verwijder
               </button>
             )}
@@ -205,7 +205,7 @@ export function TodoCard({ todo, overdue, showOwner, me, meeting = false }: { to
         )}
       </div>
       {error && (
-        <span role="alert" className="text-xs font-medium text-[#A3470F]">
+        <span role="alert" className="text-xs font-medium text-adm-warn">
           {error}
         </span>
       )}

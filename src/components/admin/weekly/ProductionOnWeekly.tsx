@@ -26,7 +26,7 @@ export function ProductionOnWeekly({ byOwner, until, planned, today, me }: { byO
             {planned ? ' (volgende weekly)' : ' (nog geen weekly gepland: komende 7 dagen)'}, plus alles wat te laat is. Afvinken = afgevinkt in Productie.
           </p>
         </div>
-        <Link href="/admin/productie" className="text-sm font-semibold text-[#0B7F93]">
+        <Link href="/admin/productie" className="text-sm font-semibold text-adm-teal">
           Naar Productie →
         </Link>
       </div>
@@ -35,10 +35,10 @@ export function ProductionOnWeekly({ byOwner, until, planned, today, me }: { byO
           const items = byOwner[p.key as TeamMember] ?? []
           const late = items.filter((i) => i.overdue).length
           return (
-            <section key={p.key} aria-label={`Uit Productie: ${p.name}`} className="flex min-w-0 flex-col gap-1 rounded-2xl bg-white/50 p-3">
+            <section key={p.key} aria-label={`Uit Productie: ${p.name}`} className="flex min-w-0 flex-col gap-1 rounded-2xl bg-adm-raised/50 p-3">
               <h3 className="m-0 text-sm font-bold">
                 {p.name} <span className={cn('font-normal', muted)}>{items.length}</span>
-                {late > 0 && <span className="ml-1.5 text-xs font-semibold text-[#8E1B12]">{late} te laat</span>}
+                {late > 0 && <span className="ml-1.5 text-xs font-semibold text-adm-red">{late} te laat</span>}
               </h3>
               {!items.length ? (
                 <Empty>Niets uit Productie.</Empty>

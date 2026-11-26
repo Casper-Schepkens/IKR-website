@@ -1,4 +1,4 @@
-import { headers } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { requireAdmin } from '@/lib/admin/session'
 import { isLivePath, PATH_HEADER } from '@/lib/admin/live'
 import { logIfSlow } from '@/lib/admin/timing'
@@ -12,6 +12,7 @@ import { chatState } from '@/lib/admin/chat/service'
 import { liveStamp } from '@/lib/admin/live-stamp'
 import { getNavPrefs } from '@/lib/admin/team/nav-prefs'
 import { EMPTY_NAV } from '@/lib/admin/team/nav-core'
+import { parseTheme, THEME_COOKIE } from '@/lib/admin/theme'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,6 +21,7 @@ export default async function AdminAppLayout({ children }: { children: React.Rea
   const { user, mode } = session
   // Chat met Grok Bot op elke pagina; geschiedenis uit de database (enkel die van deze gebruiker).
   const path = (await headers()).get(PATH_HEADER) ?? ''
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value)
   const [chat, stamp, navPrefs] = await logIfSlow(`layout ${path || '/admin'}`, Promise.all([
     chatState(session).catch(() => ({ messages: [], thinking: false })),
     // Stand van de data bij deze render (enkel op pagina's die live verversen): LiveData vergelijkt daarmee,
@@ -30,7 +32,7 @@ export default async function AdminAppLayout({ children }: { children: React.Rea
   return (
     <RecorderProvider>
       <div className="flex min-h-dvh flex-col lg:flex-row">
-        <Sidebar name={user.name} email={user.email} demo={mode === 'demo'} sales={isSalesOwner(user.email)} navPrefs={navPrefs} />
+        <Sidebar name={user.name} email={user.email} demo={mode === 'demo'} sales={isSalesOwner(user.email)} navPrefs={navPrefs} theme={theme} />
         <main className="flex min-w-0 flex-1 flex-col gap-7 px-4 pt-6 pb-14 sm:px-9">
           <AdminChat initial={chat} />
           <LiveData stamp={stamp} />

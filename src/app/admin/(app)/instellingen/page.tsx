@@ -40,12 +40,12 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
     <>
       <PageHeader eyebrow={`Ingelogd als ${user.email}`} title="Instellingen" />
       {ok && (
-        <p className="m-0 rounded-2xl bg-[#DDF2DF] p-4 text-sm text-[#1E5B27]">
+        <p className="m-0 rounded-2xl bg-adm-green-bg p-4 text-sm text-adm-green">
           {ok === 'agenda' ? 'Agenda gekoppeld. Kies hieronder welke agenda’s Grok Bot mag lezen.' : ok === 'mail' ? 'Mail gekoppeld (alleen lezen).' : 'Gekoppeld.'}
         </p>
       )}
       {fout && (
-        <p role="alert" className="m-0 rounded-2xl bg-[#FCE3D2] p-4 text-sm text-[#6E2E09]">
+        <p role="alert" className="m-0 rounded-2xl bg-adm-warn-bg p-4 text-sm text-adm-warn-strong">
           {fout}
         </p>
       )}
@@ -56,12 +56,12 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           gekoppeld is. Iedereen koppelt zijn eigen account; de contact-agenda koppel je één keer met contact@iknowright.be.
         </p>
         {!isGoogleConfigured() && (
-          <p className="m-0 mb-2 text-sm text-[#A3470F]">Google is nog niet ingesteld (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).</p>
+          <p className="m-0 mb-2 text-sm text-adm-warn">Google is nog niet ingesteld (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).</p>
         )}
         {rows.map((r) => {
           const c = status(r.email)
           return (
-            <div key={r.email} className="flex flex-wrap items-center gap-3 border-t border-[#E6DFD2] py-3.5">
+            <div key={r.email} className="flex flex-wrap items-center gap-3 border-t border-adm-line py-3.5">
               <div className="flex flex-[1_1_240px] flex-col">
                 <span className="font-semibold">{r.label}</span>
                 <span className={cn('text-xs', muted)}>{r.email}</span>

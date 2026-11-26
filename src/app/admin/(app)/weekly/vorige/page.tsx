@@ -20,7 +20,7 @@ export default async function PastWeekliesPage() {
         <Link href="/admin/weekly" className={cn(muted, 'no-underline hover:underline')}>
           Weekly
         </Link>{' '}
-        / <span className="font-semibold text-ikr-navy">Vorige weeklies</span>
+        / <span className="font-semibold text-adm-fg">Vorige weeklies</span>
       </nav>
       <PageHeader title="Vorige weeklies" />
       {!past.length && (
@@ -38,7 +38,7 @@ export default async function PastWeekliesPage() {
               </span>
               <Pill tone={w.mode === 'online' ? 'teal' : 'purple'}>{w.mode === 'online' ? 'Online' : 'Live'}</Pill>
               {w.recording_url ? (
-                <a href={w.recording_url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-[#0B7F93]">
+                <a href={w.recording_url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-adm-teal">
                   Opname / transcript
                 </a>
               ) : (

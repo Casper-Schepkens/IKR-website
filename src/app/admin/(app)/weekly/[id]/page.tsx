@@ -38,7 +38,7 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
         <Link href="/admin/weekly" className={cn(muted, 'no-underline hover:underline')}>
           Weekly
         </Link>{' '}
-        / <span className="font-semibold text-ikr-navy">Meeting</span>
+        / <span className="font-semibold text-adm-fg">Meeting</span>
       </nav>
       <PageHeader
         eyebrow={`${fmtDate(w.starts_at, { weekday: 'long', day: 'numeric', month: 'long' })} · ${weeklyTimeRange(w)}`}
@@ -65,7 +65,7 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
             existingUrl={w.recording_url}
           />
           {w.recording_url && (
-            <a href={w.recording_url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-[#0B7F93]">
+            <a href={w.recording_url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-adm-teal">
               Open opname
             </a>
           )}
@@ -81,7 +81,7 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
               </a>
             ) : (
               <>
-                <span className="text-sm text-[#A3470F]">Geen Meet-link ({w.calendar_error ?? 'agenda niet gekoppeld'}).</span>
+                <span className="text-sm text-adm-warn">Geen Meet-link ({w.calendar_error ?? 'agenda niet gekoppeld'}).</span>
                 <RetryCalendarButton weeklyId={w.id} online />
               </>
             )}
@@ -111,7 +111,7 @@ export default async function MeetingPage({ params }: { params: Promise<{ id: st
           <Card dark className="flex flex-col gap-3">
             <Title className="m-0 text-2xl text-ikr-cream-light">Conclude meeting</Title>
             <p className="m-0 text-sm text-[#E7E2F0]">Plan de volgende weekly in. Bij online wordt de Meet meteen aangemaakt.</p>
-            <div className="rounded-2xl bg-ikr-cream-light p-4">
+            <div className="rounded-2xl bg-adm-card p-4">
               <PlanWeeklyForm
                 action={concludeWeeklyAction.bind(null, w.id)}
                 submitLabel="Afsluiten en inplannen"

@@ -46,7 +46,7 @@ export function NewCallForm({ leads }: { leads: { id: string; label: string }[] 
         </label>
       </div>
       <label className="mt-2 flex items-center gap-2 text-sm">
-        <input type="checkbox" name="invite" className="size-4 accent-ikr-navy" /> Lead ook uitnodigen via de agenda
+        <input type="checkbox" name="invite" className="size-4 accent-adm-fg" /> Lead ook uitnodigen via de agenda
       </label>
     </FormAction>
   )

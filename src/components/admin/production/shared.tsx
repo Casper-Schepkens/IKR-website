@@ -41,7 +41,7 @@ export function DuePill({
   return (
     <Pill
       tone={i.tone === 'red' ? 'orange' : i.tone}
-      className={cn('whitespace-nowrap', i.tone === 'red' && 'bg-[#F8D3D0] text-[#8E1B12]')}
+      className={cn('whitespace-nowrap', i.tone === 'red' && 'bg-adm-red-bg text-adm-red')}
     >
       {i.tone === 'red' ? '! ' : ''}
       {i.text}
@@ -81,8 +81,8 @@ export function StepRow({
   return (
     <li
       className={cn(
-        'flex flex-col gap-1.5 border-t border-[#E6DFD2] py-2 first:border-t-0',
-        s.done && 'text-[#6F6A76]',
+        'flex flex-col gap-1.5 border-t border-adm-line py-2 first:border-t-0',
+        s.done && 'text-adm-faint',
       )}
     >
       {label && (
@@ -140,7 +140,7 @@ export function StepRow({
               })
             }}
             aria-label={`${s.done ? 'Terug open' : 'Af'}: ${s.title}`}
-            className="size-4 shrink-0 cursor-pointer accent-ikr-navy"
+            className="size-4 shrink-0 cursor-pointer accent-adm-fg"
           />
           <span className={cn('min-w-0 flex-1 text-sm', !s.done && 'font-semibold')}>
             {s.title}
@@ -233,7 +233,7 @@ export function StepRow({
         </form>
       )}
       {error && (
-        <p role="alert" className="m-0 ml-6 text-xs text-[#A3470F]">
+        <p role="alert" className="m-0 ml-6 text-xs text-adm-warn">
           {error}
         </p>
       )}

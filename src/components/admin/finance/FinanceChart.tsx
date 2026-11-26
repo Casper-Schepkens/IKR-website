@@ -4,9 +4,9 @@ import { useState } from 'react'
 import { muted } from '../ui'
 import { cn } from '@/utilities/ui'
 
-/** Kleuren gevalideerd (dataviz-validator, licht oppervlak #FFF8F1): in = cyaan, uit = oranje. */
-const IN = '#0B9DB8'
-const OUT = '#EB6834'
+/** Licht: gevalideerd met dataviz-validator op #FFF8F1. Donker: contrast nagerekend op #1C1533 (8.6:1 en 6.3:1): in = cyaan, uit = oranje. Waarden: --color-adm-chart-* in globals.css. */
+const IN = 'var(--color-adm-chart-in)'
+const OUT = 'var(--color-adm-chart-out)'
 const MONTHS = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec']
 const eur = (n: number) => new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n)
 const label = (m: string) => `${MONTHS[Number(m.slice(5)) - 1]} ${m.slice(2, 4)}`
@@ -27,11 +27,11 @@ export function FinanceChart({ data }: { data: { maand: string; omzet: number; k
         </span>
       </figcaption>
       <div className="relative" onMouseLeave={() => setHover(null)}>
-        <div className="flex items-end gap-[6px] border-b border-[#D9D1C2]" style={{ height: h }} aria-hidden="true">
+        <div className="flex items-end gap-[6px] border-b border-adm-line-strong" style={{ height: h }} aria-hidden="true">
           {data.map((d, i) => (
             <div
               key={d.maand}
-              className={cn('flex h-full flex-1 cursor-default items-end justify-center gap-[2px] rounded-t-md', hover === i && 'bg-[#F0EBE0]')}
+              className={cn('flex h-full flex-1 cursor-default items-end justify-center gap-[2px] rounded-t-md', hover === i && 'bg-adm-soft')}
               onMouseEnter={() => setHover(i)}
             >
               <span className="w-[38%] max-w-5 rounded-t-[4px]" style={{ height: `${(d.omzet / max) * 100}%`, background: IN }} />
@@ -49,7 +49,7 @@ export function FinanceChart({ data }: { data: { maand: string; omzet: number; k
         {hover !== null && (
           <div
             role="status"
-            className="pointer-events-none absolute top-0 z-10 rounded-xl bg-white px-3 py-2 text-xs shadow-lg"
+            className="pointer-events-none absolute top-0 z-10 rounded-xl bg-adm-raised px-3 py-2 text-xs shadow-lg"
             style={{ left: `min(calc(${((hover + 0.5) / data.length) * 100}% + 8px), calc(100% - 170px))` }}
           >
             <div className="font-bold">{label(data[hover].maand)}</div>
@@ -72,7 +72,7 @@ export function FinanceChart({ data }: { data: { maand: string; omzet: number; k
           </thead>
           <tbody>
             {data.map((d) => (
-              <tr key={d.maand} className="border-t border-[#E6DFD2]">
+              <tr key={d.maand} className="border-t border-adm-line">
                 <td className="py-1">{label(d.maand)}</td>
                 <td className="py-1 text-right tabular-nums">{eur(d.omzet)}</td>
                 <td className="py-1 text-right tabular-nums">{eur(d.kosten)}</td>

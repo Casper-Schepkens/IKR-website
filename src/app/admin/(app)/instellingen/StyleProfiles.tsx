@@ -24,7 +24,7 @@ export async function StyleProfiles() {
       {STYLE_KEYS.map((key) => {
         const p = profiles.find((x) => x.key === key)
         return (
-          <div key={key} className="flex flex-col gap-2 border-t border-[#E6DFD2] pt-4">
+          <div key={key} className="flex flex-col gap-2 border-t border-adm-line pt-4">
             <div className="flex flex-wrap items-center gap-3">
               <span className="font-semibold">{STYLE_LABEL[key]}</span>
               <span className={cn('text-xs', muted)}>
@@ -53,7 +53,7 @@ export async function StyleProfiles() {
                     <summary className="cursor-pointer text-sm font-semibold">Voorbeelden ({p.examples.length})</summary>
                     <div className="mt-2 flex flex-col gap-2">
                       {p.examples.map((e, i) => (
-                        <p key={i} className="m-0 rounded-xl bg-ikr-cream p-3 text-sm whitespace-pre-line">
+                        <p key={i} className="m-0 rounded-xl bg-adm-soft p-3 text-sm whitespace-pre-line">
                           {e}
                         </p>
                       ))}

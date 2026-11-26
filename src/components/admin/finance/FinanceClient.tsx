@@ -80,7 +80,7 @@ function TxRow({ tx, clients }: { tx: Tx; clients: { id: string; name: string }[
   const changed = category !== tx.category || (category === 'klant' && clientId !== (tx.client_id ?? ''))
   const options = tx.amount > 0 ? IN_CATEGORIES : OUT_CATEGORIES
   return (
-    <li className="grid grid-cols-1 gap-2 border-t border-[#E6DFD2] py-2.5 text-sm sm:grid-cols-[90px_minmax(0,1fr)_110px_minmax(0,260px)]">
+    <li className="grid grid-cols-1 gap-2 border-t border-adm-line py-2.5 text-sm sm:grid-cols-[90px_minmax(0,1fr)_110px_minmax(0,260px)]">
       <span className={muted}>{tx.date}</span>
       <span className="min-w-0">
         <span className="block truncate font-semibold">{tx.counterparty || tx.description.split(' Betaling')[0]}</span>
@@ -88,7 +88,7 @@ function TxRow({ tx, clients }: { tx: Tx; clients: { id: string; name: string }[
           {tx.description}
         </span>
       </span>
-      <span className={cn('tabular-nums sm:text-right', tx.amount > 0 ? 'text-[#0B7F93]' : '')}>{eur(tx.amount)}</span>
+      <span className={cn('tabular-nums sm:text-right', tx.amount > 0 ? 'text-adm-teal' : '')}>{eur(tx.amount)}</span>
       <span className="flex flex-col gap-1">
         <span className="flex gap-1">
           <select aria-label="Categorie" value={category} onChange={(e) => setCategory(e.target.value)} className={cn(input, 'min-h-9 min-w-0 py-1 text-xs', category === 'onbekend' && 'ring-2 ring-[#EB6834]')}>
@@ -113,7 +113,7 @@ function TxRow({ tx, clients }: { tx: Tx; clients: { id: string; name: string }[
         {changed && (
           <span className="flex flex-wrap items-center gap-2">
             <label className="flex items-center gap-1 text-xs">
-              <input type="checkbox" checked={rule} onChange={(e) => setRule(e.target.checked)} className="accent-ikr-navy" /> voortaan altijd zo
+              <input type="checkbox" checked={rule} onChange={(e) => setRule(e.target.checked)} className="accent-adm-fg" /> voortaan altijd zo
             </label>
             <button
               type="button"
@@ -134,7 +134,7 @@ function TxRow({ tx, clients }: { tx: Tx; clients: { id: string; name: string }[
         )}
         {tx.manual && !changed && <span className={cn('text-xs', muted)}>handmatig ingedeeld</span>}
         {error && (
-          <span role="alert" className="text-xs text-[#A3470F]">
+          <span role="alert" className="text-xs text-adm-warn">
             {error}
           </span>
         )}

@@ -11,6 +11,37 @@
   --color-ikr-navy: #201737;
   --color-ikr-navy-text: #211636;
   --color-ikr-cyan: #0FC1DE;
+
+  /* /admin: semantische kleuren. Lichte waarden hier; donkere in src/app/admin/admin.css. */
+  --color-adm-page: #F0EBE0;
+  --color-adm-soft: #F0EBE0;
+  --color-adm-soft-hover: #E6DFD2;
+  --color-adm-card: #FFF8F1;
+  --color-adm-raised: #FFFFFF;
+  --color-adm-fg: #201737;
+  --color-adm-muted: #5E5670;
+  --color-adm-faint: #69617B;
+  --color-adm-line: #E6DFD2;
+  --color-adm-line-strong: #D9D1C2;
+  --color-adm-inverse: #201737;
+  --color-adm-inverse-hover: #2C2247;
+  --color-adm-side: #201737;
+  --color-adm-warn: #A3470F;
+  --color-adm-warn-strong: #6E2E09;
+  --color-adm-warn-bg: #FCE3D2;
+  --color-adm-red: #8E1B12;
+  --color-adm-red-bg: #F8D3D0;
+  --color-adm-green: #1E5B27;
+  --color-adm-green-bg: #DDF2DF;
+  --color-adm-teal: #0B7F93;
+  --color-adm-teal-bg: #D3F3F9;
+  --color-adm-yellow: #6B5300;
+  --color-adm-yellow-bg: #FFF0C2;
+  --color-adm-violet: #3B2E63;
+  --color-adm-violet-bg: #E4E0F0;
+  --color-adm-ring: #201737;
+  --color-adm-chart-in: #0B9DB8;
+  --color-adm-chart-out: #EB6834;
 }
 
 :root {

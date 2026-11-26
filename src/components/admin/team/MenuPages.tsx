@@ -29,8 +29,8 @@ export function MenuPages({ hidden: initial, salesOwner }: { hidden: string[]; s
   const sales = MENU_PAGES.filter((p) => 'sales' in p && p.sales)
   const rest = MENU_PAGES.filter((p) => !('sales' in p && p.sales))
   const box = (p: (typeof MENU_PAGES)[number]) => (
-    <label key={p.href} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-2 text-sm hover:bg-[#F3EEE4]">
-      <input type="checkbox" className="size-5 accent-[#0E2A47]" checked={!hidden.includes(p.href)} onChange={() => toggle(p.href)} disabled={pending} />
+    <label key={p.href} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl px-2 text-sm hover:bg-adm-soft">
+      <input type="checkbox" className="size-5 accent-adm-fg" checked={!hidden.includes(p.href)} onChange={() => toggle(p.href)} disabled={pending} />
       {p.label}
     </label>
   )
@@ -57,7 +57,7 @@ export function MenuPages({ hidden: initial, salesOwner }: { hidden: string[]; s
         Terug naar de standaard
       </button>
       {error && (
-        <p role="alert" className="m-0 text-sm text-[#A3470F]">
+        <p role="alert" className="m-0 text-sm text-adm-warn">
           {error}
         </p>
       )}

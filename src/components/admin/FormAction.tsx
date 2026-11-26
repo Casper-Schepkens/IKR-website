@@ -99,11 +99,11 @@ export function FormAction({
           {pending ? pendingText : submitLabel}
         </button>
         {error && (
-          <span role="alert" className="text-sm font-medium text-[#A3470F]">
+          <span role="alert" className="text-sm font-medium text-adm-warn">
             {error}
           </span>
         )}
-        {saved && !error && !pending && <span className="text-sm text-[#1E5B27]">Opgeslagen</span>}
+        {saved && !error && !pending && <span className="text-sm text-adm-green">Opgeslagen</span>}
       </div>
     </form>
   )

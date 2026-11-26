@@ -57,7 +57,7 @@ export function InternalRow({ item: i, today, label }: { item: InternalItem; tod
       router.refresh()
     })
   return (
-    <li className="flex flex-col gap-1.5 border-t border-[#E6DFD2] py-2 first:border-t-0">
+    <li className="flex flex-col gap-1.5 border-t border-adm-line py-2 first:border-t-0">
       {label && <span className={cn('text-[11px] font-bold tracking-wide uppercase', muted)}>{label}</span>}
       <div className="flex flex-wrap items-center gap-2">
         <input
@@ -73,7 +73,7 @@ export function InternalRow({ item: i, today, label }: { item: InternalItem; tod
             })
           }
           aria-label={`Af: ${i.task.title} (${i.due_on})`}
-          className="size-4 shrink-0 cursor-pointer accent-ikr-navy"
+          className="size-4 shrink-0 cursor-pointer accent-adm-fg"
         />
         <span className="min-w-0 flex-1 text-sm font-semibold">
           {i.task.title}
@@ -115,7 +115,7 @@ export function InternalRow({ item: i, today, label }: { item: InternalItem; tod
         </div>
       )}
       {error && (
-        <p role="alert" className="m-0 ml-6 text-xs text-[#A3470F]">
+        <p role="alert" className="m-0 ml-6 text-xs text-adm-warn">
           {error}
         </p>
       )}
@@ -130,7 +130,7 @@ function TaskForm({ item, me, onDone }: { item?: InternalItem; me?: TeamMember |
   const t = item?.task
   return (
     <form
-      className="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] items-end gap-2 rounded-xl bg-ikr-cream/50 p-2"
+      className="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] items-end gap-2 rounded-xl bg-adm-soft/50 p-2"
       onSubmit={(e) => {
         e.preventDefault()
         const data = new FormData(e.currentTarget)
@@ -179,7 +179,7 @@ function TaskForm({ item, me, onDone }: { item?: InternalItem; me?: TeamMember |
         </button>
         {pending && <Spinner />}
         {error && (
-          <span role="alert" className="text-xs text-[#A3470F]">
+          <span role="alert" className="text-xs text-adm-warn">
             {error}
           </span>
         )}

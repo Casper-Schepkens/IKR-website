@@ -54,7 +54,7 @@ export function CallCard({ call: c, lead, overdue }: { call: Call; lead: CallLea
           </span>
           <span className="text-sm">
             {lead ? (
-              <Link href={`/admin/sales/leads/${lead.id}`} className="font-semibold text-ikr-navy hover:text-[#0B7F93]">
+              <Link href={`/admin/sales/leads/${lead.id}`} className="font-semibold text-adm-fg hover:text-adm-teal">
                 {lead.company ?? lead.name}
               </Link>
             ) : (
@@ -74,32 +74,32 @@ export function CallCard({ call: c, lead, overdue }: { call: Call; lead: CallLea
       <BotContext call={c} />
 
       {lead?.context && <p className={cn('m-0 text-sm', muted)}>{lead.context}</p>}
-      {c.calendar_error && <p className="m-0 text-sm text-[#A3470F]">Agenda: {c.calendar_error}</p>}
+      {c.calendar_error && <p className="m-0 text-sm text-adm-warn">Agenda: {c.calendar_error}</p>}
 
       <div className="flex flex-wrap items-center gap-2 text-sm">
         {!sales && lead?.phone && (
-          <a href={`tel:${lead.phone.replace(/\s+/g, '')}`} className="font-semibold text-[#0B7F93]">
+          <a href={`tel:${lead.phone.replace(/\s+/g, '')}`} className="font-semibold text-adm-teal">
             {lead.phone}
           </a>
         )}
         {c.meet_url && (
-          <a href={c.meet_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#0B7F93]">
+          <a href={c.meet_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-adm-teal">
             Google Meet ↗
           </a>
         )}
         {sales && <SalesPpt call={c} />}
         {c.recording_url && (
-          <a href={c.recording_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#0B7F93]">
+          <a href={c.recording_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-adm-teal">
             Opname ↗
           </a>
         )}
         {c.transcript_url && (
-          <a href={c.transcript_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#0B7F93]">
+          <a href={c.transcript_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-adm-teal">
             Transcript ↗
           </a>
         )}
         {c.thank_you_draft_id && (
-          <Link href="/admin/sales/inbox?tab=concepten" className="font-semibold text-[#0B7F93]">
+          <Link href="/admin/sales/inbox?tab=concepten" className="font-semibold text-adm-teal">
             Bedankmail
           </Link>
         )}
@@ -109,7 +109,7 @@ export function CallCard({ call: c, lead, overdue }: { call: Call; lead: CallLea
       )}
       {c.note && <p className={cn('m-0 text-xs', muted)}>{c.note}</p>}
       {c.analysis && (
-        <details className="rounded-2xl bg-ikr-cream p-3 text-sm">
+        <details className="rounded-2xl bg-adm-soft p-3 text-sm">
           <summary className="cursor-pointer font-semibold">
             Feedback van Grok Bot{c.analysis.score ? ` · ${c.analysis.score}/10` : ''}
           </summary>
@@ -134,7 +134,7 @@ export function CallCard({ call: c, lead, overdue }: { call: Call; lead: CallLea
       )}
 
       {open && (
-        <div className="flex flex-col gap-3 border-t border-[#E6DFD2] pt-3">
+        <div className="flex flex-col gap-3 border-t border-adm-line pt-3">
           {sales ? (
             <div className="flex flex-wrap items-center gap-2">
               <button
@@ -161,7 +161,7 @@ export function CallCard({ call: c, lead, overdue }: { call: Call; lead: CallLea
                     setInfo(d?.inMeeting ? 'Fireflies zit in de call.' : 'Fireflies zit niet in de call.')
                   })
                 }
-                className={cn(small, 'bg-ikr-cream text-ikr-navy')}
+                className={cn(small, 'bg-adm-soft text-adm-fg')}
               >
                 Check Fireflies
               </button>
@@ -197,7 +197,7 @@ export function CallCard({ call: c, lead, overdue }: { call: Call; lead: CallLea
                   setInfo(d?.draftId ? 'Bedankmail met de ppt staat klaar in Inbox → Concepten.' : 'Call afgerond.'),
                 )
               }
-              className={cn(small, 'bg-[#DDF2DF] text-[#1E5B27]')}
+              className={cn(small, 'bg-adm-green-bg text-adm-green')}
             >
               Call afgerond
             </button>
@@ -209,7 +209,7 @@ export function CallCard({ call: c, lead, overdue }: { call: Call; lead: CallLea
                   setInfo(d?.draftId ? 'Concept om een nieuwe call te plannen staat klaar in Inbox → Concepten.' : 'Aangeduid als no-show.'),
                 )
               }
-              className={cn(small, 'bg-[#FCE3D2] text-[#8A3A0C]')}
+              className={cn(small, 'bg-adm-warn-bg text-adm-warn')}
             >
               Kwam niet opdagen
             </button>
@@ -218,12 +218,12 @@ export function CallCard({ call: c, lead, overdue }: { call: Call; lead: CallLea
                 <button type="button" disabled={pending} onClick={() => run(() => cancelCallAction(c.id))} className={cn(small, 'bg-[#B42318] text-white')}>
                   Ja, annuleer (ook in de agenda)
                 </button>
-                <button type="button" onClick={() => setConfirmCancel(false)} className={cn(small, 'bg-ikr-cream text-ikr-navy')}>
+                <button type="button" onClick={() => setConfirmCancel(false)} className={cn(small, 'bg-adm-soft text-adm-fg')}>
                   Toch niet
                 </button>
               </>
             ) : (
-              <button type="button" disabled={pending} onClick={() => setConfirmCancel(true)} className={cn(small, 'bg-ikr-cream text-[#8E1B12]')}>
+              <button type="button" disabled={pending} onClick={() => setConfirmCancel(true)} className={cn(small, 'bg-adm-soft text-adm-red')}>
                 Annuleren
               </button>
             )}
@@ -233,7 +233,7 @@ export function CallCard({ call: c, lead, overdue }: { call: Call; lead: CallLea
       )}
 
       {info && (
-        <p role="status" className="m-0 text-sm text-[#1E5B27]">
+        <p role="status" className="m-0 text-sm text-adm-green">
           {info}
           {info.includes('Concepten') && (
             <>
@@ -246,7 +246,7 @@ export function CallCard({ call: c, lead, overdue }: { call: Call; lead: CallLea
         </p>
       )}
       {error && (
-        <p role="alert" className="m-0 text-sm text-[#A3470F]">
+        <p role="alert" className="m-0 text-sm text-adm-warn">
           {error}
         </p>
       )}
@@ -277,16 +277,16 @@ function SalesPpt({ call: c }: { call: Call }) {
           save(String(new FormData(e.currentTarget).get('url') ?? ''))
         }}
       >
-        <input name="url" type="url" autoFocus defaultValue={c.sales_ppt_url ?? ''} placeholder="https://… (leeg = standaard-ppt)" aria-label="Sales-ppt voor deze call" className="min-h-8 w-64 rounded-lg border-0 bg-ikr-cream px-2.5 text-xs" />
-        <button type="submit" disabled={pending} className={cn(small, 'bg-ikr-navy text-ikr-cream-light')}>
+        <input name="url" type="url" autoFocus defaultValue={c.sales_ppt_url ?? ''} placeholder="https://… (leeg = standaard-ppt)" aria-label="Sales-ppt voor deze call" className="min-h-8 w-64 rounded-lg border-0 bg-adm-soft px-2.5 text-xs" />
+        <button type="submit" disabled={pending} className={cn(small, 'bg-adm-inverse text-ikr-cream-light')}>
           Bewaar
         </button>
-        <button type="button" onClick={() => setEditing(false)} className={cn(small, 'bg-ikr-cream text-ikr-navy')}>
+        <button type="button" onClick={() => setEditing(false)} className={cn(small, 'bg-adm-soft text-adm-fg')}>
           Annuleer
         </button>
         {pending && <Spinner />}
         {error && (
-          <span role="alert" className="text-xs text-[#A3470F]">
+          <span role="alert" className="text-xs text-adm-warn">
             {error}
           </span>
         )}
@@ -294,11 +294,11 @@ function SalesPpt({ call: c }: { call: Call }) {
     )
   return (
     <span className="inline-flex items-center gap-1">
-      <a href={salesPptUrl(c)} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#0B7F93]">
+      <a href={salesPptUrl(c)} target="_blank" rel="noopener noreferrer" className="font-semibold text-adm-teal">
         Sales-ppt ↗
       </a>
       {c.sales_ppt_url && <span className={cn('text-xs', muted)}>(eigen)</span>}
-      <button type="button" onClick={() => setEditing(true)} aria-label="Sales-ppt aanpassen" title="Sales-ppt voor deze call aanpassen" className="rounded-full p-1 text-xs text-[#5E5670] hover:bg-ikr-cream">
+      <button type="button" onClick={() => setEditing(true)} aria-label="Sales-ppt aanpassen" title="Sales-ppt voor deze call aanpassen" className="rounded-full p-1 text-xs text-adm-muted hover:bg-adm-soft">
         ✎
       </button>
     </span>
@@ -324,7 +324,7 @@ function BotContext({ call: c }: { call: Call }) {
       router.refresh()
     })
   return (
-    <section aria-label="Context van Grok Bot" className="flex flex-col gap-2 rounded-2xl border-l-4 border-[#7B6BB0] bg-[#F3F0FA] px-4 py-3">
+    <section aria-label="Context van Grok Bot" className="flex flex-col gap-2 rounded-2xl border-l-4 border-[#7B6BB0] bg-adm-violet-bg px-4 py-3">
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} className="flex items-center gap-1.5 text-left text-sm font-bold">
           <span aria-hidden className={cn('inline-block text-xs transition-transform', open && 'rotate-90')}>
@@ -334,7 +334,7 @@ function BotContext({ call: c }: { call: Call }) {
         </button>
         {!has && !editing && <span className={cn('text-xs', muted)}>nog leeg</span>}
         {!editing && (
-          <button type="button" onClick={() => (setEditing(true), setOpen(true))} className="ml-auto rounded-full px-2 py-0.5 text-xs text-[#5E5670] hover:bg-white" aria-label="Context van Grok Bot aanpassen">
+          <button type="button" onClick={() => (setEditing(true), setOpen(true))} className="ml-auto rounded-full px-2 py-0.5 text-xs text-adm-muted hover:bg-adm-raised" aria-label="Context van Grok Bot aanpassen">
             ✎ Aanpassen
           </button>
         )}
@@ -348,18 +348,18 @@ function BotContext({ call: c }: { call: Call }) {
               save(String(new FormData(e.currentTarget).get('text') ?? ''))
             }}
           >
-            <textarea name="text" rows={8} autoFocus defaultValue={c.bot_context ?? ''} aria-label="Context van Grok Bot (markdown)" placeholder={'# Kopje\n- opsomming\n[link](https://…)'} className="w-full resize-y rounded-xl border-0 bg-white px-3 py-2 font-mono text-[13px]" />
+            <textarea name="text" rows={8} autoFocus defaultValue={c.bot_context ?? ''} aria-label="Context van Grok Bot (markdown)" placeholder={'# Kopje\n- opsomming\n[link](https://…)'} className="w-full resize-y rounded-xl border-0 bg-adm-raised px-3 py-2 font-mono text-[13px]" />
             <div className="flex flex-wrap items-center gap-2">
-              <button type="submit" disabled={pending} className={cn(small, 'bg-ikr-navy text-ikr-cream-light')}>
+              <button type="submit" disabled={pending} className={cn(small, 'bg-adm-inverse text-ikr-cream-light')}>
                 Bewaar
               </button>
-              <button type="button" onClick={() => setEditing(false)} className={cn(small, 'bg-white text-ikr-navy')}>
+              <button type="button" onClick={() => setEditing(false)} className={cn(small, 'bg-adm-raised text-adm-fg')}>
                 Annuleer
               </button>
               <span className={cn('text-xs', muted)}>Markdown: # kopje, - opsomming, **vet**, [tekst](https://…)</span>
               {pending && <Spinner />}
               {error && (
-                <span role="alert" className="text-xs text-[#A3470F]">
+                <span role="alert" className="text-xs text-adm-warn">
                   {error}
                 </span>
               )}

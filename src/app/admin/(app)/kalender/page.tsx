@@ -61,7 +61,7 @@ async function MonthItems({ days, month, today: day }: { days: string[]; month: 
   if (res.status !== 'ok')
     return (
       <Card>
-        <p className="m-0 text-sm text-[#A3470F]">{res.reason}</p>
+        <p className="m-0 text-sm text-adm-warn">{res.reason}</p>
       </Card>
     )
   const items = res.items

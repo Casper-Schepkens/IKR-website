@@ -110,7 +110,7 @@ export function InboxCard(props: InboxCardProps) {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/admin/sales/leads/${p.leadId}`}
-            className="text-lg font-bold text-ikr-navy no-underline hover:text-[#0B7F93]"
+            className="text-lg font-bold text-adm-fg no-underline hover:text-adm-teal"
           >
             {p.leadName}
           </Link>
@@ -126,7 +126,7 @@ export function InboxCard(props: InboxCardProps) {
             })}
           </span>
         </div>
-        <div className="rounded-2xl bg-ikr-cream p-4">
+        <div className="rounded-2xl bg-adm-soft p-4">
           <p className={cn('m-0 mb-1 text-xs font-semibold', muted)}>{p.subject}</p>
           <p className="m-0 text-sm leading-relaxed whitespace-pre-line">
             {p.text || '(leeg bericht)'}
@@ -139,7 +139,7 @@ export function InboxCard(props: InboxCardProps) {
           </span>
         )}
         {p.job && (p.job.status === 'error' || p.job.status === 'waiting_limit') && (
-          <span className="flex flex-wrap items-center gap-2 text-sm text-[#A3470F]">
+          <span className="flex flex-wrap items-center gap-2 text-sm text-adm-warn">
             {p.job.error}
             <button
               type="button"
@@ -256,7 +256,7 @@ export function InboxCard(props: InboxCardProps) {
           </div>
         )}
         {error && (
-          <span role="alert" className="text-sm font-medium text-[#A3470F]">
+          <span role="alert" className="text-sm font-medium text-adm-warn">
             {error}
           </span>
         )}
@@ -290,7 +290,7 @@ export function InboxCard(props: InboxCardProps) {
                 () => setSent(true),
               )
             }
-            className="ikr-btn absolute right-0 bottom-0 flex size-9 items-center justify-center rounded-full bg-ikr-cream text-ikr-navy hover:bg-[#e6dfd2] disabled:opacity-60"
+            className="ikr-btn absolute right-0 bottom-0 flex size-9 items-center justify-center rounded-full bg-adm-soft text-adm-fg hover:bg-adm-soft-hover disabled:opacity-60"
           >
             <Icon.close size={16} />
           </button>

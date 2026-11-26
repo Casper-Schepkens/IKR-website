@@ -11,7 +11,7 @@ import { buttonClass, muted, Pill, Spinner } from '../ui'
 import { ClientFields } from './ClientFields'
 import { cn } from '@/utilities/ui'
 
-const RED = 'bg-[#F8D3D0] text-[#8E1B12]'
+const RED = 'bg-adm-red-bg text-adm-red'
 const eur = (n: number | null | undefined) => (n == null ? null : new Intl.NumberFormat('nl-BE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 2 }).format(n))
 const day = (d: string | null | undefined) => (d ? fmtDate(d, { day: 'numeric', month: 'short', year: 'numeric' }) : null)
 
@@ -44,9 +44,9 @@ export function ClientRow({ client: c, days, proposal }: { client: Client; days:
   const detailId = `klant-${c.id}`
   return (
     <>
-      <tr ref={rowRef} className={cn('scroll-mt-24 border-t border-[#E6DFD2] hover:bg-ikr-cream/60', open && 'bg-ikr-cream/50')}>
+      <tr ref={rowRef} className={cn('scroll-mt-24 border-t border-adm-line hover:bg-adm-soft/60', open && 'bg-adm-soft/50')}>
         <td className="px-6 py-3">
-          <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls={detailId} className="flex items-center gap-2 text-left font-bold text-ikr-navy">
+          <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls={detailId} className="flex items-center gap-2 text-left font-bold text-adm-fg">
             <span aria-hidden className={cn('inline-block text-xs transition-transform', open && 'rotate-90')}>
               ▸
             </span>
@@ -74,7 +74,7 @@ export function ClientRow({ client: c, days, proposal }: { client: Client; days:
         )}
       </tr>
       {open && (
-        <tr id={detailId} className="bg-ikr-cream/50">
+        <tr id={detailId} className="bg-adm-soft/50">
           <td colSpan={4} className="px-6 pt-1 pb-5">
             <ClientDetail client={c} proposal={proposal} />
           </td>
@@ -124,7 +124,7 @@ function ClientDetail({ client: c, proposal }: { client: Client; proposal: Contr
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3 rounded-2xl bg-white/60 p-4">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3 rounded-2xl bg-adm-raised/60 p-4">
         <Fact label="Klant betaalt / maand" value={eur(c.monthly_fee)} hint="excl. btw" />
         <Fact label="Freelancer / maand" value={eur(c.freelancer_cost)} />
         <Fact label="Boosting / maand" value={eur(c.boosting_budget)} />
@@ -174,7 +174,7 @@ function ClientDetail({ client: c, proposal }: { client: Client; proposal: Contr
         )}
         {pending && <Spinner />}
         {error && (
-          <span role="alert" className="text-xs text-[#A3470F]">
+          <span role="alert" className="text-xs text-adm-warn">
             {error}
           </span>
         )}
@@ -211,10 +211,10 @@ function ProposalPanel({
     <p className={cn('m-0 text-xs', muted)}>Geen contracten gevonden in de IKR-Drive voor &quot;{c.name}&quot;.</p>
   )
   return (
-    <section aria-label="Voorstel uit het contract" className="flex flex-col gap-2 rounded-2xl border-2 border-dashed border-[#0B9DB8]/50 bg-white/70 p-4">
+    <section aria-label="Voorstel uit het contract" className="flex flex-col gap-2 rounded-2xl border-2 border-dashed border-[#0B9DB8]/50 bg-adm-raised/70 p-4">
       <p className="m-0 text-sm font-bold">Uit het contract</p>
       {(p.status === 'pending' || p.status === 'running') && <p className="m-0 text-sm">De agent leest de contracten… dit verschijnt hier vanzelf.</p>}
-      {(p.status === 'error' || p.status === 'waiting_limit') && <p className="m-0 text-sm text-[#A3470F]">Lukte niet: {p.error ?? 'onbekende fout'}. Probeer opnieuw.</p>}
+      {(p.status === 'error' || p.status === 'waiting_limit') && <p className="m-0 text-sm text-adm-warn">Lukte niet: {p.error ?? 'onbekende fout'}. Probeer opnieuw.</p>}
       {p.status === 'done' && p.output && (
         <>
           {p.changes.length ? (

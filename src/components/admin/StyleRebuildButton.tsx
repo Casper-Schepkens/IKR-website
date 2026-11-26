@@ -53,7 +53,7 @@ export function StyleRebuildButton({ styleKey, rewriter }: { styleKey: 'casper';
       </button>
       {info && <span className={cn('text-xs', muted)}>{info}</span>}
       {error && (
-        <span role="alert" className="text-sm text-[#A3470F]">
+        <span role="alert" className="text-sm text-adm-warn">
           {error}
         </span>
       )}

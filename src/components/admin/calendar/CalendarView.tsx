@@ -8,11 +8,11 @@ import { cn } from '@/utilities/ui'
 
 /** Kleur per soort (achtergrond van het item); tekst blijft donker. Soort staat er ook als label bij. */
 const TONE: Record<Kind, string> = {
-  weekly: 'bg-[#E4E0F0] border-[#7B6BB0]',
-  sales: 'bg-[#D3F3F9] border-[#0B9DB8]',
-  setter: 'bg-[#E8F6EC] border-[#3C9A5F]',
-  draaidag: 'bg-[#FCE3D2] border-[#EB6834]',
-  overig: 'bg-ikr-cream border-[#B9B1A3]',
+  weekly: 'bg-adm-violet-bg border-[#7B6BB0]',
+  sales: 'bg-adm-teal-bg border-[#0B9DB8]',
+  setter: 'bg-adm-green-bg border-[#3C9A5F]',
+  draaidag: 'bg-adm-warn-bg border-[#EB6834]',
+  overig: 'bg-adm-soft border-adm-line-strong',
 }
 const WEEKDAYS = ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo']
 
@@ -43,7 +43,7 @@ export function CalendarView({ items, days, month, today }: { items: CalItem[]; 
 
       {/* Maandrooster (vanaf tablet) */}
       <Card className="hidden p-0 md:block">
-        <div className="grid grid-cols-7 border-b border-[#E6DFD2] text-xs font-bold tracking-wide uppercase">
+        <div className="grid grid-cols-7 border-b border-adm-line text-xs font-bold tracking-wide uppercase">
           {WEEKDAYS.map((w) => (
             <div key={w} className={cn('px-2 py-2', muted)}>
               {w}
@@ -55,9 +55,9 @@ export function CalendarView({ items, days, month, today }: { items: CalItem[]; 
             const list = map.get(d) ?? []
             const inMonth = d.startsWith(month)
             return (
-              <div key={d} className={cn('min-h-28 border-r border-b border-[#E6DFD2] p-1.5 [&:nth-child(7n)]:border-r-0', !inMonth && 'bg-ikr-cream/40')}>
+              <div key={d} className={cn('min-h-28 border-r border-b border-adm-line p-1.5 [&:nth-child(7n)]:border-r-0', !inMonth && 'bg-adm-soft/40')}>
                 <div className={cn('mb-1 text-xs font-semibold', !inMonth && muted)}>
-                  <span className={cn(d === today && 'rounded-full bg-ikr-navy px-1.5 py-0.5 text-ikr-cream-light')}>{Number(d.slice(8))}</span>
+                  <span className={cn(d === today && 'rounded-full bg-adm-inverse px-1.5 py-0.5 text-ikr-cream-light')}>{Number(d.slice(8))}</span>
                 </div>
                 <ul className="m-0 flex list-none flex-col gap-1 p-0">
                   {list.slice(0, 4).map((it) => (
@@ -77,7 +77,7 @@ export function CalendarView({ items, days, month, today }: { items: CalItem[]; 
       <div className="flex flex-col gap-3 md:hidden">
         {!listDays.length && <Empty>Niets in deze maand.</Empty>}
         {listDays.map((d) => (
-          <Card key={d} className={cn('flex flex-col gap-2 p-4', d === today && 'ring-2 ring-ikr-navy')}>
+          <Card key={d} className={cn('flex flex-col gap-2 p-4', d === today && 'ring-2 ring-adm-ring')}>
             <p className="m-0 text-sm font-bold capitalize">
               {new Date(`${d}T12:00:00Z`).toLocaleDateString('nl-BE', { weekday: 'long', day: 'numeric', month: 'long' })}
               {d === today && ' · vandaag'}
@@ -101,7 +101,7 @@ function Chip({ it, large = false }: { it: CalItem; large?: boolean }) {
   const text = (
     <>
       <span className={cn('font-semibold', !large && 'truncate')}>{it.title}</span>
-      <span className="text-[#4D465A]">
+      <span className="text-adm-faint">
         {time}
         {large && ` · ${KINDS[it.kind]}`}
       </span>

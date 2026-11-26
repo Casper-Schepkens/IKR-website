@@ -37,7 +37,7 @@ export function SopBrowser({ sops }: { sops: Sop[] }) {
         </div>
         {oldCount > 0 && (
           <label className={cn('flex items-center gap-2 text-xs', muted)}>
-            <input type="checkbox" checked={old} onChange={(e) => setOld(e.target.checked)} className="accent-ikr-navy" /> Ook verouderde tonen ({oldCount})
+            <input type="checkbox" checked={old} onChange={(e) => setOld(e.target.checked)} className="accent-adm-fg" /> Ook verouderde tonen ({oldCount})
           </label>
         )}
       </div>
@@ -72,7 +72,7 @@ function SopItem({ sop: s, open: openInitially }: { sop: Sop; open: boolean }) {
     })
   const old = s.status === 'verouderd'
   return (
-    <li className={cn('border-t border-[#E6DFD2] py-2.5 first:border-t-0', old && 'opacity-60')}>
+    <li className={cn('border-t border-adm-line py-2.5 first:border-t-0', old && 'opacity-60')}>
       <button type="button" onClick={() => setOpen(!shown)} aria-expanded={shown} className="flex w-full items-start gap-2 text-left">
         <span aria-hidden className={cn('mt-1 inline-block text-xs transition-transform', shown && 'rotate-90')}>
           ▸
@@ -117,13 +117,13 @@ function SopItem({ sop: s, open: openInitially }: { sop: Sop; open: boolean }) {
                     </button>
                   </>
                 ) : (
-                  <button type="button" onClick={() => setConfirm(true)} className="ikr-btn inline-flex min-h-9 items-center rounded-full bg-[#F8D3D0] px-3 text-xs font-semibold text-[#8E1B12]">
+                  <button type="button" onClick={() => setConfirm(true)} className="ikr-btn inline-flex min-h-9 items-center rounded-full bg-adm-red-bg px-3 text-xs font-semibold text-adm-red">
                     Verwijder
                   </button>
                 )}
                 {pending && <Spinner />}
                 {error && (
-                  <span role="alert" className="text-xs text-[#A3470F]">
+                  <span role="alert" className="text-xs text-adm-warn">
                     {error}
                   </span>
                 )}

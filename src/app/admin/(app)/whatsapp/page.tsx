@@ -42,7 +42,7 @@ export default async function WhatsappPage() {
       <PageHeader eyebrow={`Read-only via de WhatsApp-bridge · ${active.length} actief`} title="WhatsApp" />
       {chats === null ? (
         <Card>
-          <p role="alert" className="m-0 text-sm text-[#A3470F]">
+          <p role="alert" className="m-0 text-sm text-adm-warn">
             De WhatsApp-tabellen zijn niet bereikbaar.
           </p>
         </Card>
