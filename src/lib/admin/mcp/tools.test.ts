@@ -13,6 +13,7 @@ import { INSTRUCTIONS } from './instructions'
 import { memoryLeads } from '../sales/repo'
 import { memoryWeekly } from '../weekly/repo'
 import { memoryClients } from '../clients/repo'
+import { memoryFreelancers } from '../freelancers/repo'
 import { memorySops } from '../sops/repo'
 import { memoryProduction } from '../production/repo'
 import { memoryCalls } from '../calls/repo'
@@ -30,6 +31,7 @@ describe('Grokbot-sessie', () => {
       leads: memoryLeads(),
       weekly: memoryWeekly(),
       clients: memoryClients(),
+      freelancers: memoryFreelancers(),
       sops: memorySops(),
       production: memoryProduction(),
       calls: memoryCalls(),
@@ -42,7 +44,7 @@ describe('Grokbot-sessie', () => {
     await client.connect(b)
     const names = (await client.listTools()).tools.map((t) => t.name)
     for (const t of SALES_TOOLS) expect(names).toContain(t)
-    expect(names).toHaveLength(112) // + drive_zoeken, drive_map_inhoud (read-only)
+    expect(names).toHaveLength(116) // + drive_zoeken, drive_map_inhoud (read-only); + 4 freelancer-tools
   })
 
   it('instructies: sales-vragen van het team altijd beantwoorden', () => {

@@ -141,3 +141,4 @@
 - Demomodus: zonder Supabase lokaal voorbeelddata
 - Analytics en ads-pixel laden niet meer op `/admin` (`PublicOnly`)
 - Plan + status: `docs/product/admin-plan.md` · setup: `docs/product/admin-setup.md`
+- **Freelancers (26 nov 2026):** nieuw tabblad `/admin/freelancers` (tabel `freelancers`, inline bewerken + fiche, score = Milans kleurfase, MCP-tools `freelancers_lijst` / `freelancer_aanmaken` / `freelancer_bijwerken` / `freelancer_verwijderen`). Zie `docs/product/freelancers.md`. Migratie `20261126000100_freelancers.sql` toegepast in Supabase (project IKR) op 26 nov 2026.
