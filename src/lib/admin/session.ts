@@ -7,6 +7,7 @@ import { createServerSupabase } from './supabase/server'
 import { memoryLeads, supabaseLeads, type LeadsRepo } from './sales/repo'
 import { memoryWeekly, supabaseWeekly, type WeeklyRepo } from './weekly/repo'
 import { memoryClients, supabaseClients, type ClientsRepo } from './clients/repo'
+import { memoryFreelancers, supabaseFreelancers, type FreelancersRepo } from './freelancers/repo'
 import { memoryCalls, supabaseCalls, type CallsRepo } from './calls/repo'
 import { memorySops, supabaseSops, type SopsRepo } from './sops/repo'
 import { memoryProduction, supabaseProduction, type ProductionRepo } from './production/repo'
@@ -25,6 +26,8 @@ export type AdminSession = {
   weekly: WeeklyRepo
   /** Klanten (productie): zichtbaar voor het hele team. */
   clients: ClientsRepo
+  /** Freelancers (filmen, monteren, contentplanning, schermgezichten): hele team. */
+  freelancers: FreelancersRepo
   /** SOP's: afspraken en best practices (hele team). */
   sops: SopsRepo
   /** Productieproces per klant (hele team). */
@@ -61,6 +64,7 @@ export const requireAdmin = cache(async (): Promise<AdminSession> => {
       leads: memoryLeads(),
       weekly: memoryWeekly(),
       clients: memoryClients(),
+      freelancers: memoryFreelancers(),
       sops: memorySops(),
       production: memoryProduction(),
       calls: memoryCalls(),
@@ -82,6 +86,7 @@ export const requireAdmin = cache(async (): Promise<AdminSession> => {
     leads: supabaseLeads(supabase),
     weekly: supabaseWeekly(supabase),
     clients: supabaseClients(supabase),
+    freelancers: supabaseFreelancers(supabase),
     sops: supabaseSops(supabase),
     production: supabaseProduction(supabase),
     calls: supabaseCalls(supabase),

@@ -8,6 +8,7 @@ import type { Lead, Stage, Source, LostReason } from '../sales/types'
 import type { MailDraft } from '../sales/drafts'
 import type { Call, CallStatus, CallKind } from '../calls/types'
 import type { Client } from '../clients/types'
+import type { Freelancer, Score } from '../freelancers/types'
 import type { Card, CardStatus } from '../workspace/types'
 import type { AiJob } from '../ai/jobs'
 
@@ -22,6 +23,7 @@ export const schemaChecks = [
   ok<KnownColumns<MailDraft, Columns<'mail_drafts'>>>(true),
   ok<KnownColumns<Call, Columns<'calls'>>>(true),
   ok<KnownColumns<Client, Columns<'clients'>>>(true),
+  ok<KnownColumns<Freelancer, Columns<'freelancers'>>>(true),
   ok<KnownColumns<Card, Columns<'bot_cards'>>>(true),
   ok<KnownColumns<AiJob, Columns<'ai_jobs'>>>(true),
   ok<Same<Stage, CheckValues<'leads.stage'>>>(true),
@@ -31,6 +33,7 @@ export const schemaChecks = [
   ok<Same<CallStatus, CheckValues<'calls.status'>>>(true),
   ok<Same<CallKind, CheckValues<'calls.kind'>>>(true),
   ok<Same<Call['created_via'], CheckValues<'calls.created_via'>>>(true),
+  ok<Same<Score, CheckValues<'freelancers.score'>>>(true),
   ok<Same<CardStatus, CheckValues<'bot_cards.status'>>>(true),
   ok<Same<NonNullable<Card['action_status']>, CheckValues<'bot_cards.action_status'>>>(true),
   ok<Same<Card['kind'], CheckValues<'bot_cards.kind'>>>(true),

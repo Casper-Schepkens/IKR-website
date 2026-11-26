@@ -281,6 +281,12 @@ export const Icon = {
       <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
     </Svg>
   ),
+  camera: (p: IconProps) => (
+    <Svg {...p}>
+      <rect x="2" y="6" width="14" height="12" rx="2" />
+      <path d="M16 10l6-3v10l-6-3" />
+    </Svg>
+  ),
   mail: (p: IconProps) => (
     <Svg {...p}>
       <rect x="3" y="5" width="18" height="14" rx="2" />

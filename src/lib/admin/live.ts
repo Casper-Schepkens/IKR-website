@@ -47,7 +47,7 @@ export function shouldRefreshForChat(prev: ChatSnap, next: ChatSnap) {
 export const PATH_HEADER = 'x-ikr-path'
 
 /** Tabellen waarvan een wijziging de open pagina laat verversen (in de supabase_realtime-publicatie). */
-export const LIVE_TABLES = ['leads', 'mail_drafts', 'weeklies', 'weekly_todos', 'weekly_todo_notes', 'weekly_pins', 'clients', 'calls', 'finance_transactions', 'finance_rules', 'sops', 'production', 'production_cycles', 'production_steps', 'production_client_steps', 'production_template_steps', 'production_internal_tasks', 'production_internal_done', 'production_changes', 'bot_cards', 'bot_card_messages', 'whatsapp_chats', 'whatsapp_berichten'] as const
+export const LIVE_TABLES = ['leads', 'mail_drafts', 'weeklies', 'weekly_todos', 'weekly_todo_notes', 'weekly_pins', 'clients', 'freelancers', 'calls', 'finance_transactions', 'finance_rules', 'sops', 'production', 'production_cycles', 'production_steps', 'production_client_steps', 'production_template_steps', 'production_internal_tasks', 'production_internal_done', 'production_changes', 'bot_cards', 'bot_card_messages', 'whatsapp_chats', 'whatsapp_berichten'] as const
 export type LiveTable = (typeof LIVE_TABLES)[number]
 
 const PRODUCTION_TABLES: LiveTable[] = ['clients', 'production', 'production_cycles', 'production_steps', 'production_client_steps', 'production_template_steps', 'production_internal_tasks', 'production_internal_done', 'production_changes']
@@ -64,6 +64,7 @@ export function tablesFor(pathname: string): LiveTable[] {
   if (pathname === '/admin/klanten') return ['clients', 'finance_transactions']
   if (pathname === '/admin/financien') return ['finance_transactions', 'finance_rules', 'clients']
   if (pathname === '/admin/sops') return ['sops']
+  if (pathname === '/admin/freelancers') return ['freelancers', 'clients']
   if (pathname === '/admin/productie') return PRODUCTION_TABLES
   if (pathname === '/admin/whatsapp') return ['whatsapp_chats', 'whatsapp_berichten']
   if (pathname === '/admin/werkplek') return ['bot_cards', 'bot_card_messages']
@@ -79,6 +80,7 @@ export function isLivePath(pathname: string) {
     pathname === '/admin/klanten' ||
     pathname === '/admin/financien' ||
     pathname === '/admin/sops' ||
+    pathname === '/admin/freelancers' ||
     pathname === '/admin/productie' ||
     pathname === '/admin/werkplek' ||
     pathname === '/admin/weekly' ||

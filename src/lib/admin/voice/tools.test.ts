@@ -17,7 +17,7 @@ describe('tools van de spraakbot', () => {
   it('krijgt alle tools van Grok Bot behalve zijn interne, met lezen/wijzigen per tool', async () => {
     const { tools, readOnly } = await toolCatalog()
     const names = tools.map((t) => t.name)
-    expect(names.length).toBe(112 - HIDDEN_TOOLS.size)
+    expect(names.length).toBe(116 - HIDDEN_TOOLS.size)
     for (const h of HIDDEN_TOOLS) expect(names).not.toContain(h)
     expect(names).toContain('drive_zoeken')
     expect(readOnly.get('leads_lijst')).toBe(true)

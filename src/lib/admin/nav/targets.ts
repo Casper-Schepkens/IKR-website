@@ -11,6 +11,7 @@ export const PAGES: (NavTarget & { sales?: boolean })[] = [
   { label: 'Leads', sub: 'Pagina', href: '/admin/sales', kind: 'pagina', keywords: 'sales funnel', sales: true },
   { label: 'Wachten op antwoord', sub: 'Pagina', href: '/admin/sales/inbox?tab=wachten', kind: 'pagina', keywords: 'opvolgen', sales: true },
   { label: 'Klanten', sub: 'Pagina', href: '/admin/klanten', kind: 'pagina', keywords: 'contract freelancer' },
+  { label: 'Freelancers', sub: 'Pagina', href: '/admin/freelancers', kind: 'pagina', keywords: 'freelancer filmen monteren videograaf editor schermgezicht portfolio' },
   { label: 'Financiën', sub: 'Pagina', href: '/admin/financien', kind: 'pagina', keywords: 'financien odoo omzet kosten geld betalingen' },
   { label: 'Productie', sub: 'Pagina', href: '/admin/productie', kind: 'pagina', keywords: 'proces draaidag briefing volgende stappen' },
   { label: 'Weekly', sub: 'Pagina', href: '/admin/weekly', kind: 'pagina', keywords: 'todo to-do prikbord' },

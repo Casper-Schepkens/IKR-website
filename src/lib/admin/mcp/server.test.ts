@@ -18,6 +18,7 @@ import { buildMcpServer } from './server'
 import { memoryLeads } from '../sales/repo'
 import { memoryWeekly } from '../weekly/repo'
 import { memoryClients } from '../clients/repo'
+import { memoryFreelancers } from '../freelancers/repo'
 import { memorySops } from '../sops/repo'
 import { memoryProduction } from '../production/repo'
 import { memoryCalls } from '../calls/repo'
@@ -49,6 +50,7 @@ beforeEach(async () => {
   ;(globalThis as { __ikrLeads?: unknown }).__ikrLeads = []
   ;(globalThis as { __ikrProdStore?: unknown }).__ikrProdStore = undefined
   ;(globalThis as { __ikrClients?: unknown }).__ikrClients = []
+  ;(globalThis as { __ikrFreelancers?: unknown }).__ikrFreelancers = []
   ;(globalThis as { __ikrWeekly?: unknown }).__ikrWeekly = undefined
   ;(globalThis as { __ikrWhatsapp?: unknown }).__ikrWhatsapp = undefined
   store = []
@@ -59,6 +61,7 @@ beforeEach(async () => {
     leads: memoryLeads(),
     weekly: memoryWeekly(),
     clients: memoryClients(),
+    freelancers: memoryFreelancers(),
     sops: memorySops(),
     production: memoryProduction(),
     calls: memoryCalls(),
@@ -320,6 +323,51 @@ describe('klanten: onbepaalde duur via MCP', () => {
       ['klant_bijwerken', true],
       ['klant_bijwerken', true],
       ['klant_bijwerken', false],
+    ])
+  })
+})
+
+describe('freelancers via MCP', () => {
+  it('aanmaken, lijst met filters, bijwerken (velden leegmaken, klanten koppelen), verwijderen; schrijven gelogd', async () => {
+    const names = (await client.listTools()).tools.map((t) => t.name)
+    for (const t of ['freelancers_lijst', 'freelancer_aanmaken', 'freelancer_bijwerken', 'freelancer_verwijderen']) expect(names).toContain(t)
+    const tempus = await session.clients.create({ name: 'Tempus', freelancer: null, contract_end: null, contract_indefinite: true }, 'test')
+
+    // Enkel de naam is verplicht; de rest blijft leeg (geen verzonnen waarden).
+    const made = (await call('freelancer_aanmaken', { naam: 'Voorbeeld Filmer' })).json as Record<string, unknown>
+    expect(made).toMatchObject({ naam: 'Voorbeeld Filmer', email: null, telefoon: null, score: null, link: null, gekoppelde_klanten: [] })
+    expect((await call('freelancer_aanmaken', { naam: 'Voorbeeld Editor', score: 'groen', klanten: ['tempus'], link: 'vimeo.com/voorbeeld', email: 'Editor@Voorbeeld.be' })).isError).toBe(false)
+    expect((await call('freelancer_aanmaken', { naam: '' })).isError).toBe(true)
+    expect((await call('freelancer_aanmaken', { naam: 'X', link: 'javascript:alert(1)' })).isError).toBe(true)
+
+    let list = (await call('freelancers_lijst', {})).json as unknown as Record<string, unknown>[]
+    expect(list.map((f) => f.naam)).toEqual(['Voorbeeld Editor', 'Voorbeeld Filmer'])
+    expect(list[0]).toMatchObject({ email: 'editor@voorbeeld.be', score: 'groen', link: 'https://vimeo.com/voorbeeld', gekoppelde_klanten: [{ klant_id: tempus.id, naam: 'Tempus' }] })
+    expect(((await call('freelancers_lijst', { score: 'groen' })).json as unknown as unknown[]).length).toBe(1)
+    expect(((await call('freelancers_lijst', { score: 'geen' })).json as unknown as unknown[]).length).toBe(1)
+    expect(((await call('freelancers_lijst', { klant: 'Tempus' })).json as unknown as unknown[]).length).toBe(1)
+    expect(((await call('freelancers_lijst', { zoek: 'filmer' })).json as unknown as unknown[]).length).toBe(1)
+
+    // Alle velden optioneel; lege tekst maakt leeg; klanten [] koppelt los.
+    expect((await call('freelancer_bijwerken', { freelancer: 'editor', score: 'zekerheid', telefoon: '+32 470 00 00 00', bron_opmerking: 'Via Milan' })).isError).toBe(false)
+    expect((await call('freelancer_bijwerken', { freelancer: 'editor@voorbeeld.be', email: '', klanten: [] })).isError).toBe(false)
+    expect((await call('freelancer_bijwerken', { freelancer: 'Voorbeeld' })).isError).toBe(true) // dubbelzinnig
+    expect((await call('freelancer_bijwerken', { freelancer: 'Voorbeeld Editor' })).isError).toBe(true) // niets om aan te passen
+    list = (await call('freelancers_lijst', { zoek: 'editor' })).json as unknown as Record<string, unknown>[]
+    expect(list[0]).toMatchObject({ score: 'zekerheid', telefoon: '+32 470 00 00 00', bron_opmerking: 'Via Milan', email: null, gekoppelde_klanten: [] })
+
+    expect((await call('freelancer_verwijderen', { freelancer: 'Voorbeeld Filmer' })).isError).toBe(false)
+    expect(((await call('freelancers_lijst', {})).json as unknown as unknown[]).length).toBe(1)
+    expect(logs.filter((l) => l.tool.startsWith('freelancer')).map((l) => [l.tool, l.ok])).toEqual([
+      ['freelancer_aanmaken', true],
+      ['freelancer_aanmaken', true],
+      ['freelancer_aanmaken', false],
+      ['freelancer_aanmaken', false],
+      ['freelancer_bijwerken', true],
+      ['freelancer_bijwerken', true],
+      ['freelancer_bijwerken', false],
+      ['freelancer_bijwerken', false],
+      ['freelancer_verwijderen', true],
     ])
   })
 })
