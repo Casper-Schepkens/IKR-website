@@ -210,6 +210,5 @@ export function agendaCalendarFor(conn: { google_email: string; calendars: { id:
   const shared = conn.calendars.find((c) => c.id.toLowerCase() === target)
   if (shared) return shared.id
   throw new Error(
-    `Je agenda-koppeling is van ${conn.google_email}, maar je uitnodigingen (weeklies, calls) gaan naar ${inviteAddress}. Koppel in Instellingen → Mijn koppelingen de agenda van ${inviteAddress}.`,
-  )
-}
+    `${inviteAddress} staat niet tussen de agenda's die ${conn.google_email} kan zien. Deel in Google Agenda de agenda van ${inviteAddress} met ${conn.google_email} ("Alle details van afspraken bekijken"), accepteer de deelmail en klik in Instellingen → Mijn koppelingen bij "Agenda koppelen" op "Lijst vernieuwen".`,
+  )}
