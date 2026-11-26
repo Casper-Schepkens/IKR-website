@@ -12,7 +12,7 @@ import { FreelancerFields, type ClientOption } from './FreelancerFields'
 import { SCORE_CLASS, ScorePill } from './shared'
 import { cn } from '@/utilities/ui'
 
-const RED = 'bg-[#F8D3D0] text-[#8E1B12]'
+const RED = 'bg-adm-red-bg text-adm-red'
 const COLS = 7
 type Filter = Score | 'geen' | ''
 
@@ -34,7 +34,7 @@ export function FreelancerTable({ freelancers, clients }: { freelancers: Freelan
   return (
     <>
       <div className="flex flex-col gap-3 px-4 pt-5 pb-3 sm:px-6">
-        <label className="flex max-w-md flex-col gap-1.5 text-[13px] font-semibold text-[#5E5670]">
+        <label className="flex max-w-md flex-col gap-1.5 text-[13px] font-semibold text-adm-muted">
           Zoek op naam
           <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} autoComplete="off" className={input} />
         </label>
@@ -49,7 +49,7 @@ export function FreelancerTable({ freelancers, clients }: { freelancers: Freelan
                 onClick={() => setScore(c.value)}
                 className={cn(
                   'ikr-btn inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-xs font-semibold',
-                  active ? 'bg-ikr-navy text-ikr-cream-light' : c.value && c.value !== 'geen' ? SCORE_CLASS[c.value] : 'bg-ikr-cream text-ikr-navy',
+                  active ? 'bg-adm-inverse text-ikr-cream-light' : c.value && c.value !== 'geen' ? SCORE_CLASS[c.value] : 'bg-adm-soft text-adm-fg',
                 )}
               >
                 {c.label}
@@ -110,16 +110,16 @@ function FreelancerRow({ freelancer: f, clients }: { freelancer: Freelancer; cli
   const ficheId = `freelancer-${f.id}`
   return (
     <>
-      <tr className={cn('border-t border-[#E6DFD2] align-top hover:bg-ikr-cream/60', open && 'bg-ikr-cream/50')}>
+      <tr className={cn('border-t border-adm-line align-top hover:bg-adm-soft/60', open && 'bg-adm-soft/50')}>
         <InlineCell
           id={f.id}
           field="name"
           label="Naam"
           value={f.name}
           required
-          className="min-w-[190px] pl-6 font-bold text-ikr-navy"
+          className="min-w-[190px] pl-6 font-bold text-adm-fg"
           lead={
-            <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls={ficheId} aria-label={`Fiche van ${f.name} ${open ? 'sluiten' : 'openen'}`} className="-ml-2 flex size-8 shrink-0 items-center justify-center rounded-full text-xs hover:bg-ikr-cream">
+            <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls={ficheId} aria-label={`Fiche van ${f.name} ${open ? 'sluiten' : 'openen'}`} className="-ml-2 flex size-8 shrink-0 items-center justify-center rounded-full text-xs hover:bg-adm-soft">
               <span aria-hidden className={cn('inline-block transition-transform', open && 'rotate-90')}>
                 ▸
               </span>
@@ -140,7 +140,7 @@ function FreelancerRow({ freelancer: f, clients }: { freelancer: Freelancer; cli
             linked.length > 0 && (
               <span className="mb-1 flex flex-wrap gap-1">
                 {linked.map((id) => (
-                  <Link key={id} href={`/admin/klanten?klant=${id}`} className="rounded-full bg-[#D3F3F9] px-2 py-0.5 text-xs font-semibold text-[#0A5F6E] no-underline hover:underline">
+                  <Link key={id} href={`/admin/klanten?klant=${id}`} className="rounded-full bg-adm-teal-bg px-2 py-0.5 text-xs font-semibold text-adm-teal no-underline hover:underline">
                     {names.get(id)}
                   </Link>
                 ))}
@@ -169,7 +169,7 @@ function FreelancerRow({ freelancer: f, clients }: { freelancer: Freelancer; cli
         <InlineCell id={f.id} field="notes" label="Bron en opmerking" value={f.notes} multiline className="min-w-[180px] pr-6" />
       </tr>
       {open && (
-        <tr id={ficheId} className="bg-ikr-cream/50">
+        <tr id={ficheId} className="bg-adm-soft/50">
           <td colSpan={COLS} className="px-6 pt-1 pb-5">
             <FreelancerFiche freelancer={f} clients={clients} onClose={() => setOpen(false)} />
           </td>
@@ -285,7 +285,7 @@ function InlineCell({
               onClick={start}
               aria-label={`${label} ${shown ? 'aanpassen' : 'invullen'}`}
               title={`${label} ${shown ? 'aanpassen' : 'invullen'}`}
-              className="flex size-7 shrink-0 items-center justify-center rounded-full text-[#5E5670] opacity-40 group-hover:opacity-100 hover:bg-ikr-cream focus-visible:opacity-100"
+              className="flex size-7 shrink-0 items-center justify-center rounded-full text-adm-muted opacity-40 group-hover:opacity-100 hover:bg-adm-soft focus-visible:opacity-100"
             >
               <Icon.pencil size={13} />
             </button>
@@ -294,7 +294,7 @@ function InlineCell({
         {pending && <Spinner />}
       </div>
       {error && (
-        <span role="alert" className="mt-1 block text-xs text-[#A3470F]">
+        <span role="alert" className="mt-1 block text-xs text-adm-warn">
           {error}
         </span>
       )}
@@ -330,7 +330,7 @@ function ScoreCell({ id, name, score }: { id: string; name: string; score: Score
                 setError(msg)
               })
             }}
-            className={cn('cursor-pointer appearance-none rounded-full text-xs font-semibold', shown ? 'absolute inset-0 opacity-0' : 'min-h-7 min-w-14 bg-ikr-cream/70 px-2.5 pr-6 text-[#5E5670]')}
+            className={cn('cursor-pointer appearance-none rounded-full text-xs font-semibold', shown ? 'absolute inset-0 opacity-0' : 'min-h-7 min-w-14 bg-adm-soft/70 px-2.5 pr-6 text-adm-muted')}
           >
             <option value="" />
             {SCORES.map((s) => (
@@ -346,7 +346,7 @@ function ScoreCell({ id, name, score }: { id: string; name: string; score: Score
         {pending && <Spinner />}
       </div>
       {error && (
-        <span role="alert" className="mt-1 block text-xs text-[#A3470F]">
+        <span role="alert" className="mt-1 block text-xs text-adm-warn">
           {error}
         </span>
       )}
@@ -362,7 +362,7 @@ function FreelancerFiche({ freelancer: f, clients, onClose }: { freelancer: Free
   const router = useRouter()
   const day = (iso: string) => fmtDate(iso, { day: 'numeric', month: 'short', year: 'numeric' })
   return (
-    <div className="flex flex-col gap-4 rounded-2xl bg-white/60 p-4">
+    <div className="flex flex-col gap-4 rounded-2xl bg-adm-raised/60 p-4">
       <FormAction
         action={updateFreelancerAction.bind(null, f.id)}
         submitLabel="Bewaar fiche"
@@ -403,7 +403,7 @@ function FreelancerFiche({ freelancer: f, clients, onClose }: { freelancer: Free
         )}
         {pending && <Spinner />}
         {error && (
-          <span role="alert" className="text-xs text-[#A3470F]">
+          <span role="alert" className="text-xs text-adm-warn">
             {error}
           </span>
         )}

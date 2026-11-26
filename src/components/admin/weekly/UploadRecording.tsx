@@ -59,7 +59,7 @@ export function UploadRecording({ weeklyId, atFireflies }: { weeklyId: string; a
         {atFireflies && state === 'idle' && <span className={cn('text-xs', muted)}>Opname is bij Fireflies; wacht op het transcript.</span>}
       </div>
       {msg && (
-        <p role={state === 'error' ? 'alert' : 'status'} className={cn('m-0 text-xs', state === 'error' ? 'text-[#A3470F]' : muted)}>
+        <p role={state === 'error' ? 'alert' : 'status'} className={cn('m-0 text-xs', state === 'error' ? 'text-adm-warn' : muted)}>
           {msg}
         </p>
       )}

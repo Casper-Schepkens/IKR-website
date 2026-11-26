@@ -56,7 +56,7 @@ export function WorkspaceView({ cards, names, me, ownerName, canOrderFor }: { ca
               type="button"
               onClick={() => setSelected(c.id === selected ? null : c.id)}
               aria-pressed={c.id === selected}
-              className={cn('flex flex-col gap-1.5 rounded-2xl bg-ikr-cream-light p-4 text-left shadow-sm transition hover:bg-white', c.id === selected && 'ring-2 ring-ikr-navy')}
+              className={cn('flex flex-col gap-1.5 rounded-2xl bg-adm-card p-4 text-left shadow-sm transition hover:bg-adm-raised', c.id === selected && 'ring-2 ring-adm-ring')}
             >
               <span className="flex flex-wrap items-center gap-1.5">
                 <Pill tone={KIND_TONE[c.kind]}>{CARD_KINDS[c.kind]}</Pill>
@@ -102,7 +102,7 @@ function OrderBox({ ownerName, canOrderFor }: { ownerName: string; canOrderFor: 
           {pending && <Spinner />}
           <span className={cn('text-xs', muted)}>Grok Bot zet dingen klaar, maar verstuurt nooit iets.</span>
           {error && (
-            <span role="alert" className="text-xs text-[#A3470F]">
+            <span role="alert" className="text-xs text-adm-warn">
               {error}
             </span>
           )}
@@ -138,7 +138,7 @@ function CardDetail({ card: c, names, me }: { card: CardWithMessages; names: Rec
       )}
 
       {c.action_label && (
-        <div className={cn('flex flex-col gap-2 rounded-2xl p-3', c.action_status === 'voorgesteld' ? 'bg-[#FFF0C2]' : 'bg-ikr-cream')}>
+        <div className={cn('flex flex-col gap-2 rounded-2xl p-3', c.action_status === 'voorgesteld' ? 'bg-adm-yellow-bg' : 'bg-adm-soft')}>
           <p className="m-0 text-sm font-bold">Voorstel: {c.action_label}</p>
           {c.action_detail && <p className="m-0 text-sm whitespace-pre-line">{c.action_detail}</p>}
           {c.action_status === 'voorgesteld' ? (
@@ -158,14 +158,14 @@ function CardDetail({ card: c, names, me }: { card: CardWithMessages; names: Rec
 
       <ol className="m-0 flex list-none flex-col gap-2 p-0" aria-label="Draadje">
         {c.messages.map((m) => (
-          <li key={m.id} className={cn('flex flex-col rounded-2xl px-3 py-2 text-sm', m.author === 'grokbot' ? 'mr-6 bg-ikr-cream' : 'ml-6 bg-[#D3F3F9]')}>
+          <li key={m.id} className={cn('flex flex-col rounded-2xl px-3 py-2 text-sm', m.author === 'grokbot' ? 'mr-6 bg-adm-soft' : 'ml-6 bg-adm-teal-bg')}>
             <span className={cn('text-[11px] font-semibold', muted)}>
               {name(m.author)} · {when(m.created_at)}
             </span>
             <span className="whitespace-pre-line">{m.body}</span>
           </li>
         ))}
-        {isBusy(c) && <li className={cn('mr-6 rounded-2xl bg-ikr-cream px-3 py-2 text-sm', muted)}>Grok Bot denkt na…</li>}
+        {isBusy(c) && <li className={cn('mr-6 rounded-2xl bg-adm-soft px-3 py-2 text-sm', muted)}>Grok Bot denkt na…</li>}
       </ol>
 
       <form
@@ -183,7 +183,7 @@ function CardDetail({ card: c, names, me }: { card: CardWithMessages; names: Rec
         </button>
       </form>
 
-      <div className="flex flex-wrap items-center gap-1.5 border-t border-[#E6DFD2] pt-3">
+      <div className="flex flex-wrap items-center gap-1.5 border-t border-adm-line pt-3">
         {(['open', 'besproken', 'archief'] as CardStatus[])
           .filter((s) => s !== c.status)
           .map((s) => (
@@ -201,13 +201,13 @@ function CardDetail({ card: c, names, me }: { card: CardWithMessages; names: Rec
             </button>
           </>
         ) : (
-          <button type="button" onClick={() => setConfirm(true)} className="ikr-btn ml-auto inline-flex min-h-9 items-center rounded-full bg-[#F8D3D0] px-3 text-xs font-semibold text-[#8E1B12]">
+          <button type="button" onClick={() => setConfirm(true)} className="ikr-btn ml-auto inline-flex min-h-9 items-center rounded-full bg-adm-red-bg px-3 text-xs font-semibold text-adm-red">
             Verwijder
           </button>
         )}
         {pending && <Spinner />}
         {error && (
-          <span role="alert" className="text-xs text-[#A3470F]">
+          <span role="alert" className="text-xs text-adm-warn">
             {error}
           </span>
         )}

@@ -36,7 +36,7 @@ export async function MyConnections({ email }: { email: string }) {
           Grok Bot mag je mail en gekozen agenda&apos;s <strong>lezen</strong> (nooit versturen, nooit iets aanpassen of verwijderen). Je kan voor
           de agenda een ander IKR-account gebruiken dan voor je mail. Enkel jij ziet je koppelingen hier.
         </p>
-        {blocked && <p className="m-0 mt-2 text-sm text-[#A3470F]">{blocked}</p>}
+        {blocked && <p className="m-0 mt-2 text-sm text-adm-warn">{blocked}</p>}
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
@@ -59,7 +59,7 @@ export async function MyConnections({ email }: { email: string }) {
           {agenda && agenda.status === 'ok' && <CalendarPicker calendars={agenda.calendars} selected={agenda.selected_calendars} />}
         </Block>
         {owner && invite && (
-          <section aria-label="Weeklies en calls in mijn agenda" className="flex flex-col gap-3 rounded-2xl bg-ikr-cream p-4">
+          <section aria-label="Weeklies en calls in mijn agenda" className="flex flex-col gap-3 rounded-2xl bg-adm-soft p-4">
             <h3 className="m-0 text-base font-bold">Weeklies en calls in mijn agenda</h3>
             <p className={cn('m-0 text-sm', muted)}>
               Het dashboard zet weeklies{owner === 'casper' ? ' en calls' : ''} in de contact-agenda en stuurt een uitnodiging naar dit adres. Zo komen
@@ -73,7 +73,7 @@ export async function MyConnections({ email }: { email: string }) {
         )}
       </div>
       {own.length > 0 && (
-        <div className="border-t border-[#E6DFD2] pt-3">
+        <div className="border-t border-adm-line pt-3">
           <p className="m-0 text-sm font-semibold">Wat Grok Bot laatst las</p>
           {reads.length ? (
             <ul className="m-0 mt-1 flex list-none flex-col gap-0.5 p-0 text-sm">
@@ -115,7 +115,7 @@ function Block({
 }) {
   const broken = conn?.status === 'opnieuw_koppelen'
   return (
-    <section aria-label={title} className="flex flex-col gap-3 rounded-2xl bg-ikr-cream p-4">
+    <section aria-label={title} className="flex flex-col gap-3 rounded-2xl bg-adm-soft p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="m-0 text-base font-bold">{title}</h3>
         {!conn ? <Pill tone="light">Niet gekoppeld</Pill> : broken ? <Pill tone="orange">Opnieuw koppelen</Pill> : <Pill tone="green">Gekoppeld</Pill>}
@@ -123,7 +123,7 @@ function Block({
       {conn ? (
         <p className="m-0 text-sm">
           {conn.google_email} <span className={muted}>· sinds {fmtDate(conn.connected_at)}</span>
-          {broken && <span className="mt-1 block text-[#A3470F]">De koppeling werkt niet meer (verlopen of ingetrokken). Koppel opnieuw.</span>}
+          {broken && <span className="mt-1 block text-adm-warn">De koppeling werkt niet meer (verlopen of ingetrokken). Koppel opnieuw.</span>}
         </p>
       ) : (
         <p className={cn('m-0 text-sm', muted)}>{hint}</p>

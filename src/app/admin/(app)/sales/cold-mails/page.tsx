@@ -60,7 +60,7 @@ async function ColdMailStats({ leads, selection }: { leads: LeadsRepo; selection
   } catch (e) {
     return (
       <Card>
-        <p role="alert" className="m-0 text-[#A3470F]">
+        <p role="alert" className="m-0 text-adm-warn">
           {e instanceof Error ? e.message : 'Apollo is niet bereikbaar.'}
         </p>
       </Card>
@@ -91,21 +91,21 @@ async function ColdMailStats({ leads, selection }: { leads: LeadsRepo; selection
   return (
     <>
       <Card
-        className={cn('flex flex-wrap items-center justify-between gap-4', low ? 'bg-[#FCE3D2]' : '')}
+        className={cn('flex flex-wrap items-center justify-between gap-4', low ? 'bg-adm-warn-bg' : '')}
       >
         <div className="flex flex-col gap-1">
-          <span className={cn('text-[13px] font-medium', low ? 'text-[#8A3A0C]' : muted)}>
+          <span className={cn('text-[13px] font-medium', low ? 'text-adm-warn' : muted)}>
             Nieuwe adressen nog te mailen in de actieve sequence
           </span>
           <span className="font-display text-[56px] leading-none font-black tracking-[-0.03em]">
             {stats.newAddresses}
           </span>
-          <span className={cn('text-[13px]', low ? 'text-[#8A3A0C]' : muted)}>
+          <span className={cn('text-[13px]', low ? 'text-adm-warn' : muted)}>
             {stats.scheduled} mails ingepland in totaal (incl. opvolgmails)
           </span>
         </div>
         {low && (
-          <p className="m-0 max-w-sm text-[15px] font-semibold text-[#6E2E09]">
+          <p className="m-0 max-w-sm text-[15px] font-semibold text-adm-warn-strong">
             Bijna op: vraag Grokbot om nieuwe adressen.
           </p>
         )}
@@ -148,9 +148,9 @@ async function ColdMailStats({ leads, selection }: { leads: LeadsRepo; selection
               </tr>
             )}
             {shown.map((s) => (
-              <tr key={s.id} className="border-t border-[#E6DFD2]">
+              <tr key={s.id} className="border-t border-adm-line">
                 <td className="px-6 py-3">
-                  <a href={s.url} target="_blank" rel="noreferrer" className="font-bold text-ikr-navy no-underline hover:text-[#0B7F93]">
+                  <a href={s.url} target="_blank" rel="noreferrer" className="font-bold text-adm-fg no-underline hover:text-adm-teal">
                     {s.name}
                   </a>{' '}
                   {s.active ? <Pill tone="green">Actief</Pill> : <Pill tone="light">Gepauzeerd</Pill>}

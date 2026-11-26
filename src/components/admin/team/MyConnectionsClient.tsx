@@ -15,7 +15,7 @@ export function DisconnectButton({ kind }: { kind: 'mail' | 'agenda' }) {
   const router = useRouter()
   if (!confirm)
     return (
-      <button type="button" onClick={() => setConfirm(true)} className="ikr-btn inline-flex min-h-9 items-center rounded-full bg-[#F8D3D0] px-3 text-xs font-semibold text-[#8E1B12]">
+      <button type="button" onClick={() => setConfirm(true)} className="ikr-btn inline-flex min-h-9 items-center rounded-full bg-adm-red-bg px-3 text-xs font-semibold text-adm-red">
         Ontkoppelen
       </button>
     )
@@ -41,7 +41,7 @@ export function DisconnectButton({ kind }: { kind: 'mail' | 'agenda' }) {
         Annuleer
       </button>
       {error && (
-        <span role="alert" className="text-xs text-[#A3470F]">
+        <span role="alert" className="text-xs text-adm-warn">
           {error}
         </span>
       )}
@@ -73,7 +73,7 @@ export function CalendarPicker({ calendars, selected }: { calendars: CalendarInf
         <legend className={cn('mb-1 text-[13px] font-semibold', muted)}>Agenda&apos;s die Grok Bot mag lezen</legend>
         {calendars.map((c) => (
           <label key={c.id} className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="calendar" value={c.id} defaultChecked={selected.includes(c.id)} className="size-4 accent-ikr-navy" />
+            <input type="checkbox" name="calendar" value={c.id} defaultChecked={selected.includes(c.id)} className="size-4 accent-adm-fg" />
             {c.naam}
             {c.primair && <span className={cn('text-xs', muted)}>(hoofdagenda)</span>}
           </label>
@@ -87,7 +87,7 @@ export function CalendarPicker({ calendars, selected }: { calendars: CalendarInf
           Lijst vernieuwen
         </button>
         {msg && (
-          <span role={msg.ok ? 'status' : 'alert'} className={cn('text-xs', msg.ok ? 'text-[#1E5B27]' : 'text-[#A3470F]')}>
+          <span role={msg.ok ? 'status' : 'alert'} className={cn('text-xs', msg.ok ? 'text-adm-green' : 'text-adm-warn')}>
             {msg.text}
           </span>
         )}
@@ -128,7 +128,7 @@ export function InviteAddress({ current, isDefault, fallback }: { current: strin
         </button>
         {pending && <Spinner />}
         {msg && (
-          <span role={msg.ok ? 'status' : 'alert'} className={cn('text-xs', msg.ok ? muted : 'text-[#A3470F]')}>
+          <span role={msg.ok ? 'status' : 'alert'} className={cn('text-xs', msg.ok ? muted : 'text-adm-warn')}>
             {msg.text}
           </span>
         )}

@@ -28,7 +28,7 @@ export default async function WeeklyPage() {
     return (
       <>
         <PageHeader eyebrow="Wekelijkse teammeeting" title="Weekly" />
-        <Card className="flex flex-col items-start gap-4 bg-ikr-navy p-8 text-ikr-cream-light">
+        <Card className="flex flex-col items-start gap-4 bg-adm-inverse p-8 text-ikr-cream-light">
           <span className="text-sm font-semibold tracking-wide text-ikr-cyan uppercase">Weekly bezig</span>
           <p className="m-0 font-display text-4xl leading-tight font-black">Yo, de meeting is bezig 👋</p>
           <p className="m-0 max-w-xl text-base text-[#D9D3E6]">
@@ -71,14 +71,14 @@ export default async function WeeklyPage() {
             <div className="flex flex-wrap items-center gap-2">
               <Pill tone={next.mode === 'online' ? 'teal' : 'purple'}>{next.mode === 'online' ? 'Online' : 'Live'}</Pill>
               {next.meet_url && (
-                <a href={next.meet_url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-[#0B7F93]">
+                <a href={next.meet_url} target="_blank" rel="noreferrer" className="text-sm font-semibold text-adm-teal">
                   Google Meet
                 </a>
               )}
             </div>
             {next.calendar_error && !next.calendar_event_id && (
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm text-[#A3470F]">Agenda: {next.calendar_error}</span>
+                <span className="text-sm text-adm-warn">Agenda: {next.calendar_error}</span>
                 <RetryCalendarButton weeklyId={next.id} online={next.mode === 'online'} />
               </div>
             )}

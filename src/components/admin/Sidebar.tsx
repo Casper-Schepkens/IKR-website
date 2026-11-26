@@ -131,7 +131,7 @@ export function Sidebar({
           {badge(countFor(item.href)) && (
             <span
               aria-label={countFor(item.href) === null ? 'kon niet geteld worden' : `${countFor(item.href)} wacht${countFor(item.href) === 1 ? '' : 'en'} op je`}
-              className={cn('ml-auto inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] leading-5 font-bold', active ? 'bg-ikr-navy text-ikr-cream-light' : 'bg-[#C2410C] text-white')}
+              className={cn('ml-auto inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] leading-5 font-bold', active ? 'bg-adm-inverse text-ikr-cream-light' : 'bg-[#C2410C] text-white')}
             >
               {badge(countFor(item.href))}
             </span>
@@ -157,7 +157,7 @@ export function Sidebar({
     <nav
       aria-label="Hoofdmenu"
       className={cn(
-        'sticky top-0 z-30 flex flex-col bg-ikr-navy px-4 py-3 lg:h-dvh lg:w-[232px] lg:shrink-0 lg:gap-8 lg:py-7',
+        'sticky top-0 z-30 flex flex-col bg-adm-side px-4 py-3 lg:h-dvh lg:w-[232px] lg:shrink-0 lg:gap-8 lg:py-7',
         open && 'max-h-dvh gap-5 overflow-y-auto pb-5',
       )}
     >
@@ -173,7 +173,7 @@ export function Sidebar({
             {sales ? 'SALES' : 'ADMIN'}
           </span>
           {demo && (
-            <span className="rounded-full bg-[#FFF0C2] px-2.5 py-1 text-xs font-semibold text-[#6B5300]">
+            <span className="rounded-full bg-adm-yellow-bg px-2.5 py-1 text-xs font-semibold text-adm-yellow">
               DEMO
             </span>
           )}

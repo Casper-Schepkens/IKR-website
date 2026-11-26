@@ -29,7 +29,7 @@ export function RetryCalendarButton({ weeklyId, online }: { weeklyId: string; on
         {pending && <Spinner />} {online ? 'Agenda en Meet opnieuw proberen' : 'Agenda opnieuw proberen'}
       </button>
       {error && (
-        <span role="alert" className="text-xs text-[#A3470F]">
+        <span role="alert" className="text-xs text-adm-warn">
           {error}
         </span>
       )}

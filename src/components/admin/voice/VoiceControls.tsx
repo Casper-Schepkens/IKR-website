@@ -26,7 +26,7 @@ export function MicButton({ status, onStart, onStop }: { status: VoiceStatus; on
       title={on ? 'Gesprek stoppen' : 'Praten (spraakbot)'}
       className={cn(
         'ikr-btn relative flex size-11 shrink-0 items-center justify-center rounded-full',
-        on ? 'bg-[#C8371D] text-white' : 'bg-ikr-cream-light text-ikr-navy hover:bg-white',
+        on ? 'bg-[#C8371D] text-white' : 'bg-adm-card text-adm-fg hover:bg-adm-raised',
       )}
     >
       {status === 'verbinden' ? <Spinner /> : <MicIcon />}
@@ -75,25 +75,25 @@ export function VoiceStrip({
           <span className="flex items-center gap-1.5 font-semibold">
             <span aria-hidden="true" className="size-2 rounded-full bg-[#C8371D]" />
             Spraakbot · {STATUS[status]}
-            {busyTool && <span className="font-normal text-[#5E5670]">({busyTool.replace(/_/g, ' ')})</span>}
+            {busyTool && <span className="font-normal text-adm-muted">({busyTool.replace(/_/g, ' ')})</span>}
           </span>
           {waitingGrokbot && (
-            <span className="flex items-center gap-1 text-[#5E5670]">
+            <span className="flex items-center gap-1 text-adm-muted">
               <Spinner /> Grok Bot is bezig
             </span>
           )}
           {spend && (
-            <span className="text-[#5E5670]">
+            <span className="text-adm-muted">
               Vandaag {eur(spend.vandaag)} van {eur(spend.limiet)}
             </span>
           )}
-          <button type="button" onClick={onStop} className="ml-auto rounded-full bg-ikr-cream-light px-2.5 py-1 font-semibold hover:bg-white">
+          <button type="button" onClick={onStop} className="ml-auto rounded-full bg-adm-card px-2.5 py-1 font-semibold hover:bg-adm-raised">
             Stoppen
           </button>
         </div>
       )}
       {pending.map((p) => (
-        <div key={p.id} role="group" aria-label="Wijziging wacht op bevestiging" className="flex flex-wrap items-center gap-2 rounded-2xl border-l-4 border-[#E0A100] bg-[#FFF6DD] px-3 py-2 text-[13px]">
+        <div key={p.id} role="group" aria-label="Wijziging wacht op bevestiging" className="flex flex-wrap items-center gap-2 rounded-2xl border-l-4 border-[#E0A100] bg-adm-yellow-bg px-3 py-2 text-[13px]">
           <span className="min-w-0 flex-[1_1_220px]">
             <span className="font-semibold">Bevestigen?</span> {p.samenvatting}
           </span>
@@ -101,17 +101,17 @@ export function VoiceStrip({
             type="button"
             disabled={p.busy}
             onClick={() => onDecide(p.id, 'bevestig')}
-            className="ikr-btn rounded-full bg-ikr-navy px-3 py-1.5 font-semibold text-ikr-cream-light disabled:opacity-60"
+            className="ikr-btn rounded-full bg-adm-inverse px-3 py-1.5 font-semibold text-ikr-cream-light disabled:opacity-60"
           >
             {p.busy ? <Spinner /> : 'Bevestig'}
           </button>
-          <button type="button" disabled={p.busy} onClick={() => onDecide(p.id, 'annuleer')} className="ikr-btn rounded-full bg-white px-3 py-1.5 font-semibold disabled:opacity-60">
+          <button type="button" disabled={p.busy} onClick={() => onDecide(p.id, 'annuleer')} className="ikr-btn rounded-full bg-adm-raised px-3 py-1.5 font-semibold disabled:opacity-60">
             Annuleer
           </button>
         </div>
       ))}
       {error && (
-        <span role="alert" className="flex items-center gap-2 text-[#A3470F]">
+        <span role="alert" className="flex items-center gap-2 text-adm-warn">
           {error}
           <button type="button" onClick={onClearError} aria-label="Melding sluiten" className="opacity-60 hover:opacity-100">
             ✕

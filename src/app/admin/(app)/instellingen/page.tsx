@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import { cookies } from 'next/headers'
 import { requireAdmin } from '@/lib/admin/session'
 import { isGoogleConfigured, listConnections } from '@/lib/admin/google'
 import { CONTACT_EMAIL, TEAM } from '@/lib/admin/weekly/types'
@@ -10,6 +11,8 @@ import { StyleProfiles } from './StyleProfiles'
 import { MyConnections } from '@/components/admin/team/MyConnections'
 import { SystemStatusCard } from '@/components/admin/SystemStatusCard'
 import { MenuPages } from '@/components/admin/team/MenuPages'
+import { ThemeSettings } from '@/components/admin/team/ThemeSettings'
+import { parseTheme, THEME_COOKIE } from '@/lib/admin/theme'
 import { VoiceSettings } from '@/components/admin/voice/VoiceSettings'
 import { getNavPrefs } from '@/lib/admin/team/nav-prefs'
 import { EMPTY_NAV, hiddenPages } from '@/lib/admin/team/nav-core'
@@ -23,6 +26,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const { user } = await requireAdmin()
   const [connections, navPrefs] = await Promise.all([listConnections(), getNavPrefs(user.email).catch(() => EMPTY_NAV)])
   const salesOwner = isSalesOwner(user.email)
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value)
   const status = (email: string) => connections.find((c) => c.email === email)
   const rows = [
     ...TEAM.map((t) => ({
@@ -40,12 +44,12 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
     <>
       <PageHeader eyebrow={`Ingelogd als ${user.email}`} title="Instellingen" />
       {ok && (
-        <p className="m-0 rounded-2xl bg-[#DDF2DF] p-4 text-sm text-[#1E5B27]">
+        <p className="m-0 rounded-2xl bg-adm-green-bg p-4 text-sm text-adm-green">
           {ok === 'agenda' ? 'Agenda gekoppeld. Kies hieronder welke agenda’s Grok Bot mag lezen.' : ok === 'mail' ? 'Mail gekoppeld (alleen lezen).' : 'Gekoppeld.'}
         </p>
       )}
       {fout && (
-        <p role="alert" className="m-0 rounded-2xl bg-[#FCE3D2] p-4 text-sm text-[#6E2E09]">
+        <p role="alert" className="m-0 rounded-2xl bg-adm-warn-bg p-4 text-sm text-adm-warn-strong">
           {fout}
         </p>
       )}
@@ -56,12 +60,12 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           gekoppeld is. Iedereen koppelt zijn eigen account; de contact-agenda koppel je één keer met contact@iknowright.be.
         </p>
         {!isGoogleConfigured() && (
-          <p className="m-0 mb-2 text-sm text-[#A3470F]">Google is nog niet ingesteld (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).</p>
+          <p className="m-0 mb-2 text-sm text-adm-warn">Google is nog niet ingesteld (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET).</p>
         )}
         {rows.map((r) => {
           const c = status(r.email)
           return (
-            <div key={r.email} className="flex flex-wrap items-center gap-3 border-t border-[#E6DFD2] py-3.5">
+            <div key={r.email} className="flex flex-wrap items-center gap-3 border-t border-adm-line py-3.5">
               <div className="flex flex-[1_1_240px] flex-col">
                 <span className="font-semibold">{r.label}</span>
                 <span className={cn('text-xs', muted)}>{r.email}</span>
@@ -94,6 +98,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       >
         <MyConnections email={user.email} />
       </Suspense>
+      <ThemeSettings initial={theme} />
       <MenuPages hidden={hiddenPages(navPrefs, salesOwner)} salesOwner={salesOwner} />
       {process.env.SUPABASE_SERVICE_ROLE_KEY && (
         <Suspense

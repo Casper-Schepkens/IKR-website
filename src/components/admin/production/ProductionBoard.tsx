@@ -85,12 +85,12 @@ function ClientRow({ cp, today }: { cp: ClientProduction; today: string }) {
   }, [focus])
   const n = cp.next
   return (
-    <li ref={ref} className={cn('scroll-mt-24 border-t border-[#E6DFD2]', !cp.production.active && 'opacity-60')}>
+    <li ref={ref} className={cn('scroll-mt-24 border-t border-adm-line', !cp.production.active && 'opacity-60')}>
       <button
         type="button"
         onClick={() => setOpen(!open)}
         aria-expanded={open}
-        className="grid w-full grid-cols-1 items-center gap-2 px-6 py-3 text-left hover:bg-ikr-cream/60 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_auto]"
+        className="grid w-full grid-cols-1 items-center gap-2 px-6 py-3 text-left hover:bg-adm-soft/60 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_auto]"
       >
         <span className="flex min-w-0 items-center gap-2">
           <span
@@ -106,7 +106,7 @@ function ClientRow({ cp, today }: { cp: ClientProduction; today: string }) {
         <span className="flex min-w-0 flex-col gap-1">
           <span className="truncate text-sm">{cp.phase}</span>
           <span
-            className="h-1.5 w-full max-w-64 overflow-hidden rounded-full bg-[#E6DFD2]"
+            className="h-1.5 w-full max-w-64 overflow-hidden rounded-full bg-adm-soft-hover"
             aria-hidden
           >
             <span
@@ -127,7 +127,7 @@ function ClientRow({ cp, today }: { cp: ClientProduction; today: string }) {
         </span>
       </button>
       {open && (
-        <div className="bg-ikr-cream/40 px-6 pt-1 pb-5">
+        <div className="bg-adm-soft/40 px-6 pt-1 pb-5">
           <Detail cp={cp} today={today} />
         </div>
       )}
@@ -186,7 +186,7 @@ function DateField({
         {pending && <Spinner />}
       </span>
       {error && (
-        <span role="alert" className="text-xs text-[#A3470F]">
+        <span role="alert" className="text-xs text-adm-warn">
           {error}
         </span>
       )}
@@ -213,7 +213,7 @@ function Detail({ cp, today }: { cp: ClientProduction; today: string }) {
     : ''
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-3 rounded-2xl bg-white/60 p-3">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-3 rounded-2xl bg-adm-raised/60 p-3">
         <DateField
           clientId={cp.client_id}
           anchor="getekend"
@@ -231,7 +231,7 @@ function Detail({ cp, today }: { cp: ClientProduction; today: string }) {
 
       <RhythmField clientId={cp.client_id} value={cp.production.rhythm ? rhythmLabel(cp.production.rhythm) : ''} />
 
-      <div className="flex flex-col gap-2 rounded-2xl border border-[#E6DFD2] bg-white/40 p-3">
+      <div className="flex flex-col gap-2 rounded-2xl border border-adm-line bg-adm-raised/40 p-3">
         <button type="button" onClick={() => setEditSteps(!editSteps)} aria-expanded={editSteps} className="flex items-center gap-2 text-left text-sm font-bold">
           <span aria-hidden className={cn('inline-block text-xs transition-transform', editSteps && 'rotate-90')}>
             ▸
@@ -281,7 +281,7 @@ function Detail({ cp, today }: { cp: ClientProduction; today: string }) {
           <section
             key={cycle.id}
             aria-label={`Draaidag ${cycle.no} plannen`}
-            className="flex flex-col gap-1 rounded-xl border-2 border-dashed border-[#E6DFD2] px-3 py-2"
+            className="flex flex-col gap-1 rounded-xl border-2 border-dashed border-adm-line px-3 py-2"
           >
             <h3 className="m-0 text-sm font-bold tracking-wide uppercase">
               Draaidag {cycle.no} · nog te plannen
@@ -353,7 +353,7 @@ function Detail({ cp, today }: { cp: ClientProduction; today: string }) {
         </button>
         {pending && <Spinner />}
         {error && (
-          <span role="alert" className="text-xs text-[#A3470F]">
+          <span role="alert" className="text-xs text-adm-warn">
             {error}
           </span>
         )}
@@ -382,7 +382,7 @@ function RhythmField({ clientId, value }: { clientId: string; value: string }) {
       </button>
       {pending && <Spinner />}
       {error && (
-        <span role="alert" className="w-full text-xs text-[#A3470F]">
+        <span role="alert" className="w-full text-xs text-adm-warn">
           {error}
         </span>
       )}
@@ -415,7 +415,7 @@ export function TemplateCard({ steps, name }: { steps: StepDef[]; name: string }
 function NotStarted({ clients }: { clients: { id: string; name: string }[] }) {
   const { pending, error, run } = useRun()
   return (
-    <div className="flex flex-wrap items-center gap-2 border-t border-[#E6DFD2] px-6 py-4">
+    <div className="flex flex-wrap items-center gap-2 border-t border-adm-line px-6 py-4">
       <span className={cn('text-sm', muted)}>Nog niet gestart:</span>
       {clients.map((c) => (
         <button
@@ -430,7 +430,7 @@ function NotStarted({ clients }: { clients: { id: string; name: string }[] }) {
       ))}
       {pending && <Spinner />}
       {error && (
-        <span role="alert" className="text-xs text-[#A3470F]">
+        <span role="alert" className="text-xs text-adm-warn">
           {error}
         </span>
       )}
@@ -450,7 +450,7 @@ function Block({
 }) {
   if (done)
     return (
-      <details className="rounded-xl bg-white/50 px-3 py-2">
+      <details className="rounded-xl bg-adm-raised/50 px-3 py-2">
         <summary className="cursor-pointer text-sm font-bold tracking-wide uppercase">
           {title} <span className={cn('font-normal normal-case', muted)}>· alles af ✓</span>
         </summary>

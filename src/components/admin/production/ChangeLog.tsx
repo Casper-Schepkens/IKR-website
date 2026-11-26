@@ -30,7 +30,7 @@ export function ChangeLog({ changes }: { changes: ChangeView[] }) {
         ) : (
           <ul className="m-0 mt-3 flex list-none flex-col p-0">
             {changes.map((c) => (
-              <li key={c.id} className={cn('flex flex-wrap items-center gap-2 border-t border-[#E6DFD2] py-2 text-sm first:border-t-0', c.reverted && 'text-[#6F6A76]')}>
+              <li key={c.id} className={cn('flex flex-wrap items-center gap-2 border-t border-adm-line py-2 text-sm first:border-t-0', c.reverted && 'text-adm-faint')}>
                 <span className={cn('w-36 shrink-0 text-xs', muted)}>
                   {new Date(c.at).toLocaleString('nl-BE', { timeZone: 'Europe/Brussels', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                 </span>
@@ -63,7 +63,7 @@ export function ChangeLog({ changes }: { changes: ChangeView[] }) {
           </ul>
         )}
         {error && (
-          <p role="alert" className="m-0 mt-2 text-sm text-[#A3470F]">
+          <p role="alert" className="m-0 mt-2 text-sm text-adm-warn">
             {error}
           </p>
         )}

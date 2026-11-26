@@ -44,10 +44,10 @@ export function FreelancerFields({ freelancer: f, clients }: { freelancer?: Free
       </label>
       {clients.length > 0 && (
         <fieldset className="m-0 flex flex-col gap-1.5 border-0 p-0">
-          <legend className="mb-1.5 text-[13px] font-semibold text-[#5E5670]">Gekoppeld aan klanten in het dashboard</legend>
+          <legend className="mb-1.5 text-[13px] font-semibold text-adm-muted">Gekoppeld aan klanten in het dashboard</legend>
           <div className="flex flex-wrap gap-2">
             {clients.map((c) => (
-              <label key={c.id} className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-full bg-ikr-cream px-3 text-sm has-[:checked]:bg-ikr-navy has-[:checked]:text-ikr-cream-light">
+              <label key={c.id} className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-full bg-adm-soft px-3 text-sm has-[:checked]:bg-adm-inverse has-[:checked]:text-ikr-cream-light">
                 <input type="checkbox" name="client_ids" value={c.id} defaultChecked={linked.has(c.id)} className="accent-ikr-cyan" />
                 {c.name}
               </label>

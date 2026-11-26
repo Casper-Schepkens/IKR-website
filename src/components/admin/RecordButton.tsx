@@ -53,9 +53,9 @@ export function RecordButton({
           <Spinner /> Opname naar de Drive…
         </span>
       )}
-      {done && <span className="text-sm font-semibold text-[#1E5B27]">Opname staat in de Drive.</span>}
+      {done && <span className="text-sm font-semibold text-adm-green">Opname staat in de Drive.</span>}
       {mine && r.error && (
-        <span role="alert" className="text-sm font-medium text-[#A3470F]">
+        <span role="alert" className="text-sm font-medium text-adm-warn">
           {r.error}
         </span>
       )}

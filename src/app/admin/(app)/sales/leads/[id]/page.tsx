@@ -48,10 +48,10 @@ export default async function LeadPage({ params, searchParams }: { params: Promi
         <Link href="/admin/sales" className={cn(muted, 'no-underline hover:underline')}>
           Leads
         </Link>{' '}
-        / <span className="font-semibold text-ikr-navy">{lead.name}</span>
+        / <span className="font-semibold text-adm-fg">{lead.name}</span>
       </nav>
       {fout && (
-        <p role="alert" className="m-0 rounded-2xl bg-[#FCE3D2] p-4 text-sm text-[#6E2E09]">
+        <p role="alert" className="m-0 rounded-2xl bg-adm-warn-bg p-4 text-sm text-adm-warn-strong">
           {fout}
         </p>
       )}
@@ -67,7 +67,7 @@ export default async function LeadPage({ params, searchParams }: { params: Promi
           <Pill tone="light">Lead sinds {fmtDate(lead.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</Pill>
         </div>
         {lost && lead.lost_reason && (
-          <p className="m-0 mt-2 rounded-2xl bg-[#FCE3D2] p-4 text-sm text-[#6E2E09]">
+          <p className="m-0 mt-2 rounded-2xl bg-adm-warn-bg p-4 text-sm text-adm-warn-strong">
             <strong>Lost:</strong> {LOST_REASON_LABELS[lead.lost_reason]}
             {lead.lost_note && <> · {lead.lost_note}</>}
           </p>

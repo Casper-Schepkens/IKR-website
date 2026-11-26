@@ -8,8 +8,8 @@ import { COST_LABELS } from '@/lib/admin/voice/pricing'
 const eur = (v: number) => `€${v.toFixed(2).replace('.', ',')}`
 const mins = (m: number) => (m < 1 ? '<1 min' : `${Math.round(m)} min`)
 const when = (iso: string) => new Date(iso).toLocaleString('nl-BE', { timeZone: 'Europe/Brussels', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
-const th = 'py-1.5 pr-3 text-left text-xs font-semibold text-[#5E5670]'
-const td = 'border-t border-[#E6DFD2] py-1.5 pr-3'
+const th = 'py-1.5 pr-3 text-left text-xs font-semibold text-adm-muted'
+const td = 'border-t border-adm-line py-1.5 pr-3'
 
 /** Spraakbot in Instellingen: daglimiet, stem en wie wat gebruikt (en waar de kost vandaan komt). */
 export async function VoiceSettings() {
@@ -42,10 +42,10 @@ export async function VoiceSettings() {
           <span className="font-display text-3xl font-black">{eur(s.todayEur)}</span>
           <span className={cn('text-sm', muted)}>van {eur(settings.daily_limit_eur)}</span>
         </div>
-        <div className="h-2.5 overflow-hidden rounded-full bg-ikr-cream" role="meter" aria-valuemin={0} aria-valuemax={settings.daily_limit_eur} aria-valuenow={Number(s.todayEur.toFixed(2))} aria-label="Verbruik van de daglimiet">
-          <div className={cn('h-full rounded-full', pct >= 100 ? 'bg-[#C8371D]' : pct >= 80 ? 'bg-[#E0A100]' : 'bg-ikr-navy')} style={{ width: `${pct}%` }} />
+        <div className="h-2.5 overflow-hidden rounded-full bg-adm-soft" role="meter" aria-valuemin={0} aria-valuemax={settings.daily_limit_eur} aria-valuenow={Number(s.todayEur.toFixed(2))} aria-label="Verbruik van de daglimiet">
+          <div className={cn('h-full rounded-full', pct >= 100 ? 'bg-[#C8371D]' : pct >= 80 ? 'bg-[#E0A100]' : 'bg-adm-fg')} style={{ width: `${pct}%` }} />
         </div>
-        {pct >= 100 && <p className="m-0 text-sm font-semibold text-[#A3470F]">Daglimiet bereikt: de microfoon staat uit tot morgen (of verhoog de limiet).</p>}
+        {pct >= 100 && <p className="m-0 text-sm font-semibold text-adm-warn">Daglimiet bereikt: de microfoon staat uit tot morgen (of verhoog de limiet).</p>}
       </section>
 
       <FormAction action={saveVoiceSettingsAction} submitLabel="Opslaan" submitVariant="soft" className="flex flex-col gap-3">
@@ -84,7 +84,7 @@ export async function VoiceSettings() {
         <div className="flex h-20 items-end gap-[2px]" aria-hidden="true">
           {s.days.map((d) => (
             <div key={d.day} title={`${d.day.slice(8)}/${d.day.slice(5, 7)}: ${eur(d.eur)}`} className="flex h-full min-w-0 flex-1 items-end">
-              <div className={cn('w-full rounded-t-[4px]', d.eur > 0 ? 'bg-ikr-navy' : 'bg-ikr-cream')} style={{ height: `${d.eur > 0 ? Math.max(4, (d.eur / maxDay) * 100) : 4}%` }} />
+              <div className={cn('w-full rounded-t-[4px]', d.eur > 0 ? 'bg-adm-fg' : 'bg-adm-soft')} style={{ height: `${d.eur > 0 ? Math.max(4, (d.eur / maxDay) * 100) : 4}%` }} />
             </div>
           ))}
         </div>
@@ -137,8 +137,8 @@ export async function VoiceSettings() {
                       {eur(p.eur)} <span className={muted}>({Math.round((p.eur / partsTotal) * 100)}%)</span>
                     </span>
                   </span>
-                  <span className="h-1.5 overflow-hidden rounded-full bg-ikr-cream" aria-hidden="true">
-                    <span className="block h-full rounded-full bg-ikr-navy" style={{ width: `${(p.eur / partsTotal) * 100}%` }} />
+                  <span className="h-1.5 overflow-hidden rounded-full bg-adm-soft" aria-hidden="true">
+                    <span className="block h-full rounded-full bg-adm-fg" style={{ width: `${(p.eur / partsTotal) * 100}%` }} />
                   </span>
                 </li>
               ))}

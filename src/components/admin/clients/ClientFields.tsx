@@ -125,7 +125,7 @@ export function ClientFields({ client }: { client?: Client }) {
       ) : (
         <>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="derive" defaultChecked className="accent-ikr-navy" />
+            <input type="checkbox" name="derive" defaultChecked className="accent-adm-fg" />
             Bedragen en looptijd afleiden uit het contract in de Drive (je krijgt een voorstel)
           </label>
           <details>

@@ -9,9 +9,9 @@ function Inlines({ items }: { items: Inline[] }) {
         if (x.t === 'text') return <Fragment key={i}>{x.v}</Fragment>
         if (x.t === 'b') return <strong key={i}><Inlines items={x.c} /></strong>
         if (x.t === 'i') return <em key={i}><Inlines items={x.c} /></em>
-        if (x.t === 'code') return <code key={i} className="rounded bg-ikr-cream px-1 text-[0.9em]">{x.v}</code>
+        if (x.t === 'code') return <code key={i} className="rounded bg-adm-soft px-1 text-[0.9em]">{x.v}</code>
         return (
-          <a key={i} href={x.href} target="_blank" rel="noopener noreferrer" className="font-semibold break-words text-[#0B7F93] underline">
+          <a key={i} href={x.href} target="_blank" rel="noopener noreferrer" className="font-semibold break-words text-adm-teal underline">
             <Inlines items={x.c} />
           </a>
         )

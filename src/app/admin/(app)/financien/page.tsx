@@ -53,7 +53,7 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
         <SyncFinanceButton />
       </PageHeader>
       {(syncError || state.error) && (
-        <p role="alert" className="m-0 rounded-2xl bg-[#FCE3D2] p-3 text-sm text-[#6E2E09]">
+        <p role="alert" className="m-0 rounded-2xl bg-adm-warn-bg p-3 text-sm text-adm-warn-strong">
           Odoo niet bijgewerkt: {syncError ?? state.error}
         </p>
       )}
@@ -128,11 +128,11 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
               </tr>
             )}
             {o.per_klant.map((r) => (
-              <tr key={r.client_id ?? r.naam} className="border-t border-[#E6DFD2]">
+              <tr key={r.client_id ?? r.naam} className="border-t border-adm-line">
                 <td className="px-6 py-2.5 font-semibold">{r.naam}</td>
                 <td className="px-3 py-2.5 text-right tabular-nums">
                   {eur(r.ontvangen_excl_btw)}
-                  {r.contract_omzet != null && r.ontvangen === 0 && <span className="ml-1 text-xs text-[#A3470F]">nog niet betaald</span>}
+                  {r.contract_omzet != null && r.ontvangen === 0 && <span className="ml-1 text-xs text-adm-warn">nog niet betaald</span>}
                 </td>
                 <td className={cn('px-3 py-2.5 text-right tabular-nums', muted)}>{eur(r.contract_omzet)}</td>
                 <td className="px-3 py-2.5 text-right tabular-nums">{r.freelancer == null ? <span className={muted}>?</span> : eur(r.freelancer)}</td>
@@ -156,7 +156,7 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
             const max = o.kosten[0]?.total || 1
             return (
               <li key={k.category} className="grid grid-cols-[minmax(130px,200px)_1fr_auto] items-center gap-3 text-sm">
-                <span className={cn('font-semibold', k.category === 'onbekend' && 'text-[#A3470F]')}>{k.label}</span>
+                <span className={cn('font-semibold', k.category === 'onbekend' && 'text-adm-warn')}>{k.label}</span>
                 <span className="relative h-5" title={`${k.label}: ${eur(k.total, 2)}\n${k.top.map((t) => `${t.naam}: ${eur(t.total, 2)}`).join('\n')}`}>
                   <span className="absolute inset-y-0 left-0 rounded-r-[4px] bg-[#EB6834]" style={{ width: `${Math.max(2, (k.total / max) * 100)}%` }} />
                 </span>
@@ -191,19 +191,19 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
 
 function Tile({ label, value, sub, strong, tone }: { label: string; value: string; sub?: string; strong?: boolean; tone?: 'pos' | 'neg' }) {
   return (
-    <Card className={cn('flex flex-col gap-1 p-4', strong && 'ring-2 ring-ikr-navy')}>
+    <Card className={cn('flex flex-col gap-1 p-4', strong && 'ring-2 ring-adm-ring')}>
       <span className={cn('text-xs font-semibold', muted)}>{label}</span>
-      <span className={cn('text-2xl font-black tabular-nums', tone === 'neg' && 'text-[#A3470F]')}>{value}</span>
+      <span className={cn('text-2xl font-black tabular-nums', tone === 'neg' && 'text-adm-warn')}>{value}</span>
       {sub && <span className={cn('text-xs', muted)}>{sub}</span>}
     </Card>
   )
 }
 
 const STATUS: Record<PaymentStatus, { label: string; icon: string; cls: string }> = {
-  betaald: { label: 'betaald', icon: '✓', cls: 'bg-[#DDF1E4] text-[#1E5B33]' },
-  open: { label: 'nog niet vervallen', icon: '…', cls: 'bg-[#EFE9DE] text-ikr-navy' },
-  deels: { label: 'deels betaald', icon: '½', cls: 'bg-[#FBEFC9] text-[#6B4A00]' },
-  achterstallig: { label: 'achterstallig', icon: '!', cls: 'bg-[#FCE3D2] text-[#8A3209]' },
+  betaald: { label: 'betaald', icon: '✓', cls: 'bg-adm-green-bg text-adm-green' },
+  open: { label: 'nog niet vervallen', icon: '…', cls: 'bg-adm-soft text-adm-fg' },
+  deels: { label: 'deels betaald', icon: '½', cls: 'bg-adm-yellow-bg text-adm-yellow' },
+  achterstallig: { label: 'achterstallig', icon: '!', cls: 'bg-adm-warn-bg text-adm-warn' },
 }
 const MONTH_SHORT = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec']
 const monthLabel = (m: string) => `${MONTH_SHORT[Number(m.slice(5, 7)) - 1]} ${m.slice(2, 4)}`
@@ -223,7 +223,7 @@ function Payments({ checks, noFee }: { checks: PaymentCheck[]; noFee: string[] }
       {!checks.length && <p className={cn('m-0 text-sm', muted)}>Vul bij Klanten het maandbedrag en de contractstart in.</p>}
       <ul className="m-0 flex list-none flex-col p-0">
         {checks.map((c) => (
-          <li key={c.client_id} className="flex flex-col gap-2 border-t border-[#E6DFD2] py-3 md:flex-row md:items-center md:gap-4">
+          <li key={c.client_id} className="flex flex-col gap-2 border-t border-adm-line py-3 md:flex-row md:items-center md:gap-4">
             <div className="min-w-0 md:w-48">
               <p className="m-0 font-semibold">{c.naam}</p>
               <p className={cn('m-0 text-xs', muted)}>{eur(c.maandbedrag_incl_btw, 2)} / maand incl. btw</p>
@@ -245,13 +245,13 @@ function Payments({ checks, noFee }: { checks: PaymentCheck[]; noFee: string[] }
             </ol>
             <div className="text-sm md:ml-auto md:text-right">
               {c.achterstallig > 0.5 ? (
-                <p className="m-0 font-bold text-[#8A3209]">! {eur(c.achterstallig, 2)} achterstallig</p>
+                <p className="m-0 font-bold text-adm-warn">! {eur(c.achterstallig, 2)} achterstallig</p>
               ) : (
                 <p className="m-0 font-semibold">{c.status === 'in_orde' ? '✓ in orde' : 'in orde tot nu'}</p>
               )}
               {c.tegoed > 0.5 && <p className={cn('m-0 text-xs', muted)}>{eur(c.tegoed, 2)} te veel betaald</p>}
               {c.afwijkend.map((a) => (
-                <p key={a.datum + a.bedrag} className="m-0 text-xs text-[#6B4A00]">
+                <p key={a.datum + a.bedrag} className="m-0 text-xs text-adm-yellow">
                   Afwijkend bedrag: {eur(a.bedrag, 2)} op {a.datum}
                 </p>
               ))}

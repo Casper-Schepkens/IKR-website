@@ -44,7 +44,7 @@ async function Runner({ run, errorPrefix, knownError }: { run: () => Promise<Syn
   if (outcome.changed) return <RefreshOnce />
   if (!outcome.error || (knownError && outcome.error.includes(knownError))) return null
   return (
-    <p role="alert" className="m-0 rounded-2xl bg-[#FCE3D2] p-3 text-sm text-[#6E2E09]">
+    <p role="alert" className="m-0 rounded-2xl bg-adm-warn-bg p-3 text-sm text-adm-warn-strong">
       {errorPrefix}: {outcome.error}
     </p>
   )

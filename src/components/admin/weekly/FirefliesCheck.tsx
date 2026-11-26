@@ -53,7 +53,7 @@ export function FirefliesCheck({ weeklyId }: { weeklyId: string }) {
           </button>
         </>
       )}
-      {error && <span className="text-sm text-[#A3470F]">{error}</span>}
+      {error && <span className="text-sm text-adm-warn">{error}</span>}
     </span>
   )
 }

@@ -97,7 +97,7 @@ export function RewriteBox({
         {jobId ? `${rewriter} herschrijft…` : 'Herschrijven'}
       </button>
       {error && (
-        <span role="alert" className="w-full text-sm font-medium text-[#A3470F]">
+        <span role="alert" className="w-full text-sm font-medium text-adm-warn">
           {error}
         </span>
       )}

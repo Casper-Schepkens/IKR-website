@@ -18,10 +18,10 @@ export function RecordingIndicator() {
       aria-live="polite"
       className={cn(
         'mx-2.5 inline-flex max-w-[calc(100%-1.25rem)] min-w-0 items-center gap-2 self-start rounded-full px-3 py-1.5 text-xs font-bold tabular-nums no-underline',
-        status === 'error' ? 'bg-[#FFE4D6] text-[#A3470F]' : 'bg-[#E5484D] text-white',
+        status === 'error' ? 'bg-adm-warn-bg text-adm-warn' : 'bg-[#E5484D] text-white',
       )}
     >
-      <span aria-hidden="true" className={cn('size-2 shrink-0 rounded-full', status === 'error' ? 'bg-[#A3470F]' : 'bg-white', status === 'recording' && 'animate-pulse')} />
+      <span aria-hidden="true" className={cn('size-2 shrink-0 rounded-full', status === 'error' ? 'bg-[#A3470F]' : 'bg-adm-raised', status === 'recording' && 'animate-pulse')} />
       <span className="shrink-0 whitespace-nowrap">{text}</span>
       <span className="min-w-0 truncate font-semibold opacity-85">· {target.label}</span>
     </Link>
@@ -35,7 +35,7 @@ export function RecordingPill({ recKey }: { recKey: string }) {
   if (target?.key !== recKey || status !== 'recording') return null
   return (
     <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#E5484D] px-2.5 py-1 text-xs font-bold text-white tabular-nums">
-      <span aria-hidden="true" className="size-2 animate-pulse rounded-full bg-white" /> Recording · {clock(seconds)}
+      <span aria-hidden="true" className="size-2 animate-pulse rounded-full bg-adm-raised" /> Recording · {clock(seconds)}
     </span>
   )
 }

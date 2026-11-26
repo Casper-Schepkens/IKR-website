@@ -76,7 +76,7 @@ export function DraftCard(d: DraftCardProps) {
           </button>
         </div>
         {error && (
-          <span role="alert" className="text-sm font-medium text-[#A3470F]">
+          <span role="alert" className="text-sm font-medium text-adm-warn">
             {error}
           </span>
         )}
@@ -91,7 +91,7 @@ export function DraftCard(d: DraftCardProps) {
           {d.leadName && (
             <Link
               href={`/admin/sales/leads/${d.leadId}`}
-              className="font-bold text-ikr-navy no-underline hover:text-[#0B7F93]"
+              className="font-bold text-adm-fg no-underline hover:text-adm-teal"
             >
               {d.leadName}
             </Link>
@@ -148,7 +148,7 @@ export function DraftCard(d: DraftCardProps) {
               className={cn(input, 'py-3 leading-relaxed', d.isHtml && 'font-mono text-xs')}
             />
           </label>
-          <fieldset className="m-0 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3 rounded-lg border border-black/10 p-3">
+          <fieldset className="m-0 grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3 rounded-lg border border-adm-line p-3">
             <legend className={cn('px-1 text-xs font-semibold', muted)}>
               Na versturen wordt de lead bijgewerkt (leeg = standaard)
             </legend>
@@ -235,7 +235,7 @@ export function DraftCard(d: DraftCardProps) {
           </div>
         </form>
         {error && (
-          <span role="alert" className="text-sm font-medium text-[#A3470F]">
+          <span role="alert" className="text-sm font-medium text-adm-warn">
             {error}
           </span>
         )}

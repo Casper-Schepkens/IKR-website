@@ -38,7 +38,7 @@ function Proposal({ sop: p }: { sop: Sop }) {
       refreshNotifications()
     })
   return (
-    <li className="flex items-start gap-3 rounded-2xl bg-ikr-cream-light p-3.5">
+    <li className="flex items-start gap-3 rounded-2xl bg-adm-card p-3.5">
       <div className="min-w-0 flex-1">
         <p className="m-0 font-semibold">{p.title}</p>
         <p className="m-0 text-sm whitespace-pre-line">{p.body}</p>
@@ -48,17 +48,17 @@ function Proposal({ sop: p }: { sop: Sop }) {
           {p.quote && <span className={cn('italic', muted)}>“{p.quote}”</span>}
         </div>
         {error && (
-          <p role="alert" className="m-0 mt-1 text-xs text-[#A3470F]">
+          <p role="alert" className="m-0 mt-1 text-xs text-adm-warn">
             {error}
           </p>
         )}
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
         {pending && <Spinner />}
-        <button type="button" disabled={pending} onClick={() => decide(true)} aria-label={`Goedkeuren: ${p.title}`} title="Goedkeuren" className="ikr-btn grid size-10 place-items-center rounded-full bg-[#DDF2DF] text-lg font-bold text-[#1E5B27] disabled:opacity-60">
+        <button type="button" disabled={pending} onClick={() => decide(true)} aria-label={`Goedkeuren: ${p.title}`} title="Goedkeuren" className="ikr-btn grid size-10 place-items-center rounded-full bg-adm-green-bg text-lg font-bold text-adm-green disabled:opacity-60">
           ✓
         </button>
-        <button type="button" disabled={pending} onClick={() => decide(false)} aria-label={`Afwijzen: ${p.title}`} title="Afwijzen" className="ikr-btn grid size-10 place-items-center rounded-full bg-[#F8D3D0] text-lg font-bold text-[#8E1B12] disabled:opacity-60">
+        <button type="button" disabled={pending} onClick={() => decide(false)} aria-label={`Afwijzen: ${p.title}`} title="Afwijzen" className="ikr-btn grid size-10 place-items-center rounded-full bg-adm-red-bg text-lg font-bold text-adm-red disabled:opacity-60">
           ✕
         </button>
       </div>
