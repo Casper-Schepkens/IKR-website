@@ -32,3 +32,17 @@ describe('Mijn agenda (team_agenda)', () => {
     expect(calls[1].url).toContain('/calendars/tandloosispam%40gmail.com/events')
   })
 })
+
+describe('gedeelde agenda niet leesbaar', () => {
+  it('geeft een duidelijke melding als de agenda niet met het gekoppelde account gedeeld is', async () => {
+    tokens.splice(0, tokens.length, 'token')
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ error: { message: 'Not Found' } }), { status: 404 }))
+    await expect(
+      PROVIDERS.team_agenda.read(
+        { id: '1', member_email: 'casper@iknowright.be', provider: 'team_agenda', label: null, account_email: null, calendar_ids: [], active: true },
+        new Date('2026-12-01T00:00:00Z'),
+        new Date('2026-12-20T00:00:00Z'),
+      ),
+    ).rejects.toThrow(/casper@iknowright\.be kan de agenda van tandloosispam@gmail\.com niet lezen/)
+  })
+})

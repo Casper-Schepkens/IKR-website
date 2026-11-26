@@ -4,7 +4,7 @@ import { timeout } from '@/lib/admin/http'
 import { forgetTeamToken, teamAccessToken } from '@/lib/admin/team/connections'
 import { inviteAddresses } from '@/lib/admin/team/invites'
 import { CONTACT_EMAIL, ownerOf } from '@/lib/admin/weekly/types'
-import { agendaCalendarFor, type BusySource } from './core'
+import { agendaCalendarFor, notSharedMessage, type BusySource } from './core'
 import type { Busy } from './slots'
 
 /**
@@ -36,6 +36,9 @@ export class AuthExpired extends Error {
   }
 }
 
+/** Geen toegang tot deze agenda (niet gedeeld met het gekoppelde account). */
+export class NoAccess extends Error {}
+
 async function retryOn401<T>(fn: () => Promise<T>, forget: () => void): Promise<T> {
   try {
     return await fn()
@@ -56,6 +59,7 @@ export async function readGoogleBusy(token: string, calendarId: string, from: Da
     const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${p}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store', signal: timeout() })
     const json = (await res.json().catch(() => ({}))) as { items?: RawEvent[]; nextPageToken?: string; error?: { message?: string } }
     if (res.status === 401) throw new AuthExpired()
+    if (res.status === 404 || res.status === 403) throw new NoAccess(json.error?.message ?? String(res.status))
     if (!res.ok) throw new Error(`Agenda lezen mislukt: ${json.error?.message ?? res.status}`)
     for (const e of json.items ?? []) {
       if (e.status === 'cancelled' || e.transparency === 'transparent' || !keep(e)) continue
@@ -104,8 +108,14 @@ export const PROVIDERS: Record<string, BusyProvider> = {
         async () => {
           const { token, conn } = await teamAccessToken(source.member_email, 'agenda')
           // Altijd de agenda van het uitnodigingsadres; extra agenda's enkel als ze uitdrukkelijk in de bron staan.
-          const ids = [...new Set([agendaCalendarFor(conn, target), ...source.calendar_ids])]
-          return (await Promise.all(ids.map((id) => readGoogleBusy(token, id, from, to)))).flat()
+          const main = agendaCalendarFor(conn, target)
+          const ids = [...new Set([main, ...source.calendar_ids])]
+          try {
+            return (await Promise.all(ids.map((id) => readGoogleBusy(token, id, from, to)))).flat()
+          } catch (e) {
+            if (e instanceof NoAccess) throw new Error(notSharedMessage(target, conn.google_email))
+            throw e
+          }
         },
         () => forgetTeamToken(source.member_email, 'agenda'),
       )

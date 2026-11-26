@@ -107,7 +107,7 @@ export async function getAttachment(member: string, messageId: string, attachmen
 // ─── Agenda ───────────────────────────────────────────────
 /** Alle agenda's van het gekoppelde account (om er één of meer te kiezen). */
 export async function listCalendarsWithToken(token: string): Promise<CalendarInfo[]> {
-  const r = await get<{ items?: { id: string; summary?: string; summaryOverride?: string; primary?: boolean }[] }>(token, `${CAL}/users/me/calendarList?maxResults=250`)
+  const r = await get<{ items?: { id: string; summary?: string; summaryOverride?: string; primary?: boolean }[] }>(token, `${CAL}/users/me/calendarList?maxResults=250&showHidden=true`)
   return (r.items ?? []).map((c) => ({ id: c.id, naam: c.summaryOverride ?? c.summary ?? c.id, primair: Boolean(c.primary) }))
 }
 

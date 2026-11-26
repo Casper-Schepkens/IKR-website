@@ -207,8 +207,10 @@ export function cleanPriority(raw: unknown, known: string[]): string[] {
 export function agendaCalendarFor(conn: { google_email: string; calendars: { id: string }[] }, inviteAddress: string): string {
   const target = inviteAddress.toLowerCase()
   if (conn.google_email.toLowerCase() === target) return 'primary'
-  const shared = conn.calendars.find((c) => c.id.toLowerCase() === target)
-  if (shared) return shared.id
-  throw new Error(
-    `${inviteAddress} staat niet tussen de agenda's die ${conn.google_email} kan zien. Deel in Google Agenda de agenda van ${inviteAddress} met ${conn.google_email} ("Alle details van afspraken bekijken"), accepteer de deelmail en klik in Instellingen → Mijn koppelingen bij "Agenda koppelen" op "Lijst vernieuwen".`,
-  )}
+  // Gedeelde agenda: rechtstreeks lezen, ook als ze niet (zichtbaar) in de agenda-lijst van het account staat.
+  return conn.calendars.find((c) => c.id.toLowerCase() === target)?.id ?? inviteAddress
+}
+
+/** Melding als de agenda van het uitnodigingsadres niet gedeeld is met het gekoppelde account. */
+export const notSharedMessage = (inviteAddress: string, googleEmail: string) =>
+  `${googleEmail} kan de agenda van ${inviteAddress} niet lezen. Deel in Google Agenda (ingelogd als ${inviteAddress}) je agenda met ${googleEmail}, met "Alle details van afspraken bekijken".`
