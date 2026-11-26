@@ -4,7 +4,7 @@ import { listAllConnections, memberName, resolveMember } from '../../team/connec
 import { calendarEvents, getAttachment, gmailQuery, readMessage, readThread, searchMail } from '../../team/google-read'
 import { isoDay } from '../../format'
 import { TEAM, CONTACT_EMAIL as IKR_DRIVE } from '../../weekly/types'
-import { driveFileInfo, driveSearch, driveText, ensureDrivePath, escDriveQuery, moveDriveFile } from '../../google'
+import { createDocInFolder, driveFileInfo, driveSearch, driveText, ensureDrivePath, escDriveQuery, moveDriveFile } from '../../google'
 import { KIND_KEYS as CAL_KINDS, KINDS as CAL_KIND_LABELS, timeIn } from '../../calendar/core'
 import { loadCalendar } from '../../calendar/service'
 import { inviteAddresses, moveUpcomingInvites, setInviteAddress } from '../../team/invites'
@@ -81,6 +81,21 @@ export function registerDriveTeamTools(ctx: ToolCtx) {
     const id = await ensureDrivePath(IKR_DRIVE, pad.map((p) => p.trim()))
     return { map_id: id, pad: pad.join(' / ') }
   })
+  tool(
+    'drive_doc_aanmaken',
+    'Een Google Doc aanmaken in een map van de IKR-Drive (bv. het ideeëndoc in de klantmap). Inhoud in markdown (koppen, lijsten, vet, [tekst](https://…)-links worden opmaak). Staat er in die map al een doc met precies die titel, dan wordt dat teruggegeven (niets dubbel). Geeft doc_url.',
+    { map_id: z.string(), titel: z.string().min(1).max(200), inhoud: z.string().min(1).max(100_000).describe('markdown') },
+    false,
+    async ({ map_id, titel, inhoud }) => {
+      const folder = driveId(map_id)
+      const name = titel.trim()
+      const q = `name = '${escDriveQuery(name)}' and '${folder}' in parents and mimeType = 'application/vnd.google-apps.document' and trashed = false`
+      const [existing] = await driveSearch(IKR_DRIVE, q, 1)
+      if (existing) return { doc_url: existing.webViewLink, file_id: existing.id, titel: existing.name, bestond_al: true }
+      const url = await createDocInFolder(IKR_DRIVE, folder, name, inhoud, 'text/markdown')
+      return { doc_url: url, titel: name, bestond_al: false }
+    },
+  )
   tool('drive_bestand_verplaatsen', 'Een bestand in de IKR-Drive naar een map verplaatsen (bv. een geüploade ppt naar de map van de klant). Geeft de nieuwe link.', { file_id: z.string(), map_id: z.string() }, false, async ({ file_id, map_id }) => {
     const link = await moveDriveFile(IKR_DRIVE, driveId(file_id), driveId(map_id))
     return { file_id, link }

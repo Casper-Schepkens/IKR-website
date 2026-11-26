@@ -44,7 +44,7 @@ describe('Grokbot-sessie', () => {
     await client.connect(b)
     const names = (await client.listTools()).tools.map((t) => t.name)
     for (const t of SALES_TOOLS) expect(names).toContain(t)
-    expect(names).toHaveLength(116) // + drive_zoeken, drive_map_inhoud (read-only); + 4 freelancer-tools
+    expect(names).toHaveLength(117) // + drive_zoeken, drive_map_inhoud (read-only); + 4 freelancer-tools; + drive_doc_aanmaken
   })
 
   it('instructies: sales-vragen van het team altijd beantwoorden', () => {

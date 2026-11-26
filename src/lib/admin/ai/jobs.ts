@@ -127,6 +127,24 @@ export async function enqueue(type: JobType, ref: string, input: Record<string, 
   return data as AiJob
 }
 
+/**
+ * Maakt de taak enkel aan als er nog geen is met dit type + ref (de unieke index beslist, ook bij twee
+ * runs tegelijk). Geeft de nieuwe taak, of null als ze al bestond.
+ */
+export async function claimJob(type: JobType, ref: string, input: Record<string, unknown>, by: string): Promise<AiJob | null> {
+  const { data, error } = await db().from('ai_jobs').insert({ type, ref, input, created_by: by }).select('*').single()
+  if (!error && data) return data as AiJob
+  const again = await db().from('ai_jobs').select('id').eq('type', type).eq('ref', ref).maybeSingle()
+  if (again.data) return null
+  throw new Error(error?.message ?? 'Taak aanmaken mislukt.')
+}
+
+/** Opdracht van een taak bijwerken zolang ze nog niet opgepikt is. */
+export async function updateJobInput(id: string, input: Record<string, unknown>) {
+  const { error } = await db().from('ai_jobs').update({ input }).eq('id', id).eq('status', 'pending')
+  if (error) throw new Error(error.message)
+}
+
 export async function jobsByRef(type: JobType, refs: string[]): Promise<AiJob[]> {
   if (!refs.length) return []
   const { data, error } = await db().from('ai_jobs').select('*').eq('type', type).in('ref', refs)
