@@ -151,6 +151,20 @@ describe('koppelen en ontkoppelen', () => {
     expect((await listOwnConnections(CEDRIC)).map((c) => c.kind)).toEqual(['agenda'])
   })
 
+  it('opnieuw koppelen met hetzelfde account trekt niets in (Google zou dan ook de nieuwe toegang intrekken)', async () => {
+    await saveTeamConnection({ member: CEDRIC, kind: 'mail', googleEmail: CEDRIC, refreshToken: 'r-mail', scopes: scopes('mail') })
+    await saveTeamConnection({ member: CEDRIC, kind: 'agenda', googleEmail: CEDRIC, refreshToken: 'r-agenda-1', scopes: scopes('agenda'), calendars: [] })
+    calls.length = 0
+    await saveTeamConnection({ member: CEDRIC, kind: 'agenda', googleEmail: CEDRIC, refreshToken: 'r-agenda-2', scopes: scopes('agenda'), calendars: [] })
+    // Ontkoppelen van de agenda terwijl de mail hetzelfde account gebruikt: ook niet intrekken.
+    expect(await removeTeamConnection(CEDRIC, 'agenda')).toBe(true)
+    expect(calls.some((c) => c.url.startsWith('https://oauth2.googleapis.com/revoke'))).toBe(false)
+    expect((await listOwnConnections(CEDRIC)).map((c) => c.kind)).toEqual(['mail'])
+    // Het laatste gebruik van het account: wel intrekken.
+    await removeTeamConnection(CEDRIC, 'mail')
+    expect(calls.some((c) => c.url.startsWith('https://oauth2.googleapis.com/revoke'))).toBe(true)
+  })
+
   it('weigert een koppeling waarbij niet alle (lees)rechten aangevinkt werden', async () => {
     await expect(saveTeamConnection({ member: CEDRIC, kind: 'agenda', googleEmail: CEDRIC, refreshToken: 'r', scopes: 'openid email' })).rejects.toThrow(/rechten/)
   })

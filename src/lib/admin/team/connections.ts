@@ -1,7 +1,7 @@
 import 'server-only'
 import { decryptSecret, encryptSecret } from '../crypto'
 import { isDemoMode, isSupabaseConfigured } from '../env'
-import { refreshAccessToken, revokeToken, TEAM_SCOPES } from '../google'
+import { listConnections, refreshAccessToken, revokeToken, TEAM_SCOPES } from '../google'
 import { createServiceSupabase } from '../supabase/server'
 import { TEAM } from '../weekly/types'
 
@@ -85,8 +85,10 @@ export async function saveTeamConnection(input: {
     last_error: null,
     connected_at: new Date().toISOString(),
   }
-  // Een vorige koppeling van hetzelfde soort eerst intrekken bij Google.
-  await removeTeamConnection(row.member_email, row.kind).catch(() => undefined)
+  // De vorige koppeling van hetzelfde soort vervangen. Intrekken bij Google enkel als dat account nergens
+  // anders meer gebruikt wordt: intrekken haalt ALLE toegang van dat account tot de app weg, ook de net
+  // gegeven nieuwe toegang (zelfde account) en bv. de sales-inbox.
+  await removeTeamConnection(row.member_email, row.kind, { keepAccount: row.google_email }).catch(() => undefined)
   tokenCache().delete(keyOf(row.member_email, row.kind))
   if (inMemory()) {
     mem().push(row)
@@ -112,14 +114,29 @@ async function setStatus(member: string, kind: TeamKind, status: Row['status'], 
   await db().from('team_google').update({ status, last_error: lastError, updated_at: new Date().toISOString() }).eq('member_email', member).eq('kind', kind)
 }
 
-/** Ontkoppelen: token intrekken bij Google en de koppeling verwijderen. */
-export async function removeTeamConnection(member: string, kind: TeamKind) {
+/**
+ * Wordt dit Google-account nog door een andere koppeling gebruikt (andere soort, ander teamlid of een
+ * koppeling bovenaan Instellingen, zoals de sales-inbox)? Dan mogen we het token niet intrekken.
+ */
+async function accountInUse(googleEmail: string, except: { member: string; kind: TeamKind }, keepAccount?: string) {
+  const email = googleEmail.toLowerCase()
+  if (keepAccount && keepAccount.toLowerCase() === email) return true
+  const others = (await listAllConnections()).some((c) => c.google_email === email && !(c.member_email === except.member && c.kind === except.kind))
+  if (others) return true
+  return (await listConnections().catch(() => [])).some((c) => c.email.toLowerCase() === email)
+}
+
+/**
+ * Ontkoppelen: koppeling verwijderen en het token intrekken bij Google, tenzij dat account nog voor iets
+ * anders gekoppeld is (Google trekt dan alle toegang van dat account in, ook die andere koppelingen).
+ */
+export async function removeTeamConnection(member: string, kind: TeamKind, opts: { keepAccount?: string } = {}) {
   const r = await getRow(member, kind)
   if (!r) return false
   try {
-    await revokeToken(decryptSecret(r.refresh_token_enc))
+    if (!(await accountInUse(r.google_email, { member: r.member_email, kind }, opts.keepAccount))) await revokeToken(decryptSecret(r.refresh_token_enc))
   } catch {
-    // token onleesbaar (bv. andere sleutel): toch verwijderen
+    // token onleesbaar (bv. andere sleutel) of controle mislukt: toch verwijderen
   }
   tokenCache().delete(keyOf(member, kind))
   if (inMemory()) g.__ikrTeamGoogle = mem().filter((x) => x !== r)
