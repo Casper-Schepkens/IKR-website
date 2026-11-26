@@ -4,7 +4,7 @@ import { timeout } from '@/lib/admin/http'
 import { teamAccessToken } from '@/lib/admin/team/connections'
 import { inviteAddresses } from '@/lib/admin/team/invites'
 import { CONTACT_EMAIL, ownerOf } from '@/lib/admin/weekly/types'
-import type { BusySource } from './core'
+import { agendaCalendarFor, type BusySource } from './core'
 import type { Busy } from './slots'
 
 /**
@@ -74,12 +74,15 @@ export const PROVIDERS: Record<string, BusyProvider> = {
   },
   /** De eigen agenda-koppeling (Mijn koppelingen): mag ook een persoonlijk Google-account zijn. */
   team_agenda: {
-    label: 'Mijn agenda-koppeling',
-    description: "De agenda('s) die je koppelde in Instellingen → Mijn koppelingen (mag ook een persoonlijke Google-agenda zijn). Enkel vrij/bezet wordt gelezen.",
+    label: 'Mijn agenda',
+    description:
+      'De agenda van je uitnodigingsadres (waar ook de weeklies en calls naartoe gaan), via je agenda-koppeling in Instellingen → Mijn koppelingen. Mag een persoonlijke Google-agenda zijn. Enkel vrij/bezet wordt gelezen.',
     async read(source, from, to) {
       const { token, conn } = await teamAccessToken(source.member_email, 'agenda')
-      const ids = source.calendar_ids.length ? source.calendar_ids : conn.selected_calendars
-      if (!ids.length) throw new Error("Er zijn nog geen agenda's gekozen (Instellingen → Mijn koppelingen).")
+      const owner = ownerOf(source.member_email)
+      const target = owner ? (await inviteAddresses())[owner] : source.member_email
+      // Altijd de agenda van het uitnodigingsadres; extra agenda's enkel als ze uitdrukkelijk in de bron staan.
+      const ids = [...new Set([agendaCalendarFor(conn, target), ...source.calendar_ids])]
       return (await Promise.all(ids.map((id) => readGoogleBusy(token, id, from, to)))).flat()
     },
   },

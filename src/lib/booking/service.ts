@@ -195,12 +195,17 @@ export async function upsertLead(leads: LeadsRepo, b: Pick<Booking, 'name' | 'em
   return (await leads.get(lead.id)) ?? lead
 }
 
-/** Eigen agenda als het teamlid die met schrijfrechten koppelde (Instellingen); anders contact@ met een uitnodiging. */
-async function defaultCalendarOwner(member: string) {
-  const own = (await listConnections()).find((c) => c.email === member)
-  if (own && hasScopes(own, [SCOPES.calendar])) return { owner: member, inviteMember: null }
+/**
+ * Waar het agenda-item komt. Zoals bij de weeklies en calls: in de contact@-agenda, met een uitnodiging
+ * naar het uitnodigingsadres van het teamlid (bij Casper zijn persoonlijke agenda). Enkel als het
+ * teamlid exact dat adres met schrijfrechten koppelde, rechtstreeks in die agenda.
+ */
+export async function defaultCalendarOwner(member: string) {
   const key = ownerOf(member)
-  return { owner: CONTACT_EMAIL, inviteMember: key ? await inviteAddress(key) : member }
+  const invite = (key ? await inviteAddress(key) : member).toLowerCase()
+  const own = (await listConnections()).find((c) => c.email === invite)
+  if (own && hasScopes(own, [SCOPES.calendar])) return { owner: invite, inviteMember: null }
+  return { owner: CONTACT_EMAIL, inviteMember: invite }
 }
 
 async function finalizeBooking(deps: BookingDeps, booking: Booking, member: BookingMember, config: BookingConfig) {
