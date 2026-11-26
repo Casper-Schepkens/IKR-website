@@ -91,7 +91,7 @@ export function defaultTemplate(d: ProductionData) {
 }
 
 /** Stappen van een klant: de eigen kopie, of (nog niet gekopieerd) het standaard-sjabloon. */
-function defsFor(d: ProductionData, clientId: string): { defs: StepDef[]; fromTemplate: boolean } {
+export function defsFor(d: ProductionData, clientId: string): { defs: StepDef[]; fromTemplate: boolean } {
   const own = d.clientSteps.filter((s) => s.client_id === clientId)
   if (own.length) return { defs: own, fromTemplate: false }
   try {
@@ -359,6 +359,28 @@ async function planNextByRhythm(cs: ChangeSet, d: ProductionData, client: Client
   d.cycles.push(row)
   cs.summary += ` · draaidag ${row.no} gepland op ${shoot} (${rhythmLabel(p.rhythm)})`
   return row
+}
+
+/**
+ * Zorgt dat draaidag `no + 1` bestaat (voor het ideeëndoc na draaidag `no`). Met een ritme krijgt hij
+ * meteen de berekende datum (zoals bij het afvinken van de draaidag), anders geen datum (zoals bij
+ * Tempus en Lilalou). Bestaat hij al, dan verandert er niets.
+ */
+export async function ensureNextCycle(repo: ProductionRepo, client: ClientRef, no: number, by: string): Promise<{ cycle: Cycle; created: boolean }> {
+  const d = await loadData(repo)
+  const mine = d.cycles.filter((c) => c.client_id === client.id)
+  const existing = mine.find((c) => c.no === no + 1)
+  if (existing) return { cycle: existing, created: false }
+  const after = mine.find((c) => c.no === no)
+  if (!after) throw new Error(`Draaidag ${no} van ${client.name} bestaat niet.`)
+  const cs = new ChangeSet(repo, by, `${client.name}: draaidag ${no + 1} aangemaakt (zonder datum) voor het ideeëndoc`, client.id)
+  await ensureProductionRow(cs, d, client.id)
+  const planned = await planNextByRhythm(cs, d, client, after)
+  if (planned) cs.summary = `${client.name}: draaidag ${planned.no} aangemaakt voor het ideeëndoc, gepland op ${planned.shoot_on} (${rhythmLabel(d.productions.find((x) => x.client_id === client.id)?.rhythm ?? null)})`
+  const cycle = planned ?? ((await cs.insert('production_cycles', { client_id: client.id, no: no + 1 })) as unknown as Cycle)
+  await cs.commit()
+  if (planned) await syncShootCalendar(repo, client, planned)
+  return { cycle, created: true }
 }
 
 /** Ritme van de draaidagen ("elke 2e zondag", "elke 3 weken"; null/"geen" = geen ritme). */

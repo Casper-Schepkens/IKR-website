@@ -8,12 +8,19 @@
  */
 export const DATA_ONLY_TYPES: readonly string[] = ['inbox_reply', 'na_verzending', 'call_verwerken', 'weekly_sops', 'contract_afleiden', 'style_profile', 'mail_rewrite']
 
+/**
+ * Taken die tools nodig hebben (Drive, TikTok opzoeken): altijd bij Grokbot, ook als de engine 'api' is
+ * (de Claude API heeft hier geen tools en kan geen doc aanmaken).
+ */
+export const GROK_ONLY_TYPES: readonly string[] = ['ideeendoc']
+
 export const dataViaApi = () => process.env.IKR_AI_DATA_ENGINE === 'api' && Boolean(process.env.ANTHROPIC_API_KEY)
 
 /** Wie de AI-taken uitvoert; met een taaktype: wie die soort taak uitvoert. */
 export function aiEngine(type?: string): 'api' | 'grokbot' | 'worker' {
   const e = process.env.IKR_AI_ENGINE
   const base = e === 'grokbot' || e === 'worker' ? e : 'api'
+  if (base === 'api' && type && GROK_ONLY_TYPES.includes(type)) return 'grokbot'
   if (base !== 'api' && type && DATA_ONLY_TYPES.includes(type) && dataViaApi()) return 'api'
   return base
 }

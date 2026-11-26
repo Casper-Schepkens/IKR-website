@@ -1,7 +1,7 @@
 import 'server-only'
 import { z } from 'zod'
 import { isoDay } from '../../format'
-import { cleanClientInput, daysLeft, type Client } from '../../clients/types'
+import { cleanClientFiche, cleanClientInput, daysLeft, type Client } from '../../clients/types'
 import { applyContractProposal, deriveContract, loadProposal } from '../../clients/contract'
 import { ALL_CATEGORIES, CATEGORY_LABELS, isInCategory, isOutCategory, overview, paymentChecks, periodKeyFor, periodOf, type PeriodKind } from '../../finance/core'
 import { loadClients, loadTxs, setTxCategory, syncFinance, syncState } from '../../finance/store'
@@ -25,7 +25,15 @@ export function registerClientTools(ctx: ToolCtx) {
     freelancer_kost: c.freelancer_cost ?? null,
     boosting: c.boosting_budget ?? null,
     bank_naam: c.bank_name ?? null,
+    fiche: { doel: c.content_goal ?? null, niche: c.niche ?? null, doelgroep: c.audience ?? null, beschikbaar: c.available ?? null, drive_map_id: c.drive_folder_id ?? null },
   })
+  const fiche = {
+    doel: z.string().optional().describe('Klantfiche: doel van de content (bv. naamsbekendheid, sollicitanten, verkoop)'),
+    niche: z.string().optional().describe('Klantfiche: niche / sector'),
+    doelgroep: z.string().optional().describe('Klantfiche: doelgroep'),
+    beschikbaar: z.string().optional().describe('Klantfiche: wat er beschikbaar is om te filmen (locatie, producten, mensen)'),
+    drive_map_id: z.string().optional().describe('Map van de klant in de IKR-Drive: map-id of link (zie drive_mappen_zoeken)'),
+  }
   const contractTot = z
     .string()
     .optional()
@@ -62,10 +70,10 @@ export function registerClientTools(ctx: ToolCtx) {
   )
   tool(
     'klant_bijwerken',
-    'Freelancer, contract of naam van een klant aanpassen. Contract: contract_tot = YYYY-MM-DD (einddatum), "onbepaald" (onbepaalde duur) of leeg (niet gekend); of onbepaald: true/false. Een lege tekst maakt het veld leeg; niet meegegeven velden blijven.',
-    { klant: z.string().describe('naam of id'), naam: z.string().optional(), freelancer: z.string().optional(), contract_tot: contractTot, onbepaald, ...contractMoney },
+    'Freelancer, contract, naam of klantfiche (doel, niche, doelgroep, beschikbaar, Drive-map) van een klant aanpassen. Contract: contract_tot = YYYY-MM-DD (einddatum), "onbepaald" (onbepaalde duur) of leeg (niet gekend); of onbepaald: true/false. Een lege tekst maakt het veld leeg; niet meegegeven velden blijven.',
+    { klant: z.string().describe('naam of id'), naam: z.string().optional(), freelancer: z.string().optional(), contract_tot: contractTot, onbepaald, ...contractMoney, ...fiche },
     false,
-    async ({ klant, naam, freelancer, contract_tot, onbepaald: ind, contract_start, maandbedrag, freelancer_kost, boosting, bank_naam }) => {
+    async ({ klant, naam, freelancer, contract_tot, onbepaald: ind, contract_start, maandbedrag, freelancer_kost, boosting, bank_naam, doel, niche, doelgroep, beschikbaar, drive_map_id }) => {
       const c = await resolveClient(klant)
       // Contract enkel aanpassen als het meegegeven is; een datum zet onbepaalde duur uit, onbepaald wist de datum.
       const end = contract_tot !== undefined ? contract_tot : ind ? null : c.contract_end
@@ -81,7 +89,8 @@ export function registerClientTools(ctx: ToolCtx) {
         ...(boosting !== undefined ? { boosting_budget: boosting } : {}),
         ...(bank_naam !== undefined ? { bank_name: bank_naam } : {}),
       })
-      await clients.update(c.id, next)
+      const ficheFields = cleanClientFiche({ content_goal: doel, niche, audience: doelgroep, available: beschikbaar, drive_folder_id: drive_map_id })
+      await clients.update(c.id, { ...next, ...ficheFields })
       relinkFinance()
       return `${next.name} bijgewerkt.`
     },

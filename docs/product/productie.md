@@ -60,3 +60,29 @@ Je vult enkel de ankerdata in (getekend, kick-off, strategiemeeting, draaidag). 
 | `productie_pauzeren` | productie (de)activeren |
 
 Voorbeeld: "grokbot, Tempus zit aan de briefing voor draaidag 4, draaidag is 17/11 om 9u30".
+
+## Ideeëndoc na elke draaidag (Grok Bot)
+Na elke draaidag zet het dashboard zelf een AI-taak `ideeendoc` klaar. Grok Bot maakt dan in de klantmap een Google Doc
+"[Klant] – contentideeën draaidag [n+1]" (5 à 6 formats met hook, structuur, wie/wat in beeld, wat nodig is en 2 à 3
+gecontroleerde TikTok-referenties; geen verzonnen cijfers). Er wordt niets verstuurd.
+
+- **Trigger:** dagelijkse cron `/api/cron/ideeendocs` (06:15 UTC). Een draaidag is voorbij als de datum vóór vandaag ligt
+  **of** de stap van de draaidag zelf op af staat (wat eerst komt). Beide, omdat de draaidagstap van de freelancer vaak niet
+  afgevinkt wordt (dan telt de datum), en een draaidag zonder datum enkel via het afvinken voorbij kan zijn. Enkel de laatste
+  voorbije draaidag per klant telt, en hoogstens 14 dagen geleden: oude draaidagen krijgen bij de eerste run geen taak.
+  Gepauzeerde producties worden overgeslagen.
+- **Idempotent:** één taak per klant + draaidag via `ref = ideeendoc:<client_id>:<nr>` en de unieke index op
+  `ai_jobs (type, ref)`. De taak wordt eerst geclaimd; pas daarna maakt die ene run draaidag n+1 aan. Ook een weggeklikte taak
+  telt als "bestaat al".
+- **Draaidag n+1:** bestaat hij nog niet, dan wordt hij aangemaakt (in het wijzigingslog): zonder datum, of met een ritme meteen
+  met de berekende datum (zodat de ritmeplanning niet overgeslagen wordt).
+- **Opdracht:** klant, draaidag n en n+1, klantfiche (doel, niche, doelgroep, beschikbaar), wat al gefilmd/gepost is (notities en
+  links van eerdere draaidagen + eerdere ideeëndocs), de Drive-map en de stap `ideeen_uitwerken` van n+1.
+- **Resultaat** (`doc_url`, `doc_titel`, `samenvatting`, `map_id`): het dashboard zet `doc_url` als link op
+  `ideeen_uitwerken` van draaidag n+1 met de notitie "Ideeëndoc klaar door Grok Bot" (achter een bestaande notitie) en zet een
+  prikbordkaartje voor @milan. Verder wordt niets aangepast.
+- **Engine:** `ideeendoc` loopt altijd via Grok Bot (ook als `IKR_AI_ENGINE` op api staat): het heeft Drive-tools nodig.
+- **Klantfiche:** nieuwe kolommen op `clients` (`content_goal`, `niche`, `audience`, `available`, `drive_folder_id`), te zetten
+  met `klant_bijwerken`. Leeg = Grok Bot zoekt het zelf op in de Drive.
+- **MCP:** `drive_doc_aanmaken` (map_id, titel, markdown → doc_url; bestaat er al een doc met die titel in de map, dan wordt dat
+  teruggegeven).

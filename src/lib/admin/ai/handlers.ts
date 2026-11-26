@@ -14,6 +14,7 @@ import { werkplekTask } from './tasks/werkplek'
 import { contract_afleidenTask } from './tasks/contract-afleiden'
 import { weekly_sopsTask } from './tasks/weekly-sops'
 import { style_profileTask } from './tasks/style-profile'
+import { ideeendocTask } from './tasks/ideeendoc'
 import type { Handler } from './tasks/schemas'
 
 export const HANDLERS = {
@@ -26,6 +27,7 @@ export const HANDLERS = {
   contract_afleiden: contract_afleidenTask,
   weekly_sops: weekly_sopsTask,
   style_profile: style_profileTask,
+  ideeendoc: ideeendocTask,
 } satisfies Record<string, Handler>
 
 export type JobType = keyof typeof HANDLERS

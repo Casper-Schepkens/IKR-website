@@ -151,4 +151,25 @@ export const WERKPLEK = z.object({
   actie_uitgevoerd: z.boolean().nullable().describe('Enkel bij reden "actie": true als je de actie (klaarzetten) gedaan hebt'),
 })
 
+export const IDEEENDOC = z.object({
+  doc_url: z
+    .string()
+    .regex(/^https:\/\/(docs|drive)\.google\.com\//, 'Een link naar het Google Doc (https://docs.google.com/…)')
+    .describe('Link naar het Google Doc dat je in de klantmap aanmaakte (doc_url van drive_doc_aanmaken)'),
+  doc_titel: z.string().min(1).max(300).describe('Titel van het doc: "[Klant] – contentideeën draaidag [n+1]"'),
+  samenvatting: z.string().min(1).max(1500).describe('2-4 zinnen voor Milan: welke formats, wat er nodig is op de draaidag, wat onzeker is'),
+  map_id: z.string().nullable().describe('Id van de Drive-map waarin het doc staat'),
+})
+export type IdeeendocInput = {
+  klant: { id: string; naam: string; freelancer: string | null }
+  draaidag: { nr: number; datum: string | null }
+  volgende: { nr: number; datum: string | null; nieuw_aangemaakt: boolean }
+  fiche: { doel: string | null; niche: string | null; doelgroep: string | null; beschikbaar: string | null }
+  productie_notitie: string | null
+  drive_map: { id: string; link: string } | null
+  stap: { sleutel: string; draaidag: number; bestaat: boolean; huidige_link: string | null }
+  eerder: { draaidag: number; datum: string | null; items: string[] }[]
+  eerdere_docs: { draaidag: number; titel: string; url: string; samenvatting: string | null }[]
+}
+
 export type Msg = { from: string; date: string; text: string; fromCasper: boolean }
